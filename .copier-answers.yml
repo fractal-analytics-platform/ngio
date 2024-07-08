@@ -1,0 +1,11 @@
+# Do not edit - changes here will be overwritten by Copier
+_commit: v1
+_src_path: gh:pydev-guide/pyrepo-copier
+author_email: lorenzo.cerrone@uzh.ch
+author_name: Lorenzo Cerrone
+github_username: lorenzocerrone
+mode: tooling
+module_name: ngio
+project_name: ngio
+project_short_description: Next Generation file format IO
+
