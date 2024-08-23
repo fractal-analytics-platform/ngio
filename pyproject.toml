@@ -10,8 +10,7 @@ source = "vcs"
 # read more about configuring hatch at:
 # https://hatch.pypa.io/latest/config/build/
 [tool.hatch.build.targets.wheel]
-only-include = ["src"]
-sources = ["src"]
+packages = ["src/ngio"]
 
 # https://peps.python.org/pep-0621/
 [project]
@@ -19,7 +18,7 @@ name = "ngio"
 dynamic = ["version"]
 description = "Next Generation file format IO"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 license = { text = "BSD-3-Clause" }
 authors = [{ name = "Lorenzo Cerrone", email = "lorenzo.cerrone@uzh.ch" }]
 # https://pypi.org/classifiers/
@@ -27,7 +26,6 @@ classifiers = [
     "Development Status :: 3 - Alpha",
     "License :: OSI Approved :: BSD License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
@@ -35,7 +33,15 @@ classifiers = [
     "Typing :: Typed",
 ]
 # add your package dependencies here
-dependencies = ["numpy", "zarr", "anndata", "pydantic", "dask[array]", "fractal-tasks-core"]
+dependencies = [
+    "numpy<2",
+    "pytest",
+    "zarr", 
+    "anndata", 
+    "pydantic", 
+    "dask[array]", 
+    "fractal-tasks-core"
+]
 
 # https://peps.python.org/pep-0621/#dependencies-optional-dependencies
 # "extras" (e.g. for `pip install .[test]`)
@@ -45,6 +51,7 @@ test = ["pytest", "pytest-cov"]
 # add anything else you like to have in your dev environment here
 dev = [
     "ipython",
+    "notebook",
     "mypy",
     "pdbpp",  # https://github.com/pdbpp/pdbpp
     "pre-commit",
@@ -68,7 +75,7 @@ repository = "https://github.com/lorenzocerrone/ngio"
 # https://docs.astral.sh/ruff
 [tool.ruff]
 line-length = 88
-target-version = "py38"
+target-version = "py39"
 src = ["src"]
 
 # https://docs.astral.sh/ruff/rules
@@ -146,3 +153,17 @@ ignore = [
     ".ruff_cache/**/*",
     "tests/**/*",
 ]
+
+[tool.pixi.project]
+channels = ["conda-forge"]
+platforms = ["osx-arm64"]
+
+[tool.pixi.pypi-dependencies]
+ngio = { path = ".", editable = true }
+
+[tool.pixi.environments]
+default = { solve-group = "default" }
+dev = { features = ["dev"], solve-group = "default" }
+test = { features = ["test"], solve-group = "default" }
+
+[tool.pixi.tasks]

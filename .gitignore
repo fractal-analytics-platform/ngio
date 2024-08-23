@@ -110,3 +110,8 @@ ENV/
 # IDE settings
 .vscode/
 .idea/
+# pixi environments
+.pixi
+*.egg-info
+
+*.zarr
