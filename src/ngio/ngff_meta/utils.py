@@ -1,15 +1,6 @@
 from pathlib import Path
 
 import zarr
-from fractal_tasks_core.ngff.specs import (
-    Axis,
-    Channel,
-    Dataset,
-    Multiscale,
-    NgffImageMeta,
-    Omero,
-    ScaleCoordinateTransformation,
-)
 
 from ngio.ngff_image import NgffImage
 from ngio.ngff_meta.fractal_image_meta import (
