@@ -35,12 +35,10 @@ classifiers = [
 # add your package dependencies here
 dependencies = [
     "numpy<2",
-    "pytest",
-    "zarr", 
+    "pytest", 
     "anndata", 
     "pydantic", 
-    "dask[array]", 
-    "fractal-tasks-core"
+    "dask[array]",
 ]
 
 # https://peps.python.org/pep-0621/#dependencies-optional-dependencies
@@ -51,6 +49,8 @@ test = ["pytest", "pytest-cov"]
 # add anything else you like to have in your dev environment here
 dev = [
     "ipython",
+    "pytest",
+    "pytest-cov",
     "notebook",
     "mypy",
     "pdbpp",  # https://github.com/pdbpp/pdbpp
@@ -159,6 +159,7 @@ channels = ["conda-forge"]
 platforms = ["osx-arm64"]
 
 [tool.pixi.pypi-dependencies]
+zarr = { path = "../zarr-python/", editable = true }
 ngio = { path = ".", editable = true }
 
 [tool.pixi.environments]
