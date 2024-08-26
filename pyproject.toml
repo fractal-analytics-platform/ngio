@@ -35,9 +35,10 @@ classifiers = [
 # add your package dependencies here
 dependencies = [
     "numpy<2",
-    "pytest", 
     "anndata", 
-    "pydantic", 
+    "pydantic",
+    "requests",
+    "aiohttp", 
     "dask[array]",
 ]
 
