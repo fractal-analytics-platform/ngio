@@ -1,3 +1,5 @@
+"""Fractal image metadata models."""
+
 from enum import Enum
 from typing import Literal
 
@@ -11,7 +13,9 @@ class BaseWithExtraFields(BaseModel):
         be stored in the `extra_fields` attribute.
     """
 
-    extra_fields: dict = Field(default_factory=dict)
+    extra_fields: dict = Field(
+        default_factory=dict,
+    )
 
     @model_validator(mode="before")
     def _collect_extra_fields(cls, values):
@@ -78,6 +82,9 @@ class TranslationCoordinateTransformation(BaseModel):
     translation: list[float] = Field(..., min_length=2)
 
 
+Transformation = ScaleCoordinateTransformation | TranslationCoordinateTransformation
+
+
 class Dataset(BaseModel):
     path: str
     coordinateTransformations: list[
@@ -90,15 +97,18 @@ class Multiscale(BaseModel):
     datasets: list[Dataset]
 
 
-class BaseFractalImageMeta(BaseModel):
+class BaseFractalMeta(BaseModel):
     version: str
     multiscale: Multiscale
     name: str | None = None
 
 
-class FractalImageMeta(BaseModel):
+class FractalImageMeta(BaseFractalMeta):
     omero: Omero | None = None
 
 
-class FractalLabelMeta(BaseFractalImageMeta):
+class FractalLabelMeta(BaseFractalMeta):
     pass
+
+
+FractalMeta = FractalImageMeta | FractalLabelMeta

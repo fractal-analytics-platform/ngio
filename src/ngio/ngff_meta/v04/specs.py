@@ -70,14 +70,16 @@ class TranslationCoordinateTransformation04(BaseModel):
     translation: list[float] = Field(..., min_length=2)
 
 
-Transformation = ScaleCoordinateTransformation04 | TranslationCoordinateTransformation04
+Transformation04 = (
+    ScaleCoordinateTransformation04 | TranslationCoordinateTransformation04
+)
 
 
 class Dataset04(BaseModel):
     """Model for `Multiscale.datasets` elements."""
 
     path: str
-    coordinateTransformations: list[TranslationCoordinateTransformation04] = Field(
+    coordinateTransformations: list[Transformation04] = Field(
         ..., min_length=1, max_length=2
     )
 
@@ -85,11 +87,20 @@ class Dataset04(BaseModel):
     @classmethod
     def _check_scale_exists(cls, v):
         # check if at least one scale transformation exists
-        if not any(
-            isinstance(transformation, ScaleCoordinateTransformation04)
-            for transformation in v
-        ):
-            raise ValueError("At least one scale transformation is required.")
+
+        num_scale = sum(
+            1 for item in v if isinstance(item, ScaleCoordinateTransformation04)
+        )
+        if num_scale != 1:
+            raise ValueError("Exactly one scale transformation is required.")
+
+        num_translation = sum(
+            1 for item in v if isinstance(item, TranslationCoordinateTransformation04)
+        )
+        if num_translation > 1:
+            raise ValueError("At most one translation transformation is allowed.")
+
+        return v
 
 
 class Multiscale04(BaseModel):
@@ -99,7 +110,7 @@ class Multiscale04(BaseModel):
     datasets: list[Dataset04] = Field(..., min_length=1)
     version: Literal["0.4"] | None = "0.4"
     axes: list[Axis04] = Field(..., max_length=5, min_length=2)
-    coordinateTransformations: list[Transformation] | None = None
+    coordinateTransformations: list[Transformation04] | None = None
     _check_unique = field_validator("axes")(unique_items_validator)
 
 

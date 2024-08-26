@@ -5,9 +5,9 @@ import zarr
 from ngio.ngff_image import NgffImage
 from ngio.ngff_meta.fractal_image_meta import (
     FractalImageMeta,
+    FractalLabelMeta,
     SpaceUnits,
     TimeUnits,
-    FractalLabelMeta,
 )
 
 

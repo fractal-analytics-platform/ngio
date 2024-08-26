@@ -5,7 +5,7 @@ from typing import TypeVar
 from pydantic import BaseModel, Field, model_serializer, model_validator
 
 
-class BaseFractalSpecModel(BaseModel):
+class BaseWithExtraFields(BaseModel):
     """Base class for all Fractal spec models.
 
     Every field that is not defined in the model will

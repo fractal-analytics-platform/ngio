@@ -1,6 +1,6 @@
 """Handler for reading and writing NGFF image metadata."""
 
-from typing import Protocol
+from typing import Literal, Protocol
 
 from ngio.ngff_meta.fractal_image_meta import FractalImageMeta
 from ngio.ngff_meta.v04.zarr_utils import (
@@ -11,7 +11,9 @@ from ngio.ngff_meta.v04.zarr_utils import (
 class NgffImageMetaHandler(Protocol):
     """Handler for NGFF image metadata."""
 
-    def __init__(self, zarr_path: str, cache: bool = False):
+    def __init__(
+        self, zarr_path: str, meta_mode: Literal["image", "label"], cache: bool = False
+    ):
         """Initialize the handler."""
         ...
 
@@ -50,8 +52,10 @@ def find_ngff_image_meta_handler_version(zarr_path: str) -> str:
     )
 
 
-def load_ngff_image_meta_handler(zarr_path: str) -> NgffImageMetaHandler:
+def get_ngff_image_meta_handler(
+    zarr_path: str, meta_mode: Literal["image", "label"]
+) -> NgffImageMetaHandler:
     """Load the NGFF image metadata handler."""
     version = find_ngff_image_meta_handler_version(zarr_path)
     handler = _available_load_ngff_image_meta_handlers[version]
-    return handler(zarr_path)
+    return handler(zarr_path, meta_mode=meta_mode)
