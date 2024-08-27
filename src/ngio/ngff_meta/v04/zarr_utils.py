@@ -7,9 +7,9 @@ from zarr import open_group
 from ngio.ngff_meta.fractal_image_meta import (
     Axis,
     Dataset,
+    FractalImageLabelMeta,
     FractalImageMeta,
     FractalLabelMeta,
-    FractalImageLabelMeta,
     Multiscale,
     Omero,
     ScaleCoordinateTransformation,
