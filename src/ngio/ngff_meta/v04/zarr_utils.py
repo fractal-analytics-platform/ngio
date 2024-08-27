@@ -9,7 +9,7 @@ from ngio.ngff_meta.fractal_image_meta import (
     Dataset,
     FractalImageMeta,
     FractalLabelMeta,
-    FractalMeta,
+    FractalImageLabelMeta,
     Multiscale,
     Omero,
     ScaleCoordinateTransformation,
@@ -110,7 +110,7 @@ def _transform_dataset(
 def vanilla_ngff_image_meta_v04_to_fractal(
     meta04: NgffImageMeta04,
     meta_mode: Literal["image", "label"] = "image",
-) -> FractalMeta:
+) -> FractalImageLabelMeta:
     """Convert the NgffImageMeta to FractalImageMeta."""
     if not isinstance(meta04, NgffImageMeta04):
         raise ValueError("Invalid metadata type. Expected NgffImageMeta04.")
@@ -143,14 +143,14 @@ def vanilla_ngff_image_meta_v04_to_fractal(
     )
 
 
-def load_ngff_image_meta_v04(zarr_path: str) -> FractalMeta:
+def load_ngff_image_meta_v04(zarr_path: str) -> FractalImageLabelMeta:
     """Load the OME-NGFF 0.4 image meta model."""
     check_ngff_image_meta_v04(zarr_path=zarr_path)
     meta04 = load_vanilla_ngff_image_meta_v04(zarr_path=zarr_path)
     return vanilla_ngff_image_meta_v04_to_fractal(meta04=meta04)
 
 
-def write_ngff_image_meta_v04(zarr_path: str, meta: FractalMeta) -> None:
+def write_ngff_image_meta_v04(zarr_path: str, meta: FractalImageLabelMeta) -> None:
     """Write the OME-NGFF 0.4 image meta model."""
     # TODO: Implement the conversion from FractalImageMeta to NgffImageMeta
     pass
@@ -171,7 +171,7 @@ class NgffImageMetaZarrHandlerV04:
         if not self.check_version(zarr_path):
             raise ValueError("The Zarr store does not contain the correct version.")
 
-    def load_meta(self) -> FractalMeta:
+    def load_meta(self) -> FractalImageLabelMeta:
         """Load the OME-NGFF 0.4 metadata."""
         if self.cache:
             if self._meta is None:
@@ -180,14 +180,14 @@ class NgffImageMetaZarrHandlerV04:
 
         return load_ngff_image_meta_v04(self.zarr_path)
 
-    def write_meta(self, meta: FractalMeta) -> None:
+    def write_meta(self, meta: FractalImageLabelMeta) -> None:
         """Write the OME-NGFF 0.4 metadata."""
         write_ngff_image_meta_v04(self.zarr_path, meta)
 
         if self.cache:
             self.update_cache(meta)
 
-    def update_cache(self, meta: FractalMeta) -> None:
+    def update_cache(self, meta: FractalImageLabelMeta) -> None:
         """Update the cached metadata."""
         if not self.cache:
             raise ValueError("Cache is not enabled.")

@@ -1,8 +1,3 @@
-from pathlib import Path
-
-import zarr
-
-from ngio.ngff_image import NgffImage
 from ngio.ngff_meta.fractal_image_meta import (
     FractalImageMeta,
     FractalLabelMeta,
@@ -41,6 +36,14 @@ def create_label_metadata(
 def remove_axis_from_metadata(
     metadata: FractalImageMeta,
     axis_name: str,
+) -> FractalImageMeta:
+    pass
+
+
+def derive_image_metadata(
+    image: FractalImageMeta,
+    name: str,
+    start_level: int = 0,
 ) -> FractalImageMeta:
     pass
 
