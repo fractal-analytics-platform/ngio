@@ -37,9 +37,26 @@ def create_label_metadata(
 
 def remove_axis_from_metadata(
     metadata: FractalImageMeta,
-    axis_name: str,
+    *,
+    axis_name: str | None = None,
+    idx: int | None = None,
 ) -> FractalImageMeta:
-    pass
+    """Remove an axis from the metadata."""
+    return metadata.remove_axis(axis_name=axis_name, idx=idx)
+
+
+def add_axis_to_metadata(
+    metadata: FractalImageMeta,
+    idx: int,
+    axis_name: str,
+    units: str | None = None,
+    axis_type: str = "channel",
+    scale: float = 1.0,
+) -> FractalImageMeta:
+    """Add an axis to the metadata."""
+    return metadata.add_axis(
+        idx=idx, axis_name=axis_name, units=units, axis_type=axis_type, scale=scale
+    )
 
 
 def derive_image_metadata(

@@ -372,7 +372,13 @@ class Multiscale(BaseModel):
     @property
     def axes_names(self) -> list[str]:
         """List of axes names in the Image."""
-        return [ax.name for ax in self.axes]
+        names = []
+        for ax in self.axes:
+            if isinstance(ax.name, str):
+                names.append(ax.name)
+            else:
+                names.append(ax.name.value)
+        return names
 
     def remove_axis(
         self, *, idx: int | None = None, axis_name: str | None = None
@@ -468,6 +474,11 @@ class BaseFractalMeta(BaseModel):
     def axes(self) -> list[Axis]:
         """List of axes in the multiscale."""
         return self.multiscale.axes
+
+    @property
+    def axes_names(self) -> list[str]:
+        """List of axes names in the Image."""
+        return self.multiscale.axes_names
 
     @property
     def datasets(self) -> list[Dataset]:
