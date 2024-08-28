@@ -26,7 +26,7 @@ from ngio.ngff_meta.v04.specs import (
 
 def check_ngff_image_meta_v04(zarr_path: str) -> bool:
     """Check if a Zarr Group contains the OME-NGFF v0.4."""
-    group = open_group(store=zarr_path, mode="r", zarr_version=2)
+    group = open_group(store=zarr_path, mode="r", zarr_format=2)
     multiscales = group.attrs.get("multiscales", None)
     if multiscales is None:
         return False
@@ -46,7 +46,7 @@ def check_ngff_image_meta_v04(zarr_path: str) -> bool:
 
 def load_vanilla_ngff_image_meta_v04(zarr_path: str) -> NgffImageMeta04:
     """Load the OME-NGFF 0.4 image meta model."""
-    group = open_group(store=zarr_path, mode="r", zarr_version=2)
+    group = open_group(store=zarr_path, mode="r", zarr_format=2)
     return NgffImageMeta04(**group.attrs)
 
 
