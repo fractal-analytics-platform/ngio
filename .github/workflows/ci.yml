@@ -71,6 +71,11 @@ jobs:
           filename: .github/TEST_FAIL_TEMPLATE.md
           update_existing: true
 
+  coverage:
+    name: Coverage
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
       - name: Coverage
         uses: codecov/codecov-action@v3
         with:
