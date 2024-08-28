@@ -53,9 +53,9 @@ def find_ngff_image_meta_handler_version(zarr_path: str) -> str:
 
 
 def get_ngff_image_meta_handler(
-    zarr_path: str, meta_mode: Literal["image", "label"]
+    zarr_path: str, meta_mode: Literal["image", "label"], cache: bool = False
 ) -> NgffImageMetaHandler:
     """Load the NGFF image metadata handler."""
     version = find_ngff_image_meta_handler_version(zarr_path)
     handler = _available_load_ngff_image_meta_handlers[version]
-    return handler(zarr_path, meta_mode=meta_mode)
+    return handler(zarr_path, meta_mode=meta_mode, cache=cache)

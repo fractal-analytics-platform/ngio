@@ -2,8 +2,7 @@
 
 from typing import Literal
 
-from zarr import open_group
-
+from ngio.io import read_group_attrs, update_group_attrs
 from ngio.ngff_meta.fractal_image_meta import (
     Axis,
     Dataset,
@@ -16,8 +15,11 @@ from ngio.ngff_meta.fractal_image_meta import (
     TranslationCoordinateTransformation,
 )
 from ngio.ngff_meta.v04.specs import (
+    Axis04,
     Dataset04,
+    Multiscale04,
     NgffImageMeta04,
+    Omero04,
     ScaleCoordinateTransformation04,
     Transformation04,
     TranslationCoordinateTransformation04,
@@ -26,8 +28,8 @@ from ngio.ngff_meta.v04.specs import (
 
 def check_ngff_image_meta_v04(zarr_path: str) -> bool:
     """Check if a Zarr Group contains the OME-NGFF v0.4."""
-    group = open_group(store=zarr_path, mode="r", zarr_format=2)
-    multiscales = group.attrs.get("multiscales", None)
+    group = read_group_attrs(store=zarr_path, zarr_format=2)
+    multiscales = group.get("multiscales", None)
     if multiscales is None:
         return False
 
@@ -46,8 +48,8 @@ def check_ngff_image_meta_v04(zarr_path: str) -> bool:
 
 def load_vanilla_ngff_image_meta_v04(zarr_path: str) -> NgffImageMeta04:
     """Load the OME-NGFF 0.4 image meta model."""
-    group = open_group(store=zarr_path, mode="r", zarr_format=2)
-    return NgffImageMeta04(**group.attrs)
+    attrs = read_group_attrs(store=zarr_path, zarr_format=2)
+    return NgffImageMeta04(**attrs)
 
 
 def _transform_dataset(
@@ -143,17 +145,50 @@ def vanilla_ngff_image_meta_v04_to_fractal(
     )
 
 
+def fractal_ngff_image_meta_to_vanilla_v04(
+    meta: FractalImageLabelMeta,
+) -> NgffImageMeta04:
+    """Convert the FractalImageMeta to NgffImageMeta."""
+    axes04 = [Axis04(**axis.model_dump()) for axis in meta.multiscale.axes]
+    dataset04 = []
+    for dataset in meta.multiscale.datasets:
+        transformations = [t.model_dump() for t in dataset.coordinateTransformations]
+        dataset04.append(
+            Dataset04(path=dataset.path, coordinateTransformations=transformations)
+        )
+    multiscale04 = Multiscale04(
+        name=meta.name,
+        axes=axes04,
+        datasets=dataset04,
+        version="0.4",
+    )
+    omero04 = None if meta.omero is None else Omero04(**meta.omero.model_dump())
+    return NgffImageMeta04(
+        multiscales=[multiscale04],
+        omero=omero04,
+    )
+
+
 def load_ngff_image_meta_v04(zarr_path: str) -> FractalImageLabelMeta:
     """Load the OME-NGFF 0.4 image meta model."""
-    check_ngff_image_meta_v04(zarr_path=zarr_path)
+    if not check_ngff_image_meta_v04(zarr_path=zarr_path):
+        raise ValueError(
+            "The Zarr store does not contain the correct OME-Zarr version."
+        )
     meta04 = load_vanilla_ngff_image_meta_v04(zarr_path=zarr_path)
     return vanilla_ngff_image_meta_v04_to_fractal(meta04=meta04)
 
 
 def write_ngff_image_meta_v04(zarr_path: str, meta: FractalImageLabelMeta) -> None:
     """Write the OME-NGFF 0.4 image meta model."""
-    # TODO: Implement the conversion from FractalImageMeta to NgffImageMeta
-    pass
+    if not check_ngff_image_meta_v04(zarr_path=zarr_path):
+        raise ValueError(
+            "The Zarr store does not contain the correct OME-Zarr version."
+        )
+    meta04 = fractal_ngff_image_meta_to_vanilla_v04(meta=meta)
+    update_group_attrs(
+        store=zarr_path, attrs=meta04.model_dump(exclude_none=True), zarr_format=2
+    )
 
 
 class NgffImageMetaZarrHandlerV04:

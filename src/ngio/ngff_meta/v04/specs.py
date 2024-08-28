@@ -22,11 +22,11 @@ class Window04(BaseModel):
 class Channel04(BaseWithExtraFields):
     """Model for `Omero.channels`."""
 
-    active: bool | None = None
-    coefficient: int | None = None
+    # active: bool | None = None
+    # coefficient: int | None = None
     color: str
-    family: str | None = None
-    inverted: bool | None = None
+    # family: str | None = None
+    # inverted: bool | None = None
     label: str | None = None
     window: Window04 | None = None
 
