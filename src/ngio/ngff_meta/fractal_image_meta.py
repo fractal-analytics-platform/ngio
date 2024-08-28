@@ -75,6 +75,11 @@ class SpaceUnits(str, Enum):
             raise ValueError(f"Unknown space unit: {self}")
         return scaling_factor
 
+    @classmethod
+    def allowed_names(self) -> list[str]:
+        """Get the allowed space axis names."""
+        return list(SpaceUnits.__members__.keys())
+
 
 class SpaceNames(str, Enum):
     """Allowed space axis names."""
@@ -83,11 +88,17 @@ class SpaceNames(str, Enum):
     y = "y"
     z = "z"
 
+    @classmethod
+    def allowed_names(self) -> list[str]:
+        """Get the allowed space axis names."""
+        return list(SpaceNames.__members__.keys())
+
 
 class TimeUnits(str, Enum):
     """Allowed time units."""
 
-    s = "seconds"
+    seconds = "seconds"
+    s = "s"
 
     def scaling(self) -> float:
         """Get the scaling factor of the time unit (relative to seconds)."""
@@ -99,11 +110,21 @@ class TimeUnits(str, Enum):
             raise ValueError(f"Unknown time unit: {self}")
         return scaling_factor
 
+    @classmethod
+    def allowed_names(self) -> list[str]:
+        """Get the allowed time axis names."""
+        return list(TimeUnits.__members__.keys())
+
 
 class TimeNames(str, Enum):
     """Allowed time axis names."""
 
     t = "t"
+
+    @classmethod
+    def allowed_names(self) -> list[str]:
+        """Get the allowed time axis names."""
+        return list(TimeNames.__members__.keys())
 
 
 class Axis(BaseModel):
@@ -128,16 +149,17 @@ class Axis(BaseModel):
                 raise ValueError("Channel axes must not have units.")
 
         if self.type == AxisType.time:
+            print(self)
             self.name = TimeNames(self.name)
             if not isinstance(self.unit, TimeUnits):
                 raise ValueError(
                     "Time axes must have time units."
-                    f" {self.unit} in {list(TimeUnits.__members__.keys())}"
+                    f" {self.unit} in {TimeUnits.allowed_names()}"
                 )
             if not isinstance(self.name, TimeNames):
                 raise ValueError(
                     f"Time axes must have time names. "
-                    f"{self.name} in {list(TimeNames.__members__.keys())}"
+                    f"{self.name} in {TimeNames.allowed_names()}"
                 )
 
         if self.type == AxisType.space:
@@ -145,12 +167,12 @@ class Axis(BaseModel):
             if not isinstance(self.unit, SpaceUnits):
                 raise ValueError(
                     "Space axes must have space units."
-                    f" {self.unit} in {list(SpaceUnits.__members__.keys())}"
+                    f" {self.unit} in {SpaceUnits.allowed_names()}"
                 )
             if not isinstance(self.name, SpaceNames):
                 raise ValueError(
                     f"Space axes must have space names. "
-                    f"{self.name} in {list(SpaceNames.__members__.keys())}"
+                    f"{self.name} in {SpaceNames.allowed_names()}"
                 )
         return self
 
