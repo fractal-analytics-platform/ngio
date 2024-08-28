@@ -105,12 +105,12 @@ jobs:
         id: coverage_comment
         uses: py-cov-action/python-coverage-comment-action@v3
         with:
-          GITHUB_TOKEN: ${{ github.token }}
-          MERGE_COVERAGE_FILES: true
-          MINIMUM_GREEN: 90
-          MINIMUM_ORANGE: 60
-          ANNOTATE_MISSING_LINES: true
-          ANNOTATION_TYPE: notice
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # MERGE_COVERAGE_FILES: true
+          # MINIMUM_GREEN: 90
+          # MINIMUM_ORANGE: 60
+          # ANNOTATE_MISSING_LINES: true
+          # ANNOTATION_TYPE: notice
 
   deploy:
     name: Deploy
