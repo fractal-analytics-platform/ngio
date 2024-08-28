@@ -4,7 +4,7 @@
 [![PyPI](https://img.shields.io/pypi/v/ngio.svg?color=green)](https://pypi.org/project/ngio)
 [![Python Version](https://img.shields.io/pypi/pyversions/ngio.svg?color=green)](https://python.org)
 [![CI](https://github.com/lorenzocerrone/ngio/actions/workflows/ci.yml/badge.svg)](https://github.com/lorenzocerrone/ngio/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/lorenzocerrone/ngio/graph/badge.svg?token=ELJ6CFL0K4)](https://codecov.io/gh/lorenzocerrone/ngio)
+[![codecov](https://codecov.io/gh/lorenzocerrone/ngio/branch/main/graph/badge.svg?token=ELJ6CFL0K4)](https://codecov.io/gh/lorenzocerrone/ngio)
 
 Next Generation file format IO
 
