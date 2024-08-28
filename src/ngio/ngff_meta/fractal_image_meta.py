@@ -3,7 +3,7 @@
 from enum import Enum
 from typing import Literal
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ngio.pydantic_utils import BaseWithExtraFields
 
@@ -60,7 +60,20 @@ class SpaceUnits(str, Enum):
     """Allowed space units."""
 
     micrometer = "micrometer"
+    um = "um"
     nanometer = "nanometer"
+
+    def scaling(self) -> float:
+        """Get the scaling factor of the space unit (relative to micrometer)."""
+        table = {
+            SpaceUnits.micrometer: 1.0,
+            SpaceUnits.um: 1.0,
+            SpaceUnits.nanometer: 1000.0,
+        }
+        scaling_factor = table.get(self, None)
+        if scaling_factor is None:
+            raise ValueError(f"Unknown space unit: {self}")
+        return scaling_factor
 
 
 class SpaceNames(str, Enum):
@@ -75,6 +88,16 @@ class TimeUnits(str, Enum):
     """Allowed time units."""
 
     s = "seconds"
+
+    def scaling(self) -> float:
+        """Get the scaling factor of the time unit (relative to seconds)."""
+        table = {
+            TimeUnits.s: 1.0,
+        }
+        scaling_factor = table.get(self, None)
+        if scaling_factor is None:
+            raise ValueError(f"Unknown time unit: {self}")
+        return scaling_factor
 
 
 class TimeNames(str, Enum):
@@ -93,9 +116,43 @@ class Axis(BaseModel):
         It can be a space unit or a time unit. Channel axes do not have units.
     """
 
-    name: str
+    name: str | TimeNames | SpaceNames
     type: AxisType
     unit: SpaceUnits | TimeUnits | None = None
+
+    @model_validator(mode="after")
+    def _check_consistency(self) -> "Axis":
+        """Check the consistency of the axis type and unit."""
+        if self.type == AxisType.channel:
+            if self.unit is not None:
+                raise ValueError("Channel axes must not have units.")
+
+        if self.type == AxisType.time:
+            self.name = TimeNames(self.name)
+            if not isinstance(self.unit, TimeUnits):
+                raise ValueError(
+                    "Time axes must have time units."
+                    f" {self.unit} in {list(TimeUnits.__members__.keys())}"
+                )
+            if not isinstance(self.name, TimeNames):
+                raise ValueError(
+                    f"Time axes must have time names. "
+                    f"{self.name} in {list(TimeNames.__members__.keys())}"
+                )
+
+        if self.type == AxisType.space:
+            self.name = SpaceNames(self.name)
+            if not isinstance(self.unit, SpaceUnits):
+                raise ValueError(
+                    "Space axes must have space units."
+                    f" {self.unit} in {list(SpaceUnits.__members__.keys())}"
+                )
+            if not isinstance(self.name, SpaceNames):
+                raise ValueError(
+                    f"Space axes must have space names. "
+                    f"{self.name} in {list(SpaceNames.__members__.keys())}"
+                )
+        return self
 
 
 class ScaleCoordinateTransformation(BaseModel):
@@ -137,6 +194,7 @@ class Dataset(BaseModel):
 
         - Exactly one scale transformation is required.
         - At most one translation transformation is allowed.
+        - The scale and translation transformations must have the same length.
         """
         num_scale = sum(
             1 for item in v if isinstance(item, ScaleCoordinateTransformation)
@@ -149,6 +207,22 @@ class Dataset(BaseModel):
         )
         if num_translation > 1:
             raise ValueError("At most one translation transformation is allowed.")
+
+        scale, translation = None, None
+        for transformation in v:
+            if isinstance(transformation, ScaleCoordinateTransformation):
+                scale = transformation.scale
+            elif isinstance(transformation, TranslationCoordinateTransformation):
+                translation = transformation.translation
+
+        if scale is None:
+            raise ValueError("Scale transformation not found.")
+
+        if translation is not None and len(translation) != len(scale):
+            raise ValueError(
+                "Inconsistent scale and translation transformations. "
+                "The scale and translation transformations must have the same length."
+            )
 
         return v
 
@@ -167,6 +241,73 @@ class Dataset(BaseModel):
             if isinstance(transformation, TranslationCoordinateTransformation):
                 return transformation.translation
         return None
+
+    def change_transforms(
+        self, scale: list[float] | None = None, translation: list[float] | None = None
+    ) -> "Dataset":
+        """Change the scale and translation transformations of the dataset."""
+        coordindateTransformations = []
+        for transformation in self.coordinateTransformations:
+            if (
+                isinstance(transformation, ScaleCoordinateTransformation)
+                and scale is not None
+            ):
+                coordindateTransformations.append(
+                    ScaleCoordinateTransformation(type="scale", scale=scale)
+                )
+
+            elif (
+                isinstance(transformation, TranslationCoordinateTransformation)
+                and translation is not None
+            ):
+                coordindateTransformations.append(
+                    TranslationCoordinateTransformation(
+                        type="translation", translation=translation
+                    )
+                )
+            else:
+                raise ValueError("Invalid transformation type.")
+
+        return Dataset(
+            path=self.path, coordinateTransformations=coordindateTransformations
+        )
+
+    def remove_axis(self, idx: int) -> "Dataset":
+        """Remove an axis from the scale transformation."""
+        if idx < 0:
+            raise ValueError(f"Axis index {idx} cannot be negative.")
+
+        if idx >= len(self.scale):
+            raise ValueError(f"Axis index {idx} out of range.")
+
+        new_scale = self.scale.copy()
+        new_scale.pop(idx)
+
+        if self.translation is not None:
+            new_translation = self.translation
+            new_translation.pop(idx)
+        else:
+            new_translation = None
+        return self.change_transforms(scale=new_scale, translation=new_translation)
+
+    def add_axis(
+        self, idx: int, scale: float = 1.0, translation: float = 0.0
+    ) -> "Dataset":
+        """Add an axis to the scale transformation."""
+        if idx < 0:
+            raise ValueError(f"Axis index {idx} cannot be negative.")
+        if idx > len(self.scale):
+            raise ValueError(f"Axis index {idx} out of range.")
+
+        new_scale = self.scale.copy()
+        new_scale.insert(idx, scale)
+
+        if self.translation is not None:
+            new_translation = self.translation
+            new_translation.insert(idx, translation)
+        else:
+            new_translation = None
+        return self.change_transforms(scale=new_scale, translation=new_translation)
 
 
 class Multiscale(BaseModel):
@@ -218,6 +359,87 @@ class Multiscale(BaseModel):
             raise ValueError("There can be at most one channel axis.")
         return v
 
+    @property
+    def num_levels(self) -> int:
+        """Number of levels in the multiscale."""
+        return len(self.datasets)
+
+    @property
+    def levels_paths(self) -> list[str]:
+        """Relative paths of the datasets in the multiscale."""
+        return [dataset.path for dataset in self.datasets]
+
+    @property
+    def axes_names(self) -> list[str]:
+        """List of axes names in the Image."""
+        return [ax.name for ax in self.axes]
+
+    def remove_axis(
+        self, *, idx: int | None = None, axis_name: str | None = None
+    ) -> "Multiscale":
+        """Remove an axis from the scale transformation of all datasets."""
+        if idx is None and axis_name is None:
+            raise ValueError("Either idx or axis_name must be provided.")
+
+        elif idx is not None and axis_name is not None:
+            raise ValueError("Only one of idx or axis_name must be provided.")
+
+        if axis_name is not None:
+            idx = [ax.name for ax in self.axes].index(axis_name)
+
+        if idx < 0:
+            raise ValueError(f"Axis index {idx} cannot be negative.")
+        if idx >= len(self.axes):
+            raise ValueError(f"Axis index {idx} out of range.")
+
+        new_axes = self.axes.copy()
+        new_axes.pop(idx)
+        datasets = [dataset.remove_axis(idx) for dataset in self.datasets]
+        return Multiscale(axes=new_axes, datasets=datasets)
+
+    def add_axis(
+        self,
+        *,
+        idx: int,
+        axis_name: str,
+        units: SpaceUnits | TimeUnits | str | None,
+        axis_type: AxisType | str,
+        scale: float | list[float] = 1.0,
+        translation: float | list[float] | None = None,
+    ) -> "Multiscale":
+        """Add an axis to the scale transformation of all datasets."""
+        if idx < 0:
+            raise ValueError(f"Axis index {idx} cannot be negative.")
+        if idx > len(self.axes):
+            raise ValueError(f"Axis index {idx} out of range.")
+
+        new_axes = self.axes.copy()
+        new_axes.insert(idx, Axis(name=axis_name, type=axis_type, unit=units))
+
+        if isinstance(scale, float):
+            scale = [scale] * self.num_levels
+
+        if isinstance(translation, float) or translation is None:
+            translation = [translation] * self.num_levels
+
+        if len(scale) != self.num_levels:
+            raise ValueError(
+                "Inconsistent scale transformation. "
+                "The scale transformation must have the same length."
+            )
+
+        if len(translation) != self.num_levels:
+            raise ValueError(
+                "Inconsistent translation transformation. "
+                "The translation transformation must have the same length."
+            )
+
+        new_datasets = []
+        for dataset, s, t in zip(self.datasets, scale, translation, strict=True):
+            new_datasets.append(dataset.add_axis(idx, s, t))
+
+        return Multiscale(axes=new_axes, datasets=new_datasets)
+
 
 class BaseFractalMeta(BaseModel):
     """Base class for FractalImageMeta and FractalLabelMeta.
@@ -235,7 +457,7 @@ class BaseFractalMeta(BaseModel):
     @property
     def num_levels(self) -> int:
         """Number of levels in the multiscale."""
-        return len(self.multiscale.datasets)
+        return self.multiscale.num_levels
 
     @property
     def multiscale_paths(self) -> list[str]:
@@ -263,14 +485,13 @@ class BaseFractalMeta(BaseModel):
             dataset = self.datasets_dict.get(level, None)
             if dataset is None:
                 raise ValueError(
-                    f"Dataset {level} not found. \
-                        Available datasets: {self.levels_paths}"
+                    f"Dataset {level} not found. "
+                    f"Available datasets: {self.levels_paths}"
                 )
         elif isinstance(level, int):
             if level >= self.num_levels:
                 raise ValueError(
-                    f"Level {level} not found. \
-                        Available levels: {self.num_levels}"
+                    f"Level {level} not found. Available levels: {self.num_levels}"
                 )
             dataset = self.datasets[level]
         else:
@@ -285,10 +506,7 @@ class BaseFractalMeta(BaseModel):
         pixel_sizes = []
         for ax in axis:
             if ax not in axes_names:
-                raise ValueError(
-                    f"Axis {ax} not found. \
-                        Available axes: {axes_names}"
-                )
+                raise ValueError(f"Axis {ax} not found. Available axes: {axes_names}")
             idx = axes_names.index(ax)
             pixel_sizes.append(dataset.scale[idx])
         return pixel_sizes
@@ -316,7 +534,15 @@ class FractalImageMeta(BaseFractalMeta):
     def get_channel_names(self) -> list[str]:
         """Get the names of the channels."""
         if self.omero is None:
-            return []
+            # check if a channel axis exists in the multiscale axes
+            channel_axes = [ax for ax in self.axes if ax.type == AxisType.channel]
+            if len(channel_axes) == 0:
+                raise ValueError("Image does not have channel axes.")
+
+            raise ValueError(
+                "OMERO metadata not found. Channel names are not available."
+            )
+
         return [channel.label for channel in self.omero.channels]
 
     def get_channel_idx_by_label(self, label: str) -> int:
@@ -331,6 +557,53 @@ class FractalImageMeta(BaseFractalMeta):
             raise ValueError("OMERO metadata not found.")
         return self.omero.get_idx_by_wavelength_id(wavelength_id)
 
+    def remove_axis(
+        self, *, idx: int | None = None, axis_name: str | None = None
+    ) -> "FractalImageMeta":
+        """Remove an axis from the scale transformation of all datasets."""
+        multiscale = self.multiscale.remove_axis(idx=idx, axis_name=axis_name)
+
+        # Check if channel axis exists in the multiscale axes
+        channel_axes = [ax for ax in multiscale.axes if ax.type == AxisType.channel]
+        if len(channel_axes) == 0:
+            # Remove the channel axis from the OMERO metadata
+            omero = None
+        else:
+            omero = self.omero
+
+        return FractalImageMeta(
+            version=self.version,
+            multiscale=multiscale,
+            name=self.name,
+            omero=omero,
+        )
+
+    def add_axis(
+        self,
+        *,
+        idx: int,
+        axis_name: str,
+        units: SpaceUnits | TimeUnits | str | None,
+        axis_type: AxisType | str,
+        scale: float | list[float] = 1.0,
+        translation: float | list[float] | None = None,
+    ) -> "FractalImageMeta":
+        """Add an axis to the scale transformation of all datasets."""
+        multiscale = self.multiscale.add_axis(
+            idx=idx,
+            axis_name=axis_name,
+            units=units,
+            axis_type=axis_type,
+            scale=scale,
+            translation=translation,
+        )
+        return FractalImageMeta(
+            version=self.version,
+            multiscale=multiscale,
+            name=self.name,
+            omero=self.omero,
+        )
+
 
 class FractalLabelMeta(BaseFractalMeta):
     """Fractal label metadata model.
@@ -341,7 +614,42 @@ class FractalLabelMeta(BaseFractalMeta):
         name(str | None): The name of ngff image.
     """
 
-    pass
+    def remove_axis(
+        self, *, idx: int | None = None, axis_name: str | None = None
+    ) -> "FractalLabelMeta":
+        """Remove an axis from the scale transformation of all datasets."""
+        multiscale = self.multiscale.remove_axis(idx=idx, axis_name=axis_name)
+        return FractalLabelMeta(
+            version=self.version,
+            multiscale=multiscale,
+            name=self.name,
+        )
+
+    def add_axis(
+        self,
+        *,
+        idx: int,
+        axis_name: str,
+        units: SpaceUnits | TimeUnits | str | None,
+        axis_type: AxisType | str,
+        scale: float | list[float] = 1.0,
+        translation: float | list[float] | None = None,
+    ) -> "FractalLabelMeta":
+        """Add an axis to the scale transformation of all datasets."""
+        multiscale = self.multiscale.add_axis(
+            idx=idx,
+            axis_name=axis_name,
+            units=units,
+            axis_type=axis_type,
+            scale=scale,
+            translation=translation,
+        )
+
+        return FractalLabelMeta(
+            version=self.version,
+            multiscale=multiscale,
+            name=self.name,
+        )
 
 
 FractalImageLabelMeta = FractalImageMeta | FractalLabelMeta

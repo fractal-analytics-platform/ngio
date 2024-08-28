@@ -1,3 +1,5 @@
+"""Utility functions for creating and modifying metadata."""
+
 from ngio.ngff_meta.fractal_image_meta import (
     FractalImageMeta,
     FractalLabelMeta,
