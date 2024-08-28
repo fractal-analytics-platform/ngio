@@ -50,6 +50,8 @@ jobs:
           python -m pip install -U pip
           # if running a cron job, we add the --pre flag to test against pre-releases
           python -m pip install .[test] ${{ github.event_name == 'schedule' && '--pre' || ''  }}
+
+          # To be removed when zarr 3.0 is released
           python -m pip install git+https://github.com/zarr-developers/zarr-python.git
 
       - name: 🧪 Run Tests
