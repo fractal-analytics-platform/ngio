@@ -6,5 +6,4 @@
 [![CI](https://github.com/lorenzocerrone/ngio/actions/workflows/ci.yml/badge.svg)](https://github.com/lorenzocerrone/ngio/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/lorenzocerrone/ngio/branch/main/graph/badge.svg?token=ELJ6CFL0K4)](https://codecov.io/gh/lorenzocerrone/ngio)
 
-Next Generation file format IO
-test 
+Next Generation file format IO 
