@@ -1,5 +1,3 @@
-"""Collection of helper functions to work with Zarr groups."""
-
 from pathlib import Path
 from typing import Literal
 
@@ -31,12 +29,12 @@ def _open_group(
                 f"Path {store.root} does not exist. Cannot open group."
             )
 
-        if store.mode == "r" and mode == "r+":
+        if store.mode.readonly and mode == "r+":
             raise PermissionError(
                 "Store is opened in read-only mode. Cannot open be edited."
             )
 
-        elif store.mode == "r+" and mode == "r":
+        elif store.mode.update and mode == "r":
             # Reopen the store in read only mode to avoid failing in the zarr.open_group
             store = zarr.store.LocalStore(str(store.root), mode="r")
 

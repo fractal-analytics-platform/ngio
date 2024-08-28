@@ -30,10 +30,31 @@ def local_zarr_path_v3(tmpdir) -> tuple[Path, int]:
     return zarr_path, 3
 
 
+@fixture
+def local_zarr_str_v2(tmpdir) -> tuple[str, int]:
+    zarr_path = _create_zarr(tmpdir, zarr_format=2)
+    return str(zarr_path.absolute()), 2
+
+
+@fixture
+def local_zarr_str_v3(tmpdir) -> tuple[Path, int]:
+    zarr_path = _create_zarr(tmpdir, zarr_format=3)
+    return str(zarr_path.absolute()), 3
+
+
+@fixture
+def local_zarr_store_v2(tmpdir) -> zarr.store.LocalStore:
+    zarr_path = _create_zarr(tmpdir, zarr_format=2)
+    return zarr.store.LocalStore(zarr_path, mode="r+"), 2
+
+
 @fixture(
     params=[
         "local_zarr_path_v2",
         "local_zarr_path_v3",
+        "local_zarr_str_v2",
+        "local_zarr_str_v3",
+        "local_zarr_store_v2",
     ]
 )
 def store_fixture(request):
