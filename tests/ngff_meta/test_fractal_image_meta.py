@@ -60,7 +60,6 @@ class TestOMEZarrHandlerV04:
 
     def test_modify_axis_from_label_metadata(self, ome_zarr_label_v04_path):
         from ngio.ngff_meta import get_ngff_image_meta_handler
-        from ngio.ngff_meta.utils import add_axis_to_metadata, remove_axis_from_metadata
 
         handler = get_ngff_image_meta_handler(
             store=ome_zarr_label_v04_path, meta_mode="label"
