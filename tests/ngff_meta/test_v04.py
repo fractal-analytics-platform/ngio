@@ -7,7 +7,7 @@ class TestOMEZarrHandlerV04:
         from ngio.ngff_meta import get_ngff_image_meta_handler
 
         handler = get_ngff_image_meta_handler(
-            zarr_path=ome_zarr_image_v04_path, meta_mode="image"
+            store=ome_zarr_image_v04_path, meta_mode="image"
         )
 
         meta = handler.load_meta()
@@ -24,7 +24,7 @@ class TestOMEZarrHandlerV04:
         from ngio.ngff_meta import get_ngff_image_meta_handler
 
         handler = get_ngff_image_meta_handler(
-            zarr_path=ome_zarr_image_v04_path, meta_mode="image", cache=True
+            store=ome_zarr_image_v04_path, meta_mode="image", cache=True
         )
 
         meta = handler.load_meta()

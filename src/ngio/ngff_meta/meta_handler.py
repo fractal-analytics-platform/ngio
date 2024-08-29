@@ -2,6 +2,8 @@
 
 from typing import Literal, Protocol
 
+from zarr.store.common import StoreLike
+
 from ngio.ngff_meta.fractal_image_meta import FractalImageLabelMeta
 from ngio.ngff_meta.v04.zarr_utils import (
     NgffImageMetaZarrHandlerV04,
@@ -12,7 +14,10 @@ class NgffImageMetaHandler(Protocol):
     """Handler for NGFF image metadata."""
 
     def __init__(
-        self, zarr_path: str, meta_mode: Literal["image", "label"], cache: bool = False
+        self,
+        store: StoreLike,
+        meta_mode: Literal["image", "label"],
+        cache: bool = False,
     ):
         """Initialize the handler."""
         ...
@@ -39,10 +44,10 @@ _available_load_ngff_image_meta_handlers = {
 }
 
 
-def find_ngff_image_meta_handler_version(zarr_path: str) -> str:
+def find_ngff_image_meta_handler_version(store: StoreLike) -> str:
     """Find the version of the NGFF image metadata."""
     for version, handler in _available_load_ngff_image_meta_handlers.items():
-        if handler.check_version(zarr_path):
+        if handler.check_version(store=store):
             return version
 
     supported_versions = ", ".join(_available_load_ngff_image_meta_handlers.keys())
@@ -53,9 +58,9 @@ def find_ngff_image_meta_handler_version(zarr_path: str) -> str:
 
 
 def get_ngff_image_meta_handler(
-    zarr_path: str, meta_mode: Literal["image", "label"], cache: bool = False
+    store: StoreLike, meta_mode: Literal["image", "label"], cache: bool = False
 ) -> NgffImageMetaHandler:
     """Load the NGFF image metadata handler."""
-    version = find_ngff_image_meta_handler_version(zarr_path)
+    version = find_ngff_image_meta_handler_version(store)
     handler = _available_load_ngff_image_meta_handlers[version]
-    return handler(zarr_path, meta_mode=meta_mode, cache=cache)
+    return handler(store=store, meta_mode=meta_mode, cache=cache)

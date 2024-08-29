@@ -2,6 +2,8 @@
 
 from typing import Literal
 
+from zarr.store.common import StoreLike
+
 from ngio.io import read_group_attrs, update_group_attrs
 from ngio.ngff_meta.fractal_image_meta import (
     Axis,
@@ -26,9 +28,9 @@ from ngio.ngff_meta.v04.specs import (
 )
 
 
-def check_ngff_image_meta_v04(zarr_path: str) -> bool:
+def check_ngff_image_meta_v04(store: StoreLike) -> bool:
     """Check if a Zarr Group contains the OME-NGFF v0.4."""
-    group = read_group_attrs(store=zarr_path, zarr_format=2)
+    group = read_group_attrs(store=store, zarr_format=2)
     multiscales = group.get("multiscales", None)
     if multiscales is None:
         return False
@@ -46,9 +48,9 @@ def check_ngff_image_meta_v04(zarr_path: str) -> bool:
     return version == "0.4"
 
 
-def load_vanilla_ngff_image_meta_v04(zarr_path: str) -> NgffImageMeta04:
+def load_vanilla_ngff_image_meta_v04(store: StoreLike) -> NgffImageMeta04:
     """Load the OME-NGFF 0.4 image meta model."""
-    attrs = read_group_attrs(store=zarr_path, zarr_format=2)
+    attrs = read_group_attrs(store=store, zarr_format=2)
     return NgffImageMeta04(**attrs)
 
 
@@ -93,7 +95,7 @@ def _transform_dataset(
                             "Inconsistent scale transformation. \
                             The scale transformation must have the same length."
                         )
-                    scale = [s * ts for s, ts in zip(scale, top_scale)]
+                    scale = [s * ts for s, ts in zip(scale, top_scale, strict=True)]
                 fractal_transformation.append(
                     ScaleCoordinateTransformation(
                         type=transformation.type,
@@ -169,25 +171,25 @@ def fractal_ngff_image_meta_to_vanilla_v04(
     )
 
 
-def load_ngff_image_meta_v04(zarr_path: str) -> FractalImageLabelMeta:
+def load_ngff_image_meta_v04(store: StoreLike) -> FractalImageLabelMeta:
     """Load the OME-NGFF 0.4 image meta model."""
-    if not check_ngff_image_meta_v04(zarr_path=zarr_path):
+    if not check_ngff_image_meta_v04(store=store):
         raise ValueError(
             "The Zarr store does not contain the correct OME-Zarr version."
         )
-    meta04 = load_vanilla_ngff_image_meta_v04(zarr_path=zarr_path)
+    meta04 = load_vanilla_ngff_image_meta_v04(store=store)
     return vanilla_ngff_image_meta_v04_to_fractal(meta04=meta04)
 
 
-def write_ngff_image_meta_v04(zarr_path: str, meta: FractalImageLabelMeta) -> None:
+def write_ngff_image_meta_v04(store: StoreLike, meta: FractalImageLabelMeta) -> None:
     """Write the OME-NGFF 0.4 image meta model."""
-    if not check_ngff_image_meta_v04(zarr_path=zarr_path):
+    if not check_ngff_image_meta_v04(store=store):
         raise ValueError(
             "The Zarr store does not contain the correct OME-Zarr version."
         )
     meta04 = fractal_ngff_image_meta_to_vanilla_v04(meta=meta)
     update_group_attrs(
-        store=zarr_path, attrs=meta04.model_dump(exclude_none=True), zarr_format=2
+        store=store, attrs=meta04.model_dump(exclude_none=True), zarr_format=2
     )
 
 
@@ -195,29 +197,32 @@ class NgffImageMetaZarrHandlerV04:
     """Class for loading and writing OME-NGFF 0.4 metadata."""
 
     def __init__(
-        self, zarr_path: str, meta_mode: Literal["image", "label"], cache: bool = False
+        self,
+        store: StoreLike,
+        meta_mode: Literal["image", "label"],
+        cache: bool = False,
     ):
         """Initialize the handler."""
-        self.zarr_path = zarr_path
+        self.store = store
         self.meta_mode = meta_mode
         self.cache = cache
         self._meta = None
 
-        if not self.check_version(zarr_path):
+        if not self.check_version(store=store):
             raise ValueError("The Zarr store does not contain the correct version.")
 
     def load_meta(self) -> FractalImageLabelMeta:
         """Load the OME-NGFF 0.4 metadata."""
         if self.cache:
             if self._meta is None:
-                self._meta = load_ngff_image_meta_v04(self.zarr_path)
+                self._meta = load_ngff_image_meta_v04(self.store)
             return self._meta
 
-        return load_ngff_image_meta_v04(self.zarr_path)
+        return load_ngff_image_meta_v04(self.store)
 
     def write_meta(self, meta: FractalImageLabelMeta) -> None:
         """Write the OME-NGFF 0.4 metadata."""
-        write_ngff_image_meta_v04(self.zarr_path, meta)
+        write_ngff_image_meta_v04(store=self.store, meta=meta)
 
         if self.cache:
             self.update_cache(meta)
@@ -233,6 +238,6 @@ class NgffImageMetaZarrHandlerV04:
         self._meta = None
 
     @staticmethod
-    def check_version(zarr_path: str) -> bool:
+    def check_version(store: StoreLike) -> bool:
         """Check if the Zarr store contains the correct version."""
-        return check_ngff_image_meta_v04(zarr_path)
+        return check_ngff_image_meta_v04(store=store)
