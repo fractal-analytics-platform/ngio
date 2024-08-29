@@ -22,11 +22,10 @@ class TestUtils:
         )
 
         assert meta.get_channel_names() == ["DAPI", "nanog", "Lamin B1"]
-        assert meta.pixel_size(level=0) == [1.0, 1.0, 1.0]
-        assert meta.scale(level=0) == [1.0, 1.0, 1.0, 1.0, 1.0]
-
-        assert meta.pixel_size(level="2") == [1.0, 4.0, 4.0]
-        assert meta.scale(level="2") == [1.0, 1.0, 1.0, 4.0, 4.0]
+        np.testing.assert_array_equal(meta.pixel_size(level=0), [1.0, 1.0, 1.0])
+        np.testing.assert_array_equal(meta.scale(level=0), [1.0, 1.0, 1.0, 1.0, 1.0])
+        np.testing.assert_array_equal(meta.pixel_size(level="2"), [1.0, 4.0, 4.0])
+        np.testing.assert_array_equal(meta.scale(level="2"), [1.0, 1.0, 1.0, 4.0, 4.0])
 
         assert meta.num_levels == 5
 
@@ -50,11 +49,10 @@ class TestUtils:
         )
 
         assert meta.get_channel_names() == ["DAPI", "nanog", "Lamin B1"]
-        assert meta.pixel_size(level=0) == [1.0, 1.0, 1.0]
-        assert meta.scale(level=0) == [1.0, 1.0, 1.0, 1.0]
-
-        assert meta.pixel_size(level="2") == [1.0, 4.0, 4.0]
-        assert meta.scale(level="2") == [1.0, 1.0, 4.0, 4.0]
+        np.testing.assert_array_equal(meta.pixel_size(level=0), [1.0, 1.0, 1.0])
+        np.testing.assert_array_equal(meta.scale(level=0), [1.0, 1.0, 1.0, 1.0])
+        np.testing.assert_array_equal(meta.pixel_size(level="2"), [1.0, 4.0, 4.0])
+        np.testing.assert_array_equal(meta.scale(level="2"), [1.0, 1.0, 4.0, 4.0])
 
         assert meta.num_levels == 5
 
@@ -73,10 +71,9 @@ class TestUtils:
             version="0.4",
         )
 
-        assert meta.pixel_size(level=0) == [1.0, 1.0, 1.0]
-        assert meta.scale(level=0) == [1.0, 1.0, 1.0, 1.0]
-
-        assert meta.pixel_size(level="2") == [1.0, 4.0, 4.0]
-        assert meta.scale(level="2") == [1.0, 1.0, 4.0, 4.0]
+        np.testing.assert_array_equal(meta.pixel_size(level=0), [1.0, 1.0, 1.0])
+        np.testing.assert_array_equal(meta.scale(level=0), [1.0, 1.0, 1.0, 1.0])
+        np.testing.assert_array_equal(meta.pixel_size(level="2"), [1.0, 4.0, 4.0])
+        np.testing.assert_array_equal(meta.scale(level="2"), [1.0, 1.0, 4.0, 4.0])
 
         assert meta.num_levels == 5
