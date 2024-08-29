@@ -128,22 +128,6 @@ minversion = "7.0"
 testpaths = ["tests"]
 filterwarnings = ["error"]
 
-# https://coverage.readthedocs.io/
-[tool.coverage.report]
-show_missing = true
-exclude_lines = [
-    "pragma: no cover",
-    "if TYPE_CHECKING:",
-    "@overload",
-    "except ImportError",
-    "\\.\\.\\.",
-    "raise NotImplementedError()",
-    "pass",
-]
-
-[tool.coverage.run]
-source = ["ngio"]
-
 # https://github.com/mgedmin/check-manifest#configuration
 # add files that you want check-manifest to explicitly ignore here
 # (files that are in the repo but shouldn't go in the package)
