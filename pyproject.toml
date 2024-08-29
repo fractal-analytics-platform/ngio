@@ -134,6 +134,19 @@ addopts = [
     "--cov-report=xml",
     ]
 
+# https://coverage.readthedocs.io/
+[tool.coverage.report]
+show_missing = true
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "@overload",
+    "except ImportError",
+    "\\.\\.\\.",
+    "raise NotImplementedError()",
+    "pass",
+]
+
 [tool.coverage.run]
 source = ["ngio"]
 
