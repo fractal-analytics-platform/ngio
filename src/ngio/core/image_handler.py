@@ -1,23 +1,24 @@
-from zarr.store.common import StoreLike
+"""A module to handle OME-NGFF images stored in Zarr format."""
 
-from ngio.ngff_meta import (
-    FractalImageMeta,
-    get_ngff_image_meta_handler,
-)
+from ngio.core.image_like_handler import ImageLikeHandler
 
 
-class ImageHandler:
+class ImageHandler(ImageLikeHandler):
     """A class to handle OME-NGFF images stored in Zarr format.
 
     This class provides methods to access image data and ROI tables.
     """
 
-    def __init__(
-        self,
-        store: StoreLike,
-        *,
-        level: int | str | None = None,
-        pixel_size: tuple[float, ...] | list[float] | None = None,
-    ) -> None:
-        """Initialize the MultiscaleHandler in read mode."""
-        pass
+    def get_channel_names(self) -> list[str]:
+        """Return the names of the channels in the image."""
+        return self.metadata.get_channel_names()
+
+    def get_channel_idx_by_label(self, label: str) -> int:
+        """Return the index of the channel with the given label."""
+        return self.metadata.get_channel_idx_by_label(label=label)
+
+    def get_channel_idx_by_wavelength_id(self, wavelength_id: int) -> int:
+        """Return the index of the channel with the given wavelength id."""
+        return self.metadata.get_channel_idx_by_wavelength_id(
+            wavelength_id=wavelength_id
+        )
