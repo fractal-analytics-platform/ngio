@@ -1,10 +1,11 @@
 """Fractal image metadata models."""
 
 from enum import Enum
-from typing import Literal, Self
+from typing import Literal
 
 import numpy as np
 from pydantic import BaseModel, Field, field_validator, model_validator
+from typing_extensions import Self
 
 from ngio.pydantic_utils import BaseWithExtraFields
 
