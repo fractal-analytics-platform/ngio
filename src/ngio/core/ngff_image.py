@@ -1,11 +1,13 @@
 """Abstract class for handling OME-NGFF images."""
 
-from typing import Protocol
+from typing import Protocol, TypeAlias
 
 from zarr.store.common import StoreLike
 
+T = TypeAlias("T")
 
-class HandlerProtocol(Protocol):
+
+class HandlerProtocol[T](Protocol):
     """Basic protocol that all handlers should implement."""
 
     def __init__(
@@ -25,7 +27,7 @@ class HandlerProtocol(Protocol):
         """
         ...
 
-    def get(self, name: str):
+    def get(self, name: str) -> T:
         """Get an item from the store.
 
         Args:
@@ -36,7 +38,7 @@ class HandlerProtocol(Protocol):
         """
         ...
 
-    def create(self, name: str, data) -> None:
+    def write(self, name: str, data) -> None:
         """Create an item in the store.
 
         Args:
