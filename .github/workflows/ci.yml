@@ -55,7 +55,7 @@ jobs:
           python -m pip install git+https://github.com/zarr-developers/zarr-python.git
 
       - name: 🧪 Run Tests
-        run: pytest --color=yes --cov=src/ngio --cov-report=term-missing --cov-report=xml
+        run: pytest
 
       # If something goes wrong with --pre tests, we can open an issue in the repo
       - name: 📝 Report --pre Failures
