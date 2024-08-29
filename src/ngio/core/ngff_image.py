@@ -1,13 +1,11 @@
-"""Handler protocol for all handlers to implement."""
+"""Abstract class for handling OME-NGFF images."""
 
-from typing import Protocol, TypeVar
+from typing import Protocol
 
 from zarr.store.common import StoreLike
 
-T = TypeVar("T")
 
-
-class HandlerProtocol[T](Protocol):
+class HandlerProtocol(Protocol):
     """Basic protocol that all handlers should implement."""
 
     def __init__(
@@ -27,7 +25,7 @@ class HandlerProtocol[T](Protocol):
         """
         ...
 
-    def get(self, name: str) -> T:
+    def get(self, name: str):
         """Get an item from the store.
 
         Args:
@@ -38,7 +36,7 @@ class HandlerProtocol[T](Protocol):
         """
         ...
 
-    def create(self, name: str, data: T) -> None:
+    def create(self, name: str, data) -> None:
         """Create an item in the store.
 
         Args:
@@ -46,3 +44,13 @@ class HandlerProtocol[T](Protocol):
             data (T): The item to create.
         """
         ...
+
+
+class NgffImage:
+    """A class to handle OME-NGFF images."""
+
+    def __init__(self, store: StoreLike) -> None:
+        """Initialize the NGFFImage in read mode."""
+        # Image Handler
+        self.labels: HandlerProtocol | None = None
+        self.tables: HandlerProtocol | None = None
