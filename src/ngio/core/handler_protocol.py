@@ -1,10 +1,10 @@
 """Handler protocol for all handlers to implement."""
 
-from typing import Protocol, TypeAlias
+from typing import Protocol, TypeVar
 
 from zarr.store.common import StoreLike
 
-T = TypeAlias["T"]
+T = TypeVar("T")
 
 
 class HandlerProtocol[T](Protocol):
