@@ -1,10 +1,10 @@
 """Abstract class for handling OME-NGFF images."""
 
-from typing import Protocol, TypeAlias
+from typing import Protocol, TypeVar
 
 from zarr.store.common import StoreLike
 
-T = TypeAlias("T")
+T = TypeVar("T")
 
 
 class HandlerProtocol[T](Protocol):
@@ -38,7 +38,7 @@ class HandlerProtocol[T](Protocol):
         """
         ...
 
-    def write(self, name: str, data) -> None:
+    def write(self, name: str, data: T) -> None:
         """Create an item in the store.
 
         Args:
