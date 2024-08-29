@@ -136,10 +136,6 @@ addopts = [
 
 [tool.coverage.run]
 source = ["ngio"]
-omit = [
-    "src/ngio/core/handler_protocol.py", # This is file only contains a protocol definition
-    "src/ngio/ngff_meta/_meta_handler_protocol.py", # This is file only contains a protocol definition
-    ]
 
 # https://github.com/mgedmin/check-manifest#configuration
 # add files that you want check-manifest to explicitly ignore here
