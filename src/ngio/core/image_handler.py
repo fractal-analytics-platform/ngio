@@ -1,6 +1,7 @@
+from zarr.store.common import StoreLike
+
 from ngio.ngff_meta import (
     FractalImageMeta,
-    NgffImageMetaHandler,
     get_ngff_image_meta_handler,
 )
 
@@ -11,6 +12,12 @@ class ImageHandler:
     This class provides methods to access image data and ROI tables.
     """
 
-    def __init__(self, zarr_url: str, path: str | None = None, level: int = 0) -> None:
+    def __init__(
+        self,
+        store: StoreLike,
+        *,
+        level: int | str | None = None,
+        pixel_size: tuple[float, ...] | list[float] | None = None,
+    ) -> None:
         """Initialize the MultiscaleHandler in read mode."""
-        self._metadata_handler = get_ngff_image_meta_handler(zarr_url, path, level)
+        pass

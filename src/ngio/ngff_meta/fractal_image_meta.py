@@ -3,6 +3,7 @@
 from enum import Enum
 from typing import Literal
 
+import numpy as np
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ngio.pydantic_utils import BaseWithExtraFields
@@ -402,6 +403,24 @@ class Multiscale(BaseModel):
                 names.append(ax.name.value)
         return names
 
+    @property
+    def datasets_dict(self) -> dict[str, Dataset]:
+        """Dictionary of datasets in the multiscale indexed by path."""
+        return {dataset.path: dataset for dataset in self.datasets}
+
+    def pixel_size(self, level_path: int | str = 0, axis: str = "zyx") -> list[float]:
+        """Get the pixel size of the dataset at the specified level."""
+        dataset = self.get_dataset(level_path)
+
+        axes_names = [ax.name for ax in self.axes]
+        pixel_sizes = []
+        for ax in axis:
+            if ax not in axes_names:
+                raise ValueError(f"Axis {ax} not found. Available axes: {axes_names}")
+            idx = axes_names.index(ax)
+            pixel_sizes.append(dataset.scale[idx])
+        return pixel_sizes
+
     def remove_axis(
         self, *, idx: int | None = None, axis_name: str | None = None
     ) -> "Multiscale":
@@ -424,6 +443,65 @@ class Multiscale(BaseModel):
         new_axes.pop(idx)
         datasets = [dataset.remove_axis(idx) for dataset in self.datasets]
         return Multiscale(axes=new_axes, datasets=datasets)
+
+    def get_dataset(self, level_path: int | str = 0) -> Dataset:
+        """Get the dataset at the specified level (index or path)."""
+        if isinstance(level_path, str):
+            dataset = self.datasets_dict.get(level_path, None)
+            if dataset is None:
+                raise ValueError(
+                    f"Dataset {level_path} not found. "
+                    f"Available datasets: {self.levels_paths}"
+                )
+        elif isinstance(level_path, int):
+            if level_path >= self.num_levels:
+                raise ValueError(
+                    f"Level {level_path} not found. Available levels: {self.num_levels}"
+                )
+            dataset = self.datasets[level_path]
+        else:
+            raise TypeError("Level must be an integer or a string.")
+        return dataset
+
+    def get_dataset_from_pixel_size(
+        self, pixel_size: list[float], strict: bool = True
+    ) -> Dataset:
+        """Get the dataset with the specified pixel size."""
+        closest_dataset = self.datasets[0]
+        min_distance = float("inf")
+        for dataset in self.datasets:
+            current_pixel_size = self.pixel_size(dataset.path)
+            if len(current_pixel_size) != len(pixel_size):
+                raise ValueError(
+                    "Inconsistent scale transformation. "
+                    "The scale transformation must have the same length."
+                )
+
+            distance = np.linalg.norm(
+                np.array(current_pixel_size) - np.array(pixel_size)
+            )
+            if distance < min_distance:
+                closest_dataset = dataset
+                min_distance = distance
+
+        if strict and min_distance > 1e-6:
+            raise ValueError(
+                f"Dataset with pixel size {pixel_size} not found. "
+                f"Closest pixel size: {closest_dataset.scale}"
+            )
+        return closest_dataset
+
+    def get_highest_resolution_dataset(self) -> Dataset:
+        """Get the dataset with the highest resolution."""
+        highest_resolution = float("inf")
+        highest_resolution_dataset = self.datasets[0]
+        for dataset in self.datasets:
+            resolution = np.prod(dataset.scale)
+            if resolution < highest_resolution:
+                highest_resolution = resolution
+                highest_resolution_dataset = dataset
+
+        return highest_resolution_dataset
 
     def add_axis(
         self,
@@ -488,7 +566,7 @@ class BaseFractalMeta(BaseModel):
         return self.multiscale.num_levels
 
     @property
-    def multiscale_paths(self) -> list[str]:
+    def list_paths(self) -> list[str]:
         """Relative paths of the datasets in the multiscale."""
         return [dataset.path for dataset in self.multiscale.datasets]
 
@@ -508,32 +586,19 @@ class BaseFractalMeta(BaseModel):
         return self.multiscale.datasets
 
     @property
-    def datasets_dict(self):
+    def datasets_dict(self) -> dict[str, Dataset]:
         """Dictionary of datasets in the multiscale indexed by path."""
-        return {dataset.path: dataset for dataset in self.datasets}
+        return self.multiscale.datasets_dict
 
-    def get_dataset(self, level: int | str = 0) -> Dataset:
-        """Get the dataset at the specified level (index or path)."""
-        if isinstance(level, str):
-            dataset = self.datasets_dict.get(level, None)
-            if dataset is None:
-                raise ValueError(
-                    f"Dataset {level} not found. "
-                    f"Available datasets: {self.levels_paths}"
-                )
-        elif isinstance(level, int):
-            if level >= self.num_levels:
-                raise ValueError(
-                    f"Level {level} not found. Available levels: {self.num_levels}"
-                )
-            dataset = self.datasets[level]
-        else:
-            raise TypeError("Level must be an integer or a string.")
-        return dataset
-
-    def pixel_size(self, level: int | str = 0, axis: str = "zyx") -> list[float]:
+    def pixel_size(
+        self, level_path: int | str = 0, axis: str | None = None
+    ) -> list[float]:
         """Get the pixel size of the dataset at the specified level."""
-        dataset = self.get_dataset(level)
+        dataset = self.get_dataset(level_path)
+
+        if axis is None:
+            # Return the pixel size of all spatial axes
+            axis = [ax.name for ax in self.axes if ax.type == AxisType.space]
 
         axes_names = [ax.name for ax in self.axes]
         pixel_sizes = []
@@ -544,10 +609,30 @@ class BaseFractalMeta(BaseModel):
             pixel_sizes.append(dataset.scale[idx])
         return pixel_sizes
 
-    def scale(self, level: int | str = 0) -> list[float]:
+    def scale(self, level_path: int | str = 0) -> list[float]:
         """Get the scale transformation of the dataset at the specified level."""
-        dataset = self.get_dataset(level)
+        dataset = self.get_dataset(level_path)
         return dataset.scale
+
+    def get_dataset_from_pixel_size(
+        self, pixel_size: list[float], strict: bool = True
+    ) -> tuple[int, Dataset]:
+        """Get the dataset with the specified pixel size.
+
+        Args:
+            pixel_size(list[float]): The pixel size of the dataset.
+            strict(bool): If True, raise an error if the pixel size is not found.
+
+        """
+        return self.multiscale.get_dataset_from_pixel_size(pixel_size, strict)
+
+    def get_dataset(self, level_path: int | str = 0) -> Dataset:
+        """Get the dataset at the specified level (index or path)."""
+        return self.multiscale.get_dataset(level_path)
+
+    def get_highest_resolution_dataset(self) -> Dataset:
+        """Get the dataset with the highest resolution."""
+        return self.multiscale.get_highest_resolution_dataset()
 
 
 class FractalImageMeta(BaseFractalMeta):
