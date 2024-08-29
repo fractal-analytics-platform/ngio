@@ -55,13 +55,7 @@ jobs:
           python -m pip install git+https://github.com/zarr-developers/zarr-python.git
 
       - name: 🧪 Run Tests
-        run: pytest
-
-      - name: Upload coverage data
-        uses: actions/upload-artifact@v3
-        with:
-          name: coverage-data
-          path: ".coverage*"
+        run: pytest --color=yes --cov=src/ngio --cov-report=term-missing --cov-report=xml
 
       # If something goes wrong with --pre tests, we can open an issue in the repo
       - name: 📝 Report --pre Failures
@@ -76,6 +70,7 @@ jobs:
         with:
           filename: .github/TEST_FAIL_TEMPLATE.md
           update_existing: true
+
       - name: Coverage
         uses: codecov/codecov-action@v3
         with:
