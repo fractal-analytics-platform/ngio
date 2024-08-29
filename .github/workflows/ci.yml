@@ -55,7 +55,7 @@ jobs:
           python -m pip install git+https://github.com/zarr-developers/zarr-python.git
 
       - name: 🧪 Run Tests
-        run: pytest --color=yes --cov --cov-report=xml --cov-report=term-missing
+        run: pytest
 
       - name: Upload coverage data
         uses: actions/upload-artifact@v3
