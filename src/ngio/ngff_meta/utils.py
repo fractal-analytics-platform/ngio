@@ -179,13 +179,13 @@ def remove_axis_from_metadata(
 
 
 def add_axis_to_metadata(
-    metadata: FractalImageMeta,
+    metadata: FractalImageMeta | FractalLabelMeta,
     idx: int,
     axis_name: str,
     units: str | None = None,
     axis_type: str = "channel",
     scale: float = 1.0,
-) -> FractalImageMeta:
+) -> FractalImageMeta | FractalLabelMeta:
     """Add an axis to the metadata."""
     return metadata.add_axis(
         idx=idx, axis_name=axis_name, units=units, axis_type=axis_type, scale=scale
