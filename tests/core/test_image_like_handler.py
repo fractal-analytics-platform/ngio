@@ -5,7 +5,7 @@ class TestImageLikeHandler:
         image_handler = ImageLikeHandler(store=ome_zarr_image_v04_path, level_path="0")
 
         assert image_handler.level_path == "0"
-        assert image_handler.pixel_size == [1.0, 0.1625, 0.1625]
+        assert image_handler.pixel_size.to_ordered_list() == [1.0, 0.1625, 0.1625]
         assert image_handler.axes_names == ["c", "z", "y", "x"]
 
     def test_ngff_image_from_pixel_size(self, ome_zarr_image_v04_path):

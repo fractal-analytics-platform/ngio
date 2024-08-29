@@ -2,10 +2,7 @@
 
 from zarr.store.common import StoreLike
 
-from ngio.ngff_meta import (
-    FractalImageMeta,
-    get_ngff_image_meta_handler,
-)
+from ngio.ngff_meta import FractalImageMeta, get_ngff_image_meta_handler, PixelSize
 
 
 class ImageLikeHandler:
@@ -60,6 +57,6 @@ class ImageLikeHandler:
         return self.metadata.axes_names
 
     @property
-    def pixel_size(self) -> tuple[float, float, float]:
+    def pixel_size(self) -> PixelSize:
         """Return the pixel resolution of the image."""
         return self.metadata.pixel_size(level_path=self.level_path)

@@ -1,7 +1,7 @@
 """Fractal image metadata models."""
 
 from enum import Enum
-from typing import Literal
+from typing import Literal, Self
 
 import numpy as np
 from pydantic import BaseModel, Field, field_validator, model_validator
@@ -60,21 +60,44 @@ class AxisType(str, Enum):
 class SpaceUnits(str, Enum):
     """Allowed space units."""
 
+    nanometer = "nanometer"
+    nm = "nm"
     micrometer = "micrometer"
     um = "um"
-    nanometer = "nanometer"
+    millimeter = "millimeter"
+    mm = "mm"
+    centimeter = "centimeter"
+    cm = "cm"
 
-    def scaling(self) -> float:
+    def _scaling_factor_to_um(self) -> float:
         """Get the scaling factor of the space unit (relative to micrometer)."""
         table = {
+            SpaceUnits.nanometer: 1000.0,
+            SpaceUnits.nm: 1000.0,
             SpaceUnits.micrometer: 1.0,
             SpaceUnits.um: 1.0,
-            SpaceUnits.nanometer: 1000.0,
+            SpaceUnits.millimeter: 1e-3,
+            SpaceUnits.mm: 1e-3,
+            SpaceUnits.centimeter: 1e-4,
+            SpaceUnits.cm: 1e-4,
         }
         scaling_factor = table.get(self, None)
         if scaling_factor is None:
             raise ValueError(f"Unknown space unit: {self}")
         return scaling_factor
+
+    def scaling_factor_to(self, unit: Self | str) -> float:
+        """Get the scaling factor to convert to another space unit.
+
+        Args:
+            unit(SpaceUnits | str): The target space unit.
+        """
+        if isinstance(unit, str):
+            unit = SpaceUnits(unit)
+        elif not isinstance(unit, SpaceUnits):
+            raise ValueError(f"Invalid unit type: {unit}")
+
+        return unit._scaling_factor_to_um() / self._scaling_factor_to_um()
 
     @classmethod
     def allowed_names(self) -> list[str]:
@@ -93,6 +116,71 @@ class SpaceNames(str, Enum):
     def allowed_names(self) -> list[str]:
         """Get the allowed space axis names."""
         return list(SpaceNames.__members__.keys())
+
+
+class PixelSize(BaseModel):
+    """PixelSize class to store the pixel size in 3D space."""
+
+    y: float
+    x: float
+    z: float | None = None
+    unit: SpaceUnits
+
+    axis_order: list[str] = Field(..., repr=False, min_length=2, max_length=3)
+
+    @classmethod
+    def from_list(
+        cls, pixel_size: list[float], unit: SpaceUnits, axis_order: list[str]
+    ) -> "PixelSize":
+        """Create a PixelSize object from a list of pixel sizes."""
+        if len(pixel_size) != len(axis_order):
+            raise ValueError("Inconsistent pixel size and axis order lengths.")
+
+        pixel_size_dict = {
+            "unit": unit,
+            "axis_order": axis_order,
+            "y": None,
+            "x": None,
+            "z": None,
+        }
+        for size, axis in zip(pixel_size, axis_order, strict=True):
+            pixel_size_dict[axis] = size
+
+        return cls(**pixel_size_dict)
+
+    def zyx(self) -> tuple:
+        """Return the voxel size in z, y, x order."""
+        return self.z, self.y, self.x
+
+    def yx(self) -> tuple:
+        """Return the xy plane pixel size in y, x order."""
+        return self.y, self.x
+
+    def voxel_volume(self) -> float:
+        """Return the volume of a voxel."""
+        return self.y * self.x * (self.z or 1)
+
+    def xy_plane_area(self) -> float:
+        """Return the area of the xy plane."""
+        return self.y * self.x
+
+    def to_ordered_list(self) -> list:
+        """Return the pixel size according to the axis order."""
+        return [getattr(self, axis) for axis in self.axis_order]
+
+    def change_units(self, new_unit: SpaceUnits | str) -> "PixelSize":
+        """Return a new PixelSize object with the pixel size in the new unit.
+
+        Args:
+            new_unit (SpaceUnits): The new unit to convert the pixel size to.
+        """
+        # Convert the pixel size to the new unit
+        factor = self.unit.scaling_factor_to(new_unit)
+        new_x, new_y = self.x * factor, self.y * factor
+        new_z = None if self.z is None else self.z * factor
+        return PixelSize(
+            y=new_y, x=new_x, z=new_z, unit=new_unit, axis_order=self.axis_order
+        )
 
 
 class TimeUnits(str, Enum):
@@ -404,22 +492,45 @@ class Multiscale(BaseModel):
         return names
 
     @property
+    def space_axes_type(self) -> SpaceUnits:
+        """List of spatial axes types in the multiscale."""
+        types = [ax.unit for ax in self.axes if ax.type == AxisType.space]
+        if len(set(types)) > 1:
+            raise ValueError("Inconsistent spatial axes units.")
+        return types[0]
+
+    @property
+    def ordered_space_axes(self) -> list[str]:
+        """List of space axes names in the multiscale."""
+        return [ax.name for ax in self.axes if ax.type == AxisType.space]
+
+    @property
     def datasets_dict(self) -> dict[str, Dataset]:
         """Dictionary of datasets in the multiscale indexed by path."""
         return {dataset.path: dataset for dataset in self.datasets}
 
-    def pixel_size(self, level_path: int | str = 0, axis: str = "zyx") -> list[float]:
+    def pixel_size(
+        self, level_path: int | str = 0, axis_order: list[str] | None = None
+    ) -> PixelSize:
         """Get the pixel size of the dataset at the specified level."""
-        dataset = self.get_dataset(level_path)
+        if axis_order is None:
+            # Return the pixel size of all spatial axes
+            axis_order = self.ordered_space_axes
 
-        axes_names = [ax.name for ax in self.axes]
-        pixel_sizes = []
-        for ax in axis:
-            if ax not in axes_names:
-                raise ValueError(f"Axis {ax} not found. Available axes: {axes_names}")
-            idx = axes_names.index(ax)
-            pixel_sizes.append(dataset.scale[idx])
-        return pixel_sizes
+        pixel_sizes = {
+            "axis_order": axis_order,
+            "unit": self.space_axes_type,
+            "y": None,
+            "x": None,
+            "z": None,
+        }
+
+        dataset = self.get_dataset(level_path)
+        for idx, ax in enumerate(self.axes):
+            if ax.name in axis_order:
+                pixel_sizes[ax.name] = dataset.scale[idx]
+
+        return PixelSize(**pixel_sizes)
 
     def remove_axis(
         self, *, idx: int | None = None, axis_name: str | None = None
@@ -464,32 +575,41 @@ class Multiscale(BaseModel):
         return dataset
 
     def get_dataset_from_pixel_size(
-        self, pixel_size: list[float], strict: bool = True
+        self, pixel_size: list[float] | PixelSize, strict: bool = True
     ) -> Dataset:
-        """Get the dataset with the specified pixel size."""
-        closest_dataset = self.datasets[0]
-        min_distance = float("inf")
+        """Get the dataset with the specified pixel size.
+
+        Args:
+            pixel_size(list[float] | PixelSize): The pixel size to search for.
+            strict(bool): If True, raise an error if the pixel size is not found
+
+        """
+        if isinstance(pixel_size, list):
+            pixel_size = PixelSize.from_list(
+                pixel_size,
+                unit=self.space_axes_type,
+                axis_order=self.ordered_space_axes,
+            )
+        elif not isinstance(pixel_size, PixelSize):
+            raise ValueError("Invalid pixel size type.")
+
+        query_ps = np.array(pixel_size.zyx())
+        min_diff = float("inf")
+        best_dataset = None
         for dataset in self.datasets:
-            current_pixel_size = self.pixel_size(dataset.path)
-            if len(current_pixel_size) != len(pixel_size):
-                raise ValueError(
-                    "Inconsistent scale transformation. "
-                    "The scale transformation must have the same length."
-                )
-
-            distance = np.linalg.norm(
-                np.array(current_pixel_size) - np.array(pixel_size)
+            current_ps = np.array(
+                self.pixel_size(dataset.path, pixel_size.axis_order).zyx()
             )
-            if distance < min_distance:
-                closest_dataset = dataset
-                min_distance = distance
 
-        if strict and min_distance > 1e-6:
-            raise ValueError(
-                f"Dataset with pixel size {pixel_size} not found. "
-                f"Closest pixel size: {closest_dataset.scale}"
-            )
-        return closest_dataset
+            diff = np.linalg.norm(current_ps - query_ps)
+            if diff < min_diff:
+                min_diff = diff
+                best_dataset = dataset
+
+        if min_diff > 1e-6 and strict:
+            raise ValueError("Pixel size not found.")
+
+        return best_dataset
 
     def get_highest_resolution_dataset(self) -> Dataset:
         """Get the dataset with the highest resolution."""
@@ -592,35 +712,21 @@ class BaseFractalMeta(BaseModel):
 
     def pixel_size(
         self, level_path: int | str = 0, axis: str | None = None
-    ) -> list[float]:
+    ) -> PixelSize:
         """Get the pixel size of the dataset at the specified level."""
-        dataset = self.get_dataset(level_path)
-
-        if axis is None:
-            # Return the pixel size of all spatial axes
-            axis = [ax.name for ax in self.axes if ax.type == AxisType.space]
-
-        axes_names = [ax.name for ax in self.axes]
-        pixel_sizes = []
-        for ax in axis:
-            if ax not in axes_names:
-                raise ValueError(f"Axis {ax} not found. Available axes: {axes_names}")
-            idx = axes_names.index(ax)
-            pixel_sizes.append(dataset.scale[idx])
-        return pixel_sizes
+        return self.multiscale.pixel_size(level_path, axis)
 
     def scale(self, level_path: int | str = 0) -> list[float]:
         """Get the scale transformation of the dataset at the specified level."""
-        dataset = self.get_dataset(level_path)
-        return dataset.scale
+        return self.multiscale.get_dataset(level_path).scale
 
     def get_dataset_from_pixel_size(
-        self, pixel_size: list[float], strict: bool = True
+        self, pixel_size: list[float] | PixelSize, strict: bool = True
     ) -> tuple[int, Dataset]:
         """Get the dataset with the specified pixel size.
 
         Args:
-            pixel_size(list[float]): The pixel size of the dataset.
+            pixel_size(list[float] | PixelSize): The pixel size to search for.
             strict(bool): If True, raise an error if the pixel size is not found.
 
         """

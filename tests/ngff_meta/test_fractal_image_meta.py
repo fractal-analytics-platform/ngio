@@ -11,7 +11,8 @@ class TestOMEZarrHandlerV04:
 
         fractal_meta = handler.load_meta()
         np.testing.assert_array_equal(
-            fractal_meta.pixel_size(level_path=0), [1.0, 0.1625, 0.1625]
+            fractal_meta.pixel_size(level_path=0).to_ordered_list(),
+            [1.0, 0.1625, 0.1625],
         )
         np.testing.assert_array_equal(
             fractal_meta.scale(level_path=0), [1.0, 1.0, 0.1625, 0.1625]
