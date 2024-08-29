@@ -127,6 +127,17 @@ pretty = true
 minversion = "7.0"
 testpaths = ["tests"]
 filterwarnings = ["error"]
+addopts = [
+    "--cov=src/ngio",
+    "--cov-report=term-missing",
+    "--cov-report=xml",
+    ]
+
+[tool.coverage.run]
+omit = [
+    "src/ngio/core/handler_protocol.py", # This is file only contains a protocol definition
+    "src/ngio/ngff_meta/_meta_handler_protocol.py", # This is file only contains a protocol definition
+    ]
 
 # https://github.com/mgedmin/check-manifest#configuration
 # add files that you want check-manifest to explicitly ignore here
