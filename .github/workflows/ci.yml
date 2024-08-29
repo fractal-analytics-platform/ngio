@@ -71,16 +71,11 @@ jobs:
           filename: .github/TEST_FAIL_TEMPLATE.md
           update_existing: true
 
-      - name: Print all files in the repository
-        run: |
-          ls -R
-          pwd
-
       - name: Coverage
         uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: /home/runner/work/
+          files: /home/runner/work/ngio/ngio/coverage.xml
 
   deploy:
     name: Deploy
