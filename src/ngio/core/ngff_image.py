@@ -7,7 +7,7 @@ from zarr.store.common import StoreLike
 T = TypeVar("T")
 
 
-class HandlerProtocol[T](Protocol):
+class HandlerProtocol(Protocol):
     """Basic protocol that all handlers should implement."""
 
     def __init__(
