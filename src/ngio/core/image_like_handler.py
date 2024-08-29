@@ -2,7 +2,7 @@
 
 from zarr.store.common import StoreLike
 
-from ngio.ngff_meta import FractalImageMeta, get_ngff_image_meta_handler, PixelSize
+from ngio.ngff_meta import FractalImageMeta, PixelSize, get_ngff_image_meta_handler
 
 
 class ImageLikeHandler:

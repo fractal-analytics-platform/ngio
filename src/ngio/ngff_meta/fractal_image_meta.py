@@ -169,7 +169,7 @@ class PixelSize(BaseModel):
         """Return the pixel size according to the axis order."""
         return [getattr(self, axis) for axis in self.axis_order]
 
-    def change_units(self, new_unit: SpaceUnits | str) -> "PixelSize":
+    def to_units(self, new_unit: SpaceUnits | str) -> "PixelSize":
         """Return a new PixelSize object with the pixel size in the new unit.
 
         Args:
@@ -486,10 +486,10 @@ class Multiscale(BaseModel):
         """List of axes names in the Image."""
         names = []
         for ax in self.axes:
-            if isinstance(ax.name, str):
-                names.append(ax.name)
-            else:
+            if isinstance(ax.name, SpaceNames) or isinstance(ax.name, TimeNames):
                 names.append(ax.name.value)
+            else:
+                names.append(ax.name)
         return names
 
     @property

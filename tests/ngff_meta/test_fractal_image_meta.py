@@ -45,3 +45,33 @@ class TestOMEZarrHandlerV04:
             metadata=meta_no_channel, idx=0, axis_name="c", units=None
         )
         assert meta_add_channel.axes_names == fractal_meta.axes_names
+
+    def test_pixel_size(self, ome_zarr_image_v04_path):
+        from ngio.ngff_meta import get_ngff_image_meta_handler
+
+        handler = get_ngff_image_meta_handler(
+            store=ome_zarr_image_v04_path, meta_mode="image"
+        )
+
+        pixel_size = handler.load_meta().pixel_size(level_path=0)
+        assert pixel_size.to_ordered_list() == [1.0, 0.1625, 0.1625]
+        pixel_size_nm = pixel_size.to_units("nm")
+        assert pixel_size_nm.to_ordered_list() == [1000.0, 162.5, 162.5]
+
+    def test_modify_axis_from_label_metadata(self, ome_zarr_label_v04_path):
+        from ngio.ngff_meta import get_ngff_image_meta_handler
+        from ngio.ngff_meta.utils import add_axis_to_metadata, remove_axis_from_metadata
+
+        handler = get_ngff_image_meta_handler(
+            store=ome_zarr_label_v04_path, meta_mode="label"
+        )
+
+        fractal_meta = handler.load_meta()
+
+        meta_no_channel = fractal_meta.remove_axis(axis_name="z")
+        assert meta_no_channel.axes_names == ["y", "x"]
+
+        meta_add_channel = meta_no_channel.add_axis(
+            idx=0, axis_name="z", units="micrometer", axis_type="space"
+        )
+        assert meta_add_channel.axes_names == fractal_meta.axes_names
