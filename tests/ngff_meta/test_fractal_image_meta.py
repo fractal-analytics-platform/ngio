@@ -18,13 +18,14 @@ class TestOMEZarrHandlerV04:
             fractal_meta.scale(level_path=0), [1.0, 1.0, 0.1625, 0.1625]
         )
         assert fractal_meta.num_levels == 5
-        assert fractal_meta.list_paths == ["0", "1", "2", "3", "4"]
+        assert fractal_meta.levels_paths == ["0", "1", "2", "3", "4"]
         assert fractal_meta.axes == fractal_meta.multiscale.axes
         assert fractal_meta.datasets == fractal_meta.multiscale.datasets
-        assert fractal_meta.get_channel_names() == ["DAPI", "nanog", "Lamin B1"]
+        assert fractal_meta.channel_names == ["DAPI", "nanog", "Lamin B1"]
         assert fractal_meta.get_channel_idx_by_label("DAPI") == 0
         assert fractal_meta.get_channel_idx_by_wavelength_id("A01_C01") == 0
         assert fractal_meta.axes_names == ["c", "z", "y", "x"]
+        assert fractal_meta.space_axes_names == ["z", "y", "x"]
         assert fractal_meta.get_highest_resolution_dataset().path == "0"
 
     def test_modify_axis_from_metadata(self, ome_zarr_image_v04_path):

@@ -9,9 +9,10 @@ class ImageHandler(ImageLikeHandler):
     This class provides methods to access image data and ROI tables.
     """
 
-    def get_channel_names(self) -> list[str]:
+    @property
+    def channel_names(self) -> list[str]:
         """Return the names of the channels in the image."""
-        return self.metadata.get_channel_names()
+        return self.metadata.channel_names
 
     def get_channel_idx_by_label(self, label: str) -> int:
         """Return the index of the channel with the given label."""

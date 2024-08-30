@@ -21,7 +21,7 @@ class TestUtils:
             version="0.4",
         )
 
-        assert meta.get_channel_names() == ["DAPI", "nanog", "Lamin B1"]
+        assert meta.channel_names == ["DAPI", "nanog", "Lamin B1"]
         np.testing.assert_array_equal(
             meta.pixel_size(level_path=0).to_ordered_list(), [1.0, 1.0, 1.0]
         )
@@ -56,7 +56,7 @@ class TestUtils:
             version="0.4",
         )
 
-        assert meta.get_channel_names() == ["DAPI", "nanog", "Lamin B1"]
+        assert meta.channel_names == ["DAPI", "nanog", "Lamin B1"]
         np.testing.assert_array_equal(
             meta.pixel_size(level_path=0).to_ordered_list(), [1.0, 1.0, 1.0]
         )

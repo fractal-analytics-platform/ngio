@@ -454,36 +454,45 @@ class Multiscale(BaseModel):
         - There must be at least two space axes.
         - There can be at most 3 space axes.
         - There must be at most one channel axis.
+        - Space axes must have consistent units.
 
         """
+        # Check the uniqueness of the axes names
         names = [axis.name for axis in v]
         if len(names) != len(set(names)):
             raise ValueError("Axes must have unique names.")
 
+        # Check the number of spatial axes == 2 or 3
         spatial_axes = [axis for axis in v if axis.type == AxisType.space]
         if len(spatial_axes) not in [2, 3]:
             raise ValueError(
                 f"There must be 2 or 3 spatial axes. Found {len(spatial_axes)}."
             )
 
+        # Check the number of channel axes == 1
         channel_axes = [axis for axis in v if axis.type == AxisType.channel]
         if len(channel_axes) > 1:
             raise ValueError("There can be at most one channel axis.")
+
+        # Check the consistency of the space axes units
+        space_units = [axis.unit for axis in spatial_axes]
+        if len(set(space_units)) > 1:
+            raise ValueError("Inconsistent spatial axes units.")
         return v
 
     @property
     def num_levels(self) -> int:
-        """Number of levels in the multiscale."""
+        """Number of resolution levels in the multiscale."""
         return len(self.datasets)
 
     @property
     def levels_paths(self) -> list[str]:
-        """Relative paths of the datasets in the multiscale."""
+        """List of all resolution levels paths in the multiscale."""
         return [dataset.path for dataset in self.datasets]
 
     @property
     def axes_names(self) -> list[str]:
-        """List of axes names in the Image."""
+        """List of axes names in the multiscale."""
         names = []
         for ax in self.axes:
             if isinstance(ax.name, SpaceNames) or isinstance(ax.name, TimeNames):
@@ -493,17 +502,15 @@ class Multiscale(BaseModel):
         return names
 
     @property
-    def space_axes_type(self) -> SpaceUnits:
-        """List of spatial axes types in the multiscale."""
-        types = [ax.unit for ax in self.axes if ax.type == AxisType.space]
-        if len(set(types)) > 1:
-            raise ValueError("Inconsistent spatial axes units.")
-        return types[0]
+    def space_axes_names(self) -> list[str]:
+        """List of spatial axes names in the multiscale."""
+        return [ax.name for ax in self.axes if ax.type == AxisType.space]
 
     @property
-    def ordered_space_axes(self) -> list[str]:
-        """List of space axes names in the multiscale."""
-        return [ax.name for ax in self.axes if ax.type == AxisType.space]
+    def space_axes_unit(self) -> SpaceUnits:
+        """The unit of the space axes."""
+        types = [ax.unit for ax in self.axes if ax.type == AxisType.space]
+        return types[0]
 
     @property
     def datasets_dict(self) -> dict[str, Dataset]:
@@ -516,11 +523,11 @@ class Multiscale(BaseModel):
         """Get the pixel size of the dataset at the specified level."""
         if axis_order is None:
             # Return the pixel size of all spatial axes
-            axis_order = self.ordered_space_axes
+            axis_order = self.space_axes_names
 
         pixel_sizes = {
             "axis_order": axis_order,
-            "unit": self.space_axes_type,
+            "unit": self.space_axes_unit,
             "y": None,
             "x": None,
             "z": None,
@@ -533,28 +540,27 @@ class Multiscale(BaseModel):
 
         return PixelSize(**pixel_sizes)
 
-    def remove_axis(
-        self, *, idx: int | None = None, axis_name: str | None = None
-    ) -> "Multiscale":
-        """Remove an axis from the scale transformation of all datasets."""
-        if idx is None and axis_name is None:
-            raise ValueError("Either idx or axis_name must be provided.")
+    def scale(
+        self, level_path: int | str = 0, axis_order: list[str] | None = None
+    ) -> list[float]:
+        """Get the scale transformation of the dataset at the specified level."""
+        if axis_order is None:
+            # Return the scale transformation of all axes
+            return self.get_dataset(level_path).scale
 
-        elif idx is not None and axis_name is not None:
-            raise ValueError("Only one of idx or axis_name must be provided.")
+        original_scale = self.get_dataset(level_path).scale
+        original_axis_order = self.axes_names
+        scale_dict = {ax: s for ax, s in zip(original_axis_order, original_scale)}
 
-        if axis_name is not None:
-            idx = [ax.name for ax in self.axes].index(axis_name)
+        scale = []
+        for ax in axis_order:
+            if ax not in original_axis_order:
+                raise ValueError(
+                    f"Axis {ax} not found in the dataset. Existing axes: {original_axis_order}"
+                )
+            scale.append(scale_dict[ax])
 
-        if idx < 0:
-            raise ValueError(f"Axis index {idx} cannot be negative.")
-        if idx >= len(self.axes):
-            raise ValueError(f"Axis index {idx} out of range.")
-
-        new_axes = self.axes.copy()
-        new_axes.pop(idx)
-        datasets = [dataset.remove_axis(idx) for dataset in self.datasets]
-        return Multiscale(axes=new_axes, datasets=datasets)
+        return scale
 
     def get_dataset(self, level_path: int | str = 0) -> Dataset:
         """Get the dataset at the specified level (index or path)."""
@@ -582,14 +588,15 @@ class Multiscale(BaseModel):
 
         Args:
             pixel_size(list[float] | PixelSize): The pixel size to search for.
-            strict(bool): If True, raise an error if the pixel size is not found
+            strict(bool): If True, raise an error if the pixel size is not found,
+                otherwise return the dataset with the closest pixel size.
 
         """
         if isinstance(pixel_size, list):
             pixel_size = PixelSize.from_list(
                 pixel_size,
-                unit=self.space_axes_type,
-                axis_order=self.ordered_space_axes,
+                unit=self.space_axes_unit,
+                axis_order=self.space_axes_names,
             )
         elif not isinstance(pixel_size, PixelSize):
             raise ValueError("Invalid pixel size type.")
@@ -623,6 +630,29 @@ class Multiscale(BaseModel):
                 highest_resolution_dataset = dataset
 
         return highest_resolution_dataset
+
+    def remove_axis(
+        self, *, idx: int | None = None, axis_name: str | None = None
+    ) -> "Multiscale":
+        """Remove an axis from the scale transformation of all datasets."""
+        if idx is None and axis_name is None:
+            raise ValueError("Either idx or axis_name must be provided.")
+
+        elif idx is not None and axis_name is not None:
+            raise ValueError("Only one of idx or axis_name must be provided.")
+
+        if axis_name is not None:
+            idx = [ax.name for ax in self.axes].index(axis_name)
+
+        if idx < 0:
+            raise ValueError(f"Axis index {idx} cannot be negative.")
+        if idx >= len(self.axes):
+            raise ValueError(f"Axis index {idx} out of range.")
+
+        new_axes = self.axes.copy()
+        new_axes.pop(idx)
+        datasets = [dataset.remove_axis(idx) for dataset in self.datasets]
+        return Multiscale(axes=new_axes, datasets=datasets)
 
     def add_axis(
         self,
@@ -677,69 +707,155 @@ class BaseFractalMeta(BaseModel):
         name(str | None): The name of ngff image.
     """
 
-    version: str
-    multiscale: Multiscale
-    name: str | None = None
+    version: str = Field(..., frozen=True)
+    multiscale: Multiscale = Field(..., frozen=True)
+    name: str | None = Field(default=None, frozen=True)
 
     @property
     def num_levels(self) -> int:
-        """Number of levels in the multiscale."""
+        """Number of resolution levels in the multiscale.
+
+        Returns:
+            int: The number of resolution levels in the multiscale.
+        """
         return self.multiscale.num_levels
 
     @property
-    def list_paths(self) -> list[str]:
-        """Relative paths of the datasets in the multiscale."""
-        return [dataset.path for dataset in self.multiscale.datasets]
+    def levels_paths(self) -> list[str]:
+        """List of all resolution levels paths in the multiscale.
+
+        Returns:
+            list[str]: The paths of all resolution levels in the multiscale.
+        """
+        return self.multiscale.levels_paths
 
     @property
     def axes(self) -> list[Axis]:
-        """List of axes in the multiscale."""
+        """List of axes in the multiscale.
+
+        Returns:
+            list[Axis]: The axes in the multiscale.
+        """
         return self.multiscale.axes
 
     @property
     def axes_names(self) -> list[str]:
-        """List of axes names in the Image."""
+        """List of axes names in the multiscale.
+
+        Returns:
+            list[str]: The axes names in the multiscale.
+        """
         return self.multiscale.axes_names
 
     @property
+    def space_axes_names(self) -> list[str]:
+        """List of space axes names in the multiscale.
+
+        Returns:
+            list[str]: The space axes names in the multiscale.
+        """
+        return self.multiscale.space_axes_names
+
+    @property
+    def space_axes_unit(self) -> SpaceUnits:
+        """The unit of the space axes.
+
+        Returns:
+            SpaceUnits: The unit of the space axes.
+        """
+        return self.multiscale.space_axes_unit
+
+    @property
     def datasets(self) -> list[Dataset]:
-        """List of datasets in the multiscale."""
+        """List of datasets in the multiscale.
+
+        Returns:
+            list[Dataset]: The datasets in the multiscale.
+        """
         return self.multiscale.datasets
 
     @property
     def datasets_dict(self) -> dict[str, Dataset]:
-        """Dictionary of datasets in the multiscale indexed by path."""
+        """Dictionary of datasets in the multiscale indexed by path.
+
+        Returns:
+            dict[str, Dataset]: The datasets in the multiscale indexed by path.
+        """
         return self.multiscale.datasets_dict
 
     def pixel_size(
-        self, level_path: int | str = 0, axis: str | None = None
+        self, level_path: int | str = 0, axis_order: str | None = None
     ) -> PixelSize:
-        """Get the pixel size of the dataset at the specified level."""
-        return self.multiscale.pixel_size(level_path, axis)
+        """Get the pixel size of the dataset at the specified level.
 
-    def scale(self, level_path: int | str = 0) -> list[float]:
-        """Get the scale transformation of the dataset at the specified level."""
-        return self.multiscale.get_dataset(level_path).scale
+        Args:
+            level_path(int | str): The level index (int) or path (str).
+            axis_order(list[str] | None): An optional list of space axis names to return the
+                pixel size in the specified order. If None, the pixel size will be
+                returned in the order of the spatial axes.
+        Returns:
+            PixelSize: The pixel size of the dataset.
+
+        """
+        return self.multiscale.pixel_size(level_path, axis_order=axis_order)
+
+    def scale(
+        self, level_path: int | str = 0, axis_order: list[str] | None = None
+    ) -> list[float]:
+        """Get the scale transformation of the dataset at the specified level.
+
+        Args:
+            level_path(int | str): The level index (int) or path (str).
+            axis_order(list[str] | None): An optional list of axis names to return the
+                scale transformation in the specified order. If None, the scale transformation
+                will be returned in the order of the axes.
+        Returns:
+            list[float]: The scale transformation of the dataset.
+        """
+        return self.multiscale.scale(level_path, axis_order=axis_order)
+
+    def get_dataset(self, level_path: int | str = 0) -> Dataset:
+        """Get the dataset at the specified level (index or path).
+
+        Args:
+            level_path(int | str): The level index (int) or path (str).
+        Returns:
+            Dataset: The dataset at the specified level.
+        """
+        return self.multiscale.get_dataset(level_path)
 
     def get_dataset_from_pixel_size(
         self, pixel_size: list[float] | PixelSize, strict: bool = True
-    ) -> tuple[int, Dataset]:
+    ) -> Dataset:
         """Get the dataset with the specified pixel size.
 
         Args:
             pixel_size(list[float] | PixelSize): The pixel size to search for.
             strict(bool): If True, raise an error if the pixel size is not found.
-
+        Returns:
+            Dataset: The dataset with the specified pixel size (or the closest one).
         """
         return self.multiscale.get_dataset_from_pixel_size(pixel_size, strict)
-
-    def get_dataset(self, level_path: int | str = 0) -> Dataset:
-        """Get the dataset at the specified level (index or path)."""
-        return self.multiscale.get_dataset(level_path)
 
     def get_highest_resolution_dataset(self) -> Dataset:
         """Get the dataset with the highest resolution."""
         return self.multiscale.get_highest_resolution_dataset()
+
+    def to_version(self, version: str) -> "FractalImageMeta":
+        """Convert the metadata to a different version.
+
+        Args:
+            version(str): The version of the metadata.
+
+        Returns:
+            FractalImageMeta: The metadata with the specified version.
+        """
+        return FractalImageMeta(
+            version=version,
+            multiscale=self.multiscale,
+            name=self.name,
+            omero=self.omero,
+        )
 
 
 class FractalImageMeta(BaseFractalMeta):
@@ -754,10 +870,15 @@ class FractalImageMeta(BaseFractalMeta):
 
     """
 
-    omero: Omero | None = None
+    omero: Omero | None = Field(default=None, frozen=True)
 
-    def get_channel_names(self) -> list[str]:
-        """Get the names of the channels."""
+    @property
+    def channel_names(self) -> list[str]:
+        """Get the names of the channels.
+
+        Returns:
+            list[str]: The names of the channels.
+        """
         if self.omero is None:
             # check if a channel axis exists in the multiscale axes
             channel_axes = [ax for ax in self.axes if ax.type == AxisType.channel]
@@ -771,13 +892,25 @@ class FractalImageMeta(BaseFractalMeta):
         return [channel.label for channel in self.omero.channels]
 
     def get_channel_idx_by_label(self, label: str) -> int:
-        """Get the index of a channel by its label."""
+        """Get the index of a channel by its label.
+
+        Args:
+            label(str): The label/name of the channel.
+        Returns:
+            int: The index of the channel.
+        """
         if self.omero is None:
             raise ValueError("OMERO metadata not found.")
         return self.omero.get_idx_by_label(label)
 
     def get_channel_idx_by_wavelength_id(self, wavelength_id: str) -> int:
-        """Get the index of a channel by its wavelength ID."""
+        """Get the index of a channel by its wavelength ID.
+
+        Args:
+            wavelength_id(str): The wavelength ID of the channel.
+        Returns:
+            int: The index of the channel.
+        """
         if self.omero is None:
             raise ValueError("OMERO metadata not found.")
         return self.omero.get_idx_by_wavelength_id(wavelength_id)
@@ -828,6 +961,9 @@ class FractalImageMeta(BaseFractalMeta):
             name=self.name,
             omero=self.omero,
         )
+
+    def to_new_axis_order(self, axis_order: list[str]) -> "FractalImageMeta":
+        raise NotImplementedError("Method not implemented.")
 
 
 class FractalLabelMeta(BaseFractalMeta):
