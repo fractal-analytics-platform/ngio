@@ -2,9 +2,7 @@
 
 from typing import Literal
 
-from zarr.store.common import StoreLike
-
-from ngio.io import read_group_attrs, update_group_attrs
+from ngio.io import StoreOrGroup, read_group_attrs, update_group_attrs
 from ngio.ngff_meta.fractal_image_meta import (
     Axis,
     Dataset,
@@ -28,7 +26,7 @@ from ngio.ngff_meta.v04.specs import (
 )
 
 
-def check_ngff_image_meta_v04(store: StoreLike) -> bool:
+def check_ngff_image_meta_v04(store: StoreOrGroup) -> bool:
     """Check if a Zarr Group contains the OME-NGFF v0.4."""
     group = read_group_attrs(store=store, zarr_format=2)
     multiscales = group.get("multiscales", None)
@@ -48,7 +46,7 @@ def check_ngff_image_meta_v04(store: StoreLike) -> bool:
     return version == "0.4"
 
 
-def load_vanilla_ngff_image_meta_v04(store: StoreLike) -> NgffImageMeta04:
+def load_vanilla_ngff_image_meta_v04(store: StoreOrGroup) -> NgffImageMeta04:
     """Load the OME-NGFF 0.4 image meta model."""
     attrs = read_group_attrs(store=store, zarr_format=2)
     return NgffImageMeta04(**attrs)
@@ -171,7 +169,7 @@ def fractal_ngff_image_meta_to_vanilla_v04(
     )
 
 
-def load_ngff_image_meta_v04(store: StoreLike) -> FractalImageLabelMeta:
+def load_ngff_image_meta_v04(store: StoreOrGroup) -> FractalImageLabelMeta:
     """Load the OME-NGFF 0.4 image meta model."""
     if not check_ngff_image_meta_v04(store=store):
         raise ValueError(
@@ -181,7 +179,7 @@ def load_ngff_image_meta_v04(store: StoreLike) -> FractalImageLabelMeta:
     return vanilla_ngff_image_meta_v04_to_fractal(meta04=meta04)
 
 
-def write_ngff_image_meta_v04(store: StoreLike, meta: FractalImageLabelMeta) -> None:
+def write_ngff_image_meta_v04(store: StoreOrGroup, meta: FractalImageLabelMeta) -> None:
     """Write the OME-NGFF 0.4 image meta model."""
     if not check_ngff_image_meta_v04(store=store):
         raise ValueError(
@@ -198,7 +196,7 @@ class NgffImageMetaZarrHandlerV04:
 
     def __init__(
         self,
-        store: StoreLike,
+        store: StoreOrGroup,
         meta_mode: Literal["image", "label"],
         cache: bool = False,
     ):
@@ -238,6 +236,6 @@ class NgffImageMetaZarrHandlerV04:
         self._meta = None
 
     @staticmethod
-    def check_version(store: StoreLike) -> bool:
+    def check_version(store: StoreOrGroup) -> bool:
         """Check if the Zarr store contains the correct version."""
         return check_ngff_image_meta_v04(store=store)

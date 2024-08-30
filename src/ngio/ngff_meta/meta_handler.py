@@ -2,8 +2,7 @@
 
 from typing import Literal, Protocol
 
-from zarr.store.common import StoreLike
-
+from ngio.io import StoreOrGroup
 from ngio.ngff_meta.fractal_image_meta import FractalImageLabelMeta
 from ngio.ngff_meta.v04.zarr_utils import (
     NgffImageMetaZarrHandlerV04,
@@ -15,7 +14,7 @@ class NgffImageMetaHandler(Protocol):
 
     def __init__(
         self,
-        store: StoreLike,
+        store: StoreOrGroup,
         meta_mode: Literal["image", "label"],
         cache: bool = False,
     ):
@@ -44,7 +43,7 @@ _available_load_ngff_image_meta_handlers = {
 }
 
 
-def find_ngff_image_meta_handler_version(store: StoreLike) -> str:
+def find_ngff_image_meta_handler_version(store: StoreOrGroup) -> str:
     """Find the version of the NGFF image metadata."""
     for version, handler in _available_load_ngff_image_meta_handlers.items():
         if handler.check_version(store=store):
@@ -58,7 +57,7 @@ def find_ngff_image_meta_handler_version(store: StoreLike) -> str:
 
 
 def get_ngff_image_meta_handler(
-    store: StoreLike, meta_mode: Literal["image", "label"], cache: bool = False
+    store: StoreOrGroup, meta_mode: Literal["image", "label"], cache: bool = False
 ) -> NgffImageMetaHandler:
     """Load the NGFF image metadata handler."""
     version = find_ngff_image_meta_handler_version(store)

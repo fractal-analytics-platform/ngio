@@ -55,33 +55,33 @@ class TestGroupUtils:
         assert len(groups) == 3, "Groups were not listed correctly."
 
     def test_raise_file_not_found_error(self):
-        from ngio.io._zarr_group_utils import _open_group
+        from ngio.io._zarr_group_utils import open_group
 
         with pytest.raises(FileNotFoundError):
-            _open_group(store="nonexistent.zarr", mode="r", zarr_format=2)
+            open_group(store="nonexistent.zarr", mode="r", zarr_format=2)
 
         with pytest.raises(FileNotFoundError):
-            _open_group(
+            open_group(
                 store=zarr.store.LocalStore("nonexistent.zarr"), mode="r", zarr_format=2
             )
 
     def test_raise_permission_error(self, local_zarr_path_v2):
-        from ngio.io._zarr_group_utils import _open_group
+        from ngio.io._zarr_group_utils import open_group
 
         local_zarr_path, _ = local_zarr_path_v2
 
         with pytest.raises(PermissionError):
-            _open_group(
+            open_group(
                 store=zarr.store.LocalStore(local_zarr_path, mode="r"),
                 mode="r+",
                 zarr_format=2,
             )
 
     def test_raise_not_implemented_error(self):
-        from ngio.io._zarr_group_utils import _open_group
+        from ngio.io._zarr_group_utils import open_group
 
         with pytest.raises(NotImplementedError):
-            _open_group(
+            open_group(
                 store=zarr.store.RemoteStore(url="https://test.com/test.zarr"),
                 mode="r",
                 zarr_format=3,
