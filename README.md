@@ -18,14 +18,12 @@ NGIO is a Python library to streamline OME-Zarr image analysis workflows.
 
 ### Roadmap
 
-Here’s the table with grammar corrections:
-
 | Feature | Status | ETA | Description |
 |---------|--------|-----|-------------|
 | Metadata Handling | ✅ Done | | Read, Write, Validate OME-Zarr Metadata (0.4 supported, 0.5 ready) |
-| OME-Zarr Validation | ✅ Done | | Validate OME-Zarr files for compliance with the OME-Zarr Specification + Compliance between Metadata and Data |
-| Base Image Handling | ✅ Done | | Load data from OME-Zarr files, retrieve basic metadata, and write data |
-| ROI Handling | ✅ Done | | Common ROI models |
+| OME-Zarr Validation | ✅ Doneish | | Validate OME-Zarr files for compliance with the OME-Zarr Specification + Compliance between Metadata and Data |
+| Base Image Handling | ✅ Doneish | | Load data from OME-Zarr files, retrieve basic metadata, and write data |
+| ROI Handling | ✅ Doneish | | Common ROI models |
 | Label Handling | Ongoing | Mid-September | Based on Image Handling |
 | Table Validation | Ongoing | Mid-September | Validate Table fractal V1 + Compliance between Metadata and Data |
 | Table Handling | Ongoing | Mid-September | Read, Write ROI, Features, and Masked Tables |
