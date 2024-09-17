@@ -101,7 +101,7 @@ def _create_image_metadata(
 
 
 def create_image_metadata(
-    axis_order: list[str] = ("t", "c", "z", "y", "x"),
+    axis_names: list[str] = ("t", "c", "z", "y", "x"),
     pixel_sizes: tuple[float, float, float] = (1.0, 1.0, 1.0),
     scaling_factors: tuple[float, float, float] = (1.0, 2.0, 2.0),
     pixel_units: SpaceUnits | str = SpaceUnits.micrometer,
@@ -115,12 +115,31 @@ def create_image_metadata(
     omero_kwargs: dict[str, Any] | None = None,
     version: str = "0.4",
 ) -> FractalImageMeta:
-    """Create a image metadata object from scratch."""
+    """Create a image metadata object from scratch.
+
+    Args:
+        axis_names: The names of the axes.
+            The order is not important, since ngio will sort them in the correct
+            canonical order.
+        pixel_sizes: The pixel sizes in z, y, x order.
+        scaling_factors: The scaling factors in z, y, x order.
+        pixel_units: The units of the pixel sizes.
+        time_spacing: The time spacing.
+        time_units: The units of the time spacing.
+        num_levels: The number of levels.
+        name: The name of the metadata.
+        channel_names: The names of the channels.
+        channel_wavelengths: The wavelengths of the channels.
+        channel_kwargs: The additional channel kwargs.
+        omero_kwargs: The additional omero kwargs.
+        version: The version of the metadata.
+
+    """
     if len(channel_names) != len(set(channel_names)):
         raise ValueError("Channel names must be unique.")
 
     mulitscale, omero = _create_image_metadata(
-        axis_order=axis_order,
+        axis_order=axis_names,
         pixel_sizes=pixel_sizes,
         scaling_factors=scaling_factors,
         pixel_units=pixel_units,
@@ -151,7 +170,21 @@ def create_label_metadata(
     name: str | None = None,
     version: str = "0.4",
 ) -> FractalLabelMeta:
-    """Create a label metadata object from scratch."""
+    """Create a label metadata object from scratch.
+
+    Args:
+        axis_order: The names of the axes.
+            The order is not important, since ngio will sort them in the correct
+            canonical order.
+        pixel_sizes: The pixel sizes in z, y, x order.
+        scaling_factors: The scaling factors in z, y, x order.
+        pixel_units: The units of the pixel sizes.
+        time_spacing: The time spacing.
+        time_units: The units of the time spacing.
+        num_levels: The number of levels.
+        name: The name of the metadata.
+        version: The version of the metadata.
+    """
     multiscale, _ = _create_image_metadata(
         axis_order=axis_order,
         pixel_sizes=pixel_sizes,
@@ -174,7 +207,13 @@ def remove_axis_from_metadata(
     axis_name: str | None = None,
     idx: int | None = None,
 ) -> FractalImageMeta:
-    """Remove an axis from the metadata."""
+    """Remove an axis from the metadata.
+
+    Args:
+        metadata: A FractalImageMeta object.
+        axis_name: The name of the axis to remove.
+        idx: The index of the axis to remove.
+    """
     return metadata.remove_axis(axis_name=axis_name, idx=idx)
 
 
@@ -186,7 +225,16 @@ def add_axis_to_metadata(
     axis_type: str = "channel",
     scale: float = 1.0,
 ) -> FractalImageMeta | FractalLabelMeta:
-    """Add an axis to the metadata."""
+    """Add an axis to the FractalImageMeta or FractalLabelMeta object.
+
+    Args:
+        metadata: A FractalImageMeta or FractalLabelMeta object.
+        idx: The index of the axis.
+        axis_name: The name of the axis.
+        units: The units of the axis.
+        axis_type: The type of the axis.
+        scale: The scale of the axis.
+    """
     return metadata.add_axis(
         idx=idx, axis_name=axis_name, units=units, axis_type=axis_type, scale=scale
     )
