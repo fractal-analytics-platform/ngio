@@ -5,7 +5,6 @@ from typing import Literal
 
 import numpy as np
 from pydantic import BaseModel, Field, field_validator, model_validator
-from typing_extensions import Self
 
 from ngio.pydantic_utils import BaseWithExtraFields
 
@@ -70,36 +69,6 @@ class SpaceUnits(str, Enum):
     centimeter = "centimeter"
     cm = "cm"
 
-    def _scaling_factor_to_um(self) -> float:
-        """Get the scaling factor of the space unit (relative to micrometer)."""
-        table = {
-            SpaceUnits.nanometer: 1000.0,
-            SpaceUnits.nm: 1000.0,
-            SpaceUnits.micrometer: 1.0,
-            SpaceUnits.um: 1.0,
-            SpaceUnits.millimeter: 1e-3,
-            SpaceUnits.mm: 1e-3,
-            SpaceUnits.centimeter: 1e-4,
-            SpaceUnits.cm: 1e-4,
-        }
-        scaling_factor = table.get(self, None)
-        if scaling_factor is None:
-            raise ValueError(f"Unknown space unit: {self}")
-        return scaling_factor
-
-    def scaling_factor_to(self, unit: Self | str) -> float:
-        """Get the scaling factor to convert to another space unit.
-
-        Args:
-            unit(SpaceUnits | str): The target space unit.
-        """
-        if isinstance(unit, str):
-            unit = SpaceUnits(unit)
-        elif not isinstance(unit, SpaceUnits):
-            raise ValueError(f"Invalid unit type: {unit}")
-
-        return unit._scaling_factor_to_um() / self._scaling_factor_to_um()
-
     @classmethod
     def allowed_names(self) -> list[str]:
         """Get the allowed space axis names."""
@@ -119,40 +88,48 @@ class SpaceNames(str, Enum):
         return list(SpaceNames.__members__.keys())
 
 
+class ChannelNames(str, Enum):
+    """Allowed channel axis names."""
+
+    c = "c"
+
+    @classmethod
+    def allowed_names(self) -> list[str]:
+        """Get the allowed channel axis names."""
+        return list(ChannelNames.__members__.keys())
+
+
 class PixelSize(BaseModel):
     """PixelSize class to store the pixel size in 3D space."""
 
     y: float
     x: float
-    z: float | None = None
-    unit: SpaceUnits
-
-    axis_order: list[str] = Field(..., repr=False, min_length=2, max_length=3)
+    z: float = 1.0
+    unit: SpaceUnits = SpaceUnits.um
 
     @classmethod
-    def from_list(
-        cls, pixel_size: list[float], unit: SpaceUnits, axis_order: list[str]
-    ) -> "PixelSize":
-        """Create a PixelSize object from a list of pixel sizes."""
-        if len(pixel_size) != len(axis_order):
-            raise ValueError("Inconsistent pixel size and axis order lengths.")
+    def from_list(cls, sizes: list[float], unit: SpaceUnits):
+        """Build a PixelSize object from a list of sizes.
 
-        pixel_size_dict = {
-            "unit": unit,
-            "axis_order": axis_order,
-            "y": None,
-            "x": None,
-            "z": None,
-        }
-        for size, axis in zip(pixel_size, axis_order, strict=True):
-            pixel_size_dict[axis] = size
+        Note: The order of the sizes must be z, y, x.
 
-        return cls(**pixel_size_dict)
+        Args:
+            sizes(list[float]): The list of sizes.
+            unit(SpaceUnits): The unit of the sizes.
+        """
+        if len(sizes) == 2:
+            return cls(y=sizes[0], x=sizes[1], unit=unit)
+        elif len(sizes) == 3:
+            return cls(z=sizes[0], y=sizes[1], x=sizes[2], unit=unit)
+        else:
+            raise ValueError("Invalid pixel size list. Must have 2 or 3 elements.")
 
+    @property
     def zyx(self) -> tuple:
         """Return the voxel size in z, y, x order."""
         return self.z, self.y, self.x
 
+    @property
     def yx(self) -> tuple:
         """Return the xy plane pixel size in y, x order."""
         return self.y, self.x
@@ -165,40 +142,12 @@ class PixelSize(BaseModel):
         """Return the area of the xy plane."""
         return self.y * self.x
 
-    def to_ordered_list(self) -> list:
-        """Return the pixel size according to the axis order."""
-        return [getattr(self, axis) for axis in self.axis_order]
-
-    def to_units(self, new_unit: SpaceUnits | str) -> "PixelSize":
-        """Return a new PixelSize object with the pixel size in the new unit.
-
-        Args:
-            new_unit (SpaceUnits): The new unit to convert the pixel size to.
-        """
-        # Convert the pixel size to the new unit
-        factor = self.unit.scaling_factor_to(new_unit)
-        new_x, new_y = self.x * factor, self.y * factor
-        new_z = None if self.z is None else self.z * factor
-        return PixelSize(
-            y=new_y, x=new_x, z=new_z, unit=new_unit, axis_order=self.axis_order
-        )
-
 
 class TimeUnits(str, Enum):
     """Allowed time units."""
 
     seconds = "seconds"
     s = "s"
-
-    def scaling(self) -> float:
-        """Get the scaling factor of the time unit (relative to seconds)."""
-        table = {
-            TimeUnits.s: 1.0,
-        }
-        scaling_factor = table.get(self, None)
-        if scaling_factor is None:
-            raise ValueError(f"Unknown time unit: {self}")
-        return scaling_factor
 
     @classmethod
     def allowed_names(self) -> list[str]:
@@ -354,7 +303,7 @@ class Dataset(BaseModel):
                 return transformation.translation
         return None
 
-    def change_transforms(
+    def _change_transforms(
         self, scale: list[float] | None = None, translation: list[float] | None = None
     ) -> "Dataset":
         """Change the scale and translation transformations of the dataset."""
@@ -384,7 +333,7 @@ class Dataset(BaseModel):
             path=self.path, coordinateTransformations=coordindateTransformations
         )
 
-    def remove_axis(self, idx: int) -> "Dataset":
+    def _remove_axis(self, idx: int) -> "Dataset":
         """Remove an axis from the scale transformation."""
         if idx < 0:
             raise ValueError(f"Axis index {idx} cannot be negative.")
@@ -400,9 +349,9 @@ class Dataset(BaseModel):
             new_translation.pop(idx)
         else:
             new_translation = None
-        return self.change_transforms(scale=new_scale, translation=new_translation)
+        return self._change_transforms(scale=new_scale, translation=new_translation)
 
-    def add_axis(
+    def _add_axis(
         self, idx: int, scale: float = 1.0, translation: float = 0.0
     ) -> "Dataset":
         """Add an axis to the scale transformation."""
@@ -419,7 +368,7 @@ class Dataset(BaseModel):
             new_translation.insert(idx, translation)
         else:
             new_translation = None
-        return self.change_transforms(scale=new_scale, translation=new_translation)
+        return self._change_transforms(scale=new_scale, translation=new_translation)
 
 
 class Multiscale(BaseModel):
@@ -491,6 +440,11 @@ class Multiscale(BaseModel):
         return [dataset.path for dataset in self.datasets]
 
     @property
+    def canonical_order(self) -> list[str]:
+        """The canonical order of the axes."""
+        return ["t", "c", "z", "y", "x"]
+
+    @property
     def axes_names(self) -> list[str]:
         """List of axes names in the multiscale."""
         names = []
@@ -517,50 +471,25 @@ class Multiscale(BaseModel):
         """Dictionary of datasets in the multiscale indexed by path."""
         return {dataset.path: dataset for dataset in self.datasets}
 
-    def pixel_size(
-        self, level_path: int | str = 0, axis_order: list[str] | None = None
-    ) -> PixelSize:
+    def pixel_size(self, level_path: int | str = 0) -> PixelSize:
         """Get the pixel size of the dataset at the specified level."""
-        if axis_order is None:
-            # Return the pixel size of all spatial axes
-            axis_order = self.space_axes_names
-
         pixel_sizes = {
-            "axis_order": axis_order,
             "unit": self.space_axes_unit,
-            "y": None,
-            "x": None,
-            "z": None,
+            "y": 1.0,
+            "x": 1.0,
+            "z": 1.0,
         }
 
         dataset = self.get_dataset(level_path)
         for idx, ax in enumerate(self.axes):
-            if ax.name in axis_order:
+            if ax.name in pixel_sizes.keys():
                 pixel_sizes[ax.name] = dataset.scale[idx]
 
         return PixelSize(**pixel_sizes)
 
-    def scale(
-        self, level_path: int | str = 0, axis_order: list[str] | None = None
-    ) -> list[float]:
+    def scale(self, level_path: int | str = 0) -> list[float]:
         """Get the scale transformation of the dataset at the specified level."""
-        if axis_order is None:
-            # Return the scale transformation of all axes
-            return self.get_dataset(level_path).scale
-
-        original_scale = self.get_dataset(level_path).scale
-        original_axis_order = self.axes_names
-        scale_dict = {ax: s for ax, s in zip(original_axis_order, original_scale)}
-
-        scale = []
-        for ax in axis_order:
-            if ax not in original_axis_order:
-                raise ValueError(
-                    f"Axis {ax} not found in the dataset. Existing axes: {original_axis_order}"
-                )
-            scale.append(scale_dict[ax])
-
-        return scale
+        return self.get_dataset(level_path).scale
 
     def get_dataset(self, level_path: int | str = 0) -> Dataset:
         """Get the dataset at the specified level (index or path)."""
@@ -594,21 +523,18 @@ class Multiscale(BaseModel):
         """
         if isinstance(pixel_size, list):
             pixel_size = PixelSize.from_list(
-                pixel_size,
-                unit=self.space_axes_unit,
-                axis_order=self.space_axes_names,
+                sizes=pixel_size, unit=self.space_axes_unit
             )
         elif not isinstance(pixel_size, PixelSize):
             raise ValueError("Invalid pixel size type.")
 
-        query_ps = np.array(pixel_size.zyx())
+        query_ps = np.array(pixel_size.zyx)
         min_diff = float("inf")
         best_dataset = None
+        all_ps = []
         for dataset in self.datasets:
-            current_ps = np.array(
-                self.pixel_size(dataset.path, pixel_size.axis_order).zyx()
-            )
-
+            current_ps = np.array(self.pixel_size(dataset.path).zyx)
+            all_ps.append(current_ps)
             diff = np.linalg.norm(current_ps - query_ps)
             if diff < min_diff:
                 min_diff = diff
@@ -651,7 +577,7 @@ class Multiscale(BaseModel):
 
         new_axes = self.axes.copy()
         new_axes.pop(idx)
-        datasets = [dataset.remove_axis(idx) for dataset in self.datasets]
+        datasets = [dataset._remove_axis(idx) for dataset in self.datasets]
         return Multiscale(axes=new_axes, datasets=datasets)
 
     def add_axis(
@@ -693,7 +619,7 @@ class Multiscale(BaseModel):
 
         new_datasets = []
         for dataset, s, t in zip(self.datasets, scale, translation, strict=True):
-            new_datasets.append(dataset.add_axis(idx, s, t))
+            new_datasets.append(dataset._add_axis(idx, s, t))
 
         return Multiscale(axes=new_axes, datasets=new_datasets)
 
@@ -783,42 +709,35 @@ class BaseFractalMeta(BaseModel):
         """
         return self.multiscale.datasets_dict
 
-    def pixel_size(
-        self, level_path: int | str = 0, axis_order: str | None = None
-    ) -> PixelSize:
+    def pixel_size(self, level_path: int | str = 0) -> PixelSize:
         """Get the pixel size of the dataset at the specified level.
 
         Args:
             level_path(int | str): The level index (int) or path (str).
-            axis_order(list[str] | None): An optional list of space axis names to return the
-                pixel size in the specified order. If None, the pixel size will be
-                returned in the order of the spatial axes.
+
         Returns:
             PixelSize: The pixel size of the dataset.
 
         """
-        return self.multiscale.pixel_size(level_path, axis_order=axis_order)
+        return self.multiscale.pixel_size(level_path)
 
-    def scale(
-        self, level_path: int | str = 0, axis_order: list[str] | None = None
-    ) -> list[float]:
+    def scale(self, level_path: int | str = 0) -> list[float]:
         """Get the scale transformation of the dataset at the specified level.
 
         Args:
             level_path(int | str): The level index (int) or path (str).
-            axis_order(list[str] | None): An optional list of axis names to return the
-                scale transformation in the specified order. If None, the scale transformation
-                will be returned in the order of the axes.
+
         Returns:
             list[float]: The scale transformation of the dataset.
         """
-        return self.multiscale.scale(level_path, axis_order=axis_order)
+        return self.multiscale.scale(level_path)
 
     def get_dataset(self, level_path: int | str = 0) -> Dataset:
         """Get the dataset at the specified level (index or path).
 
         Args:
             level_path(int | str): The level index (int) or path (str).
+
         Returns:
             Dataset: The dataset at the specified level.
         """
@@ -832,6 +751,7 @@ class BaseFractalMeta(BaseModel):
         Args:
             pixel_size(list[float] | PixelSize): The pixel size to search for.
             strict(bool): If True, raise an error if the pixel size is not found.
+
         Returns:
             Dataset: The dataset with the specified pixel size (or the closest one).
         """
@@ -896,6 +816,7 @@ class FractalImageMeta(BaseFractalMeta):
 
         Args:
             label(str): The label/name of the channel.
+
         Returns:
             int: The index of the channel.
         """
@@ -908,6 +829,7 @@ class FractalImageMeta(BaseFractalMeta):
 
         Args:
             wavelength_id(str): The wavelength ID of the channel.
+
         Returns:
             int: The index of the channel.
         """
@@ -961,9 +883,6 @@ class FractalImageMeta(BaseFractalMeta):
             name=self.name,
             omero=self.omero,
         )
-
-    def to_new_axis_order(self, axis_order: list[str]) -> "FractalImageMeta":
-        raise NotImplementedError("Method not implemented.")
 
 
 class FractalLabelMeta(BaseFractalMeta):

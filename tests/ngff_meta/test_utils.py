@@ -23,13 +23,13 @@ class TestUtils:
 
         assert meta.channel_names == ["DAPI", "nanog", "Lamin B1"]
         np.testing.assert_array_equal(
-            meta.pixel_size(level_path=0).to_ordered_list(), [1.0, 1.0, 1.0]
+            meta.pixel_size(level_path=0).zyx, [1.0, 1.0, 1.0]
         )
         np.testing.assert_array_equal(
             meta.scale(level_path=0), [1.0, 1.0, 1.0, 1.0, 1.0]
         )
         np.testing.assert_array_equal(
-            meta.pixel_size(level_path="2").to_ordered_list(), [1.0, 4.0, 4.0]
+            meta.pixel_size(level_path="2").zyx, [1.0, 4.0, 4.0]
         )
         np.testing.assert_array_equal(
             meta.scale(level_path="2"), [1.0, 1.0, 1.0, 4.0, 4.0]
@@ -58,11 +58,11 @@ class TestUtils:
 
         assert meta.channel_names == ["DAPI", "nanog", "Lamin B1"]
         np.testing.assert_array_equal(
-            meta.pixel_size(level_path=0).to_ordered_list(), [1.0, 1.0, 1.0]
+            meta.pixel_size(level_path=0).zyx, [1.0, 1.0, 1.0]
         )
         np.testing.assert_array_equal(meta.scale(level_path=0), [1.0, 1.0, 1.0, 1.0])
         np.testing.assert_array_equal(
-            meta.pixel_size(level_path="2").to_ordered_list(), [1.0, 4.0, 4.0]
+            meta.pixel_size(level_path="2").zyx, [1.0, 4.0, 4.0]
         )
         np.testing.assert_array_equal(meta.scale(level_path="2"), [1.0, 1.0, 4.0, 4.0])
 
@@ -84,11 +84,11 @@ class TestUtils:
         )
 
         np.testing.assert_array_equal(
-            meta.pixel_size(level_path=0).to_ordered_list(), [1.0, 1.0, 1.0]
+            meta.pixel_size(level_path=0).zyx, (1.0, 1.0, 1.0)
         )
         np.testing.assert_array_equal(meta.scale(level_path=0), [1.0, 1.0, 1.0, 1.0])
         np.testing.assert_array_equal(
-            meta.pixel_size(level_path="2").to_ordered_list(), [1.0, 4.0, 4.0]
+            meta.pixel_size(level_path="2").zyx, (1.0, 4.0, 4.0)
         )
         np.testing.assert_array_equal(meta.scale(level_path="2"), [1.0, 1.0, 4.0, 4.0])
 

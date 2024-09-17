@@ -11,7 +11,7 @@ class TestOMEZarrHandlerV04:
 
         fractal_meta = handler.load_meta()
         np.testing.assert_array_equal(
-            fractal_meta.pixel_size(level_path=0).to_ordered_list(),
+            fractal_meta.pixel_size(level_path=0).zyx,
             [1.0, 0.1625, 0.1625],
         )
         np.testing.assert_array_equal(
@@ -55,9 +55,7 @@ class TestOMEZarrHandlerV04:
         )
 
         pixel_size = handler.load_meta().pixel_size(level_path=0)
-        assert pixel_size.to_ordered_list() == [1.0, 0.1625, 0.1625]
-        pixel_size_nm = pixel_size.to_units("nm")
-        assert pixel_size_nm.to_ordered_list() == [1000.0, 162.5, 162.5]
+        assert pixel_size.zyx == (1.0, 0.1625, 0.1625)
 
     def test_modify_axis_from_label_metadata(self, ome_zarr_label_v04_path):
         from ngio.ngff_meta import get_ngff_image_meta_handler

@@ -1,12 +1,13 @@
 """Generic class to handle Image-like data in a OME-NGFF file."""
 
-from zarr.store.common import StoreLike
+import zarr
 
+from ngio.io import StoreOrGroup, open_group
 from ngio.ngff_meta import (
     FractalImageMeta,
     PixelSize,
-    get_ngff_image_meta_handler,
     SpaceUnits,
+    get_ngff_image_meta_handler,
 )
 
 
@@ -18,19 +19,23 @@ class ImageLikeHandler:
 
     def __init__(
         self,
-        store: StoreLike,
+        store: StoreOrGroup,
         *,
         level_path: str | int | None = None,
         pixel_size: tuple[float, ...] | list[float] | None = None,
         highest_resolution: bool = False,
     ) -> None:
         """Initialize the MultiscaleHandler in read mode."""
+        if not isinstance(store, zarr.Group):
+            store = open_group(store=store, mode="r")
+
         self._metadata_handler = get_ngff_image_meta_handler(
-            store=store, meta_mode="image", cache=False
+            store=store, meta_mode="image", cache=True
         )
 
         # Find the level / resolution index
         self.level_path = self._find_level(level_path, pixel_size, highest_resolution)
+        self._group = store
 
     def _find_level(
         self,
@@ -59,6 +64,11 @@ class ImageLikeHandler:
             return meta.get_dataset_from_pixel_size(pixel_size, strict=True).path
 
         return meta.get_highest_resolution_dataset().path
+
+    @property
+    def group(self) -> zarr.Group:
+        """Return the Zarr group containing the image data."""
+        return self._group
 
     @property
     def metadata(self) -> FractalImageMeta:

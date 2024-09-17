@@ -45,18 +45,21 @@
     "omero": {
         "channels": [
             {
+                "active": true,
                 "color": "00FFFF",
                 "label": "DAPI",
                 "wavelength_id": "A01_C01",
                 "window": {"end": 700, "max": 65535, "min": 0, "start": 0}
             },
             {
+                "active": true,
                 "color": "FF00FF",
                 "label": "nanog",
                 "wavelength_id": "A01_C02",
                 "window": {"end": 180, "max": 65535, "min": 0, "start": 0}
             },
             {
+                "active": true,
                 "color": "FFFF00",
                 "label": "Lamin B1",
                 "wavelength_id": "A02_C03",

@@ -22,7 +22,7 @@ class Window04(BaseModel):
 class Channel04(BaseWithExtraFields):
     """Model for `Omero.channels`."""
 
-    # active: bool | None = None
+    active: bool = True
     # coefficient: int | None = None
     color: str
     # family: str | None = None
@@ -42,7 +42,7 @@ class Axis04(BaseModel):
     """Model for `Multiscale.axes` elements."""
 
     name: str
-    type: str | None = None
+    type: str
     unit: str | None = None
 
 
@@ -112,6 +112,34 @@ class Multiscale04(BaseModel):
     axes: list[Axis04] = Field(..., max_length=5, min_length=2)
     coordinateTransformations: list[Transformation04] | None = None
     _check_unique = field_validator("axes")(unique_items_validator)
+
+    @field_validator("axes")
+    @classmethod
+    def _check_axes_order(cls, v):
+        # check if the order of axes is correct
+        axes_types = [axis.type for axis in v]
+
+        if "time" in axes_types:
+            time_position = axes_types.index("time")
+            if time_position != 0:
+                raise ValueError("Time axis should be the first axis.")
+
+            axes_types = axes_types.pop(0)
+
+        if len(axes_types) < 2:
+            raise ValueError("At least two spatial axes are required.")
+
+        reversed_axes_types = axes_types[::-1]
+
+        channel_type_flag = False
+        for ax_type in reversed_axes_types:
+            if ax_type == "space":
+                if channel_type_flag:
+                    raise ValueError("Channel axis should precede spatial axes.")
+            else:
+                channel_type_flag = True
+
+        return v
 
 
 class NgffImageMeta04(BaseWithExtraFields):
