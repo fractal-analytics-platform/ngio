@@ -375,11 +375,11 @@ class Multiscale(BaseModel):
     """Multiscale model.
 
     Attributes:
-        axes(list[Axis]): The list of axes in the multiscale.
+        _axes(list[Axis]): The list of axes in the multiscale.
         datasets(list[Dataset]): The list of datasets in the multiscale.
     """
 
-    axes: list[Axis] = Field(..., max_length=5, min_length=2)
+    unordered_axes: list[Axis] = Field(..., max_length=5, min_length=2)
     datasets: list[Dataset] = Field(..., min_length=1)
 
     @field_validator("datasets")
@@ -394,7 +394,7 @@ class Multiscale(BaseModel):
             raise ValueError("Datasets must have unique paths.")
         return v
 
-    @field_validator("axes")
+    @field_validator("unordered_axes")
     @classmethod
     def _check_axes(cls, v):
         """Check the axes.
@@ -440,13 +440,28 @@ class Multiscale(BaseModel):
         return [dataset.path for dataset in self.datasets]
 
     @property
-    def canonical_order(self) -> list[str]:
-        """The canonical order of the axes."""
-        return ["t", "c", "z", "y", "x"]
+    def axes(self) -> list[Axis]:
+        """The axes in the canonical order."""
+        axes = self.unordered_axes
+        axes_types = [ax.type for ax in axes]
+        axes_names = [ax.name for ax in axes]
+        ordered_axes = []
+
+        if AxisType.time in axes_types:
+            ordered_axes.append(axes[axes_types.index(AxisType.time)])
+
+        if AxisType.channel in axes_types:
+            ordered_axes.append(axes[axes_types.index(AxisType.channel)])
+
+        for ax_name in [SpaceNames.z, SpaceNames.y, SpaceNames.x]:
+            if ax_name in axes_names:
+                ordered_axes.append(axes[axes_names.index(ax_name)])
+
+        return ordered_axes
 
     @property
     def axes_names(self) -> list[str]:
-        """List of axes names in the multiscale."""
+        """List of axes names in the multiscale in the canonical order."""
         names = []
         for ax in self.axes:
             if isinstance(ax.name, SpaceNames) or isinstance(ax.name, TimeNames):
@@ -578,7 +593,7 @@ class Multiscale(BaseModel):
         new_axes = self.axes.copy()
         new_axes.pop(idx)
         datasets = [dataset._remove_axis(idx) for dataset in self.datasets]
-        return Multiscale(axes=new_axes, datasets=datasets)
+        return Multiscale(unordered_axes=new_axes, datasets=datasets)
 
     def add_axis(
         self,
@@ -621,7 +636,7 @@ class Multiscale(BaseModel):
         for dataset, s, t in zip(self.datasets, scale, translation, strict=True):
             new_datasets.append(dataset._add_axis(idx, s, t))
 
-        return Multiscale(axes=new_axes, datasets=new_datasets)
+        return Multiscale(unordered_axes=new_axes, datasets=new_datasets)
 
 
 class BaseFractalMeta(BaseModel):

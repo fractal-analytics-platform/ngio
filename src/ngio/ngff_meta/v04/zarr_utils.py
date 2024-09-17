@@ -124,7 +124,7 @@ def vanilla_ngff_image_meta_v04_to_fractal(
         coo_transformation04=multiscale04.coordinateTransformations,
     )
     fractal_multiscale = Multiscale(
-        axes=fractal_axes,
+        unordered_axes=fractal_axes,
         datasets=fractal_datasets,
     )
 

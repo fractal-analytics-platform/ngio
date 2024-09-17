@@ -77,7 +77,7 @@ def _create_image_metadata(
         print(ax_name, unit, ax_type)
         axes.append(Axis(name=ax_name, unit=unit, type=ax_type))
 
-    multiscale = Multiscale(axes=axes, datasets=datasets)
+    multiscale = Multiscale(unordered_axes=axes, datasets=datasets)
 
     if channel_names is not None:
         if channel_wavelengths is None:
