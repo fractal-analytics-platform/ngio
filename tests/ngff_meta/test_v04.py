@@ -1,5 +1,7 @@
 import json
 
+import pytest
+
 
 class TestOMEZarrHandlerV04:
     def test_basic_workflow(self, ome_zarr_image_v04_path):
@@ -35,3 +37,16 @@ class TestOMEZarrHandlerV04:
 
         saved_meta = read_group_attrs(store=ome_zarr_image_v04_path, zarr_format=2)
         assert saved_meta == base_ome_zarr_meta
+
+    def test_wrong_axis_order(self):
+        from pydantic import ValidationError
+
+        from ngio.ngff_meta.v04.specs import NgffImageMeta04
+
+        with open(
+            "tests/data/meta_v04/base_ome_zarr_image_meta_wrong_axis_order.json"
+        ) as f:
+            base_ome_zarr_meta = json.load(f)
+
+        with pytest.raises(ValidationError):
+            NgffImageMeta04(**base_ome_zarr_meta)
