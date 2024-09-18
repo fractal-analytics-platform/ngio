@@ -6,11 +6,9 @@ from ngio.ngff_meta.fractal_image_meta import (
     Axis,
     Channel,
     Dataset,
-    FractalImageMeta,
-    FractalLabelMeta,
-    Multiscale,
+    ImageMeta,
+    LabelMeta,
     Omero,
-    ScaleCoordinateTransformation,
     SpaceNames,
     SpaceUnits,
     TimeNames,
@@ -18,7 +16,7 @@ from ngio.ngff_meta.fractal_image_meta import (
 )
 
 
-def _compute_scale(axis_order, pixel_sizes, time_spacing):
+def _compute_scale(axis_names, pixel_sizes, time_spacing):
     scale = []
 
     pixel_sizes_dict = {
@@ -27,7 +25,7 @@ def _compute_scale(axis_order, pixel_sizes, time_spacing):
         "y": pixel_sizes[2],
     }
 
-    for ax in axis_order:
+    for ax in axis_names:
         if ax in TimeNames.allowed_names():
             scale.append(time_spacing)
         elif ax in SpaceNames.allowed_names():
@@ -39,56 +37,46 @@ def _compute_scale(axis_order, pixel_sizes, time_spacing):
 
 
 def _create_image_metadata(
-    axis_order: list[str] = ("t", "c", "z", "y", "x"),
+    axis_names: list[str] = ("t", "c", "z", "y", "x"),
     pixel_sizes: tuple[float, float, float] = (1.0, 1.0, 1.0),
     scaling_factors: tuple[float, float, float] = (1.0, 2.0, 2.0),
     pixel_units: SpaceUnits | str = SpaceUnits.micrometer,
     time_spacing: float = 1.0,
     time_units: TimeUnits | str = TimeUnits.s,
     num_levels: int = 5,
-    channel_names: list[str] | None = None,
+    channel_labels: list[str] | None = None,
     channel_wavelengths: list[str] | None = None,
     channel_kwargs: list[dict[str, Any]] | None = None,
     omero_kwargs: dict[str, Any] | None = None,
-) -> tuple[Multiscale, Omero]:
+) -> tuple[list[Dataset], Omero]:
     """Create a image metadata object from scratch."""
-    scale = _compute_scale(axis_order, pixel_sizes, time_spacing)
+    scale = _compute_scale(axis_names, pixel_sizes, time_spacing)
 
+    axes = Axis.batch_create(axis_names, time_unit=time_units, space_unit=pixel_units)
     datasets = []
     for level in range(num_levels):
-        transform = [ScaleCoordinateTransformation(type="scale", scale=scale)]
-        datasets.append(Dataset(path=str(level), coordinateTransformations=transform))
+        datasets.append(
+            Dataset(
+                path=str(level),
+                arbitrary_axes=axes,
+                arbitrary_scale=scale,
+                arbitrary_translation=None,
+            )
+        )
 
         pixel_sizes = [s * f for s, f in zip(pixel_sizes, scaling_factors, strict=True)]
-        scale = _compute_scale(axis_order, pixel_sizes, time_spacing)
+        scale = _compute_scale(axis_names, pixel_sizes, time_spacing)
 
-    axes = []
-    for ax_name in axis_order:
-        if ax_name in TimeNames.allowed_names():
-            unit = time_units
-            ax_type = "time"
-        elif ax_name in SpaceNames.allowed_names():
-            unit = pixel_units
-            ax_type = "space"
-        else:
-            unit = None
-            ax_type = "channel"
-
-        print(ax_name, unit, ax_type)
-        axes.append(Axis(name=ax_name, unit=unit, type=ax_type))
-
-    multiscale = Multiscale(unordered_axes=axes, datasets=datasets)
-
-    if channel_names is not None:
+    if channel_labels is not None:
         if channel_wavelengths is None:
-            channel_wavelengths = [None] * len(channel_names)
+            channel_wavelengths = [None] * len(channel_labels)
 
         if channel_kwargs is None:
-            channel_kwargs = [{}] * len(channel_names)
+            channel_kwargs = [{}] * len(channel_labels)
 
         channels = []
         for label, wavelenghts, kwargs in zip(
-            channel_names, channel_wavelengths, channel_kwargs, strict=True
+            channel_labels, channel_wavelengths, channel_kwargs, strict=True
         ):
             channels.append(Channel(label=label, wavelength_id=wavelenghts, **kwargs))
 
@@ -97,7 +85,7 @@ def _create_image_metadata(
     else:
         omero = None
 
-    return multiscale, omero
+    return datasets, omero
 
 
 def create_image_metadata(
@@ -109,12 +97,12 @@ def create_image_metadata(
     time_units: TimeUnits | str = TimeUnits.s,
     num_levels: int = 5,
     name: str | None = None,
-    channel_names: list[str] | None = None,
+    channel_labels: list[str] | None = None,
     channel_wavelengths: list[str] | None = None,
     channel_kwargs: list[dict[str, Any]] | None = None,
     omero_kwargs: dict[str, Any] | None = None,
     version: str = "0.4",
-) -> FractalImageMeta:
+) -> ImageMeta:
     """Create a image metadata object from scratch.
 
     Args:
@@ -128,33 +116,33 @@ def create_image_metadata(
         time_units: The units of the time spacing.
         num_levels: The number of levels.
         name: The name of the metadata.
-        channel_names: The names of the channels.
+        channel_labels: The names of the channels.
         channel_wavelengths: The wavelengths of the channels.
         channel_kwargs: The additional channel kwargs.
         omero_kwargs: The additional omero kwargs.
         version: The version of the metadata.
 
     """
-    if len(channel_names) != len(set(channel_names)):
+    if len(channel_labels) != len(set(channel_labels)):
         raise ValueError("Channel names must be unique.")
 
-    mulitscale, omero = _create_image_metadata(
-        axis_order=axis_names,
+    datasets, omero = _create_image_metadata(
+        axis_names=axis_names,
         pixel_sizes=pixel_sizes,
         scaling_factors=scaling_factors,
         pixel_units=pixel_units,
         time_spacing=time_spacing,
         time_units=time_units,
         num_levels=num_levels,
-        channel_names=channel_names,
+        channel_labels=channel_labels,
         channel_wavelengths=channel_wavelengths,
         channel_kwargs=channel_kwargs,
         omero_kwargs=omero_kwargs,
     )
-    return FractalImageMeta(
+    return ImageMeta(
         version=version,
         name=name,
-        multiscale=mulitscale,
+        datasets=datasets,
         omero=omero,
     )
 
@@ -169,7 +157,7 @@ def create_label_metadata(
     num_levels: int = 5,
     name: str | None = None,
     version: str = "0.4",
-) -> FractalLabelMeta:
+) -> LabelMeta:
     """Create a label metadata object from scratch.
 
     Args:
@@ -185,8 +173,8 @@ def create_label_metadata(
         name: The name of the metadata.
         version: The version of the metadata.
     """
-    multiscale, _ = _create_image_metadata(
-        axis_order=axis_order,
+    datasets, _ = _create_image_metadata(
+        axis_names=axis_order,
         pixel_sizes=pixel_sizes,
         scaling_factors=scaling_factors,
         pixel_units=pixel_units,
@@ -194,19 +182,19 @@ def create_label_metadata(
         time_units=time_units,
         num_levels=num_levels,
     )
-    return FractalLabelMeta(
+    return LabelMeta(
         version=version,
         name=name,
-        multiscale=multiscale,
+        datasets=datasets,
     )
 
 
 def remove_axis_from_metadata(
-    metadata: FractalImageMeta,
+    metadata: ImageMeta,
     *,
     axis_name: str | None = None,
     idx: int | None = None,
-) -> FractalImageMeta:
+) -> ImageMeta:
     """Remove an axis from the metadata.
 
     Args:
@@ -218,39 +206,36 @@ def remove_axis_from_metadata(
 
 
 def add_axis_to_metadata(
-    metadata: FractalImageMeta | FractalLabelMeta,
-    idx: int,
+    metadata: ImageMeta | LabelMeta,
     axis_name: str,
-    units: str | None = None,
-    axis_type: str = "channel",
     scale: float = 1.0,
-) -> FractalImageMeta | FractalLabelMeta:
+) -> ImageMeta | LabelMeta:
     """Add an axis to the FractalImageMeta or FractalLabelMeta object.
 
     Args:
         metadata: A FractalImageMeta or FractalLabelMeta object.
-        idx: The index of the axis.
-        axis_name: The name of the axis.
-        units: The units of the axis.
-        axis_type: The type of the axis.
-        scale: The scale of the axis.
+        axis_name: The name of the axis to add.
+        scale: The scale of the axis
     """
     return metadata.add_axis(
-        idx=idx, axis_name=axis_name, units=units, axis_type=axis_type, scale=scale
+        axis_name=axis_name,
+        scale=scale,
     )
 
 
 def derive_image_metadata(
-    image: FractalImageMeta,
+    image: ImageMeta,
     name: str,
     start_level: int = 0,
-) -> FractalImageMeta:
+) -> ImageMeta:
+    """Derive a new image metadata from an existing one."""
     pass
 
 
 def derive_label_metadata(
-    image: FractalImageMeta,
+    image: ImageMeta,
     name: str,
     start_level: int = 0,
-) -> FractalLabelMeta:
+) -> LabelMeta:
+    """Derive a new label metadata from an existing one."""
     pass

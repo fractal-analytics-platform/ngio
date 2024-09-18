@@ -6,13 +6,10 @@ from ngio.io import StoreOrGroup, read_group_attrs, update_group_attrs
 from ngio.ngff_meta.fractal_image_meta import (
     Axis,
     Dataset,
-    FractalImageLabelMeta,
-    FractalImageMeta,
-    FractalLabelMeta,
-    Multiscale,
+    ImageLabelMeta,
+    ImageMeta,
+    LabelMeta,
     Omero,
-    ScaleCoordinateTransformation,
-    TranslationCoordinateTransformation,
 )
 from ngio.ngff_meta.v04.specs import (
     Axis04,
@@ -54,6 +51,7 @@ def load_vanilla_ngff_image_meta_v04(store: StoreOrGroup) -> NgffImageMeta04:
 
 def _transform_dataset(
     datasets04: list[Dataset04],
+    axes: list[Axis04],
     coo_transformation04: list[Transformation04] | None,
 ) -> list[Dataset]:
     # coo_transformation validation
@@ -74,15 +72,10 @@ def _transform_dataset(
 
     fractal_datasets = []
     for dataset04 in datasets04:
-        fractal_transformation = []
+        scale, translation = None, None
         for transformation in dataset04.coordinateTransformations:
             if isinstance(transformation, TranslationCoordinateTransformation04):
-                fractal_transformation.append(
-                    TranslationCoordinateTransformation(
-                        type=transformation.type,
-                        translation=transformation.translation,
-                    )
-                )
+                translation = transformation.translation
 
             if isinstance(transformation, ScaleCoordinateTransformation04):
                 scale = transformation.scale
@@ -93,17 +86,15 @@ def _transform_dataset(
                             "Inconsistent scale transformation. \
                             The scale transformation must have the same length."
                         )
+                    # Combine the scale transformation with the top-level scale
                     scale = [s * ts for s, ts in zip(scale, top_scale, strict=True)]
-                fractal_transformation.append(
-                    ScaleCoordinateTransformation(
-                        type=transformation.type,
-                        scale=scale,
-                    )
-                )
+                scale = scale
         fractal_datasets.append(
             Dataset(
                 path=dataset04.path,
-                coordinateTransformations=fractal_transformation,
+                arbitrary_axes=axes,
+                arbitrary_scale=scale,
+                arbitrary_translation=translation,
             )
         )
     return fractal_datasets
@@ -112,47 +103,52 @@ def _transform_dataset(
 def vanilla_ngff_image_meta_v04_to_fractal(
     meta04: NgffImageMeta04,
     meta_mode: Literal["image", "label"] = "image",
-) -> FractalImageLabelMeta:
+) -> ImageLabelMeta:
     """Convert the NgffImageMeta to FractalImageMeta."""
     if not isinstance(meta04, NgffImageMeta04):
         raise ValueError("Invalid metadata type. Expected NgffImageMeta04.")
 
     multiscale04 = meta04.multiscales[0]
-    fractal_axes = [Axis(**axis.model_dump()) for axis in multiscale04.axes]
+    axes = [Axis(name=axis.name, unit=axis.unit) for axis in multiscale04.axes]
     fractal_datasets = _transform_dataset(
         datasets04=multiscale04.datasets,
+        axes=axes,
         coo_transformation04=multiscale04.coordinateTransformations,
-    )
-    fractal_multiscale = Multiscale(
-        unordered_axes=fractal_axes,
-        datasets=fractal_datasets,
     )
 
     if meta_mode == "label":
-        return FractalLabelMeta(
+        return LabelMeta(
             version="0.4",
             name=multiscale04.name,
-            multiscale=fractal_multiscale,
+            datasets=fractal_datasets,
         )
 
     fractal_omero = None if meta04.omero is None else Omero(**meta04.omero.model_dump())
 
-    return FractalImageMeta(
+    return ImageMeta(
         version="0.4",
         name=multiscale04.name,
-        multiscale=fractal_multiscale,
+        datasets=fractal_datasets,
         omero=fractal_omero,
     )
 
 
 def fractal_ngff_image_meta_to_vanilla_v04(
-    meta: FractalImageLabelMeta,
+    meta: ImageLabelMeta,
 ) -> NgffImageMeta04:
     """Convert the FractalImageMeta to NgffImageMeta."""
-    axes04 = [Axis04(**axis.model_dump()) for axis in meta.multiscale.axes]
+    axes04 = [Axis04(**axis.model_dump()) for axis in meta.axes]
     dataset04 = []
-    for dataset in meta.multiscale.datasets:
-        transformations = [t.model_dump() for t in dataset.coordinateTransformations]
+    for dataset in meta.datasets:
+        transformations = [
+            ScaleCoordinateTransformation04(type="scale", scale=dataset.scale)
+        ]
+        if dataset.translation is not None:
+            transformations.append(
+                TranslationCoordinateTransformation04(
+                    type="translation", translation=dataset.translation
+                )
+            )
         dataset04.append(
             Dataset04(path=dataset.path, coordinateTransformations=transformations)
         )
@@ -169,7 +165,7 @@ def fractal_ngff_image_meta_to_vanilla_v04(
     )
 
 
-def load_ngff_image_meta_v04(store: StoreOrGroup) -> FractalImageLabelMeta:
+def load_ngff_image_meta_v04(store: StoreOrGroup) -> ImageLabelMeta:
     """Load the OME-NGFF 0.4 image meta model."""
     if not check_ngff_image_meta_v04(store=store):
         raise ValueError(
@@ -179,7 +175,7 @@ def load_ngff_image_meta_v04(store: StoreOrGroup) -> FractalImageLabelMeta:
     return vanilla_ngff_image_meta_v04_to_fractal(meta04=meta04)
 
 
-def write_ngff_image_meta_v04(store: StoreOrGroup, meta: FractalImageLabelMeta) -> None:
+def write_ngff_image_meta_v04(store: StoreOrGroup, meta: ImageLabelMeta) -> None:
     """Write the OME-NGFF 0.4 image meta model."""
     if not check_ngff_image_meta_v04(store=store):
         raise ValueError(
@@ -209,7 +205,7 @@ class NgffImageMetaZarrHandlerV04:
         if not self.check_version(store=store):
             raise ValueError("The Zarr store does not contain the correct version.")
 
-    def load_meta(self) -> FractalImageLabelMeta:
+    def load_meta(self) -> ImageLabelMeta:
         """Load the OME-NGFF 0.4 metadata."""
         if self.cache:
             if self._meta is None:
@@ -218,14 +214,14 @@ class NgffImageMetaZarrHandlerV04:
 
         return load_ngff_image_meta_v04(self.store)
 
-    def write_meta(self, meta: FractalImageLabelMeta) -> None:
+    def write_meta(self, meta: ImageLabelMeta) -> None:
         """Write the OME-NGFF 0.4 metadata."""
         write_ngff_image_meta_v04(store=self.store, meta=meta)
 
         if self.cache:
             self.update_cache(meta)
 
-    def update_cache(self, meta: FractalImageLabelMeta) -> None:
+    def update_cache(self, meta: ImageLabelMeta) -> None:
         """Update the cached metadata."""
         if not self.cache:
             raise ValueError("Cache is not enabled.")

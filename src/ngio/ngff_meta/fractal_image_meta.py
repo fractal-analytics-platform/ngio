@@ -1,10 +1,16 @@
-"""Fractal image metadata models."""
+"""Image metadata models.
+
+This module contains the models for the image metadata.
+These metadata models are not adhering to the OME standard.
+But they can be built from the OME standard metadata, and the
+can be converted to the OME standard.
+"""
 
 from enum import Enum
-from typing import Literal
 
 import numpy as np
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, Field
+from typing_extensions import Self
 
 from ngio.pydantic_utils import BaseWithExtraFields
 
@@ -33,20 +39,6 @@ class Omero(BaseWithExtraFields):
     """
 
     channels: list[Channel] = Field(default_factory=list)
-
-    def get_idx_by_label(self, label: str) -> int:
-        """Get the index of a channel by its label."""
-        for idx, channel in enumerate(self.channels):
-            if channel.label == label:
-                return idx
-        raise ValueError(f"Channel with label {label} not found.")
-
-    def get_idx_by_wavelength_id(self, wavelength_id: str) -> int:
-        """Get the index of a channel by its wavelength ID."""
-        for idx, channel in enumerate(self.channels):
-            if channel.wavelength_id == wavelength_id:
-                return idx
-        raise ValueError(f"Channel with wavelength ID {wavelength_id} not found.")
 
 
 class AxisType(str, Enum):
@@ -78,9 +70,9 @@ class SpaceUnits(str, Enum):
 class SpaceNames(str, Enum):
     """Allowed space axis names."""
 
-    x = "x"
-    y = "y"
     z = "z"
+    y = "y"
+    x = "x"
 
     @classmethod
     def allowed_names(self) -> list[str]:
@@ -102,10 +94,10 @@ class ChannelNames(str, Enum):
 class PixelSize(BaseModel):
     """PixelSize class to store the pixel size in 3D space."""
 
-    y: float
-    x: float
-    z: float = 1.0
-    unit: SpaceUnits = SpaceUnits.um
+    x: float = Field(..., ge=0)
+    y: float = Field(..., ge=0)
+    z: float = Field(1.0, ge=0)
+    unit: SpaceUnits = SpaceUnits.micrometer
 
     @classmethod
     def from_list(cls, sizes: list[float], unit: SpaceUnits):
@@ -142,6 +134,10 @@ class PixelSize(BaseModel):
         """Return the area of the xy plane."""
         return self.y * self.x
 
+    def distance(self, other: "PixelSize") -> float:
+        """Return the distance between two pixel sizes."""
+        return np.linalg.norm(np.array(self.zyx) - np.array(other.zyx))
+
 
 class TimeUnits(str, Enum):
     """Allowed time units."""
@@ -166,785 +162,683 @@ class TimeNames(str, Enum):
         return list(TimeNames.__members__.keys())
 
 
-class Axis(BaseModel):
-    """Axis infos model.
-
-    name(str): The name of the axis.
-    type(AxisType): The type of the axis.
-        It can be "channel", "time" or "space".
-    unit(SpaceUnits | TimeUnits): The unit of the axis.
-        It can be a space unit or a time unit. Channel axes do not have units.
-    """
-
-    name: str | TimeNames | SpaceNames
-    type: AxisType
-    unit: SpaceUnits | TimeUnits | None = None
-
-    @model_validator(mode="after")
-    def _check_consistency(self) -> "Axis":
-        """Check the consistency of the axis type and unit."""
-        if self.type == AxisType.channel:
-            if self.unit is not None:
-                raise ValueError("Channel axes must not have units.")
-
-        if self.type == AxisType.time:
-            print(self)
-            self.name = TimeNames(self.name)
-            if not isinstance(self.unit, TimeUnits):
-                raise ValueError(
-                    "Time axes must have time units."
-                    f" {self.unit} in {TimeUnits.allowed_names()}"
-                )
-            if not isinstance(self.name, TimeNames):
-                raise ValueError(
-                    f"Time axes must have time names. "
-                    f"{self.name} in {TimeNames.allowed_names()}"
-                )
-
-        if self.type == AxisType.space:
-            self.name = SpaceNames(self.name)
-            if not isinstance(self.unit, SpaceUnits):
-                raise ValueError(
-                    "Space axes must have space units."
-                    f" {self.unit} in {SpaceUnits.allowed_names()}"
-                )
-            if not isinstance(self.name, SpaceNames):
-                raise ValueError(
-                    f"Space axes must have space names. "
-                    f"{self.name} in {SpaceNames.allowed_names()}"
-                )
-        return self
-
-
-class ScaleCoordinateTransformation(BaseModel):
-    """Scale transformation."""
-
-    type: Literal["scale"]
-    scale: list[float] = Field(..., min_length=2)
-
-
-class TranslationCoordinateTransformation(BaseModel):
-    """Translation transformation."""
-
-    type: Literal["translation"]
-    translation: list[float] = Field(..., min_length=2)
-
-
-Transformation = ScaleCoordinateTransformation | TranslationCoordinateTransformation
-
-
-class Dataset(BaseModel):
-    """Information about a dataset in the multiscale.
-
-    path(str): The relative path of the dataset.
-    coordinateTransformations(list[Transformation]): The list of coordinate
-        transformations of the dataset.
-        A single scale transformation is required, while a translation
-        transformation is optional.
-    """
-
-    path: str
-    coordinateTransformations: list[
-        ScaleCoordinateTransformation | TranslationCoordinateTransformation
-    ]
-
-    @field_validator("coordinateTransformations")
-    @classmethod
-    def _check_coo_transformations(cls, v):
-        """Check the coordinate transformations.
-
-        - Exactly one scale transformation is required.
-        - At most one translation transformation is allowed.
-        - The scale and translation transformations must have the same length.
-        """
-        num_scale = sum(
-            1 for item in v if isinstance(item, ScaleCoordinateTransformation)
-        )
-        if num_scale != 1:
-            raise ValueError("Exactly one scale transformation is required.")
-
-        num_translation = sum(
-            1 for item in v if isinstance(item, TranslationCoordinateTransformation)
-        )
-        if num_translation > 1:
-            raise ValueError("At most one translation transformation is allowed.")
-
-        scale, translation = None, None
-        for transformation in v:
-            if isinstance(transformation, ScaleCoordinateTransformation):
-                scale = transformation.scale
-            elif isinstance(transformation, TranslationCoordinateTransformation):
-                translation = transformation.translation
-
-        if scale is None:
-            raise ValueError("Scale transformation not found.")
-
-        if translation is not None and len(translation) != len(scale):
-            raise ValueError(
-                "Inconsistent scale and translation transformations. "
-                "The scale and translation transformations must have the same length."
-            )
-
-        return v
-
-    @property
-    def scale(self) -> list[float]:
-        """Get the scale transformation of the dataset."""
-        for transformation in self.coordinateTransformations:
-            if isinstance(transformation, ScaleCoordinateTransformation):
-                return transformation.scale
-        raise ValueError("Scale transformation not found.")
-
-    @property
-    def translation(self) -> list[float] | None:
-        """Return the translation transformation of the dataset (if any)."""
-        for transformation in self.coordinateTransformations:
-            if isinstance(transformation, TranslationCoordinateTransformation):
-                return transformation.translation
-        return None
-
-    def _change_transforms(
-        self, scale: list[float] | None = None, translation: list[float] | None = None
-    ) -> "Dataset":
-        """Change the scale and translation transformations of the dataset."""
-        coordindateTransformations = []
-        for transformation in self.coordinateTransformations:
-            if (
-                isinstance(transformation, ScaleCoordinateTransformation)
-                and scale is not None
-            ):
-                coordindateTransformations.append(
-                    ScaleCoordinateTransformation(type="scale", scale=scale)
-                )
-
-            elif (
-                isinstance(transformation, TranslationCoordinateTransformation)
-                and translation is not None
-            ):
-                coordindateTransformations.append(
-                    TranslationCoordinateTransformation(
-                        type="translation", translation=translation
-                    )
-                )
-            else:
-                raise ValueError("Invalid transformation type.")
-
-        return Dataset(
-            path=self.path, coordinateTransformations=coordindateTransformations
-        )
-
-    def _remove_axis(self, idx: int) -> "Dataset":
-        """Remove an axis from the scale transformation."""
-        if idx < 0:
-            raise ValueError(f"Axis index {idx} cannot be negative.")
-
-        if idx >= len(self.scale):
-            raise ValueError(f"Axis index {idx} out of range.")
-
-        new_scale = self.scale.copy()
-        new_scale.pop(idx)
-
-        if self.translation is not None:
-            new_translation = self.translation
-            new_translation.pop(idx)
-        else:
-            new_translation = None
-        return self._change_transforms(scale=new_scale, translation=new_translation)
-
-    def _add_axis(
-        self, idx: int, scale: float = 1.0, translation: float = 0.0
-    ) -> "Dataset":
-        """Add an axis to the scale transformation."""
-        if idx < 0:
-            raise ValueError(f"Axis index {idx} cannot be negative.")
-        if idx > len(self.scale):
-            raise ValueError(f"Axis index {idx} out of range.")
-
-        new_scale = self.scale.copy()
-        new_scale.insert(idx, scale)
-
-        if self.translation is not None:
-            new_translation = self.translation
-            new_translation.insert(idx, translation)
-        else:
-            new_translation = None
-        return self._change_transforms(scale=new_scale, translation=new_translation)
-
-
-class Multiscale(BaseModel):
-    """Multiscale model.
-
-    Attributes:
-        _axes(list[Axis]): The list of axes in the multiscale.
-        datasets(list[Dataset]): The list of datasets in the multiscale.
-    """
-
-    unordered_axes: list[Axis] = Field(..., max_length=5, min_length=2)
-    datasets: list[Dataset] = Field(..., min_length=1)
-
-    @field_validator("datasets")
-    @classmethod
-    def _check_datasets(cls, v):
-        """Check the datasets.
-
-        - The datasets must have unique paths.
-        """
-        paths = [dataset.path for dataset in v]
-        if len(paths) != len(set(paths)):
-            raise ValueError("Datasets must have unique paths.")
-        return v
-
-    @field_validator("unordered_axes")
-    @classmethod
-    def _check_axes(cls, v):
-        """Check the axes.
-
-        - The axes must have unique names.
-        - There must be at least two space axes.
-        - There can be at most 3 space axes.
-        - There must be at most one channel axis.
-        - Space axes must have consistent units.
-
-        """
-        # Check the uniqueness of the axes names
-        names = [axis.name for axis in v]
-        if len(names) != len(set(names)):
-            raise ValueError("Axes must have unique names.")
-
-        # Check the number of spatial axes == 2 or 3
-        spatial_axes = [axis for axis in v if axis.type == AxisType.space]
-        if len(spatial_axes) not in [2, 3]:
-            raise ValueError(
-                f"There must be 2 or 3 spatial axes. Found {len(spatial_axes)}."
-            )
-
-        # Check the number of channel axes == 1
-        channel_axes = [axis for axis in v if axis.type == AxisType.channel]
-        if len(channel_axes) > 1:
-            raise ValueError("There can be at most one channel axis.")
-
-        # Check the consistency of the space axes units
-        space_units = [axis.unit for axis in spatial_axes]
-        if len(set(space_units)) > 1:
-            raise ValueError("Inconsistent spatial axes units.")
-        return v
-
-    @property
-    def num_levels(self) -> int:
-        """Number of resolution levels in the multiscale."""
-        return len(self.datasets)
-
-    @property
-    def levels_paths(self) -> list[str]:
-        """List of all resolution levels paths in the multiscale."""
-        return [dataset.path for dataset in self.datasets]
-
-    @property
-    def axes(self) -> list[Axis]:
-        """The axes in the canonical order."""
-        axes = self.unordered_axes
-        axes_types = [ax.type for ax in axes]
-        axes_names = [ax.name for ax in axes]
-        ordered_axes = []
-
-        if AxisType.time in axes_types:
-            ordered_axes.append(axes[axes_types.index(AxisType.time)])
-
-        if AxisType.channel in axes_types:
-            ordered_axes.append(axes[axes_types.index(AxisType.channel)])
-
-        for ax_name in [SpaceNames.z, SpaceNames.y, SpaceNames.x]:
-            if ax_name in axes_names:
-                ordered_axes.append(axes[axes_names.index(ax_name)])
-
-        return ordered_axes
-
-    @property
-    def axes_names(self) -> list[str]:
-        """List of axes names in the multiscale in the canonical order."""
-        names = []
-        for ax in self.axes:
-            if isinstance(ax.name, SpaceNames) or isinstance(ax.name, TimeNames):
-                names.append(ax.name.value)
-            else:
-                names.append(ax.name)
-        return names
-
-    @property
-    def space_axes_names(self) -> list[str]:
-        """List of spatial axes names in the multiscale."""
-        return [ax.name for ax in self.axes if ax.type == AxisType.space]
-
-    @property
-    def space_axes_unit(self) -> SpaceUnits:
-        """The unit of the space axes."""
-        types = [ax.unit for ax in self.axes if ax.type == AxisType.space]
-        return types[0]
-
-    @property
-    def datasets_dict(self) -> dict[str, Dataset]:
-        """Dictionary of datasets in the multiscale indexed by path."""
-        return {dataset.path: dataset for dataset in self.datasets}
-
-    def pixel_size(self, level_path: int | str = 0) -> PixelSize:
-        """Get the pixel size of the dataset at the specified level."""
-        pixel_sizes = {
-            "unit": self.space_axes_unit,
-            "y": 1.0,
-            "x": 1.0,
-            "z": 1.0,
-        }
-
-        dataset = self.get_dataset(level_path)
-        for idx, ax in enumerate(self.axes):
-            if ax.name in pixel_sizes.keys():
-                pixel_sizes[ax.name] = dataset.scale[idx]
-
-        return PixelSize(**pixel_sizes)
-
-    def scale(self, level_path: int | str = 0) -> list[float]:
-        """Get the scale transformation of the dataset at the specified level."""
-        return self.get_dataset(level_path).scale
-
-    def get_dataset(self, level_path: int | str = 0) -> Dataset:
-        """Get the dataset at the specified level (index or path)."""
-        if isinstance(level_path, str):
-            dataset = self.datasets_dict.get(level_path, None)
-            if dataset is None:
-                raise ValueError(
-                    f"Dataset {level_path} not found. "
-                    f"Available datasets: {self.levels_paths}"
-                )
-        elif isinstance(level_path, int):
-            if level_path >= self.num_levels:
-                raise ValueError(
-                    f"Level {level_path} not found. Available levels: {self.num_levels}"
-                )
-            dataset = self.datasets[level_path]
-        else:
-            raise TypeError("Level must be an integer or a string.")
-        return dataset
-
-    def get_dataset_from_pixel_size(
-        self, pixel_size: list[float] | PixelSize, strict: bool = True
-    ) -> Dataset:
-        """Get the dataset with the specified pixel size.
+class Axis:
+    """Axis infos model."""
+
+    def __init__(
+        self,
+        name: str | TimeNames | SpaceNames,
+        unit: SpaceUnits | TimeUnits | None = None,
+    ) -> None:
+        """Initialize the Axis object.
 
         Args:
-            pixel_size(list[float] | PixelSize): The pixel size to search for.
-            strict(bool): If True, raise an error if the pixel size is not found,
-                otherwise return the dataset with the closest pixel size.
-
+            name(str): The name of the axis.
+            unit(SpaceUnits | TimeUnits | None): The unit of the axis.
         """
-        if isinstance(pixel_size, list):
-            pixel_size = PixelSize.from_list(
-                sizes=pixel_size, unit=self.space_axes_unit
+        if name is None:
+            raise ValueError("Axis name cannot be None.")
+
+        if isinstance(name, Enum):
+            name = name.value
+
+        self._name = name
+
+        if name in TimeNames.allowed_names():
+            self._type = AxisType.time
+
+            if unit is None:
+                self._unit = TimeUnits.s
+            elif unit not in TimeUnits.allowed_names():
+                raise ValueError(f"Invalid time unit {unit}.")
+            else:
+                self._unit = unit
+
+        elif name in SpaceNames.allowed_names():
+            self._type = AxisType.space
+
+            if unit is None:
+                self._unit = SpaceUnits.um
+            elif unit not in SpaceUnits.allowed_names():
+                raise ValueError(f"Invalid space unit {unit}.")
+            else:
+                self._unit = unit
+
+        elif name in ChannelNames.allowed_names():
+            self._type = AxisType.channel
+            if unit is not None:
+                raise ValueError("Channel axis cannot have a unit.")
+            self._unit = None
+        else:
+            raise ValueError(f"Invalid axis name {name}.")
+
+    @classmethod
+    def lazy_create(
+        cls,
+        name: str | TimeNames | SpaceNames,
+        time_unit: TimeUnits | None = None,
+        space_unit: SpaceUnits | None = None,
+    ) -> "Axis":
+        """Create an Axis object with the default unit."""
+        if name in TimeNames.allowed_names():
+            return cls(name=name, unit=time_unit)
+        elif name in SpaceNames.allowed_names():
+            return cls(name=name, unit=space_unit)
+        else:
+            return cls(name=name, unit=None)
+
+    @classmethod
+    def batch_create(
+        cls,
+        axes_names: list[str | SpaceNames | TimeNames],
+        time_unit: TimeUnits | None = None,
+        space_unit: SpaceUnits | None = None,
+    ) -> list["Axis"]:
+        """Create a list of Axis objects from a list of dictionaries."""
+        axes = []
+        for name in axes_names:
+            axes.append(
+                cls.lazy_create(name=name, time_unit=time_unit, space_unit=space_unit)
             )
-        elif not isinstance(pixel_size, PixelSize):
-            raise ValueError("Invalid pixel size type.")
+        return axes
 
-        query_ps = np.array(pixel_size.zyx)
-        min_diff = float("inf")
-        best_dataset = None
-        all_ps = []
-        for dataset in self.datasets:
-            current_ps = np.array(self.pixel_size(dataset.path).zyx)
-            all_ps.append(current_ps)
-            diff = np.linalg.norm(current_ps - query_ps)
-            if diff < min_diff:
-                min_diff = diff
-                best_dataset = dataset
+    @property
+    def name(self) -> str:
+        """Get the name of the axis."""
+        return self._name
 
-        if min_diff > 1e-6 and strict:
-            raise ValueError("Pixel size not found.")
+    @property
+    def unit(self) -> SpaceUnits | TimeUnits | None:
+        """Get the unit of the axis."""
+        return self._unit
 
-        return best_dataset
+    @unit.setter
+    def unit(self, unit: SpaceUnits | TimeUnits | None):
+        """Set the unit of the axis."""
+        self._unit = unit
 
-    def get_highest_resolution_dataset(self) -> Dataset:
-        """Get the dataset with the highest resolution."""
-        highest_resolution = float("inf")
-        highest_resolution_dataset = self.datasets[0]
-        for dataset in self.datasets:
-            resolution = np.prod(dataset.scale)
-            if resolution < highest_resolution:
-                highest_resolution = resolution
-                highest_resolution_dataset = dataset
+    @property
+    def type(self) -> AxisType:
+        """Get the type of the axis."""
+        return self._type
 
-        return highest_resolution_dataset
+    def model_dump(self) -> dict:
+        """Return the axis information in a dictionary."""
+        return {"name": self.name, "unit": self.unit, "type": self.type}
 
-    def remove_axis(
-        self, *, idx: int | None = None, axis_name: str | None = None
-    ) -> "Multiscale":
-        """Remove an axis from the scale transformation of all datasets."""
-        if idx is None and axis_name is None:
-            raise ValueError("Either idx or axis_name must be provided.")
 
-        elif idx is not None and axis_name is not None:
-            raise ValueError("Only one of idx or axis_name must be provided.")
+class Dataset:
+    """Model for a dataset in the multiscale.
 
-        if axis_name is not None:
-            idx = [ax.name for ax in self.axes].index(axis_name)
+    To initialize the Dataset object, the path, the axes, scale, and translation list
+    can be provided with arbitrary order.
 
-        if idx < 0:
-            raise ValueError(f"Axis index {idx} cannot be negative.")
-        if idx >= len(self.axes):
-            raise ValueError(f"Axis index {idx} out of range.")
+    The Dataset object will reorder the scale and translation lists according to the
+    following canonical order of the axes:
+        * Time axis (if present)
+        * Channel axis (if present)
+        * Z axis (if present)
+        * Y axis (Mandatory)
+        * X axis (Mandatory)
+    """
 
-        new_axes = self.axes.copy()
-        new_axes.pop(idx)
-        datasets = [dataset._remove_axis(idx) for dataset in self.datasets]
-        return Multiscale(unordered_axes=new_axes, datasets=datasets)
-
-    def add_axis(
+    def __init__(
         self,
         *,
-        idx: int,
-        axis_name: str,
-        units: SpaceUnits | TimeUnits | str | None,
-        axis_type: AxisType | str,
-        scale: float | list[float] = 1.0,
-        translation: float | list[float] | None = None,
-    ) -> "Multiscale":
-        """Add an axis to the scale transformation of all datasets."""
-        if idx < 0:
-            raise ValueError(f"Axis index {idx} cannot be negative.")
-        if idx > len(self.axes):
-            raise ValueError(f"Axis index {idx} out of range.")
+        path: str,
+        arbitrary_axes: list[Axis],
+        arbitrary_scale: list[float],
+        arbitrary_translation: list[float] | None = None,
+        canonical_order: list[str] | None = None,
+    ):
+        """Initialize the Dataset object.
 
-        new_axes = self.axes.copy()
-        new_axes.insert(idx, Axis(name=axis_name, type=axis_type, unit=units))
+        Args:
+            path(str): The path of the dataset.
+            arbitrary_axes(list[Axis]): The list of axes in the multiscale.
+            arbitrary_scale(list[float]): The list of scale transformation.
+                The scale transformation must have the same length as the axes.
+            arbitrary_translation(list[float] | None): The list of translation.
+            canonical_order(list[str] | None): The canonical order of the axes.
+                If None, the default order is ["t", "c", "z", "y", "x"].
+        """
+        self._path = path
 
-        if isinstance(scale, float):
-            scale = [scale] * self.num_levels
+        # Canonical order validation
+        if canonical_order is None:
+            self._canonical_order = ["t", "c", "z", "y", "x"]
+        else:
+            self._canonical_order = canonical_order
 
-        if isinstance(translation, float) or translation is None:
-            translation = [translation] * self.num_levels
+        for ax in arbitrary_axes:
+            if ax.name not in self._canonical_order:
+                raise ValueError(f"Axis {ax.name} not found in the canonical order.")
 
-        if len(scale) != self.num_levels:
+        if len(set(self._canonical_order)) != len(self._canonical_order):
+            raise ValueError("Canonical order must have unique elements.")
+
+        if len(set(arbitrary_axes)) != len(arbitrary_axes):
+            raise ValueError("arbitrary axes must have unique elements.")
+
+        self._arbitrary_axes = arbitrary_axes
+
+        # Scale transformation validation
+        if len(arbitrary_scale) != len(arbitrary_axes):
             raise ValueError(
                 "Inconsistent scale transformation. "
                 "The scale transformation must have the same length."
             )
+        self._scale = arbitrary_scale
 
-        if len(translation) != self.num_levels:
+        # Translation transformation validation
+        if arbitrary_translation is not None and len(arbitrary_translation) != len(
+            arbitrary_axes
+        ):
             raise ValueError(
                 "Inconsistent translation transformation. "
                 "The translation transformation must have the same length."
             )
 
-        new_datasets = []
-        for dataset, s, t in zip(self.datasets, scale, translation, strict=True):
-            new_datasets.append(dataset._add_axis(idx, s, t))
+        self._translation = arbitrary_translation
 
-        return Multiscale(unordered_axes=new_axes, datasets=new_datasets)
-
-
-class BaseFractalMeta(BaseModel):
-    """Base class for FractalImageMeta and FractalLabelMeta.
-
-    Attributes:
-        version(str): The version of the metadata.
-        multiscale(Multiscale): The multiscale information.
-        name(str | None): The name of ngff image.
-    """
-
-    version: str = Field(..., frozen=True)
-    multiscale: Multiscale = Field(..., frozen=True)
-    name: str | None = Field(default=None, frozen=True)
+        # Compute the index mapping between the canonical order and the actual order
+        _map = {ax.name: i for i, ax in enumerate(arbitrary_axes)}
+        self._index_mapping = {
+            name: _map.get(name, None) for name in self._canonical_order
+        }
+        self._ordered_axes = [
+            arbitrary_axes[i] for i in self._index_mapping.values() if i is not None
+        ]
 
     @property
-    def num_levels(self) -> int:
-        """Number of resolution levels in the multiscale.
-
-        Returns:
-            int: The number of resolution levels in the multiscale.
-        """
-        return self.multiscale.num_levels
+    def path(self) -> str:
+        """Get the path of the dataset."""
+        return self._path
 
     @property
-    def levels_paths(self) -> list[str]:
-        """List of all resolution levels paths in the multiscale.
-
-        Returns:
-            list[str]: The paths of all resolution levels in the multiscale.
-        """
-        return self.multiscale.levels_paths
+    def index_mapping(self) -> dict[str, int]:
+        """Get the mapping between the canonical order and the actual order."""
+        return self._index_mapping
 
     @property
     def axes(self) -> list[Axis]:
-        """List of axes in the multiscale.
+        """Get the axes in the canonical order."""
+        return self._ordered_axes
 
-        Returns:
-            list[Axis]: The axes in the multiscale.
-        """
-        return self.multiscale.axes
+    @property
+    def scale(self) -> list[float]:
+        """Get the scale transformation of the dataset in the canonical order."""
+        return [self._scale[i] for i in self._index_mapping.values() if i is not None]
+
+    @property
+    def translation(self) -> list[float] | None:
+        """Get the translation transformation of the dataset in the canonical order."""
+        if self._translation is None:
+            return None
+        return [self._translation[i] for i in self._index_mapping.values()]
 
     @property
     def axes_names(self) -> list[str]:
-        """List of axes names in the multiscale.
-
-        Returns:
-            list[str]: The axes names in the multiscale.
-        """
-        return self.multiscale.axes_names
+        """Get the axes names in the canonical order."""
+        return [ax.name for ax in self.axes]
 
     @property
     def space_axes_names(self) -> list[str]:
-        """List of space axes names in the multiscale.
-
-        Returns:
-            list[str]: The space axes names in the multiscale.
-        """
-        return self.multiscale.space_axes_names
+        """Get the spatial axes names in the canonical order."""
+        return [ax.name for ax in self.axes if ax.type == AxisType.space]
 
     @property
     def space_axes_unit(self) -> SpaceUnits:
-        """The unit of the space axes.
+        """Get the unit of the spatial axes."""
+        types = [ax.unit for ax in self.axes if ax.type == AxisType.space]
+        if len(set(types)) > 1:
+            raise ValueError("Inconsistent spatial axes units.")
+        return types[0]
 
-        Returns:
-            SpaceUnits: The unit of the space axes.
+    @property
+    def pixel_size(self) -> PixelSize:
+        """Get the pixel size of the dataset."""
+        pixel_sizes = {}
+
+        for ax, scale in zip(self.axes, self.scale, strict=True):
+            if ax.type == AxisType.space:
+                pixel_sizes[ax.name] = scale
+
+        return PixelSize(**pixel_sizes, unit=self.space_axes_unit)
+
+    @property
+    def time_axis_unit(self) -> TimeUnits | None:
+        """Get the unit of the time axis."""
+        types = [ax.unit for ax in self.axes if ax.type == AxisType.time]
+        if len(set(types)) > 1:
+            raise ValueError("Inconsistent time axis units.")
+        return types[0] if types else None
+
+    def remove_axis(self, axis_name: str) -> "Dataset":
+        """Remove an axis from the dataset.
+
+        Args:
+            axis_name(str): The name of the axis to remove.
         """
-        return self.multiscale.space_axes_unit
+        if axis_name not in self.axes_names:
+            raise ValueError(f"Axis {axis_name} not found in the dataset.")
+
+        if axis_name in ["x", "y"]:
+            raise ValueError("Cannot remove mandatory axes x and y.")
+
+        axes_idx = self.index_mapping[axis_name]
+
+        new_arbitrary_axes = self._arbitrary_axes.copy()
+        new_arbitrary_axes.pop(axes_idx)
+
+        new_scale = self._scale.copy()
+        new_scale.pop(axes_idx)
+
+        if self._translation is not None:
+            new_translation = self._translation.copy()
+            new_translation.pop(axes_idx)
+        else:
+            new_translation = None
+
+        return Dataset(
+            path=self.path,
+            arbitrary_axes=new_arbitrary_axes,
+            arbitrary_scale=new_scale,
+            arbitrary_translation=new_translation,
+            canonical_order=self._canonical_order,
+        )
+
+    def add_axis(
+        self, axis_name: str, scale: float = 1.0, translation: float | None = None
+    ) -> "Dataset":
+        """Add an axis to the dataset.
+
+        Args:
+            axis_name(str): The name of the axis to add.
+            scale(float): The scale of the axis.
+            translation(float | None): The translation of the axis.
+        """
+        if axis_name in self.axes_names:
+            raise ValueError(f"Axis {axis_name} already exists in the dataset.")
+
+        axis = Axis.lazy_create(
+            name=axis_name,
+            space_unit=self.space_axes_unit,
+            time_unit=self.time_axis_unit,
+        )
+
+        new_arbitrary_axes = self._arbitrary_axes.copy()
+        new_arbitrary_axes.append(axis)
+
+        new_scale = self._scale.copy()
+        new_scale.append(scale)
+
+        if self._translation is not None:
+            new_translation = self._translation.copy()
+            new_translation.append(translation)
+        else:
+            new_translation = None
+
+        return Dataset(
+            path=self.path,
+            arbitrary_axes=new_arbitrary_axes,
+            arbitrary_scale=new_scale,
+            arbitrary_translation=new_translation,
+            canonical_order=self._canonical_order,
+        )
+
+    def to_canonical_order(self) -> "Dataset":
+        """Return a new Dataset where the axes are in the canonical order."""
+        new_axes = self._ordered_axes
+        new_scale = self.scale
+        new_translation = self.translation
+        return Dataset(
+            path=self.path,
+            arbitrary_axes=new_axes,
+            arbitrary_scale=new_scale,
+            arbitrary_translation=new_translation,
+        )
+
+    def arbitrary_model_dump(self) -> dict:
+        """Return the dataset information in the arbitrary order."""
+        return {
+            "path": self.path,
+            "axes": [ax.model_dump(exclude_none=True) for ax in self._arbitrary_axes],
+            "scale": self._scale,
+            "translation": self._translation,
+        }
+
+    def ordered_model_dump(self) -> dict:
+        """Return the dataset information in the canonical order."""
+        return {
+            "path": self.path,
+            "axes": [ax.model_dump(exclude_none=True) for ax in self.axes],
+            "scale": self.scale,
+            "translation": self.translation,
+        }
+
+
+class BaseMeta:
+    """Base class for ImageMeta and LabelMeta."""
+
+    def __init__(self, version: str, name: str, datasets: list[Dataset]) -> None:
+        """Initialize the ImageMeta object."""
+        self._version = version
+        self._name = name
+
+        if len(datasets) == 0:
+            raise ValueError("At least one dataset must be provided.")
+
+        self._datasets = datasets
+
+    @property
+    def version(self) -> str:
+        """Version of the OME-NFF metadata used to build the object."""
+        return self._version
+
+    @property
+    def name(self) -> str:
+        """Name of the image."""
+        return self._name
 
     @property
     def datasets(self) -> list[Dataset]:
-        """List of datasets in the multiscale.
-
-        Returns:
-            list[Dataset]: The datasets in the multiscale.
-        """
-        return self.multiscale.datasets
+        """List of datasets in the multiscale."""
+        return self._datasets
 
     @property
-    def datasets_dict(self) -> dict[str, Dataset]:
-        """Dictionary of datasets in the multiscale indexed by path.
+    def num_levels(self) -> int:
+        """Number of levels in the multiscale."""
+        return len(self.datasets)
 
-        Returns:
-            dict[str, Dataset]: The datasets in the multiscale indexed by path.
-        """
-        return self.multiscale.datasets_dict
+    @property
+    def levels_paths(self) -> list[str]:
+        """List of paths of the datasets."""
+        return [dataset.path for dataset in self.datasets]
 
-    def pixel_size(self, level_path: int | str = 0) -> PixelSize:
-        """Get the pixel size of the dataset at the specified level.
+    @property
+    def index_mapping(self) -> dict[str, int]:
+        """Get the mapping between the canonical order and the actual order."""
+        return self.datasets[0].index_mapping
 
-        Args:
-            level_path(int | str): The level index (int) or path (str).
+    @property
+    def axes(self) -> list[Axis]:
+        """List of axes in the canonical order."""
+        return self.datasets[0].axes
 
-        Returns:
-            PixelSize: The pixel size of the dataset.
+    @property
+    def axes_names(self) -> list[str]:
+        """List of axes names in the canonical order."""
+        return self.datasets[0].axes_names
 
-        """
-        return self.multiscale.pixel_size(level_path)
+    @property
+    def space_axes_names(self) -> list[str]:
+        """List of spatial axes names in the canonical order."""
+        return self.datasets[0].space_axes_names
 
-    def scale(self, level_path: int | str = 0) -> list[float]:
-        """Get the scale transformation of the dataset at the specified level.
+    @property
+    def space_axes_unit(self) -> SpaceUnits:
+        """Get the unit of the spatial axes."""
+        return self.datasets[0].space_axes_unit
 
-        Args:
-            level_path(int | str): The level index (int) or path (str).
+    @property
+    def time_axis_unit(self) -> TimeUnits | None:
+        """Get the unit of the time axis."""
+        return self.datasets[0].time_axis_unit
 
-        Returns:
-            list[float]: The scale transformation of the dataset.
-        """
-        return self.multiscale.scale(level_path)
+    def _get_dataset_by_path(self, path: str) -> Dataset:
+        """Get a dataset by its path."""
+        for dataset in self.datasets:
+            if dataset.path == path:
+                return dataset
+        raise ValueError(f"Dataset with path {path} not found.")
 
-    def get_dataset(self, level_path: int | str = 0) -> Dataset:
-        """Get the dataset at the specified level (index or path).
+    def _get_dataset_by_index(self, idx: int) -> Dataset:
+        """Get a dataset by its index."""
+        if idx < 0 or idx >= len(self.datasets):
+            raise ValueError(f"Index {idx} out of range.")
+        return self.datasets[idx]
 
-        Args:
-            level_path(int | str): The level index (int) or path (str).
-
-        Returns:
-            Dataset: The dataset at the specified level.
-        """
-        return self.multiscale.get_dataset(level_path)
-
-    def get_dataset_from_pixel_size(
-        self, pixel_size: list[float] | PixelSize, strict: bool = True
+    def _get_dataset_by_pixel_size(
+        self, pixel_size: PixelSize, strict: bool = False, tol: float = 1e-6
     ) -> Dataset:
-        """Get the dataset with the specified pixel size.
+        """Get a dataset with the closest pixel size.
 
         Args:
-            pixel_size(list[float] | PixelSize): The pixel size to search for.
-            strict(bool): If True, raise an error if the pixel size is not found.
-
-        Returns:
-            Dataset: The dataset with the specified pixel size (or the closest one).
+            pixel_size(PixelSize): The pixel size to search for.
+            strict(bool): If True, the pixel size must smaller than tol.
+            tol(float): Any pixel size with a distance less than tol will be considered.
         """
-        return self.multiscale.get_dataset_from_pixel_size(pixel_size, strict)
+        min_dist = np.inf
 
-    def get_highest_resolution_dataset(self) -> Dataset:
+        for dataset in self.datasets:
+            dist = dataset.pixel_size.distance(pixel_size)
+            if dist < min_dist:
+                min_dist = dist
+                closest_dataset = dataset
+
+        if strict and min_dist > tol:
+            raise ValueError("No dataset with a pixel size close enough.")
+
+        return closest_dataset
+
+    def get_dataset(
+        self,
+        *,
+        path: str | None = None,
+        idx: int | None = None,
+        pixel_size: PixelSize | None = None,
+        strict: bool = False,
+    ) -> Dataset:
+        """Get a dataset by its path, index or pixel size.
+
+        Args:
+            path(str): The path of the dataset.
+            idx(int): The index of the dataset.
+            pixel_size(PixelSize): The pixel size to search for.
+            strict(bool): If True, the pixel size must be exactly the same.
+                If pixel_size is None, strict is ignored.
+        """
+        # Only one of the arguments must be provided
+        if sum([path is not None, idx is not None, pixel_size is not None]) != 1:
+            raise ValueError("get_dataset must receive only one argument.")
+
+        if path is not None:
+            return self._get_dataset_by_path(path)
+        elif idx is not None:
+            return self._get_dataset_by_index(idx)
+        elif pixel_size is not None:
+            return self._get_dataset_by_pixel_size(pixel_size, strict=strict)
+        else:
+            raise ValueError("get_dataset has no valid arguments.")
+
+    def get_highest_resolution(self) -> Dataset:
         """Get the dataset with the highest resolution."""
-        return self.multiscale.get_highest_resolution_dataset()
+        return self._get_dataset_by_pixel_size(
+            PixelSize(0.0, 0.0, 0.0, SpaceUnits.um), strict=False
+        )
 
-    def to_version(self, version: str) -> "FractalImageMeta":
-        """Convert the metadata to a different version.
+    def scale(self, path: str | None = None, idx: int | None = None) -> list[float]:
+        """Get the scale transformation of a dataset.
 
         Args:
-            version(str): The version of the metadata.
-
-        Returns:
-            FractalImageMeta: The metadata with the specified version.
+            path(str): The path of the dataset.
+            idx(int): The index of the dataset.
         """
-        return FractalImageMeta(
-            version=version,
-            multiscale=self.multiscale,
-            name=self.name,
-            omero=self.omero,
+        return self.get_dataset(path=path, idx=idx).scale
+
+    def translation(
+        self, path: str | None = None, idx: int | None = None
+    ) -> list[float] | None:
+        """Get the translation transformation of a dataset.
+
+        Args:
+            path(str): The path of the dataset.
+            idx(int): The index of the dataset.
+        """
+        return self.get_dataset(path=path, idx=idx).translation
+
+    def pixel_size(self, path: str | None = None, idx: int | None = None) -> PixelSize:
+        """Get the pixel size of a dataset.
+
+        Args:
+            path(str): The path of the dataset.
+            idx(int): The index of the dataset.
+        """
+        return self.get_dataset(path=path, idx=idx).pixel_size
+
+    def remove_axis(self, axis_name: str) -> Self:
+        """Remove an axis from the metadata.
+
+        Args:
+            axis_name(str): The name of the axis to remove.
+        """
+        new_datasets = [dataset.remove_axis(axis_name) for dataset in self.datasets]
+        return self.__class__(
+            version=self.version, name=self.name, datasets=new_datasets
+        )
+
+    def add_axis(
+        self, axis_name: str, scale: float = 1.0, translation: float | None = None
+    ) -> Self:
+        """Add an axis to the metadata.
+
+        Args:
+            axis_name(str): The name of the axis to add.
+            scale(float): The scale of the axis.
+            translation(float | None): The translation of the axis.
+        """
+        new_datasets = [
+            dataset.add_axis(axis_name, scale, translation) for dataset in self.datasets
+        ]
+        return self.__class__(
+            version=self.version, name=self.name, datasets=new_datasets
         )
 
 
-class FractalImageMeta(BaseFractalMeta):
-    """Fractal image metadata model.
+class LabelMeta(BaseMeta):
+    """Label metadata model."""
 
-    Attributes:
-        version(str): The version of the metadata.
-        multiscale(Multiscale): The multiscale information.
-        name(str | None): The name of ngff image.
-        omero(Omero | None): The OMERO metadata. Contains information about the
-            channels, and visualization settings.
+    def __init__(self, version: str, name: str, datasets: list[Dataset]) -> None:
+        """Initialize the ImageMeta object."""
+        super().__init__(version, name, datasets)
 
-    """
+        # Make sure that there are no channel axes
+        for ax in self.datasets[0].axes:
+            if ax.type == AxisType.channel:
+                raise ValueError("Channel axes are not allowed in ImageMeta.")
 
-    omero: Omero | None = Field(default=None, frozen=True)
+    def add_axis(
+        self, axis_name: str, scale: float = 1, translation: float | None = None
+    ) -> BaseMeta:
+        """Add an axis to the metadata."""
+        # Check if the axis is a channel
+        axis = Axis.lazy_create(
+            name=axis_name,
+            space_unit=self.space_axes_unit,
+            time_unit=self.time_axis_unit,
+        )
+        if axis.type == AxisType.channel:
+            raise ValueError("Channel axes are not allowed in LabelMeta.")
+
+        return super().add_axis(
+            axis_name=axis_name, scale=scale, translation=translation
+        )
+
+
+class ImageMeta(BaseMeta):
+    """Image metadata model."""
+
+    def __init__(
+        self, version: str, name: str, datasets: list[Dataset], omero: Omero | None
+    ) -> None:
+        """Initialize the ImageMeta object."""
+        super().__init__(version=version, name=name, datasets=datasets)
+        self._omero = omero
 
     @property
-    def channel_names(self) -> list[str]:
-        """Get the names of the channels.
+    def omero(self) -> Omero | None:
+        """Get the OMERO metadata."""
+        return self._omero
 
-        Returns:
-            list[str]: The names of the channels.
-        """
-        if self.omero is None:
-            # check if a channel axis exists in the multiscale axes
-            channel_axes = [ax for ax in self.axes if ax.type == AxisType.channel]
-            if len(channel_axes) == 0:
-                raise ValueError("Image does not have channel axes.")
+    @property
+    def channels(self) -> list[Channel]:
+        """Get the channels in the image."""
+        if self._omero is None:
+            return []
+        return self.omero.channels
 
+    @property
+    def num_channels(self) -> int:
+        """Get the number of channels in the image."""
+        return len(self.channels)
+
+    @property
+    def channel_labels(self) -> list[str]:
+        """Get the labels of the channels in the image."""
+        return [channel.label for channel in self.channels]
+
+    @property
+    def channel_wavelength_ids(self) -> list[str]:
+        """Get the wavelength IDs of the channels in the image."""
+        return [channel.wavelength_id for channel in self.channels]
+
+    def _get_channel_idx_by_label(self, label: str) -> int | None:
+        """Get the index of a channel by its label."""
+        if self._omero is None:
+            return None
+
+        if label not in self.channel_labels:
+            raise ValueError(f"Channel with label {label} not found.")
+
+        return self.channel_labels.index(label)
+
+    def _get_channel_idx_by_wavelength_id(self, wavelength_id: str) -> int | None:
+        """Get the index of a channel by its wavelength ID."""
+        if self._omero is None:
+            return None
+
+        if wavelength_id not in self.channel_wavelength_ids:
+            raise ValueError(f"Channel with wavelength ID {wavelength_id} not found.")
+
+        return self.channel_wavelength_ids.index(wavelength_id)
+
+    def get_channel_idx(
+        self, label: str | None = None, wavelength_id: str | None = None
+    ) -> int:
+        """Get the index of a channel by its label or wavelength ID."""
+        # Only one of the arguments must be provided
+        if sum([label is not None, wavelength_id is not None]) != 1:
+            raise ValueError("get_channel_idx must receive only one argument.")
+
+        if label is not None:
+            return self._get_channel_idx_by_label(label)
+        elif wavelength_id is not None:
+            return self._get_channel_idx_by_wavelength_id(wavelength_id)
+        else:
             raise ValueError(
-                "OMERO metadata not found. Channel names are not available."
+                "get_channel_idx must receive either label or wavelength_id."
             )
 
-        return [channel.label for channel in self.omero.channels]
-
-    def get_channel_idx_by_label(self, label: str) -> int:
-        """Get the index of a channel by its label.
+    def remove_axis(self, axis_name: str) -> "ImageMeta":
+        """Remove an axis from the metadata.
 
         Args:
-            label(str): The label/name of the channel.
-
-        Returns:
-            int: The index of the channel.
+            axis_name(str): The name of the axis to remove.
         """
-        if self.omero is None:
-            raise ValueError("OMERO metadata not found.")
-        return self.omero.get_idx_by_label(label)
+        new_image = super().remove_axis(axis_name=axis_name)
 
-    def get_channel_idx_by_wavelength_id(self, wavelength_id: str) -> int:
-        """Get the index of a channel by its wavelength ID.
+        # If the removed axis is a channel, remove the channel from the omero metadata
+        if axis_name in ChannelNames.allowed_names():
+            new_omero = Omero(channels=[], **self.omero.extra_fields)
+            return ImageMeta(
+                version=new_image.version,
+                name=new_image.name,
+                datasets=new_image.datasets,
+                omero=new_omero,
+            )
 
-        Args:
-            wavelength_id(str): The wavelength ID of the channel.
-
-        Returns:
-            int: The index of the channel.
-        """
-        if self.omero is None:
-            raise ValueError("OMERO metadata not found.")
-        return self.omero.get_idx_by_wavelength_id(wavelength_id)
-
-    def remove_axis(
-        self, *, idx: int | None = None, axis_name: str | None = None
-    ) -> "FractalImageMeta":
-        """Remove an axis from the scale transformation of all datasets."""
-        multiscale = self.multiscale.remove_axis(idx=idx, axis_name=axis_name)
-
-        # Check if channel axis exists in the multiscale axes
-        channel_axes = [ax for ax in multiscale.axes if ax.type == AxisType.channel]
-        if len(channel_axes) == 0:
-            # Remove the channel axis from the OMERO metadata
-            omero = None
-        else:
-            omero = self.omero
-
-        return FractalImageMeta(
-            version=self.version,
-            multiscale=multiscale,
-            name=self.name,
-            omero=omero,
-        )
-
-    def add_axis(
-        self,
-        *,
-        idx: int,
-        axis_name: str,
-        units: SpaceUnits | TimeUnits | str | None,
-        axis_type: AxisType | str,
-        scale: float | list[float] = 1.0,
-        translation: float | list[float] | None = None,
-    ) -> "FractalImageMeta":
-        """Add an axis to the scale transformation of all datasets."""
-        multiscale = self.multiscale.add_axis(
-            idx=idx,
-            axis_name=axis_name,
-            units=units,
-            axis_type=axis_type,
-            scale=scale,
-            translation=translation,
-        )
-        return FractalImageMeta(
-            version=self.version,
-            multiscale=multiscale,
-            name=self.name,
-            omero=self.omero,
-        )
+        return new_image
 
 
-class FractalLabelMeta(BaseFractalMeta):
-    """Fractal label metadata model.
-
-    Attributes:
-        version(str): The version of the metadata.
-        multiscale(Multiscale): The multiscale information.
-        name(str | None): The name of ngff image.
-    """
-
-    def remove_axis(
-        self, *, idx: int | None = None, axis_name: str | None = None
-    ) -> "FractalLabelMeta":
-        """Remove an axis from the scale transformation of all datasets."""
-        multiscale = self.multiscale.remove_axis(idx=idx, axis_name=axis_name)
-        return FractalLabelMeta(
-            version=self.version,
-            multiscale=multiscale,
-            name=self.name,
-        )
-
-    def add_axis(
-        self,
-        *,
-        idx: int,
-        axis_name: str,
-        units: SpaceUnits | TimeUnits | str | None,
-        axis_type: AxisType | str,
-        scale: float | list[float] = 1.0,
-        translation: float | list[float] | None = None,
-    ) -> "FractalLabelMeta":
-        """Add an axis to the scale transformation of all datasets."""
-        multiscale = self.multiscale.add_axis(
-            idx=idx,
-            axis_name=axis_name,
-            units=units,
-            axis_type=axis_type,
-            scale=scale,
-            translation=translation,
-        )
-
-        return FractalLabelMeta(
-            version=self.version,
-            multiscale=multiscale,
-            name=self.name,
-        )
-
-
-FractalImageLabelMeta = FractalImageMeta | FractalLabelMeta
+ImageLabelMeta = ImageMeta | LabelMeta

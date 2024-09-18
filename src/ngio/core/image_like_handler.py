@@ -4,7 +4,7 @@ import zarr
 
 from ngio.io import StoreOrGroup, open_group
 from ngio.ngff_meta import (
-    FractalImageMeta,
+    ImageMeta,
     PixelSize,
     SpaceUnits,
     get_ngff_image_meta_handler,
@@ -71,7 +71,7 @@ class ImageLikeHandler:
         return self._group
 
     @property
-    def metadata(self) -> FractalImageMeta:
+    def metadata(self) -> ImageMeta:
         """Return the metadata of the image."""
         return self._metadata_handler.load_meta()
 

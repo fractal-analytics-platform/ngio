@@ -14,26 +14,18 @@ class TestUtils:
             time_units="s",
             num_levels=5,
             name="test",
-            channel_names=["DAPI", "nanog", "Lamin B1"],
+            channel_labels=["DAPI", "nanog", "Lamin B1"],
             channel_wavelengths=["A01_C01", "A02_C02", "A03_C03"],
             channel_kwargs=None,
             omero_kwargs=None,
             version="0.4",
         )
 
-        assert meta.channel_names == ["DAPI", "nanog", "Lamin B1"]
-        np.testing.assert_array_equal(
-            meta.pixel_size(level_path=0).zyx, [1.0, 1.0, 1.0]
-        )
-        np.testing.assert_array_equal(
-            meta.scale(level_path=0), [1.0, 1.0, 1.0, 1.0, 1.0]
-        )
-        np.testing.assert_array_equal(
-            meta.pixel_size(level_path="2").zyx, [1.0, 4.0, 4.0]
-        )
-        np.testing.assert_array_equal(
-            meta.scale(level_path="2"), [1.0, 1.0, 1.0, 4.0, 4.0]
-        )
+        assert meta.channel_labels == ["DAPI", "nanog", "Lamin B1"]
+        np.testing.assert_array_equal(meta.pixel_size(idx=0).zyx, [1.0, 1.0, 1.0])
+        np.testing.assert_array_equal(meta.scale(idx=0), [1.0, 1.0, 1.0, 1.0, 1.0])
+        np.testing.assert_array_equal(meta.pixel_size(path="2").zyx, [1.0, 4.0, 4.0])
+        np.testing.assert_array_equal(meta.scale(path="2"), [1.0, 1.0, 1.0, 4.0, 4.0])
 
         assert meta.num_levels == 5
 
@@ -49,22 +41,18 @@ class TestUtils:
             time_units="s",
             num_levels=5,
             name="test",
-            channel_names=["DAPI", "nanog", "Lamin B1"],
+            channel_labels=["DAPI", "nanog", "Lamin B1"],
             channel_wavelengths=["A01_C01", "A02_C02", "A03_C03"],
             channel_kwargs=None,
             omero_kwargs=None,
             version="0.4",
         )
 
-        assert meta.channel_names == ["DAPI", "nanog", "Lamin B1"]
-        np.testing.assert_array_equal(
-            meta.pixel_size(level_path=0).zyx, [1.0, 1.0, 1.0]
-        )
-        np.testing.assert_array_equal(meta.scale(level_path=0), [1.0, 1.0, 1.0, 1.0])
-        np.testing.assert_array_equal(
-            meta.pixel_size(level_path="2").zyx, [1.0, 4.0, 4.0]
-        )
-        np.testing.assert_array_equal(meta.scale(level_path="2"), [1.0, 1.0, 4.0, 4.0])
+        assert meta.channel_labels == ["DAPI", "nanog", "Lamin B1"]
+        np.testing.assert_array_equal(meta.pixel_size(idx=0).zyx, [1.0, 1.0, 1.0])
+        np.testing.assert_array_equal(meta.scale(idx=0), [1.0, 1.0, 1.0, 1.0])
+        np.testing.assert_array_equal(meta.pixel_size(path="2").zyx, [1.0, 4.0, 4.0])
+        np.testing.assert_array_equal(meta.scale(path="2"), [1.0, 1.0, 4.0, 4.0])
 
         assert meta.num_levels == 5
 
@@ -80,7 +68,7 @@ class TestUtils:
             time_units="s",
             num_levels=5,
             name="test",
-            channel_names=["DAPI", "nanog", "Lamin B1"],
+            channel_labels=["DAPI", "nanog", "Lamin B1"],
             channel_wavelengths=["A01_C01", "A02_C02", "A03_C03"],
             channel_kwargs=None,
             omero_kwargs=None,
@@ -99,7 +87,7 @@ class TestUtils:
             time_units="s",
             num_levels=5,
             name="test",
-            channel_names=["DAPI", "nanog", "Lamin B1"],
+            channel_labels=["DAPI", "nanog", "Lamin B1"],
             channel_wavelengths=["A01_C01", "A02_C02", "A03_C03"],
             channel_kwargs=None,
             omero_kwargs=None,
@@ -124,13 +112,9 @@ class TestUtils:
             version="0.4",
         )
 
-        np.testing.assert_array_equal(
-            meta.pixel_size(level_path=0).zyx, (1.0, 1.0, 1.0)
-        )
-        np.testing.assert_array_equal(meta.scale(level_path=0), [1.0, 1.0, 1.0, 1.0])
-        np.testing.assert_array_equal(
-            meta.pixel_size(level_path="2").zyx, (1.0, 4.0, 4.0)
-        )
-        np.testing.assert_array_equal(meta.scale(level_path="2"), [1.0, 1.0, 4.0, 4.0])
+        np.testing.assert_array_equal(meta.pixel_size(idx=0).zyx, (1.0, 1.0, 1.0))
+        np.testing.assert_array_equal(meta.scale(idx=0), [1.0, 1.0, 1.0, 1.0])
+        np.testing.assert_array_equal(meta.pixel_size(path="2").zyx, (1.0, 4.0, 4.0))
+        np.testing.assert_array_equal(meta.scale(path="2"), [1.0, 1.0, 4.0, 4.0])
 
         assert meta.num_levels == 5

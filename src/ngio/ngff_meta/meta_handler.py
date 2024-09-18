@@ -3,7 +3,7 @@
 from typing import Literal, Protocol
 
 from ngio.io import StoreOrGroup
-from ngio.ngff_meta.fractal_image_meta import FractalImageLabelMeta
+from ngio.ngff_meta.fractal_image_meta import ImageLabelMeta
 from ngio.ngff_meta.v04.zarr_utils import (
     NgffImageMetaZarrHandlerV04,
 )
@@ -21,15 +21,15 @@ class NgffImageMetaHandler(Protocol):
         """Initialize the handler."""
         ...
 
-    def load_meta(self) -> FractalImageLabelMeta:
+    def load_meta(self) -> ImageLabelMeta:
         """Load the OME-NGFF 0.4 metadata."""
         ...
 
-    def write_meta(self, meta: FractalImageLabelMeta) -> None:
+    def write_meta(self, meta: ImageLabelMeta) -> None:
         """Write the OME-NGFF 0.4 metadata."""
         ...
 
-    def update_cache(self, meta: FractalImageLabelMeta) -> None:
+    def update_cache(self, meta: ImageLabelMeta) -> None:
         """Update the cached metadata."""
         ...
 
