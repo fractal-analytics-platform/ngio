@@ -652,10 +652,10 @@ class BaseMeta:
         else:
             raise ValueError("get_dataset has no valid arguments.")
 
-    def get_highest_resolution(self) -> Dataset:
+    def get_highest_resolution_dataset(self) -> Dataset:
         """Get the dataset with the highest resolution."""
         return self._get_dataset_by_pixel_size(
-            PixelSize(0.0, 0.0, 0.0, SpaceUnits.um), strict=False
+            pixel_size=PixelSize(x=0.0, y=0.0, z=0.0, unit=SpaceUnits.um), strict=False
         )
 
     def scale(self, path: str | None = None, idx: int | None = None) -> list[float]:
@@ -750,7 +750,11 @@ class ImageMeta(BaseMeta):
     """Image metadata model."""
 
     def __init__(
-        self, version: str, name: str, datasets: list[Dataset], omero: Omero | None
+        self,
+        version: str,
+        name: str,
+        datasets: list[Dataset],
+        omero: Omero | None = None,
     ) -> None:
         """Initialize the ImageMeta object."""
         super().__init__(version=version, name=name, datasets=datasets)

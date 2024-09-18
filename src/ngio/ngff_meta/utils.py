@@ -193,16 +193,14 @@ def remove_axis_from_metadata(
     metadata: ImageMeta,
     *,
     axis_name: str | None = None,
-    idx: int | None = None,
 ) -> ImageMeta:
     """Remove an axis from the metadata.
 
     Args:
-        metadata: A FractalImageMeta object.
+        metadata: A ImageMeta object.
         axis_name: The name of the axis to remove.
-        idx: The index of the axis to remove.
     """
-    return metadata.remove_axis(axis_name=axis_name, idx=idx)
+    return metadata.remove_axis(axis_name=axis_name)
 
 
 def add_axis_to_metadata(
@@ -210,10 +208,10 @@ def add_axis_to_metadata(
     axis_name: str,
     scale: float = 1.0,
 ) -> ImageMeta | LabelMeta:
-    """Add an axis to the FractalImageMeta or FractalLabelMeta object.
+    """Add an axis to the ImageMeta or LabelMeta object.
 
     Args:
-        metadata: A FractalImageMeta or FractalLabelMeta object.
+        metadata: A ImageMeta or LabelMeta object.
         axis_name: The name of the axis to add.
         scale: The scale of the axis
     """
