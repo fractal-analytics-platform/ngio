@@ -104,7 +104,7 @@ def vanilla_ngff_image_meta_v04_to_fractal(
     meta04: NgffImageMeta04,
     meta_mode: Literal["image", "label"] = "image",
 ) -> ImageLabelMeta:
-    """Convert the NgffImageMeta to FractalImageMeta."""
+    """Convert the NgffImageMeta04 to ImageMeta."""
     if not isinstance(meta04, NgffImageMeta04):
         raise ValueError("Invalid metadata type. Expected NgffImageMeta04.")
 
@@ -136,7 +136,7 @@ def vanilla_ngff_image_meta_v04_to_fractal(
 def fractal_ngff_image_meta_to_vanilla_v04(
     meta: ImageLabelMeta,
 ) -> NgffImageMeta04:
-    """Convert the FractalImageMeta to NgffImageMeta."""
+    """Convert the ImageMeta to NgffImageMeta."""
     axes04 = [Axis04(**axis.model_dump()) for axis in meta.axes]
     dataset04 = []
     for dataset in meta.datasets:
