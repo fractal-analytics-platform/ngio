@@ -8,7 +8,8 @@ from ngio.ngff_meta.fractal_image_meta import ImageMeta, PixelSize
 class Image(ImageLike):
     """A class to handle OME-NGFF images stored in Zarr format.
 
-    This class provides methods to access image data and ROI tables.
+    This class provides methods to load image data and metadata from
+    an OME-Zarr file.
     """
 
     def __init__(
@@ -22,7 +23,7 @@ class Image(ImageLike):
         strict: bool = True,
         cache: bool = True,
     ) -> None:
-        """Initialize the MultiscaleHandler in read mode.
+        """Initialize the the Image Object.
 
         Note: Only one of `path`, `idx`, 'pixel_size' or 'highest_resolution'
         should be provided.
