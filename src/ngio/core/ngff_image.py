@@ -4,7 +4,7 @@ from typing import Protocol, TypeVar
 
 from zarr.store.common import StoreLike
 
-from ngio.core.image_handler import ImageHandler
+from ngio.core.image_handler import Image
 from ngio.io import open_group
 from ngio.ngff_meta import FractalImageLabelMeta, get_ngff_image_meta_handler
 
@@ -93,7 +93,7 @@ class NgffImage:
         level_path: str | int | None = None,
         pixel_size: tuple[float, ...] | list[float] | None = None,
         highest_resolution: bool = True,
-    ) -> ImageHandler:
+    ) -> Image:
         """Get an image handler for the given level.
 
         Args:
@@ -106,7 +106,7 @@ class NgffImage:
         Returns:
             ImageHandler: The image handler.
         """
-        return ImageHandler(
+        return Image(
             store=self.group,
             level_path=level_path,
             pixel_size=pixel_size,

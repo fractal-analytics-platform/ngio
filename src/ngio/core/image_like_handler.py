@@ -1,17 +1,20 @@
 """Generic class to handle Image-like data in a OME-NGFF file."""
 
+from typing import Literal
+
 import zarr
 
 from ngio.io import StoreOrGroup, open_group
 from ngio.ngff_meta import (
-    ImageMeta,
+    Dataset,
+    ImageLabelMeta,
     PixelSize,
     SpaceUnits,
     get_ngff_image_meta_handler,
 )
 
 
-class ImageLikeHandler:
+class ImageLike:
     """A class to handle OME-NGFF images stored in Zarr format.
 
     This class provides methods to access image data and ROI tables.
@@ -20,50 +23,46 @@ class ImageLikeHandler:
     def __init__(
         self,
         store: StoreOrGroup,
-        *,
-        level_path: str | int | None = None,
-        pixel_size: tuple[float, ...] | list[float] | None = None,
+        path: str | None = None,
+        idx: int | None = None,
+        pixel_size: PixelSize | None = None,
         highest_resolution: bool = False,
+        strict: bool = True,
+        meta_mode: Literal["image", "label"] = "image",
+        cache: bool = True,
     ) -> None:
-        """Initialize the MultiscaleHandler in read mode."""
+        """Initialize the MultiscaleHandler in read mode.
+
+        Note: Only one of `path`, `idx`, 'pixel_size' or 'highest_resolution'
+        should be provided.
+
+        store (StoreOrGroup): The Zarr store or group containing the image data.
+        path (str | None): The path to the level.
+        idx (int | None): The index of the level.
+        pixel_size (PixelSize | None): The pixel size of the level.
+        highest_resolution (bool): Whether to get the highest resolution level.
+        strict (bool): Whether to raise an error where a pixel size is not found
+            to match the requested "pixel_size".
+        meta_mode (str): The mode of the metadata handler.
+        cache (bool): Whether to cache the metadata.
+        """
         if not isinstance(store, zarr.Group):
             store = open_group(store=store, mode="r")
 
         self._metadata_handler = get_ngff_image_meta_handler(
-            store=store, meta_mode="image", cache=True
+            store=store, meta_mode=meta_mode, cache=cache
         )
 
         # Find the level / resolution index
-        self.level_path = self._find_level(level_path, pixel_size, highest_resolution)
+        metadata = self._metadata_handler.load_meta()
+        self._dataset = metadata.get_dataset(
+            path=path,
+            idx=idx,
+            pixel_size=pixel_size,
+            highest_resolution=highest_resolution,
+            strict=strict,
+        )
         self._group = store
-
-    def _find_level(
-        self,
-        level_path: int | str | None,
-        pixel_size: tuple[float, ...] | list[float] | None,
-        highest_resolution: bool,
-    ) -> str:
-        """Find the index of the level."""
-        args_valid = [
-            level_path is not None,
-            pixel_size is not None,
-            highest_resolution,
-        ]
-
-        if sum(args_valid) != 1:
-            raise ValueError(
-                "One and only one of level_path, pixel_size, "
-                "or highest_resolution=True can be used. "
-                f"Received: {level_path=}, {pixel_size=}, {highest_resolution=}"
-            )
-        meta = self._metadata_handler.load_meta()
-        if level_path is not None:
-            return meta.get_dataset(level_path).path
-
-        if pixel_size is not None:
-            return meta.get_dataset_from_pixel_size(pixel_size, strict=True).path
-
-        return meta.get_highest_resolution_dataset().path
 
     @property
     def group(self) -> zarr.Group:
@@ -71,26 +70,41 @@ class ImageLikeHandler:
         return self._group
 
     @property
-    def metadata(self) -> ImageMeta:
+    def metadata(self) -> ImageLabelMeta:
         """Return the metadata of the image."""
         return self._metadata_handler.load_meta()
 
     @property
+    def dataset(self) -> Dataset:
+        """Return the dataset of the image."""
+        return self._dataset
+
+    @property
+    def path(self) -> str:
+        """Return the path of the dataset (relative to the root group)."""
+        return self.dataset.path
+
+    @property
+    def channel_labels(self) -> list[str]:
+        """Return the names of the channels in the image."""
+        return self.dataset.path
+
+    @property
     def axes_names(self) -> list[str]:
         """Return the names of the axes in the image."""
-        return self.metadata.axes_names
+        return self.dataset.axes_names
 
     @property
     def space_axes_names(self) -> list[str]:
         """Return the names of the space axes in the image."""
-        return self.metadata.space_axes_names
+        return self.dataset.space_axes_names
 
     @property
     def space_axes_unit(self) -> SpaceUnits:
         """Return the units of the space axes in the image."""
-        return self.metadata.space_axes_unit
+        return self.dataset.space_axes_unit
 
     @property
     def pixel_size(self) -> PixelSize:
         """Return the pixel resolution of the image."""
-        return self.metadata.pixel_size(level_path=self.level_path)
+        return self.dataset.pixel_size

@@ -628,6 +628,7 @@ class BaseMeta:
         path: str | None = None,
         idx: int | None = None,
         pixel_size: PixelSize | None = None,
+        highest_resolution: bool = False,
         strict: bool = False,
     ) -> Dataset:
         """Get a dataset by its path, index or pixel size.
@@ -636,11 +637,22 @@ class BaseMeta:
             path(str): The path of the dataset.
             idx(int): The index of the dataset.
             pixel_size(PixelSize): The pixel size to search for.
+            highest_resolution(bool): If True, the dataset with the highest resolution
             strict(bool): If True, the pixel size must be exactly the same.
                 If pixel_size is None, strict is ignored.
         """
         # Only one of the arguments must be provided
-        if sum([path is not None, idx is not None, pixel_size is not None]) != 1:
+        if (
+            sum(
+                [
+                    path is not None,
+                    idx is not None,
+                    pixel_size is not None,
+                    highest_resolution,
+                ]
+            )
+            != 1
+        ):
             raise ValueError("get_dataset must receive only one argument.")
 
         if path is not None:
@@ -649,6 +661,8 @@ class BaseMeta:
             return self._get_dataset_by_index(idx)
         elif pixel_size is not None:
             return self._get_dataset_by_pixel_size(pixel_size, strict=strict)
+        elif highest_resolution:
+            return self.get_highest_resolution_dataset()
         else:
             raise ValueError("get_dataset has no valid arguments.")
 
