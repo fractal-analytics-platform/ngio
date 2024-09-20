@@ -5,7 +5,7 @@ from typing import Protocol, TypeVar
 from zarr.store.common import StoreLike
 
 from ngio.core.image_handler import Image
-from ngio.io import open_group
+from ngio.io import open_group_wrapper
 from ngio.ngff_meta import FractalImageLabelMeta, get_ngff_image_meta_handler
 
 T = TypeVar("T")
@@ -67,7 +67,7 @@ class NgffImage:
     def __init__(self, store: StoreLike) -> None:
         """Initialize the NGFFImage in read mode."""
         self.store = store
-        self.group = open_group(store=store, mode="r+")
+        self.group = open_group_wrapper(store=store, mode="r+")
         self._image_meta = get_ngff_image_meta_handler(
             self.group, meta_mode="image", cache=False
         )

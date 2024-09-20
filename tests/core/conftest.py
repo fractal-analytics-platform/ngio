@@ -17,4 +17,10 @@ def ome_zarr_image_v04_path(tmpdir):
 
     base_ome_zarr_meta = base_ome_zarr_meta
     group.attrs.update(base_ome_zarr_meta)
+
+    # shape = (3, 10, 256, 256)
+    for i, path in enumerate(["0", "1", "2", "3"]):
+        shape = (3, 10, 256 // (2**i), 256 // (2**i))
+        group.create_array(name=path, fill_value=0, shape=shape)
+
     return zarr_path

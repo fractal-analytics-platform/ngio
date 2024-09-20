@@ -18,7 +18,7 @@ from ngio.ngff_meta.fractal_image_meta import (
 )
 
 
-def _create_image_metadata(
+def _create_multiscale_meta(
     on_disk_axis: list[str] = ("t", "c", "z", "y", "x"),
     pixel_sizes: PixelSize | None = None,
     xy_scaling_factor: float = 2.0,
@@ -110,7 +110,7 @@ def create_image_metadata(
         version: The version of NGFF metadata.
 
     """
-    datasets = _create_image_metadata(
+    datasets = _create_multiscale_meta(
         on_disk_axis=on_disk_axis,
         pixel_sizes=pixel_sizes,
         xy_scaling_factor=xy_scaling_factor,
@@ -192,7 +192,7 @@ def create_label_metadata(
         name: The name of the metadata.
         version: The version of NGFF metadata.
     """
-    datasets, _ = _create_image_metadata(
+    datasets = _create_multiscale_meta(
         on_disk_axis=on_disk_axis,
         pixel_sizes=pixel_sizes,
         xy_scaling_factor=xy_scaling_factor,

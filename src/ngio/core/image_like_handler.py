@@ -2,9 +2,11 @@
 
 from typing import Literal
 
+import numpy as np
 import zarr
 
-from ngio.io import StoreOrGroup, open_group
+from ngio.core.dimensions import Dimensions
+from ngio.io import StoreOrGroup, open_group_wrapper
 from ngio.ngff_meta import (
     Dataset,
     ImageLabelMeta,
@@ -47,7 +49,9 @@ class ImageLike:
         cache (bool): Whether to cache the metadata.
         """
         if not isinstance(store, zarr.Group):
-            store = open_group(store=store, mode="r")
+            store = open_group_wrapper(store=store, mode="r+")
+
+        self._group = store
 
         self._metadata_handler = get_ngff_image_meta_handler(
             store=store, meta_mode=meta_mode, cache=cache
@@ -55,15 +59,47 @@ class ImageLike:
 
         # Find the level / resolution index
         metadata = self._metadata_handler.load_meta()
-        self._dataset = metadata.get_dataset(
+        dataset = metadata.get_dataset(
             path=path,
             idx=idx,
             pixel_size=pixel_size,
             highest_resolution=highest_resolution,
             strict=strict,
         )
-        self._group = store
+        self._init_dataset(dataset)
 
+    def _init_dataset(self, dataset: Dataset):
+        """Set the dataset of the image.
+
+        This method is for internal use only.
+        """
+        self._dataset = dataset
+
+        if self._dataset.path not in self._group.array_keys():
+            raise ValueError(f"Dataset {self._dataset.path} not found in the group.")
+
+        self._array = self._group[self.dataset.path]
+        self._diminesions = Dimensions(
+            array=self._array,
+            axes_names=self._dataset.axes_names,
+            axes_order=self._dataset.axes_order,
+        )
+
+    def _debug_set_new_dataset(
+        self,
+        new_dataset: Dataset,
+    ):
+        """Debug method to change the the dataset metadata.
+
+        This methods allow to change dataset after initialization.
+        This allow to skip the OME-NGFF metadata validation.
+        This method is for testing/debug purposes only.
+
+        DO NOT USE THIS METHOD IN PRODUCTION CODE.
+        """
+        self._init_dataset(new_dataset)
+
+    # Method to get the metadata of the image
     @property
     def group(self) -> zarr.Group:
         """Return the Zarr group containing the image data."""
@@ -108,3 +144,28 @@ class ImageLike:
     def pixel_size(self) -> PixelSize:
         """Return the pixel resolution of the image."""
         return self.dataset.pixel_size
+
+    # Method to get the data of the image
+    @property
+    def array(self) -> zarr.Array:
+        """Return the image data as a Zarr array."""
+        return self._array
+
+    @property
+    def dimensions(self) -> Dimensions:
+        """Return the dimensions of the image."""
+        return self._diminesions
+
+    @property
+    def shape(self) -> tuple[int, ...]:
+        """Return the shape of the image."""
+        return self.dimensions.shape
+
+    @property
+    def on_disk_shape(self) -> tuple[int, ...]:
+        """Return the shape of the image."""
+        return self.dimensions.on_disk_shape
+
+    def get_data(self) -> np.ndarray:
+        """Return the image data as a Zarr array."""
+        return self.array[...]
