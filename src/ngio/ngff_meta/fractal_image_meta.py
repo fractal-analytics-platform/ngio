@@ -116,6 +116,10 @@ class PixelSize(BaseModel):
         else:
             raise ValueError("Invalid pixel size list. Must have 2 or 3 elements.")
 
+    def as_dict(self) -> dict:
+        """Return the pixel size as a dictionary."""
+        return {"z": self.z, "y": self.y, "x": self.x}
+
     @property
     def zyx(self) -> tuple:
         """Return the voxel size in z, y, x order."""
@@ -271,7 +275,7 @@ class Dataset:
     """Model for a dataset in the multiscale.
 
     To initialize the Dataset object, the path, the axes, scale, and translation list
-    can be provided with arbitrary order.
+    can be provided with on_disk order.
 
     The Dataset object will reorder the scale and translation lists according to the
     following canonical order of the axes:
@@ -318,9 +322,9 @@ class Dataset:
             raise ValueError("Canonical order must have unique elements.")
 
         if len(set(on_disk_axes)) != len(on_disk_axes):
-            raise ValueError("arbitrary axes must have unique elements.")
+            raise ValueError("on_disk axes must have unique elements.")
 
-        self._arbitrary_axes = on_disk_axes
+        self._on_disk_axes = on_disk_axes
 
         # Scale transformation validation
         if len(on_disk_scale) != len(on_disk_axes):
@@ -368,7 +372,7 @@ class Dataset:
     @property
     def on_disk_axes_names(self) -> list[Axis]:
         """Get the axes in the on-disk order."""
-        return [ax.name for ax in self._arbitrary_axes]
+        return [ax.name for ax in self._on_disk_axes]
 
     @property
     def axes_order(self) -> list[str]:
@@ -454,8 +458,8 @@ class Dataset:
 
         axes_idx = self.index_mapping[axis_name]
 
-        new_arbitrary_axes = self._arbitrary_axes.copy()
-        new_arbitrary_axes.pop(axes_idx)
+        new_on_disk_axes = self._on_disk_axes.copy()
+        new_on_disk_axes.pop(axes_idx)
 
         new_scale = self._scale.copy()
         new_scale.pop(axes_idx)
@@ -468,7 +472,7 @@ class Dataset:
 
         return Dataset(
             path=self.path,
-            on_disk_axes=new_arbitrary_axes,
+            on_disk_axes=new_on_disk_axes,
             on_disk_scale=new_scale,
             on_disk_translation=new_translation,
             canonical_order=self._canonical_order,
@@ -493,8 +497,8 @@ class Dataset:
             time_unit=self.time_axis_unit,
         )
 
-        new_arbitrary_axes = self._arbitrary_axes.copy()
-        new_arbitrary_axes.append(axis)
+        new_on_disk_axes = self._on_disk_axes.copy()
+        new_on_disk_axes.append(axis)
 
         new_scale = self._scale.copy()
         new_scale.append(scale)
@@ -507,7 +511,7 @@ class Dataset:
 
         return Dataset(
             path=self.path,
-            on_disk_axes=new_arbitrary_axes,
+            on_disk_axes=new_on_disk_axes,
             on_disk_scale=new_scale,
             on_disk_translation=new_translation,
             canonical_order=self._canonical_order,
@@ -525,11 +529,11 @@ class Dataset:
             on_disk_translation=new_translation,
         )
 
-    def arbitrary_model_dump(self) -> dict:
-        """Return the dataset information in the arbitrary order."""
+    def on_disk_model_dump(self) -> dict:
+        """Return the dataset information in the on_disk order."""
         return {
             "path": self.path,
-            "axes": [ax.model_dump(exclude_none=True) for ax in self._arbitrary_axes],
+            "axes": [ax.model_dump(exclude_none=True) for ax in self._on_disk_axes],
             "scale": self._scale,
             "translation": self._translation,
         }

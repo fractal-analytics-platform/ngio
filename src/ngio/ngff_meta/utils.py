@@ -5,10 +5,12 @@ from typing import Any
 from ngio.ngff_meta.fractal_image_meta import (
     Axis,
     Channel,
+    ChannelNames,
     Dataset,
     ImageMeta,
     LabelMeta,
     Omero,
+    PixelSize,
     SpaceNames,
     SpaceUnits,
     TimeNames,
@@ -16,30 +18,11 @@ from ngio.ngff_meta.fractal_image_meta import (
 )
 
 
-def _compute_scale(axis_names, pixel_sizes, time_spacing):
-    scale = []
-
-    pixel_sizes_dict = {
-        "z": pixel_sizes[0],
-        "x": pixel_sizes[1],
-        "y": pixel_sizes[2],
-    }
-
-    for ax in axis_names:
-        if ax in TimeNames.allowed_names():
-            scale.append(time_spacing)
-        elif ax in SpaceNames.allowed_names():
-            scale.append(pixel_sizes_dict[ax])
-        else:
-            scale.append(1.0)
-
-    return scale
-
-
 def _create_image_metadata(
-    axis_names: list[str] = ("t", "c", "z", "y", "x"),
-    pixel_sizes: tuple[float, float, float] = (1.0, 1.0, 1.0),
-    scaling_factors: tuple[float, float, float] = (1.0, 2.0, 2.0),
+    on_disk_axis: list[str] = ("t", "c", "z", "y", "x"),
+    pixel_sizes: PixelSize | None = None,
+    xy_scaling_factor: float = 2.0,
+    z_scaling_factor: float = 1.0,
     pixel_units: SpaceUnits | str = SpaceUnits.micrometer,
     time_spacing: float = 1.0,
     time_units: TimeUnits | str = TimeUnits.s,
@@ -50,11 +33,37 @@ def _create_image_metadata(
     omero_kwargs: dict[str, Any] | None = None,
 ) -> tuple[list[Dataset], Omero]:
     """Create a image metadata object from scratch."""
-    scale = _compute_scale(axis_names, pixel_sizes, time_spacing)
+    allowed_axes_names = (
+        SpaceNames.allowed_names()
+        + TimeNames.allowed_names()
+        + ChannelNames.allowed_names()
+    )
+    for ax in on_disk_axis:
+        if ax not in allowed_axes_names:
+            raise ValueError(
+                f"Invalid axis name: {ax}, allowed names: {allowed_axes_names}"
+            )
 
-    axes = Axis.batch_create(axis_names, time_unit=time_units, space_unit=pixel_units)
+    if pixel_sizes is None:
+        pixel_sizes = PixelSize(z=1.0, y=1.0, x=1.0, unit=pixel_units)
+
+    pixel_sizes_dict = pixel_sizes.as_dict()
+    pixel_sizes_dict["t"] = time_spacing
+
+    scaling_factor_dict = {
+        "z": z_scaling_factor,
+        "y": xy_scaling_factor,
+        "x": xy_scaling_factor,
+    }
+
+    axes = Axis.batch_create(on_disk_axis, time_unit=time_units, space_unit=pixel_units)
     datasets = []
-    for level in range(num_levels):
+    for i, level in range(num_levels):
+        scale = [
+            pixel_sizes_dict.get(ax, 1.0) * scaling_factor_dict.get(ax, 1.0) ** i
+            for ax in on_disk_axis
+        ]
+
         datasets.append(
             Dataset(
                 path=str(level),
@@ -63,9 +72,6 @@ def _create_image_metadata(
                 on_disk_translation=None,
             )
         )
-
-        pixel_sizes = [s * f for s, f in zip(pixel_sizes, scaling_factors, strict=True)]
-        scale = _compute_scale(axis_names, pixel_sizes, time_spacing)
 
     if channel_labels is not None:
         if channel_wavelengths is None:
@@ -89,10 +95,10 @@ def _create_image_metadata(
 
 
 def create_image_metadata(
-    axis_names: list[str] = ("t", "c", "z", "y", "x"),
-    pixel_sizes: tuple[float, float, float] = (1.0, 1.0, 1.0),
-    scaling_factors: tuple[float, float, float] = (1.0, 2.0, 2.0),
-    pixel_units: SpaceUnits | str = SpaceUnits.micrometer,
+    on_disk_axis: list[str] = ("t", "c", "z", "y", "x"),
+    pixel_sizes: PixelSize | None = None,
+    xy_scaling_factor: float = 2.0,
+    z_scaling_factor: float = 1.0,
     time_spacing: float = 1.0,
     time_units: TimeUnits | str = TimeUnits.s,
     num_levels: int = 5,
@@ -106,31 +112,35 @@ def create_image_metadata(
     """Create a image metadata object from scratch.
 
     Args:
-        axis_names: The names of the axes.
-            The order is not important, since ngio will sort them in the correct
-            canonical order.
-        pixel_sizes: The pixel sizes in z, y, x order.
-        scaling_factors: The scaling factors in z, y, x order.
-        pixel_units: The units of the pixel sizes.
-        time_spacing: The time spacing.
-        time_units: The units of the time spacing.
-        num_levels: The number of levels.
+        on_disk_axis: The names of the axes. The order will correspond to the
+            on-disk order. Axes order should follow the canonical order
+            (t, c, z, y, x). Note that a different order can still be used
+            to store the data on disk if NGFF version used is supports it.
+        pixel_sizes: The pixel sizes for the z, y, x axes.
+        xy_scaling_factor: The scaling factor for the y and x axes, to be used
+            for the pyramid building.
+        z_scaling_factor: The scaling factor for the z axis, to be used for the
+            pyramid building. Note that several tools may not support scaling
+            diffent than 1.0 for the z axis.
+        time_spacing: The time spacing (If the time axis is present).
+        time_units: The units of the time spacing (If the time axis is present).
+        num_levels: The number of levels in the pyramid.
         name: The name of the metadata.
         channel_labels: The names of the channels.
         channel_wavelengths: The wavelengths of the channels.
         channel_kwargs: The additional channel kwargs.
         omero_kwargs: The additional omero kwargs.
-        version: The version of the metadata.
+        version: The version of NGFF metadata.
 
     """
     if len(channel_labels) != len(set(channel_labels)):
         raise ValueError("Channel names must be unique.")
 
     datasets, omero = _create_image_metadata(
-        axis_names=axis_names,
+        on_disk_axis=on_disk_axis,
         pixel_sizes=pixel_sizes,
-        scaling_factors=scaling_factors,
-        pixel_units=pixel_units,
+        xy_scaling_factor=xy_scaling_factor,
+        z_scaling_factor=z_scaling_factor,
         time_spacing=time_spacing,
         time_units=time_units,
         num_levels=num_levels,
@@ -148,10 +158,10 @@ def create_image_metadata(
 
 
 def create_label_metadata(
-    axis_order: list[str] = ("t", "z", "y", "x"),
-    pixel_sizes: tuple[float, float, float] = (1.0, 1.0, 1.0),
-    scaling_factors: tuple[float, float, float] = (1.0, 2.0, 2.0),
-    pixel_units: SpaceUnits | str = SpaceUnits.micrometer,
+    on_disk_axis: list[str] = ("t", "c", "z", "y", "x"),
+    pixel_sizes: PixelSize | None = None,
+    xy_scaling_factor: float = 2.0,
+    z_scaling_factor: float = 1.0,
     time_spacing: float = 1.0,
     time_units: TimeUnits | str = TimeUnits.s,
     num_levels: int = 5,
@@ -161,23 +171,27 @@ def create_label_metadata(
     """Create a label metadata object from scratch.
 
     Args:
-        axis_order: The names of the axes.
-            The order is not important, since ngio will sort them in the correct
-            canonical order.
-        pixel_sizes: The pixel sizes in z, y, x order.
-        scaling_factors: The scaling factors in z, y, x order.
-        pixel_units: The units of the pixel sizes.
-        time_spacing: The time spacing.
-        time_units: The units of the time spacing.
-        num_levels: The number of levels.
+        on_disk_axis: The names of the axes. The order will correspond to the
+            on-disk order. Axes order should follow the canonical order
+            (t, c, z, y, x). Note that a different order can still be used
+            to store the data on disk if NGFF version used is supports it.
+        pixel_sizes: The pixel sizes for the z, y, x axes.
+        xy_scaling_factor: The scaling factor for the y and x axes, to be used
+            for the pyramid building.
+        z_scaling_factor: The scaling factor for the z axis, to be used for the
+            pyramid building. Note that several tools may not support scaling
+            diffent than 1.0 for the z axis.
+        time_spacing: The time spacing (If the time axis is present).
+        time_units: The units of the time spacing (If the time axis is present).
+        num_levels: The number of levels in the pyramid.
         name: The name of the metadata.
-        version: The version of the metadata.
+        version: The version of NGFF metadata.
     """
     datasets, _ = _create_image_metadata(
-        axis_names=axis_order,
+        on_disk_axis=on_disk_axis,
         pixel_sizes=pixel_sizes,
-        scaling_factors=scaling_factors,
-        pixel_units=pixel_units,
+        xy_scaling_factor=xy_scaling_factor,
+        z_scaling_factor=z_scaling_factor,
         time_spacing=time_spacing,
         time_units=time_units,
         num_levels=num_levels,
