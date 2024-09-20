@@ -27,10 +27,6 @@ def _create_image_metadata(
     time_spacing: float = 1.0,
     time_units: TimeUnits | str = TimeUnits.s,
     num_levels: int = 5,
-    channel_labels: list[str] | None = None,
-    channel_wavelengths: list[str] | None = None,
-    channel_kwargs: list[dict[str, Any]] | None = None,
-    omero_kwargs: dict[str, Any] | None = None,
 ) -> tuple[list[Dataset], Omero]:
     """Create a image metadata object from scratch."""
     allowed_axes_names = (
@@ -72,26 +68,7 @@ def _create_image_metadata(
                 on_disk_translation=None,
             )
         )
-
-    if channel_labels is not None:
-        if channel_wavelengths is None:
-            channel_wavelengths = [None] * len(channel_labels)
-
-        if channel_kwargs is None:
-            channel_kwargs = [{}] * len(channel_labels)
-
-        channels = []
-        for label, wavelenghts, kwargs in zip(
-            channel_labels, channel_wavelengths, channel_kwargs, strict=True
-        ):
-            channels.append(Channel(label=label, wavelength_id=wavelenghts, **kwargs))
-
-        omero_kwargs = {} if omero_kwargs is None else omero_kwargs
-        omero = Omero(channels=channels, **omero_kwargs)
-    else:
-        omero = None
-
-    return datasets, omero
+    return datasets
 
 
 def create_image_metadata(
@@ -133,10 +110,7 @@ def create_image_metadata(
         version: The version of NGFF metadata.
 
     """
-    if len(channel_labels) != len(set(channel_labels)):
-        raise ValueError("Channel names must be unique.")
-
-    datasets, omero = _create_image_metadata(
+    datasets = _create_image_metadata(
         on_disk_axis=on_disk_axis,
         pixel_sizes=pixel_sizes,
         xy_scaling_factor=xy_scaling_factor,
@@ -144,11 +118,42 @@ def create_image_metadata(
         time_spacing=time_spacing,
         time_units=time_units,
         num_levels=num_levels,
-        channel_labels=channel_labels,
-        channel_wavelengths=channel_wavelengths,
-        channel_kwargs=channel_kwargs,
-        omero_kwargs=omero_kwargs,
     )
+
+    if channel_labels is None:
+        return ImageMeta(
+            version=version,
+            name=name,
+            datasets=datasets,
+            omero=None,
+        )
+
+    if channel_wavelengths is None:
+        channel_wavelengths = channel_labels
+    else:
+        if len(channel_wavelengths) != len(channel_labels):
+            raise ValueError(
+                "The number of channel wavelengths must match the number of "
+                "channel labels."
+            )
+
+    if channel_kwargs is None:
+        channel_kwargs = [{}] * len(channel_labels)
+    else:
+        if len(channel_kwargs) != len(channel_labels):
+            raise ValueError(
+                "The number of channel kwargs must match the number of channel labels."
+            )
+
+    channels = []
+    for label, wavelenghts, kwargs in zip(
+        channel_labels, channel_wavelengths, channel_kwargs, strict=True
+    ):
+        channels.append(Channel(label=label, wavelength_id=wavelenghts, **kwargs))
+
+    omero_kwargs = {} if omero_kwargs is None else omero_kwargs
+    omero = Omero(channels=channels, **omero_kwargs)
+
     return ImageMeta(
         version=version,
         name=name,

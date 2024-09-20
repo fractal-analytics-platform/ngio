@@ -2,7 +2,9 @@
 
 from typing import Literal, Protocol
 
-from ngio.io import StoreOrGroup
+from zarr.core.common import AccessModeLiteral
+
+from ngio.io import Group, StoreLike, StoreOrGroup
 from ngio.ngff_meta.fractal_image_meta import ImageLabelMeta
 from ngio.ngff_meta.v04.zarr_utils import (
     NgffImageMetaZarrHandlerV04,
@@ -17,8 +19,29 @@ class NgffImageMetaHandler(Protocol):
         store: StoreOrGroup,
         meta_mode: Literal["image", "label"],
         cache: bool = False,
+        mode: AccessModeLiteral = "a",
     ):
         """Initialize the handler."""
+        ...
+
+    @property
+    def group(self) -> Group:
+        """Return the Zarr group."""
+        ...
+
+    @property
+    def store(self) -> StoreLike:
+        """Return the Zarr store."""
+        ...
+
+    @property
+    def zarr_version(self) -> int:
+        """Return the Zarr version."""
+        ...
+
+    @staticmethod
+    def check_version(store: StoreOrGroup = None) -> bool:
+        """Check if the version of the metadata is supported."""
         ...
 
     def load_meta(self) -> ImageLabelMeta:
@@ -57,9 +80,15 @@ def find_ngff_image_meta_handler_version(store: StoreOrGroup) -> str:
 
 
 def get_ngff_image_meta_handler(
-    store: StoreOrGroup, meta_mode: Literal["image", "label"], cache: bool = False
+    store: StoreOrGroup,
+    meta_mode: Literal["image", "label"],
+    version: str | None = None,
+    cache: bool = False,
+    mode: AccessModeLiteral = "a",
 ) -> NgffImageMetaHandler:
     """Load the NGFF image metadata handler."""
-    version = find_ngff_image_meta_handler_version(store)
+    if version is None:
+        version = find_ngff_image_meta_handler_version(store)
+
     handler = _available_load_ngff_image_meta_handlers[version]
-    return handler(store=store, meta_mode=meta_mode, cache=cache)
+    return handler(store=store, meta_mode=meta_mode, cache=cache, mode=mode)

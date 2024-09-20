@@ -2,7 +2,14 @@
 
 from typing import Literal
 
-from ngio.io import StoreOrGroup, read_group_attrs, update_group_attrs
+from zarr.core.common import AccessModeLiteral
+
+from ngio.io import (
+    Group,
+    StoreLike,
+    StoreOrGroup,
+    open_group_wrapper,
+)
 from ngio.ngff_meta.fractal_image_meta import (
     Axis,
     Dataset,
@@ -25,28 +32,22 @@ from ngio.ngff_meta.v04.specs import (
 
 def check_ngff_image_meta_v04(store: StoreOrGroup) -> bool:
     """Check if a Zarr Group contains the OME-NGFF v0.4."""
-    group = read_group_attrs(store=store, zarr_format=2)
-    multiscales = group.get("multiscales", None)
+    store = open_group_wrapper(store=store, mode="r", zarr_format=2)
+    attrs = dict(store.attrs)
+    multiscales = attrs.get("multiscales", None)
     if multiscales is None:
         return False
 
-    if not isinstance(multiscales, list):
-        raise ValueError("Invalid multiscales metadata. Multiscales is not a list.")
-
-    if len(multiscales) == 0:
-        raise ValueError("Invalid multiscales metadata. Multiscales is an empty list.")
-
     version = multiscales[0].get("version", None)
-    if version is None:
-        raise ValueError("Invalid multiscales metadata. Version is not defined.")
+    if version != "0.4":
+        return False
 
-    return version == "0.4"
+    return True
 
 
-def load_vanilla_ngff_image_meta_v04(store: StoreOrGroup) -> NgffImageMeta04:
+def load_vanilla_ngff_image_meta_v04(group: Group) -> NgffImageMeta04:
     """Load the OME-NGFF 0.4 image meta model."""
-    attrs = read_group_attrs(store=store, zarr_format=2)
-    return NgffImageMeta04(**attrs)
+    return NgffImageMeta04(**group.attrs)
 
 
 def _transform_dataset(
@@ -165,26 +166,31 @@ def fractal_ngff_image_meta_to_vanilla_v04(
     )
 
 
-def load_ngff_image_meta_v04(store: StoreOrGroup) -> ImageLabelMeta:
+def load_ngff_image_meta_v04(group: Group) -> ImageLabelMeta:
     """Load the OME-NGFF 0.4 image meta model."""
-    if not check_ngff_image_meta_v04(store=store):
+    if not check_ngff_image_meta_v04(store=group):
         raise ValueError(
             "The Zarr store does not contain the correct OME-Zarr version."
         )
-    meta04 = load_vanilla_ngff_image_meta_v04(store=store)
+    meta04 = load_vanilla_ngff_image_meta_v04(group=group)
     return vanilla_ngff_image_meta_v04_to_fractal(meta04=meta04)
 
 
-def write_ngff_image_meta_v04(store: StoreOrGroup, meta: ImageLabelMeta) -> None:
+def write_ngff_image_meta_v04(group: Group, meta: ImageLabelMeta) -> None:
     """Write the OME-NGFF 0.4 image meta model."""
-    if not check_ngff_image_meta_v04(store=store):
-        raise ValueError(
-            "The Zarr store does not contain the correct OME-Zarr version."
-        )
+    if dict(group.attrs):
+        # If group is not empty, check if the version is correct
+        if not check_ngff_image_meta_v04(store=group):
+            raise ValueError(
+                "The Zarr store does not contain the correct OME-Zarr version."
+            )
+    if meta.omero is not None:
+        for c in meta.omero.channels:
+            if "color" not in c.extra_fields:
+                c.extra_fields["color"] = "0x000000"
+
     meta04 = fractal_ngff_image_meta_to_vanilla_v04(meta=meta)
-    update_group_attrs(
-        store=store, attrs=meta04.model_dump(exclude_none=True), zarr_format=2
-    )
+    group.attrs.update(meta04.model_dump(exclude=None))
 
 
 class NgffImageMetaZarrHandlerV04:
@@ -195,28 +201,77 @@ class NgffImageMetaZarrHandlerV04:
         store: StoreOrGroup,
         meta_mode: Literal["image", "label"],
         cache: bool = False,
+        mode: AccessModeLiteral = "a",
     ):
-        """Initialize the handler."""
-        self.store = store
+        """Initialize the handler.
+
+        Args:
+            store (StoreOrGroup): The Zarr store or group containing the image data.
+            meta_mode (str): The mode of the metadata handler.
+            cache (bool): Whether to cache the metadata.
+            mode (str): The mode of the store.
+        """
+        if isinstance(store, Group):
+            self._store = store.store_path
+            self._group = store
+
+        elif isinstance(store, StoreLike):
+            self._store = store
+            self._group = open_group_wrapper(store=store, mode=mode, zarr_format=2)
+
+        else:
+            raise ValueError("Invalid store type. Expected Zarr store or group")
+
         self.meta_mode = meta_mode
         self.cache = cache
         self._meta = None
 
-        if not self.check_version(store=store):
-            raise ValueError("The Zarr store does not contain the correct version.")
+    @property
+    def zarr_version(self) -> int:
+        """Return the Zarr version.
+
+        This is not strictly necessary, but it is necessary
+        to make sure the zarr python creare consistent zarr files.
+        """
+        return 2
+
+    @property
+    def store(self) -> StoreLike:
+        """Return the Zarr store."""
+        return self._store
+
+    @property
+    def group(self) -> Group:
+        """Return the Zarr group."""
+        return self._group
+
+    @staticmethod
+    def check_version(store: StoreOrGroup) -> bool:
+        """Check if the version of the metadata is supported."""
+        return check_ngff_image_meta_v04(store=store)
 
     def load_meta(self) -> ImageLabelMeta:
         """Load the OME-NGFF 0.4 metadata."""
+        if not self.check_version(store=self.group):
+            raise ValueError(
+                "The Zarr store does not contain the correct OME-Zarr version."
+            )
+
         if self.cache:
             if self._meta is None:
-                self._meta = load_ngff_image_meta_v04(self.store)
+                self._meta = load_ngff_image_meta_v04(self.group)
             return self._meta
 
-        return load_ngff_image_meta_v04(self.store)
+        return load_ngff_image_meta_v04(self.group)
 
     def write_meta(self, meta: ImageLabelMeta) -> None:
         """Write the OME-NGFF 0.4 metadata."""
-        write_ngff_image_meta_v04(store=self.store, meta=meta)
+        if self.group.store_path.store.mode.readonly:
+            raise ValueError(
+                "The store is read-only. Cannot write the metadata to the store."
+            )
+
+        write_ngff_image_meta_v04(group=self.group, meta=meta)
 
         if self.cache:
             self.update_cache(meta)
@@ -230,8 +285,3 @@ class NgffImageMetaZarrHandlerV04:
     def clear_cache(self) -> None:
         """Clear the cached metadata."""
         self._meta = None
-
-    @staticmethod
-    def check_version(store: StoreOrGroup) -> bool:
-        """Check if the Zarr store contains the correct version."""
-        return check_ngff_image_meta_v04(store=store)

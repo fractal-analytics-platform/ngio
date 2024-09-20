@@ -401,6 +401,11 @@ class Dataset:
         return [self._scale[i] for i in self._index_mapping.values() if i is not None]
 
     @property
+    def on_disk_scale(self) -> list[float]:
+        """Get the scale transformation of the dataset in the on-disk order."""
+        return self._scale
+
+    @property
     def translation(self) -> list[float] | None:
         """Get the translation transformation of the dataset in the canonical order."""
         if self._translation is None:
