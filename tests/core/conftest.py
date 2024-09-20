@@ -12,7 +12,9 @@ def ome_zarr_image_v04_path(tmpdir):
 
     group = zarr.open_group(store=zarr_path, mode="w", zarr_format=2)
 
-    json_path = Path("tests") / "data" / " meta_v04" / " base_ome_zarr_image_meta.json"
+    json_path = (
+        Path(".") / "tests" / "data" / "meta_v04" / "base_ome_zarr_image_meta.json"
+    )
     with open(json_path) as f:
         base_ome_zarr_meta = json.load(f)
 
