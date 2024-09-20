@@ -39,6 +39,7 @@ dependencies = [
     "requests",
     "aiohttp", 
     "dask[array]",
+    "zarr==v3.0.0-alpha.4",
 ]
 
 # https://peps.python.org/pep-0621/#dependencies-optional-dependencies
@@ -166,7 +167,7 @@ channels = ["conda-forge"]
 platforms = ["osx-arm64"]
 
 [tool.pixi.pypi-dependencies]
-zarr = { path = "../zarr-python/", editable = true }
+# zarr = { path = "../zarr-python/", editable = true }
 ngio = { path = ".", editable = true }
 
 [tool.pixi.environments]
