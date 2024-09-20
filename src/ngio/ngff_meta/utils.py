@@ -58,9 +58,9 @@ def _create_image_metadata(
 
     axes = Axis.batch_create(on_disk_axis, time_unit=time_units, space_unit=pixel_units)
     datasets = []
-    for i, level in range(num_levels):
+    for level in range(num_levels):
         scale = [
-            pixel_sizes_dict.get(ax, 1.0) * scaling_factor_dict.get(ax, 1.0) ** i
+            pixel_sizes_dict.get(ax, 1.0) * scaling_factor_dict.get(ax, 1.0) ** level
             for ax in on_disk_axis
         ]
 
