@@ -3,13 +3,13 @@ import numpy as np
 
 class TestUtils:
     def test_create_fractal_meta_with_t(self):
-        from ngio.ngff_meta.utils import create_image_metadata
+        from ngio.ngff_meta import create_image_metadata
 
         meta = create_image_metadata(
-            axis_names=("t", "c", "z", "y", "x"),
-            pixel_sizes=(1.0, 1.0, 1.0),
-            scaling_factors=(1.0, 2.0, 2.0),
-            pixel_units="micrometer",
+            on_disk_axis=("t", "c", "z", "y", "x"),
+            pixel_sizes=None,
+            xy_scaling_factor=2.0,
+            z_scaling_factor=1.0,
             time_spacing=1.0,
             time_units="s",
             num_levels=5,
@@ -30,13 +30,13 @@ class TestUtils:
         assert meta.num_levels == 5
 
     def test_create_fractal_meta(self):
-        from ngio.ngff_meta.utils import create_image_metadata
+        from ngio.ngff_meta import create_image_metadata
 
         meta = create_image_metadata(
-            axis_names=("c", "z", "y", "x"),
-            pixel_sizes=(1.0, 1.0, 1.0),
-            scaling_factors=(1.0, 2.0, 2.0),
-            pixel_units="micrometer",
+            on_disk_axis=("c", "z", "y", "x"),
+            pixel_sizes=None,
+            xy_scaling_factor=2.0,
+            z_scaling_factor=1.0,
             time_spacing=1.0,
             time_units="s",
             num_levels=5,
@@ -57,13 +57,13 @@ class TestUtils:
         assert meta.num_levels == 5
 
     def test_create_fractal_meta_with_non_canonical_order(self):
-        from ngio.ngff_meta.utils import create_image_metadata
+        from ngio.ngff_meta import create_image_metadata
 
         meta = create_image_metadata(
-            axis_names=("z", "c", "y", "x"),
-            pixel_sizes=(1.0, 1.0, 1.0),
-            scaling_factors=(1.0, 2.0, 2.0),
-            pixel_units="micrometer",
+            on_disk_axis=("z", "c", "y", "x"),
+            pixel_sizes=None,
+            xy_scaling_factor=2.0,
+            z_scaling_factor=1.0,
             time_spacing=1.0,
             time_units="s",
             num_levels=5,
@@ -79,10 +79,10 @@ class TestUtils:
         assert meta.space_axes_names == ["z", "y", "x"]
 
         meta = create_image_metadata(
-            axis_names=("z", "c", "y", "x", "t"),
-            pixel_sizes=(1.0, 1.0, 1.0),
-            scaling_factors=(1.0, 2.0, 2.0),
-            pixel_units="micrometer",
+            on_disk_axis=("t", "c", "z", "y", "x"),
+            pixel_sizes=None,
+            xy_scaling_factor=2.0,
+            z_scaling_factor=1.0,
             time_spacing=1.0,
             time_units="s",
             num_levels=5,
@@ -98,13 +98,13 @@ class TestUtils:
         assert meta.space_axes_names == ["z", "y", "x"]
 
     def test_create_fractal_label_meta(self):
-        from ngio.ngff_meta.utils import create_label_metadata
+        from ngio.ngff_meta import create_label_metadata
 
         meta = create_label_metadata(
-            axis_order=("t", "z", "y", "x"),
-            pixel_sizes=(1.0, 1.0, 1.0),
-            scaling_factors=(1.0, 2.0, 2.0),
-            pixel_units="micrometer",
+            on_disk_axis=("t", "z", "y", "x"),
+            pixel_sizes=None,
+            xy_scaling_factor=2.0,
+            z_scaling_factor=1.0,
             time_spacing=1.0,
             time_units="s",
             num_levels=5,
