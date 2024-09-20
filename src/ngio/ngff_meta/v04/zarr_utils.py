@@ -92,9 +92,9 @@ def _transform_dataset(
         fractal_datasets.append(
             Dataset(
                 path=dataset04.path,
-                arbitrary_axes=axes,
-                arbitrary_scale=scale,
-                arbitrary_translation=translation,
+                on_disk_axes=axes,
+                on_disk_scale=scale,
+                on_disk_translation=translation,
             )
         )
     return fractal_datasets

@@ -7,7 +7,11 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator
 
-from ngio.pydantic_utils import BaseWithExtraFields, unique_items_validator
+from ngio.pydantic_utils import (
+    SKIP_NGFF_VALIDATION,
+    BaseWithExtraFields,
+    unique_items_validator,
+)
 
 
 class Window04(BaseModel):
@@ -87,6 +91,8 @@ class Dataset04(BaseModel):
     @classmethod
     def _check_scale_exists(cls, v):
         # check if at least one scale transformation exists
+        if SKIP_NGFF_VALIDATION:
+            return v
 
         num_scale = sum(
             1 for item in v if isinstance(item, ScaleCoordinateTransformation04)
@@ -117,6 +123,9 @@ class Multiscale04(BaseModel):
     @classmethod
     def _check_axes_order(cls, v):
         # check if the order of axes is correct
+        if SKIP_NGFF_VALIDATION:
+            return v
+
         axes_types = [axis.type for axis in v]
 
         if "time" in axes_types:
@@ -138,7 +147,6 @@ class Multiscale04(BaseModel):
                     raise ValueError("Channel axis should precede spatial axes.")
             else:
                 channel_type_flag = True
-
         return v
 
 

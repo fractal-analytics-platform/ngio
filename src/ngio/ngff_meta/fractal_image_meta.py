@@ -286,19 +286,19 @@ class Dataset:
         self,
         *,
         path: str,
-        arbitrary_axes: list[Axis],
-        arbitrary_scale: list[float],
-        arbitrary_translation: list[float] | None = None,
+        on_disk_axes: list[Axis],
+        on_disk_scale: list[float],
+        on_disk_translation: list[float] | None = None,
         canonical_order: list[str] | None = None,
     ):
         """Initialize the Dataset object.
 
         Args:
             path(str): The path of the dataset.
-            arbitrary_axes(list[Axis]): The list of axes in the multiscale.
-            arbitrary_scale(list[float]): The list of scale transformation.
+            on_disk_axes(list[Axis]): The list of axes in the multiscale.
+            on_disk_scale(list[float]): The list of scale transformation.
                 The scale transformation must have the same length as the axes.
-            arbitrary_translation(list[float] | None): The list of translation.
+            on_disk_translation(list[float] | None): The list of translation.
             canonical_order(list[str] | None): The canonical order of the axes.
                 If None, the default order is ["t", "c", "z", "y", "x"].
         """
@@ -310,44 +310,44 @@ class Dataset:
         else:
             self._canonical_order = canonical_order
 
-        for ax in arbitrary_axes:
+        for ax in on_disk_axes:
             if ax.name not in self._canonical_order:
                 raise ValueError(f"Axis {ax.name} not found in the canonical order.")
 
         if len(set(self._canonical_order)) != len(self._canonical_order):
             raise ValueError("Canonical order must have unique elements.")
 
-        if len(set(arbitrary_axes)) != len(arbitrary_axes):
+        if len(set(on_disk_axes)) != len(on_disk_axes):
             raise ValueError("arbitrary axes must have unique elements.")
 
-        self._arbitrary_axes = arbitrary_axes
+        self._arbitrary_axes = on_disk_axes
 
         # Scale transformation validation
-        if len(arbitrary_scale) != len(arbitrary_axes):
+        if len(on_disk_scale) != len(on_disk_axes):
             raise ValueError(
                 "Inconsistent scale transformation. "
                 "The scale transformation must have the same length."
             )
-        self._scale = arbitrary_scale
+        self._scale = on_disk_scale
 
         # Translation transformation validation
-        if arbitrary_translation is not None and len(arbitrary_translation) != len(
-            arbitrary_axes
+        if on_disk_translation is not None and len(on_disk_translation) != len(
+            on_disk_axes
         ):
             raise ValueError(
                 "Inconsistent translation transformation. "
                 "The translation transformation must have the same length."
             )
 
-        self._translation = arbitrary_translation
+        self._translation = on_disk_translation
 
         # Compute the index mapping between the canonical order and the actual order
-        _map = {ax.name: i for i, ax in enumerate(arbitrary_axes)}
+        _map = {ax.name: i for i, ax in enumerate(on_disk_axes)}
         self._index_mapping = {
             name: _map.get(name, None) for name in self._canonical_order
         }
         self._ordered_axes = [
-            arbitrary_axes[i] for i in self._index_mapping.values() if i is not None
+            on_disk_axes[i] for i in self._index_mapping.values() if i is not None
         ]
 
     @property
@@ -364,6 +364,32 @@ class Dataset:
     def axes(self) -> list[Axis]:
         """Get the axes in the canonical order."""
         return self._ordered_axes
+
+    @property
+    def on_disk_axes_names(self) -> list[Axis]:
+        """Get the axes in the on-disk order."""
+        return [ax.name for ax in self._arbitrary_axes]
+
+    @property
+    def axes_order(self) -> list[str]:
+        """Get the mapping between the canonical order and the on-disk order.
+
+        Example:
+            on_disk_order = ["z", "c", "y", "x"]
+            canonical_order = ["c", "z", "y", "x"]
+            axes_order = [1, 0, 2, 3]
+        """
+        on_disk_axes = self.on_disk_axes_names
+        canonical_axes = self.axes_names
+        return [on_disk_axes.index(ax) for ax in canonical_axes]
+
+    @property
+    def reverse_axes_oder(self) -> list[str]:
+        """Get the mapping between the on-disk order and the canonical order.
+
+        It is the inverse of the axes_order.
+        """
+        return np.argsort(self.axes_order)
 
     @property
     def scale(self) -> list[float]:
@@ -442,9 +468,9 @@ class Dataset:
 
         return Dataset(
             path=self.path,
-            arbitrary_axes=new_arbitrary_axes,
-            arbitrary_scale=new_scale,
-            arbitrary_translation=new_translation,
+            on_disk_axes=new_arbitrary_axes,
+            on_disk_scale=new_scale,
+            on_disk_translation=new_translation,
             canonical_order=self._canonical_order,
         )
 
@@ -481,9 +507,9 @@ class Dataset:
 
         return Dataset(
             path=self.path,
-            arbitrary_axes=new_arbitrary_axes,
-            arbitrary_scale=new_scale,
-            arbitrary_translation=new_translation,
+            on_disk_axes=new_arbitrary_axes,
+            on_disk_scale=new_scale,
+            on_disk_translation=new_translation,
             canonical_order=self._canonical_order,
         )
 
@@ -494,9 +520,9 @@ class Dataset:
         new_translation = self.translation
         return Dataset(
             path=self.path,
-            arbitrary_axes=new_axes,
-            arbitrary_scale=new_scale,
-            arbitrary_translation=new_translation,
+            on_disk_axes=new_axes,
+            on_disk_scale=new_scale,
+            on_disk_translation=new_translation,
         )
 
     def arbitrary_model_dump(self) -> dict:

@@ -1,8 +1,13 @@
 """Utility functions for Pydantic models."""
 
+import os
 from typing import TypeVar
 
 from pydantic import BaseModel, Field, model_serializer, model_validator
+
+# Debugging flag to skip validation of the metadata (for testing purposes only)
+# check if this is an environment variable
+SKIP_NGFF_VALIDATION = bool(os.getenv("SKIP_NGFF_VALIDATION", False))
 
 
 class BaseWithExtraFields(BaseModel):
@@ -32,6 +37,9 @@ T = TypeVar("T")
 
 def unique_items_validator(values: list[T]) -> list[T]:
     """Validate that all items in the list are unique."""
+    if SKIP_NGFF_VALIDATION:
+        return values
+
     for ind, value in enumerate(values, start=1):
         if value in values[ind:]:
             raise ValueError(f"Non-unique values in {values}.")

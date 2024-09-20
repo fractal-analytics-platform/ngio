@@ -58,9 +58,9 @@ def _create_image_metadata(
         datasets.append(
             Dataset(
                 path=str(level),
-                arbitrary_axes=axes,
-                arbitrary_scale=scale,
-                arbitrary_translation=None,
+                on_disk_axes=axes,
+                on_disk_scale=scale,
+                on_disk_translation=None,
             )
         )
 
