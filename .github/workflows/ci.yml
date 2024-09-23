@@ -78,6 +78,30 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: /home/runner/work/ngio/ngio/coverage.xml
 
+  zarrv3:
+    name: Test zarr-python v3 compatibility
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache-dependency-path: "pyproject.toml"
+          cache: "pip"
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install -U pip
+          # if running a cron job, we add the --pre flag to test against pre-releases
+          python -m pip install .[dev3] ${{ github.event_name == 'schedule' && '--pre' || ''  }}
+
+      - name: 🧪 Run Tests
+        run: pytest
+        continue-on-error: true
+
   deploy:
     name: Deploy
     needs: test
