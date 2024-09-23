@@ -215,12 +215,9 @@ class NgffImageMetaZarrHandlerV04:
             self._store = store.store_path
             self._group = store
 
-        elif isinstance(store, StoreLike):
+        else:
             self._store = store
             self._group = open_group_wrapper(store=store, mode=mode, zarr_format=2)
-
-        else:
-            raise ValueError("Invalid store type. Expected Zarr store or group")
 
         self.meta_mode = meta_mode
         self.cache = cache
