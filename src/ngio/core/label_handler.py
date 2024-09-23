@@ -1,9 +1,7 @@
 """A module to handle OME-NGFF images stored in Zarr format."""
 
-from zarr.store.common import StoreLike
-
 from ngio.core.image_like_handler import ImageLike
-from ngio.io import StoreOrGroup
+from ngio.io import StoreLike, StoreOrGroup
 from ngio.ngff_meta.fractal_image_meta import LabelMeta, PixelSize
 
 

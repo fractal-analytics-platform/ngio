@@ -39,12 +39,14 @@ dependencies = [
     "requests",
     "aiohttp", 
     "dask[array]",
-    "zarr==v3.0.0-alpha.4",
+    "zarr",
 ]
 
 # https://peps.python.org/pep-0621/#dependencies-optional-dependencies
 # "extras" (e.g. for `pip install .[test]`)
 [project.optional-dependencies]
+v3 = ["zarr==v3.0.0-alpha.4"]
+v2 = ["zarr<3.0.0a0"]
 # add dependencies used for testing here
 test = ["pytest", "pytest-cov"]
 # add anything else you like to have in your dev environment here
@@ -59,6 +61,7 @@ dev = [
     "rich",  # https://github.com/Textualize/rich
     "ruff",
 ]
+
 
 [project.urls]
 homepage = "https://github.com/lorenzocerrone/ngio"
@@ -168,11 +171,15 @@ platforms = ["osx-arm64"]
 
 [tool.pixi.pypi-dependencies]
 # zarr = { path = "../zarr-python/", editable = true }
+# anndata = { path = "../anndata/", editable = true }
 ngio = { path = ".", editable = true }
 
 [tool.pixi.environments]
 default = { solve-group = "default" }
-dev = { features = ["dev"], solve-group = "default" }
-test = { features = ["test"], solve-group = "default" }
+v3 = { features = ["v3"], solve-group = "v3" }
+v2 = { features = ["v2"], solve-group = "v2" }
+dev2 = { features = ["dev"], solve-group = "v2" }
+dev3 = { features = ["dev"], solve-group = "v3" }
 
-[tool.pixi.tasks]
+test = { features = ["test"], solve-group = "v2" }
+

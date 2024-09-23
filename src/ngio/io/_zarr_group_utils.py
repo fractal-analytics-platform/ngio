@@ -1,28 +1,29 @@
-import zarr
-import zarr.store
-from zarr.core.common import AccessModeLiteral, ZarrFormat
-from zarr.store.common import StoreLike
+from pathlib import Path
 
-StoreOrGroup = StoreLike | zarr.Group
+import zarr
+
+from ngio.io._zarr import (
+    AccessModeLiteral,
+    StoreLike,
+    StoreOrGroup,
+    ZarrFormat,
+    _open_group_v2_v3,
+    _pass_through_group,
+)
+
+# Zarr v3 Imports
+# import zarr.store
+# from zarr.core.common import AccessModeLiteral, ZarrFormat
+# from zarr.store.common import StoreLike
 
 
 def _check_store(store: StoreLike) -> StoreLike:
-    if isinstance(store, zarr.store.RemoteStore):
-        raise NotImplementedError(
-            "RemoteStore is not yet supported. Please use LocalStore."
-        )
-    return store
+    if isinstance(store, str) or isinstance(store, Path):
+        return store
 
-
-def _pass_through_group(
-    group: zarr.Group, mode: AccessModeLiteral, zarr_format: ZarrFormat = 2
-) -> zarr.Group:
-    if group.metadata.zarr_format != zarr_format:
-        raise ValueError(
-            f"Zarr format mismatch. Expected {zarr_format}, "
-            "got {store.metadata.zarr_format}."
-        )
-    return group
+    raise NotImplementedError(
+        "RemoteStore is not yet supported. Please use LocalStore."
+    )
 
 
 def open_group_wrapper(
@@ -42,4 +43,5 @@ def open_group_wrapper(
         return _pass_through_group(store, mode=mode, zarr_format=zarr_format)
 
     store = _check_store(store)
-    return zarr.open_group(store=store, mode=mode, zarr_format=zarr_format)
+
+    return _open_group_v2_v3(store=store, mode=mode, zarr_format=zarr_format)

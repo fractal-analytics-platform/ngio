@@ -2,14 +2,13 @@
 
 from typing import Literal
 
-from zarr.core.common import AccessModeLiteral
-
 from ngio.io import (
+    AccessModeLiteral,
     Group,
-    StoreLike,
     StoreOrGroup,
     open_group_wrapper,
 )
+from ngio.io._zarr import _is_group_readonly
 from ngio.ngff_meta.fractal_image_meta import (
     Axis,
     Dataset,
@@ -212,7 +211,11 @@ class NgffImageMetaZarrHandlerV04:
             mode (str): The mode of the store.
         """
         if isinstance(store, Group):
-            self._store = store.store_path
+            if hasattr(store, "store_path"):
+                self._store = store.store_path
+            else:
+                self._store = store.store
+
             self._group = store
 
         else:
@@ -233,7 +236,7 @@ class NgffImageMetaZarrHandlerV04:
         return 2
 
     @property
-    def store(self) -> StoreLike:
+    def store(self):
         """Return the Zarr store."""
         return self._store
 
@@ -263,7 +266,7 @@ class NgffImageMetaZarrHandlerV04:
 
     def write_meta(self, meta: ImageLabelMeta) -> None:
         """Write the OME-NGFF 0.4 metadata."""
-        if self.group.store_path.store.mode.readonly:
+        if _is_group_readonly(self.group):
             raise ValueError(
                 "The store is read-only. Cannot write the metadata to the store."
             )

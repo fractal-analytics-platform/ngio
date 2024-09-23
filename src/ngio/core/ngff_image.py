@@ -2,10 +2,8 @@
 
 from typing import Protocol, TypeVar
 
-from zarr.store.common import StoreLike
-
 from ngio.core.image_handler import Image
-from ngio.io import open_group_wrapper
+from ngio.io import StoreLike, open_group_wrapper
 from ngio.ngff_meta import FractalImageLabelMeta, get_ngff_image_meta_handler
 
 T = TypeVar("T")

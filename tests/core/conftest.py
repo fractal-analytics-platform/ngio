@@ -1,16 +1,23 @@
 import json
+from importlib.metadata import version
 from pathlib import Path
 
 import zarr
-import zarr.store
+from packaging.version import Version
 from pytest import fixture
+
+zarr_verison = version("zarr")
+ZARR_PYTHON_V = 2 if Version(zarr_verison) < Version("3.0.0a") else 3
 
 
 @fixture
 def ome_zarr_image_v04_path(tmpdir):
     zarr_path = Path(tmpdir) / "test_ome_ngff_v04.zarr"
 
-    group = zarr.open_group(store=zarr_path, mode="w", zarr_format=2)
+    if ZARR_PYTHON_V == 3:
+        group = zarr.open_group(store=zarr_path, mode="w", zarr_format=2)
+    else:
+        group = zarr.open_group(store=zarr_path, mode="w", zarr_version=2)
 
     json_path = (
         Path(".") / "tests" / "data" / "meta_v04" / "base_ome_zarr_image_meta.json"
@@ -24,6 +31,9 @@ def ome_zarr_image_v04_path(tmpdir):
     # shape = (3, 10, 256, 256)
     for i, path in enumerate(["0", "1", "2", "3"]):
         shape = (3, 10, 256 // (2**i), 256 // (2**i))
-        group.create_array(name=path, fill_value=0, shape=shape)
+        if ZARR_PYTHON_V == 3:
+            group.create_array(name=path, fill_value=0, shape=shape)
+        else:
+            group.zeros(name=path, shape=shape)
 
     return zarr_path

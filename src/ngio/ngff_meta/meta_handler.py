@@ -2,9 +2,7 @@
 
 from typing import Literal, Protocol
 
-from zarr.core.common import AccessModeLiteral
-
-from ngio.io import Group, StoreLike, StoreOrGroup
+from ngio.io import AccessModeLiteral, Group, StoreOrGroup
 from ngio.ngff_meta.fractal_image_meta import ImageLabelMeta
 from ngio.ngff_meta.v04.zarr_utils import (
     NgffImageMetaZarrHandlerV04,
@@ -30,7 +28,7 @@ class NgffImageMetaHandler(Protocol):
         ...
 
     @property
-    def store(self) -> StoreLike:
+    def store(self):
         """Return the Zarr store."""
         ...
 

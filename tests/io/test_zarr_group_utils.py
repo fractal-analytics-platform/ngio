@@ -1,5 +1,6 @@
 import pytest
 import zarr
+from conftest import ZARR_PYTHON_V
 
 
 class TestGroupUtils:
@@ -15,6 +16,7 @@ class TestGroupUtils:
         group.attrs.update(self.test_attrs)
         assert dict(group.attrs) == self.test_attrs
 
+    @pytest.mark.skipif(ZARR_PYTHON_V, reason="Zarr V2 does not support remote stores.")
     def test_raise_not_implemented_error(self):
         from ngio.io._zarr_group_utils import open_group_wrapper
 
