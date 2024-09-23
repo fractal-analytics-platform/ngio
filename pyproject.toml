@@ -44,12 +44,12 @@ dependencies = [
 # https://peps.python.org/pep-0621/#dependencies-optional-dependencies
 # "extras" (e.g. for `pip install .[test]`)
 [project.optional-dependencies]
-v3 = ["zarr==v3.0.0-alpha.4"]
-v2 = ["zarr<3.0.0a0"]
 # add dependencies used for testing here
 test = ["zarr<3.0.0a0", "pytest", "pytest-cov"]
+
 # add anything else you like to have in your dev environment here
-dev = [
+dev2 = [
+    "zarr<3.0.0a0",
     "ipython",
     "pytest",
     "pytest-cov",
@@ -58,7 +58,20 @@ dev = [
     "pdbpp",  # https://github.com/pdbpp/pdbpp
     "pre-commit",
     "rich",  # https://github.com/Textualize/rich
-    "ruff",
+    "ruff"
+]
+
+dev3 = [
+    "zarr==v3.0.0-alpha.4",
+    "ipython",
+    "pytest",
+    "pytest-cov",
+    "notebook",
+    "mypy",
+    "pdbpp",  # https://github.com/pdbpp/pdbpp
+    "pre-commit",
+    "rich",  # https://github.com/Textualize/rich
+    "ruff"
 ]
 
 
@@ -173,11 +186,9 @@ platforms = ["osx-arm64"]
 # anndata = { path = "../anndata/", editable = true }
 ngio = { path = ".", editable = true }
 
-#[tool.pixi.environments]
-#default = { solve-group = "default" }
-#v3 = { features = ["v3"], solve-group = "v3" }
-#v2 = { features = ["v2"], solve-group = "v2" }
-#dev2 = { features = ["dev"], solve-group = "v2" }
-#dev3 = { features = ["dev"], solve-group = "v3" }
-#test = { features = ["test"], solve-group = "v2" }
+[tool.pixi.environments]
+default = { solve-group = "default" }
+dev2 = { features = ["dev2"], solve-group = "v2" }
+dev3 = { features = ["dev3"], solve-group = "v3" }
+test = { features = ["test"], solve-group = "v2_test" }
 
