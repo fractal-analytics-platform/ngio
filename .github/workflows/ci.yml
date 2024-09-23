@@ -35,8 +35,8 @@ jobs:
         python-version: ["3.10", "3.11", "3.12"]
         # Skip Windows for now It's seems there are some issues with the
         # ZarrV3 on Windows
-        # platform: [ubuntu-latest, macos-latest, windows-latest]
-        platform: [ubuntu-latest, macos-latest]
+        platform: [ubuntu-latest, macos-latest, windows-latest]
+        # platform: [ubuntu-latest, macos-latest]
 
     steps:
       - uses: actions/checkout@v4
