@@ -47,7 +47,7 @@ dependencies = [
 v3 = ["zarr==v3.0.0-alpha.4"]
 v2 = ["zarr<3.0.0a0"]
 # add dependencies used for testing here
-test = ["pytest", "pytest-cov"]
+test = ["zarr<3.0.0a0", "pytest", "pytest-cov"]
 # add anything else you like to have in your dev environment here
 dev = [
     "ipython",
