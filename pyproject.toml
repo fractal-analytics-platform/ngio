@@ -173,12 +173,11 @@ platforms = ["osx-arm64"]
 # anndata = { path = "../anndata/", editable = true }
 ngio = { path = ".", editable = true }
 
-[tool.pixi.environments]
-default = { solve-group = "default" }
-v3 = { features = ["v3"], solve-group = "v3" }
-v2 = { features = ["v2"], solve-group = "v2" }
-dev2 = { features = ["dev"], solve-group = "v2" }
-dev3 = { features = ["dev"], solve-group = "v3" }
-
-test = { features = ["test"], solve-group = "v2" }
+#[tool.pixi.environments]
+#default = { solve-group = "default" }
+#v3 = { features = ["v3"], solve-group = "v3" }
+#v2 = { features = ["v2"], solve-group = "v2" }
+#dev2 = { features = ["dev"], solve-group = "v2" }
+#dev3 = { features = ["dev"], solve-group = "v3" }
+#test = { features = ["test"], solve-group = "v2" }
 
