@@ -1,7 +1,8 @@
+import numpy as np
 from pydantic import BaseModel
 
-from ngio.ngff_meta.fractal_image_meta import SpaceUnits, PixelSize
-import numpy as np
+from ngio.core.dimensions import Dimensions
+from ngio.ngff_meta.fractal_image_meta import PixelSize, SpaceUnits
 
 
 class Point(BaseModel):
@@ -29,16 +30,18 @@ class WorldCooROI(BaseModel):
         round_value = int(np.round(value / pixel_size))
         return min(round_value, max_shape)
 
-    def to_raster_coo(self, pixel_size: PixelSize, max_shape) -> "RasterCooROI":
+    def to_raster_coo(
+        self, pixel_size: PixelSize, dimensions: Dimensions
+    ) -> "RasterCooROI":
         """Convert to raster coordinates."""
         RasterCooROI(
             field_index=self.field_index,
-            x=self._to_raster(value=self.x, pixel_size=pixel_size.x, max_shape=2**32),
-            y=int(self.y / pixel_size.y),
-            z=int(self.z / pixel_size.z),
-            x_length=int(self.x_length / pixel_size.x),
-            y_length=int(self.y_length / pixel_size.y),
-            z_length=int(self.z_length / pixel_size.z),
+            x=self._to_raster(self.x, pixel_size.x, dimensions.x),
+            y=self._to_raster(self.y, pixel_size.y, dimensions.y),
+            z=self._to_raster(self.z, pixel_size.z, dimensions.z),
+            x_length=self._to_raster(self.x_length, pixel_size.x, dimensions.x),
+            y_length=self._to_raster(self.y_length, pixel_size.y, dimensions.y),
+            z_length=self._to_raster(self.z_length, pixel_size.z, dimensions.z),
             original_roi=self,
         )
 

@@ -4,9 +4,9 @@ import numpy as np
 import zarr
 from dask import array as da
 
+from ngio.pipes import ArrayLike
 from ngio.pipes._slicer_transforms import SlicerTransform
 from ngio.pipes._transforms import Transform
-from ngio.pipes import ArrayLike
 
 
 class DataTransformPipe:
