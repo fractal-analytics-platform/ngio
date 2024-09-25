@@ -3,8 +3,8 @@ from typing import Protocol
 import numpy as np
 from dask import array as da
 
+from ngio._common_types import ArrayLike
 from ngio.core.roi import RasterCooROI
-from ngio.pipes import ArrayLike
 
 
 class SlicerTransform(Protocol):

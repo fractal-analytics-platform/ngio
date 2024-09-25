@@ -5,6 +5,7 @@ from typing import Literal
 import numpy as np
 import zarr
 
+from ngio._common_types import ArrayLike
 from ngio.core.dimensions import Dimensions
 from ngio.io import StoreOrGroup, open_group_wrapper
 from ngio.ngff_meta import (
@@ -14,6 +15,7 @@ from ngio.ngff_meta import (
     SpaceUnits,
     get_ngff_image_meta_handler,
 )
+from ngio.pipes import DataTransformPipe, NaiveSlicer
 
 
 class ImageLike:

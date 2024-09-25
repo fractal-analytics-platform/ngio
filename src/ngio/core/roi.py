@@ -1,16 +1,14 @@
+"""Region of interest (ROI) metadata.
+
+These are the interfaces bwteen the ROI tables / masking ROI tables and
+    the ImageLikeHandler.
+"""
+
 import numpy as np
 from pydantic import BaseModel
 
 from ngio.core.dimensions import Dimensions
 from ngio.ngff_meta.fractal_image_meta import PixelSize, SpaceUnits
-
-
-class Point(BaseModel):
-    """Point metadata."""
-
-    x: float
-    y: float
-    z: float
 
 
 class WorldCooROI(BaseModel):
@@ -34,7 +32,7 @@ class WorldCooROI(BaseModel):
         self, pixel_size: PixelSize, dimensions: Dimensions
     ) -> "RasterCooROI":
         """Convert to raster coordinates."""
-        RasterCooROI(
+        return RasterCooROI(
             field_index=self.field_index,
             x=self._to_raster(self.x, pixel_size.x, dimensions.x),
             y=self._to_raster(self.y, pixel_size.y, dimensions.y),
@@ -58,9 +56,18 @@ class RasterCooROI(BaseModel):
     z_length: int
     original_roi: WorldCooROI
 
-    def to_world_coo(self, pixel_size: float) -> "WorldCooROI":
+    def to_world_coo(self, pixel_size: PixelSize) -> WorldCooROI:
         """Convert to world coordinates."""
-        raise NotImplementedError
+        return WorldCooROI(
+            field_index=self.field_index,
+            x=self.x * pixel_size.x,
+            y=self.y * pixel_size.y,
+            z=self.z * pixel_size.z,
+            x_length=self.x_length * pixel_size.x,
+            y_length=self.y_length * pixel_size.y,
+            z_length=self.z_length * pixel_size.z,
+            unit=pixel_size.unit,
+        )
 
     def x_slice(self) -> slice:
         """Return the slice for the x-axis."""

@@ -1,10 +1,6 @@
 """A module to handle data transforms for image data."""
 
-import numpy as np
-import zarr
-from dask import array as da
-
-from ngio.pipes import ArrayLike
+from ngio._common_types import ArrayLike
 from ngio.pipes._slicer_transforms import SlicerTransform
 from ngio.pipes._transforms import Transform
 

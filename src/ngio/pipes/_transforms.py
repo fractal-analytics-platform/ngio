@@ -1,5 +1,6 @@
-from ngio.pipes import ArrayLike
 from typing import Protocol
+
+from ngio._common_types import ArrayLike
 
 
 class Transform(Protocol):

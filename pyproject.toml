@@ -50,6 +50,7 @@ test = ["zarr<3.0.0a0", "pytest", "pytest-cov"]
 # add anything else you like to have in your dev environment here
 dev2 = [
     "zarr<3.0.0a0",
+    "matplotlib",
     "ipython",
     "pytest",
     "pytest-cov",
