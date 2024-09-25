@@ -74,8 +74,12 @@ def _get_table_impl(group: zarr.Group) -> Table:
 class TableGroup:
     """A class to handle the /labels group in an OME-NGFF file."""
 
-    def __init__(self, group: StoreLike) -> None:
+    def __init__(self, group: StoreLike | zarr.Group) -> None:
         """Initialize the LabelGroupHandler."""
+
+        if not isinstance(group, zarr.Group):
+            group = zarr.open_group(group, mode="a")
+
         if "tables" not in group:
             raise ValueError("The NGFF image contains no 'tables' Group.")
 
@@ -119,6 +123,7 @@ class TableGroup:
                 )
             list_of_typed_tables = []
             for table_name in list_of_tables:
+                print(table_name)
                 table = self._group[table_name]
                 common_meta = CommonMeta(**table.attrs)
                 if common_meta.type == type:
@@ -144,7 +149,12 @@ class TableGroup:
     ) -> Table:
         """Add a new table to the group."""
         list_of_tables = self._get_list_of_tables()
-        if not overwrite and name in list_of_tables:
+
+        if overwrite and name in list_of_tables:
+            self._group.attrs["tables"] = [
+                table for table in list_of_tables if table != name
+            ]
+        elif not overwrite and name in list_of_tables:
             raise ValueError(f"Table {name} already exists in the group.")
 
         table_impl = _find_table_impl(table_type=table_type, version=version)

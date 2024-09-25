@@ -99,6 +99,10 @@ class ROITableV1:
         """
         table_group = parent_group.create_group(name, overwrite=overwrite)
 
+        # Always make sure to write the metadata (in case the write fails)
+        meta = ROITableV1Meta()
+        table_group.attrs.update(meta.model_dump(exclude=None))
+
         # setup empty dataframe with FieldIndex as index
         # and self._required_columns as columns
         origin_columns = ORIGIN_COLUMNS if include_origin else []

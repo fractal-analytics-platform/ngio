@@ -86,8 +86,9 @@ class FeatureTableV1:
             raise ValueError("Can not create an empty feature table.")
 
         group = parent_group.create_group(name, overwrite=overwrite)
-
         meta = FeatureTableV1Meta(region={"path": region}, instance_key=instance_key)
+        # Always make sure to write the metadata (in case the write fails)
+        group.attrs.update(meta.model_dump(exclude=None))
 
         cls._write(group=group, table=table, meta=meta)
         return cls(group=group)
