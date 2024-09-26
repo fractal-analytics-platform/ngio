@@ -10,6 +10,6 @@ class Transform(Protocol):
         """Apply the transform to the data and return the result."""
         ...
 
-    def push(self, data: ArrayLike) -> ArrayLike:
+    def set(self, data: ArrayLike) -> ArrayLike:
         """Apply the reverse transform to the data and return the result."""
         ...
