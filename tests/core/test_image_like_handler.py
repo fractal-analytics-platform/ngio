@@ -18,7 +18,7 @@ class TestImageLikeHandler:
         assert not image_handler.dimensions.is_time_series()
         assert image_handler.dimensions.has_multiple_channels()
 
-    @pytest.mask.skip("Not implemented yet")
+    @pytest.mark.skip("Not implemented yet")
     def test_ngff_image_from_pixel_size(self, ome_zarr_image_v04_path):
         from ngio.core.image_like_handler import ImageLike
         from ngio.ngff_meta import PixelSize
