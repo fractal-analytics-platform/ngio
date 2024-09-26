@@ -80,9 +80,9 @@ class TableGroup:
             group = zarr.open_group(group, mode="a")
 
         if "tables" not in group:
-            raise ValueError("The NGFF image contains no 'tables' Group.")
-
-        self._group: zarr.Group = group["tables"]
+            self._group = group.create_group("tables")
+        else:
+            self._group: zarr.Group = group["tables"]
 
     def _validate_list_of_tables(self, list_of_tables: list[str]) -> None:
         """Validate the list of tables."""
@@ -122,7 +122,6 @@ class TableGroup:
                 )
             list_of_typed_tables = []
             for table_name in list_of_tables:
-                print(table_name)
                 table = self._group[table_name]
                 common_meta = CommonMeta(**table.attrs)
                 if common_meta.type == type:

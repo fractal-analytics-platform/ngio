@@ -402,6 +402,15 @@ class Dataset:
         return [self._scale[i] for i in self._index_mapping.values() if i is not None]
 
     @property
+    def time_spacing(self) -> float:
+        """Get the time spacing of the dataset."""
+        if "t" not in self.axes_names:
+            return 1.0
+
+        scale_t = self.scale[self.index_mapping.get("t")]
+        return scale_t
+
+    @property
     def on_disk_scale(self) -> list[float]:
         """Get the scale transformation of the dataset in the on-disk order."""
         return self._scale
@@ -716,6 +725,37 @@ class BaseMeta:
             idx(int): The index of the dataset.
         """
         return self.get_dataset(path=path, idx=idx).scale
+
+    def scaling_factors(self) -> list[float]:
+        scaling_factors = []
+        for d1, d2 in zip(self.datasets[1:], self.datasets[:-1], strict=True):
+            scaling_factors.append([d1 / d2 for d1, d2 in zip(d1.scale, d2.scale)])
+
+        for sf in scaling_factors:
+            assert (
+                sf == scaling_factors[0]
+            ), "Inconsistent scaling factors not well supported."
+        return scaling_factors[0]
+
+    @property
+    def xy_scaling_factor(self) -> float:
+        """Get the xy scaling factor of the dataset."""
+        scaling_factors = self.scaling_factors()
+        x_scaling_f = scaling_factors[self.index_mapping.get("x")]
+        y_scaling_f = scaling_factors[self.index_mapping.get("y")]
+
+        if not np.allclose(x_scaling_f, y_scaling_f):
+            raise ValueError("Inconsistent xy scaling factor.")
+        return x_scaling_f
+
+    @property
+    def z_scaling_factor(self) -> float:
+        """Get the z scaling factor of the dataset."""
+        scaling_factors = self.scaling_factors()
+        if "z" not in self.axes_names:
+            return 1.0
+        z_scaling_f = scaling_factors[self.index_mapping.get("z")]
+        return z_scaling_f
 
     def translation(
         self, path: str | None = None, idx: int | None = None

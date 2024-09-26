@@ -1,5 +1,6 @@
 """Generic class to handle Image-like data in a OME-NGFF file."""
 
+from functools import partial
 from pathlib import Path
 from typing import Literal
 from warnings import warn
@@ -9,6 +10,7 @@ import numpy as np
 import zarr
 from dask.delayed import Delayed
 from dask.distributed import Lock
+from scipy.ndimage import zoom
 
 from ngio._common_types import ArrayLike
 from ngio.core.dimensions import Dimensions
@@ -382,3 +384,55 @@ class ImageLike:
             x=x, y=y, z=z, t=t, c=c, preserve_dimensions=preserve_dimensions
         )
         self._set_pipe(data_pipe=data_pipe, patch=patch)
+
+    def consolidate(self, order: int = 1) -> None:
+        """Consolidate the Zarr array."""
+        processed_paths = [self]
+
+        todo_image = [
+            ImageLike(store=self.group, path=_path)
+            for _path in self.metadata.levels_paths
+            if _path != self.path
+        ]
+
+        while todo_image:
+            dist_matrix = np.zeros((len(processed_paths), len(todo_image)))
+            for i, image in enumerate(todo_image):
+                for j, processed_image in enumerate(processed_paths):
+                    dist_matrix[j, i] = np.sqrt(
+                        np.sum(
+                            [
+                                (s1 - s2) ** 2
+                                for s1, s2 in zip(
+                                    image.shape, processed_image.shape, strict=False
+                                )
+                            ]
+                        )
+                    )
+
+            source, target = np.unravel_index(dist_matrix.argmin(), dist_matrix.shape)
+
+            source_image = processed_paths[source]
+            target_image = todo_image.pop(target)
+
+            zoom_factors = tuple(
+                [
+                    s1 / s2
+                    for s1, s2 in zip(
+                        target_image.shape, source_image.shape, strict=False
+                    )
+                ]
+            )
+
+            partial_zoom = partial(zoom, zoom=zoom_factors, order=order)
+            out_image = da.map_blocks(
+                partial_zoom,
+                source_image.dask_array,
+                # dtype = source_image.dask_array,
+                chunks=target_image.array.chunks,
+            )
+            out_image = out_image.astype(target_image.array.dtype)
+            target_image.array[...] = out_image.compute()
+            # compute the transformation
+
+            processed_paths.append(target_image)

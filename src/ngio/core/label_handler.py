@@ -1,6 +1,10 @@
 """A module to handle OME-NGFF images stored in Zarr format."""
 
+import zarr
+
+from ngio.core.image_handler import Image
 from ngio.core.image_like_handler import ImageLike
+from ngio.core.utils import create_empty_ome_zarr_label
 from ngio.io import StoreLike, StoreOrGroup
 from ngio.ngff_meta.fractal_image_meta import LabelMeta, PixelSize
 
@@ -13,6 +17,7 @@ class Label(ImageLike):
     """
 
     def __init__(
+        self,
         store: StoreOrGroup,
         *,
         path: str | None = None,
@@ -47,6 +52,7 @@ class Label(ImageLike):
             cache=cache,
         )
 
+    @property
     def metadata(self) -> LabelMeta:
         """Return the metadata of the image."""
         return super().metadata
@@ -55,23 +61,132 @@ class Label(ImageLike):
 class LabelGroup:
     """A class to handle the /labels group in an OME-NGFF file."""
 
-    def __init__(self, group: StoreLike) -> None:
+    def __init__(
+        self,
+        group: StoreLike | zarr.Group,
+        image_ref: Image | None = None,
+    ) -> None:
         """Initialize the LabelGroupHandler."""
-        self._group = group
+        if not isinstance(group, zarr.Group):
+            group = zarr.open_group(group, mode="a")
 
-    @property
-    def group_name(self) -> str:
-        """Return the name of the group."""
-        return "labels"
+        if "labels" not in group:
+            self._group = group.create_group("labels")
+            self._group.attrs["labels"] = []  # initialize the labels attribute
+        else:
+            self._group: zarr.Group = group["labels"]
+
+        self._imgage_ref = image_ref
 
     def list(self) -> list[str]:
         """List all labels in the group."""
-        return list(self._group.array_keys())
+        return self._group.attrs.get("labels", [])
 
-    def get(self, name: str) -> Label:
-        """Get a label from the group."""
-        raise NotImplementedError("Not yet implemented.")
+    def get(
+        self,
+        name: str,
+        path: str | None = None,
+        pixel_size: PixelSize | None = None,
+        highest_resolution: bool = True,
+    ) -> Label:
+        """Geta a Label from the group.
 
-    def write(self, name: str, data: Label) -> None:
-        """Create a label in the group."""
-        raise NotImplementedError("Not yet implemented.")
+        Args:
+            name (str): The name of the label.
+            path (str | None, optional): The path to the level.
+            pixel_size (tuple[float, ...] | list[float] | None, optional): The pixel
+                size of the level.
+            highest_resolution (bool, optional): Whether to get the highest
+                resolution level
+        """
+        if name not in self.list():
+            raise ValueError(f"Label {name} not found in the group.")
+
+        if path is not None or pixel_size is not None:
+            highest_resolution = False
+
+        return Label(
+            store=self._group[name],
+            path=path,
+            pixel_size=pixel_size,
+            highest_resolution=highest_resolution,
+        )
+
+    def derive(
+        self,
+        name: str,
+        overwrite: bool = False,
+        **kwargs,
+    ) -> Label:
+        """Derive a new label from an existing label.
+
+        Args:
+            name (str): The name of the new label.
+            overwrite (bool): If True, the label will be overwritten if it exists.
+                Default is False.
+            **kwargs: Additional keyword arguments to pass to the new label.
+        """
+        list_of_labels = self.list()
+
+        if overwrite and name in list_of_labels:
+            self._group.attrs["label"] = [
+                label for label in list_of_labels if label != name
+            ]
+        elif not overwrite and name in list_of_labels:
+            raise ValueError(f"Label {name} already exists in the group.")
+
+        # create the new label
+        new_label_group = self._group.create_group(name, overwrite=overwrite)
+
+        if self._imgage_ref is None:
+            label_0 = self.get(list_of_labels[0])
+            metadata = label_0.metadata
+            on_disk_shape = label_0.on_disk_shape
+            chunks = label_0.array.chunks
+            dataset = label_0.dataset
+        else:
+            label_0 = self._imgage_ref
+            metadata = label_0.metadata
+            channel_index = metadata.index_mapping.get("c", None)
+            if channel_index is not None:
+                on_disk_shape = (
+                    label_0.on_disk_shape[:channel_index]
+                    + label_0.on_disk_shape[channel_index + 1 :]
+                )
+                chunks = (
+                    label_0.array.chunks[:channel_index]
+                    + label_0.array.chunks[channel_index + 1 :]
+                )
+            else:
+                on_disk_shape = label_0.on_disk_shape
+                chunks = label_0.array.chunks
+
+            metadata = metadata.remove_axis("c")
+            dataset = metadata.get_highest_resolution_dataset()
+
+        default_kwargs = {
+            "store": new_label_group,
+            "shape": on_disk_shape,
+            "chunks": chunks,
+            "dtype": label_0.array.dtype,
+            "on_disk_axis": dataset.on_disk_axes_names,
+            "pixel_sizes": dataset.pixel_size,
+            "xy_scaling_factor": metadata.xy_scaling_factor,
+            "z_scaling_factor": metadata.z_scaling_factor,
+            "time_spacing": dataset.time_spacing,
+            "time_units": dataset.time_axis_unit,
+            "num_levels": metadata.num_levels,
+            "name": name,
+            "overwrite": overwrite,
+            "version": metadata.version,
+        }
+
+        default_kwargs.update(kwargs)
+
+        create_empty_ome_zarr_label(
+            **default_kwargs,
+        )
+
+        if name not in self.list():
+            self._group.attrs["labels"] = [*list_of_labels, name]
+        return self.get(name)

@@ -134,7 +134,6 @@ class FeatureTableV1:
 
     def write(self) -> None:
         """Write the crrent state of the table to the Zarr file."""
-        self._validate_feature_table(table=self.data_frame)
         self._write(group=self.table_group, table=self.data_frame, meta=self.meta)
 
     @staticmethod

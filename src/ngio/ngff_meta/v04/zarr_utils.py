@@ -33,6 +33,7 @@ def check_ngff_image_meta_v04(store: StoreOrGroup) -> bool:
     """Check if a Zarr Group contains the OME-NGFF v0.4."""
     store = open_group_wrapper(store=store, mode="r", zarr_format=2)
     attrs = dict(store.attrs)
+    print(attrs)
     multiscales = attrs.get("multiscales", None)
     if multiscales is None:
         return False
@@ -158,6 +159,10 @@ def fractal_ngff_image_meta_to_vanilla_v04(
         datasets=dataset04,
         version="0.4",
     )
+
+    if isinstance(meta, LabelMeta):
+        return NgffImageMeta04(multiscales=[multiscale04])
+
     omero04 = None if meta.omero is None else Omero04(**meta.omero.model_dump())
     return NgffImageMeta04(
         multiscales=[multiscale04],
@@ -183,10 +188,11 @@ def write_ngff_image_meta_v04(group: Group, meta: ImageLabelMeta) -> None:
             raise ValueError(
                 "The Zarr store does not contain the correct OME-Zarr version."
             )
-    if meta.omero is not None:
+
+    if isinstance(meta, ImageMeta) and meta.omero is not None:
         for c in meta.omero.channels:
             if "color" not in c.extra_fields:
-                c.extra_fields["color"] = "0x000000"
+                c.extra_fields["color"] = "00FFFF"
 
     meta04 = fractal_ngff_image_meta_to_vanilla_v04(meta=meta)
     group.attrs.update(meta04.model_dump(exclude=None))
