@@ -33,7 +33,6 @@ def check_ngff_image_meta_v04(store: StoreOrGroup) -> bool:
     """Check if a Zarr Group contains the OME-NGFF v0.4."""
     store = open_group_wrapper(store=store, mode="r", zarr_format=2)
     attrs = dict(store.attrs)
-    print(attrs)
     multiscales = attrs.get("multiscales", None)
     if multiscales is None:
         return False
