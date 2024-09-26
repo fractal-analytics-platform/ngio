@@ -98,6 +98,7 @@ class PixelSize(BaseModel):
     y: float = Field(..., ge=0)
     z: float = Field(1.0, ge=0)
     unit: SpaceUnits = SpaceUnits.micrometer
+    virtual: bool = False
 
     @classmethod
     def from_list(cls, sizes: list[float], unit: SpaceUnits):

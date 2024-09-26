@@ -76,7 +76,6 @@ class TableGroup:
 
     def __init__(self, group: StoreLike | zarr.Group) -> None:
         """Initialize the LabelGroupHandler."""
-
         if not isinstance(group, zarr.Group):
             group = zarr.open_group(group, mode="a")
 

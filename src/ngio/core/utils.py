@@ -14,6 +14,7 @@ from ngio.ngff_meta.fractal_image_meta import (
 def create_empty_ome_zarr_image(
     store: StoreLike,
     shape: list[int],
+    chunks: list[int] | None = None,
     dtype: str = "uint16",
     on_disk_axis: list[str] = ("t", "c", "z", "y", "x"),
     pixel_sizes: PixelSize | None = None,
@@ -87,7 +88,9 @@ def create_empty_ome_zarr_image(
     for dataset in image_meta.datasets:
         path = dataset.path
 
-        group.create_array(name=path, fill_value=0, shape=shape, dtype=dtype)
+        group.create_array(
+            name=path, fill_value=0, shape=shape, dtype=dtype, chunks=chunks
+        )
 
         # Todo redo this with when a proper build of pyramid id implemente
         shape = [int(s / sc) for s, sc in zip(shape, scaling_factor, strict=True)]

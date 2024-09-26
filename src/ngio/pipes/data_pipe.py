@@ -13,7 +13,7 @@ class DataTransformPipe:
         - Shuffle the axes of the data
         - Normalize the data
 
-    All these in reverse order will be applied to the data when pushing a patch.
+    All these in reverse order will be applied to the data when seting a patch.
 
     """
 
@@ -29,6 +29,13 @@ class DataTransformPipe:
         self.slicer = slicer
         self.list_of_transforms = data_transforms
 
+    def __repr__(self) -> str:
+        """Return the string representation of the object."""
+        list_transforms = ", ".join(
+            [str(transform) for transform in self.list_of_transforms]
+        )
+        return f"DataTransformPipe(slicer={self.slicer}, transforms={list_transforms})"
+
     def get(self, data: ArrayLike) -> ArrayLike:
         """Apply all the transforms to the data and return the result."""
         data = self.slicer.get(data)
@@ -36,8 +43,10 @@ class DataTransformPipe:
             data = transform.get(data)
         return data
 
-    def push(self, data: ArrayLike, patch: ArrayLike) -> ArrayLike:
+    def set(self, data: ArrayLike, patch: ArrayLike) -> None:
         """Apply all the reverse transforms to the data and return the result."""
         for transform in reversed(self.list_of_transforms):
-            patch = transform.push(patch)
-        return self.slicer.push(data, patch)
+            patch = transform.set(patch)
+
+        # Write the patch to the data and save it
+        self.slicer.set(data, patch)
