@@ -1,7 +1,7 @@
 """Utility functions for creating and manipulating images."""
 
-from typing import Any
 import math
+from typing import Any
 
 from ngio.core.image_handler import Image
 from ngio.io import StoreLike
