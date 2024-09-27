@@ -2,7 +2,7 @@
 [![PyPI](https://img.shields.io/pypi/v/ngio.svg?color=green)](https://pypi.org/project/ngio)
 [![Python Version](https://img.shields.io/pypi/pyversions/ngio.svg?color=green)](https://python.org)
 [![CI](https://github.com/lorenzocerrone/ngio/actions/workflows/ci.yml/badge.svg)](https://github.com/lorenzocerrone/ngio/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/lorenzocerrone/ngio/branch/main/graph/badge.svg?token=ELJ6CFL0K4)](https://codecov.io/gh/lorenzocerrone/ngio)
+[![codecov](https://codecov.io/gh/fractal-analytics-platform/ngio/graph/badge.svg?token=FkmF26FZki)](https://codecov.io/gh/fractal-analytics-platform/ngio)
 
 # NGIO - Next Generation file format IO
 
@@ -20,17 +20,17 @@ NGIO is a Python library to streamline OME-Zarr image analysis workflows.
 
 | Feature | Status | ETA | Description |
 |---------|--------|-----|-------------|
-| Metadata Handling | ✅ Done | | Read, Write, Validate OME-Zarr Metadata (0.4 supported, 0.5 ready) |
-| OME-Zarr Validation | ✅ Doneish | | Validate OME-Zarr files for compliance with the OME-Zarr Specification + Compliance between Metadata and Data |
-| Base Image Handling | ✅ Doneish | | Load data from OME-Zarr files, retrieve basic metadata, and write data |
-| ROI Handling | ✅ Doneish | | Common ROI models |
-| Label Handling | Ongoing | Mid-September | Based on Image Handling |
-| Table Validation | Ongoing | Mid-September | Validate Table fractal V1 + Compliance between Metadata and Data |
-| Table Handling | Ongoing | Mid-September | Read, Write ROI, Features, and Masked Tables |
-| Basic Iterators | Not started | End-September | Read and Write Iterators for common access patterns |
-| Base Documentation | Not started | End-September | API Documentation and Examples |
-| Beta Ready Testing | Not started | End-September | Beta Testing; Library is ready for testing, but the API is not stable |
-| Mask Iterators | Not started | October | Iterators over Masked Tables |
+| Metadata Handling | ✅ | | Read, Write, Validate OME-Zarr Metadata (0.4 supported, 0.5 ready) |
+| OME-Zarr Validation | ✅ | | Validate OME-Zarr files for compliance with the OME-Zarr Specification + Compliance between Metadata and Data |
+| Base Image Handling | ✅ | | Load data from OME-Zarr files, retrieve basic metadata, and write data |
+| ROI Handling | ✅ | | Common ROI models |
+| Label Handling | ✅ | Mid-September | Based on Image Handling |
+| Table Validation | ✅ | Mid-September | Validate Table fractal V1 + Compliance between Metadata and Data |
+| Table Handling | ✅ | Mid-September | Read, Write ROI, Features, and Masked Tables |
+| Basic Iterators | Ongoing | End-September | Read and Write Iterators for common access patterns |
+| Base Documentation | Ongoing | End-September | API Documentation and Examples |
+| Beta Ready Testing | Ongoing | End-September | Beta Testing; Library is ready for testing, but the API is not stable |
+| Mask Iterators | Ongoing | October | Iterators over Masked Tables |
 | Advanced Iterators | Not started | October | Iterators for advanced access patterns |
 | Parallel Iterators | Not started | End of the Year | Concurrent Iterators for parallel read and write |
 | Full Documentation | Not started | End of the Year | Complete Documentation |
