@@ -75,6 +75,12 @@ dev3 = [
     "ruff"
 ]
 
+docs = [
+    "mkdocs",
+    "mkdocs-material",
+    "mkdocstrings[python]",
+]
+
 
 [project.urls]
 homepage = "https://github.com/lorenzocerrone/ngio"
@@ -192,4 +198,5 @@ default = { solve-group = "default" }
 dev2 = { features = ["dev2"], solve-group = "v2" }
 dev3 = { features = ["dev3"], solve-group = "v3" }
 test = { features = ["test"], solve-group = "v2_test" }
+docs = { features = ["docs"], solve-group = "v2" }
 

@@ -1,0 +1,24 @@
+site_name: "NGIO: Next Generation File Format I/O"
+site_url: "https://github.com/fractal-analytics-platform/ngio.git"
+
+theme: 
+  name: material
+
+nav:
+  - Home: index.md
+  - Getting Started: getting-started.md
+  - API Reference:
+    - core: api/core.md
+
+plugins: 
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          selection:
+            # Include private members if necessary
+            members: private
+          rendering:
+            # Use Google-style docstrings, for example
+            docstring_style: google
+
