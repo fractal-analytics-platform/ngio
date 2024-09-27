@@ -726,10 +726,12 @@ class BaseMeta:
         """
         return self.get_dataset(path=path, idx=idx).scale
 
-    def scaling_factors(self) -> list[float]:
+    def _scaling_factors(self) -> list[float]:
         scaling_factors = []
         for d1, d2 in zip(self.datasets[1:], self.datasets[:-1], strict=True):
-            scaling_factors.append([d1 / d2 for d1, d2 in zip(d1.scale, d2.scale)])
+            scaling_factors.append(
+                [d1 / d2 for d1, d2 in zip(d1.scale, d2.scale, strict=True)]
+            )
 
         for sf in scaling_factors:
             assert (
@@ -740,7 +742,7 @@ class BaseMeta:
     @property
     def xy_scaling_factor(self) -> float:
         """Get the xy scaling factor of the dataset."""
-        scaling_factors = self.scaling_factors()
+        scaling_factors = self._scaling_factors()
         x_scaling_f = scaling_factors[self.index_mapping.get("x")]
         y_scaling_f = scaling_factors[self.index_mapping.get("y")]
 
@@ -751,7 +753,7 @@ class BaseMeta:
     @property
     def z_scaling_factor(self) -> float:
         """Get the z scaling factor of the dataset."""
-        scaling_factors = self.scaling_factors()
+        scaling_factors = self._scaling_factors()
         if "z" not in self.axes_names:
             return 1.0
         z_scaling_f = scaling_factors[self.index_mapping.get("z")]

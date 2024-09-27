@@ -1,9 +1,25 @@
-class TestImageHandler:
-    def test_ngff_image(self, ome_zarr_image_v04_path):
-        from ngio.core.image_handler import Image
+class TestLabel:
+    def test_label_image(self, ome_zarr_image_v04_path):
+        import dask.array as da
+        import numpy as np
 
-        image_handler = Image(store=ome_zarr_image_v04_path, path="0")
+        from ngio.core.ngff_image import NgffImage
 
-        assert image_handler.channel_labels == ["DAPI", "nanog", "Lamin B1"]
-        assert image_handler.get_channel_idx(label="DAPI") == 0
-        assert image_handler.get_channel_idx(wavelength_id="A01_C01") == 0
+        ngff_image = NgffImage(ome_zarr_image_v04_path)
+        image_handler = ngff_image.get_image(path="0")
+        label_handler = ngff_image.label.derive(name="label")
+
+        assert ngff_image.label.list() == ["label"]
+        assert "c" not in label_handler.axes_names
+        assert label_handler.shape == image_handler.shape[1:]
+
+        shape = label_handler.shape
+        assert label_handler.get_data(mode="dask").shape == shape
+
+        label_handler.set_data(patch=da.ones((10, 256, 256), dtype=np.uint16))
+        assert label_handler.get_data(t=0, z=0, x=0, y=0) == 1
+
+        label_handler.consolidate()
+
+        label_handler_1 = ngff_image.label.get(name="label")
+        assert label_handler_1.get_data(t=0, z=0, x=0, y=0) == 1
