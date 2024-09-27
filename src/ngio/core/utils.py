@@ -1,13 +1,14 @@
 """Utility functions for creating and manipulating images."""
 
 from typing import Any
+import math
 
 from ngio.core.image_handler import Image
 from ngio.io import StoreLike
 from ngio.ngff_meta import (
     create_image_metadata,
-    get_ngff_image_meta_handler,
     create_label_metadata,
+    get_ngff_image_meta_handler,
 )
 from ngio.ngff_meta.fractal_image_meta import (
     PixelSize,
@@ -184,7 +185,19 @@ def create_empty_ome_zarr_label(
         )
 
         # Todo redo this with when a proper build of pyramid id implemente
-        shape = [int(s / sc) for s, sc in zip(shape, scaling_factor, strict=True)]
+        _shape = []
+        for s, sc in zip(shape, scaling_factor, strict=True):
+            if math.floor(s / sc) % 2 == 0:
+                _shape.append(math.floor(s / sc))
+            else:
+                _shape.append(math.ceil(s / sc))
+        shape = list(_shape)
 
         if chunks is not None:
-            chunks = [int(c / sc) for c, sc in zip(chunks, scaling_factor, strict=True)]
+            _chunks = []
+            for c, sc in zip(chunks, scaling_factor, strict=True):
+                if math.floor(c / sc) % 2 == 0:
+                    _chunks.append(math.floor(c / sc))
+                else:
+                    _chunks.append(math.ceil(c / sc))
+            chunks = list(_chunks)

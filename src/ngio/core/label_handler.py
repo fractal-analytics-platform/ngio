@@ -1,9 +1,13 @@
 """A module to handle OME-NGFF images stored in Zarr format."""
 
+from typing import Literal
+
 import zarr
 
+from ngio._common_types import ArrayLike
 from ngio.core.image_handler import Image
 from ngio.core.image_like_handler import ImageLike
+from ngio.core.roi import WorldCooROI
 from ngio.core.utils import create_empty_ome_zarr_label
 from ngio.io import StoreLike, StoreOrGroup
 from ngio.ngff_meta.fractal_image_meta import LabelMeta, PixelSize
@@ -56,6 +60,110 @@ class Label(ImageLike):
     def metadata(self) -> LabelMeta:
         """Return the metadata of the image."""
         return super().metadata
+
+    def get_data_from_roi(
+        self,
+        roi: WorldCooROI,
+        t: int | slice | None = None,
+        mode: Literal["numpy"] | Literal["dask"] = "numpy",
+        preserve_dimensions: bool = False,
+    ) -> ArrayLike:
+        """Return the label data from a region of interest (ROI).
+
+        Args:
+            roi (WorldCooROI): The region of interest.
+            t (int | slice | None): The time index or slice.
+            mode (str): The mode to return the data.
+            preserve_dimensions (bool): Whether to preserve the dimensions of the data.
+        """
+        return super().get_data_from_roi(
+            roi=roi, t=t, c=None, mode=mode, preserve_dimensions=preserve_dimensions
+        )
+
+    def set_data_from_roi(
+        self,
+        patch: ArrayLike,
+        roi: WorldCooROI,
+        t: int | slice | None = None,
+        preserve_dimensions: bool = False,
+    ) -> None:
+        """Set the label data from a region of interest (ROI).
+
+        Args:
+            roi (WorldCooROI): The region of interest.
+            patch (ArrayLike): The patch to set.
+            t (int | slice | None): The time index or slice.
+            preserve_dimensions (bool): Whether to preserve the dimensions of the data.
+        """
+        return super().set_data_from_roi(
+            patch=patch, roi=roi, t=t, c=None, preserve_dimensions=preserve_dimensions
+        )
+
+    def get_data(
+        self,
+        x: int | slice | None = None,
+        y: int | slice | None = None,
+        z: int | slice | None = None,
+        t: int | slice | None = None,
+        mode: Literal["numpy"] | Literal["dask"] = "numpy",
+        preserve_dimensions: bool = False,
+    ) -> ArrayLike:
+        """Return the label data.
+
+        Args:
+            x (int | slice | None): The x index or slice.
+            y (int | slice | None): The y index or slice.
+            z (int | slice | None): The z index or slice.
+            t (int | slice | None): The time index or slice.
+            mode (str): The mode to return the data.
+            preserve_dimensions (bool): Whether to preserve the dimensions of the data.
+        """
+        return super().get_data(
+            x=x,
+            y=y,
+            z=z,
+            t=t,
+            c=None,
+            mode=mode,
+            preserve_dimensions=preserve_dimensions,
+        )
+
+    def set_data(
+        self,
+        patch: ArrayLike,
+        x: int | slice | None = None,
+        y: int | slice | None = None,
+        z: int | slice | None = None,
+        t: int | slice | None = None,
+        preserve_dimensions: bool = False,
+    ) -> None:
+        """Set the label data in the zarr array.
+
+        Args:
+            patch (ArrayLike): The patch to set.
+            x (int | slice | None): The x index or slice.
+            y (int | slice | None): The y index or slice.
+            z (int | slice | None): The z index or slice.
+            t (int | slice | None): The time index or slice.
+            preserve_dimensions (bool): Whether to preserve the dimensions of the data.
+        """
+        return super().set_data(
+            patch=patch,
+            x=x,
+            y=y,
+            z=z,
+            t=t,
+            c=None,
+            preserve_dimensions=preserve_dimensions,
+        )
+
+    def consolidate(self) -> None:
+        """Consolidate the label group.
+
+        This method consolidates the label group by
+        filling all other pyramid levels with the data
+        """
+        return super().consolidate(order=0)
 
 
 class LabelGroup:

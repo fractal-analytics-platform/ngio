@@ -164,6 +164,6 @@ class TableGroup:
             **type_specific_kwargs,
         )
 
-        if name not in list_of_tables:
-            self._group.attrs["tables"] = [*list_of_tables, name]
+        self._group.attrs["tables"] = [*list_of_tables, name]
+
         return new_table

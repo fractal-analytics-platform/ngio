@@ -423,7 +423,6 @@ class ImageLike:
                     )
                 ]
             )
-
             partial_zoom = partial(zoom, zoom=zoom_factors, order=order)
             out_image = da.map_blocks(
                 partial_zoom,
@@ -432,7 +431,7 @@ class ImageLike:
                 chunks=target_image.array.chunks,
             )
             out_image = out_image.astype(target_image.array.dtype)
+            # da.to_zarr(out_image, target_image.array, overwrite=True)
             target_image.array[...] = out_image.compute()
             # compute the transformation
-
             processed_paths.append(target_image)
