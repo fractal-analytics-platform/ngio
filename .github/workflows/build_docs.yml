@@ -21,6 +21,12 @@ jobs:
           python-version: "3.12"
           cache-dependency-path: "pyproject.toml"
           cache: "pip"
+      
+      - name: Download Dataset from Zenodo
+        run: |
+            mkdir -p data
+            wget -O data/dataset.zip https://zenodo.org/records/13305156/files/20200812-CardiomyocyteDifferentiation14-Cycle1.zarr.zip?download=1?
+            unzip -o data/dataset.zip -d data
 
       - name: Install Dependencies
         run: |

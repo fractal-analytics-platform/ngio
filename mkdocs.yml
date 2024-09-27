@@ -6,7 +6,9 @@ theme:
 
 nav:
   - Home: index.md
-  - Getting Started: getting-started.md
+  - Getting Started: 
+    - Installation: getting-started.md
+    - Getting Started: notebooks/quickstart.ipynb
   - API Reference:
     - core: api/core.md
 
@@ -21,4 +23,8 @@ plugins:
           rendering:
             # Use Google-style docstrings, for example
             docstring_style: google
+
+  - mkdocs-jupyter:
+      notebooks_dir: notebooks
+      execute: true
 
