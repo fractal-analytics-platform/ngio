@@ -2,11 +2,14 @@
 
 NGIO is a Python library to streamline OME-Zarr image analysis workflows.
 
-**Highlights:**
+**Main Goals:**
 
 - Abstract object base API for handling OME-Zarr files
+- Powefull iterators for processing data using common access patterns
+- Tight integration with [Fractal's Table Fractal](https://fractal-analytics-platform.github.io/fractal-tasks-core/tables/)
 - Validate OME-Zarr files
-- Powefull iterators for reading and writing data using common access patterns
+
+To get started, check out the [Getting Started](getting-started.md) guide.
 
 ## 🚧 Ngio is Under active Development 🚧
 
@@ -29,3 +32,10 @@ NGIO is a Python library to streamline OME-Zarr image analysis workflows.
 | Parallel Iterators | Not started | End of the Year | Concurrent Iterators for parallel read and write |
 | Full Documentation | Not started | End of the Year | Complete Documentation |
 | Release 1.0 (Commitment to API) | Not started | End of the Year | API is stable; breaking changes will be avoided |
+
+## Contributors
+
+`ngio` is developed at the [BioVisionCenter](https://www.biovisioncenter.uzh.ch/en.html) at the University of Zurich. The main contributors are: [@lorenzocerrone](https://github.com/lorenzocerrone), [@jluethi](https://github.com/jluethi).
+
+## License
+`ngio` is released according to the BSD-3-Clause License. See [LICENSE](https://github.com/fractal-analytics-platform/ngio/blob/main/LICENSE)

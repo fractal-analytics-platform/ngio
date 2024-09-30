@@ -100,6 +100,10 @@ class PixelSize(BaseModel):
     unit: SpaceUnits = SpaceUnits.micrometer
     virtual: bool = False
 
+    def __repr__(self):
+        """Return the string representation of the object."""
+        return f"PixelSize(x={self.x}, y={self.y}, z={self.z}, unit={self.unit.value})"
+
     @classmethod
     def from_list(cls, sizes: list[float], unit: SpaceUnits):
         """Build a PixelSize object from a list of sizes.
@@ -389,7 +393,7 @@ class Dataset:
         return [on_disk_axes.index(ax) for ax in canonical_axes]
 
     @property
-    def reverse_axes_oder(self) -> list[str]:
+    def reverse_axes_order(self) -> list[str]:
         """Get the mapping between the on-disk order and the canonical order.
 
         It is the inverse of the axes_order.
