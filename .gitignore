@@ -117,3 +117,5 @@ pixi.lock
 *.egg-info
 
 *.zarr
+
+data/
