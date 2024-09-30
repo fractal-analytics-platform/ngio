@@ -1,30 +1,87 @@
 site_name: "NGIO: Next Generation File Format I/O"
 site_url: "https://github.com/fractal-analytics-platform/ngio.git"
+site_description: "A Python library for processing Next Generation File Formats (NGFF) images"
+repo_name: "ngio"
+repo_url: "https://github.com/fractal-analytics-platform/ngio"
+copyright: "Copyright &copy; 2024-, BioVisionCenter UZH"
 
-theme: 
+theme:
   name: material
+  favicon: images/favicon.ico
+  #logo: logos/logo_white.png
+  icon:
+    repo: fontawesome/brands/github
+  palette:
+    # Palette toggle for light mode
+    - scheme: default
+      # primary: green
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
 
-nav:
-  - Home: index.md
-  - Getting Started: 
-    - Installation: getting-started.md
-    - Getting Started: notebooks/quickstart.ipynb
-  - API Reference:
-    - core: api/core.md
+    # Palette toggle for dark mode
+    - scheme: slate
+      # primary: teal
+      # accent: light-green
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - content.tooltips
+    - content.code.annotate
+    - navigation.instant
+    - navigation.instant.progress
+    - navigation.sections
+    - navigation.path
+    - navigation.indexes
+    - navigation.footer
+    - toc.follow
+    - search.suggest
+    - search.share
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: "https://github.com/fractal-analytics-platform/ngio"
+      name: NGIO on GitHub
 
 plugins: 
   - search
+  - autorefs
   - mkdocstrings:
       handlers:
         python:
-          selection:
-            # Include private members if necessary
-            members: private
-          rendering:
-            # Use Google-style docstrings, for example
+          import:
+            - https://docs.python.org/3/objects.inv
+            - https://numpy.org/doc/stable/objects.inv
+          options:
+            heading_level: 3
             docstring_style: google
-
+            show_source: true
+            show_signature_annotations: true
+            show_root_heading: true
+            show_root_full_path: true
+            show_bases: true
+            docstring_section_style: list
+  - git-revision-date-localized:
+      enable_creation_date: true
+  - git-committers:
+      repository: fractal-analytics-platform/ngio
+      branch: main
   - mkdocs-jupyter:
-      notebooks_dir: notebooks
       execute: true
 
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+
+nav:
+  - Home: index.md
+  - Getting Started: getting-started.md
+  - Examples:
+    - notebooks/basic_usage.ipynb
+    - notebooks/image.ipynb
+    - notebooks/processing.ipynb
+  - API Reference:
+    - core: api/core.md

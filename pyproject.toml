@@ -80,6 +80,10 @@ docs = [
     "mkdocs-material",
     "mkdocstrings[python]",
     "mkdocs-jupyter",
+    "mkdocs-autorefs",
+    "mkdocs-git-revision-date-localized-plugin",
+    "mkdocs-git-committers-plugin-2",
+    "scikit-image",
 ]
 
 
@@ -199,5 +203,5 @@ default = { solve-group = "default" }
 dev2 = { features = ["dev2"], solve-group = "v2" }
 dev3 = { features = ["dev3"], solve-group = "v3" }
 test = { features = ["test"], solve-group = "v2_test" }
-docs = { features = ["docs"], solve-group = "v2" }
+docs = { features = ["dev2", "docs"], solve-group = "v2" }
 
