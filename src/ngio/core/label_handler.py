@@ -184,7 +184,7 @@ class LabelGroup:
         else:
             self._group: zarr.Group = group["labels"]
 
-        self._imgage_ref = image_ref
+        self._image_ref = image_ref
 
     def list(self) -> list[str]:
         """List all labels in the group."""
@@ -246,14 +246,14 @@ class LabelGroup:
         # create the new label
         new_label_group = self._group.create_group(name, overwrite=overwrite)
 
-        if self._imgage_ref is None:
+        if self._image_ref is None:
             label_0 = self.get(list_of_labels[0])
             metadata = label_0.metadata
             on_disk_shape = label_0.on_disk_shape
             chunks = label_0.array.chunks
             dataset = label_0.dataset
         else:
-            label_0 = self._imgage_ref
+            label_0 = self._image_ref
             metadata = label_0.metadata
             channel_index = metadata.index_mapping.get("c", None)
             if channel_index is not None:

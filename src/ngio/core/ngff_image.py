@@ -1,6 +1,6 @@
 """Abstract class for handling OME-NGFF images."""
 
-from typing import Any, Protocol, TypeVar
+from typing import Protocol, TypeVar
 
 import numpy as np
 

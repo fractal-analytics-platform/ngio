@@ -3,7 +3,6 @@
 import math
 from typing import Any
 
-from ngio.core.image_handler import Image
 from ngio.io import StoreLike
 from ngio.ngff_meta import (
     create_image_metadata,
@@ -106,7 +105,7 @@ def create_empty_ome_zarr_image(
             dimension_separator="/",
         )
 
-        # Todo redo this with when a proper build of pyramid id implemente
+        # Todo redo this with when a proper build of pyramid is implemented
         shape = [int(s / sc) for s, sc in zip(shape, scaling_factor, strict=True)]
 
         if chunks is not None:
@@ -184,7 +183,7 @@ def create_empty_ome_zarr_label(
             dimension_separator="/",
         )
 
-        # Todo redo this with when a proper build of pyramid id implemente
+        # Todo redo this with when a proper build of pyramid is implemented
         _shape = []
         for s, sc in zip(shape, scaling_factor, strict=True):
             if math.floor(s / sc) % 2 == 0:

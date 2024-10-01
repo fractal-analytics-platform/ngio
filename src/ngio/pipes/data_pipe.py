@@ -9,11 +9,11 @@ class DataTransformPipe:
     """A class to handle a pipeline of data transforms.
 
     For example, a pipeline of transforms can be:
-        - Selecte a subset of the data
+        - Select a subset of the data
         - Shuffle the axes of the data
         - Normalize the data
 
-    All these in reverse order will be applied to the data when seting a patch.
+    All these in reverse order will be applied to the data when setting a patch.
 
     """
 

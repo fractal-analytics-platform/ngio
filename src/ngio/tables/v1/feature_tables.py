@@ -37,13 +37,13 @@ class FeatureTableV1:
     https://fractal-analytics-platform.github.io/fractal-tasks-core/tables/
     """
 
-    def __init__(self, group: zarr.Group, inplicit_conversion: bool = False):
+    def __init__(self, group: zarr.Group, implicit_conversion: bool = False):
         """Initialize the class from an existing group.
 
         Args:
             group (zarr.Group): The group containing the
                 ROI table.
-            inplicit_conversion (bool): If True, the anndata object will be
+            implicit_conversion (bool): If True, the anndata object will be
                 converted to a DataFrame without any checks. If False, the
                 anndata object will be checked for compatibility and converted
                 to a DataFrame. Default is False.
@@ -139,7 +139,7 @@ class FeatureTableV1:
     @staticmethod
     def _write(group: zarr.Group, table: DataFrame, meta: FeatureTableV1Meta) -> None:
         ad_table = df_to_andata(
-            table, index_key=meta.instance_key, inplicit_conversion=False
+            table, index_key=meta.instance_key, implicit_conversion=False
         )
 
         path = Path(group.store.path) / group.path

@@ -119,7 +119,7 @@ class ROITableV1:
             table = DataFrame(columns=columns)
         else:
             cls._validate_roi_table(table=table)
-        # this should be possibe to do duing initialization
+        # this should be possible to do duing initialization
         # but for now this works
         table = table.set_index("FieldIndex")
         cls._write(group=table_group, table=table)

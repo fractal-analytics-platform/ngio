@@ -98,7 +98,7 @@ def create_image_metadata(
             for the pyramid building.
         z_scaling_factor: The scaling factor for the z axis, to be used for the
             pyramid building. Note that several tools may not support scaling
-            diffent than 1.0 for the z axis.
+            different than 1.0 for the z axis.
         time_spacing: The time spacing (If the time axis is present).
         time_units: The units of the time spacing (If the time axis is present).
         num_levels: The number of levels in the pyramid.
@@ -146,10 +146,10 @@ def create_image_metadata(
             )
 
     channels = []
-    for label, wavelenghts, kwargs in zip(
+    for label, wavelengths, kwargs in zip(
         channel_labels, channel_wavelengths, channel_kwargs, strict=True
     ):
-        channels.append(Channel(label=label, wavelength_id=wavelenghts, **kwargs))
+        channels.append(Channel(label=label, wavelength_id=wavelengths, **kwargs))
 
     omero_kwargs = {} if omero_kwargs is None else omero_kwargs
     omero = Omero(channels=channels, **omero_kwargs)
@@ -185,7 +185,7 @@ def create_label_metadata(
             for the pyramid building.
         z_scaling_factor: The scaling factor for the z axis, to be used for the
             pyramid building. Note that several tools may not support scaling
-            diffent than 1.0 for the z axis.
+            different than 1.0 for the z axis.
         time_spacing: The time spacing (If the time axis is present).
         time_units: The units of the time spacing (If the time axis is present).
         num_levels: The number of levels in the pyramid.

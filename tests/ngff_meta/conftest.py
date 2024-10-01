@@ -6,8 +6,8 @@ import zarr
 from packaging.version import Version
 from pytest import fixture
 
-zarr_verison = version("zarr")
-ZARR_PYTHON_V = 2 if Version(zarr_verison) < Version("3.0.0a") else 3
+zarr_version = version("zarr")
+ZARR_PYTHON_V = 2 if Version(zarr_version) < Version("3.0.0a") else 3
 
 
 @fixture

@@ -51,7 +51,7 @@ def _safe_to_df(data_frame: pd.DataFrame, index_key: str) -> pd.DataFrame:
 def df_to_andata(
     data_frame: pd.DataFrame,
     index_key: str = "label",
-    inplicit_conversion: bool = False,
+    implicit_conversion: bool = False,
 ) -> ad.AnnData:
     """Convert a pandas DataFrame representing a fractal table to an AnnData object.
 
@@ -59,13 +59,13 @@ def df_to_andata(
         data_frame: A pandas DataFrame representing a fractal table.
         index_key: The column name to use as the index of the DataFrame.
             Default is 'label'.
-        inplicit_conversion: If True, the function will convert the data frame
+        implicit_conversion: If True, the function will convert the data frame
             to an AnnData object as it. If False, the function will check the data frame
             for compatibility.
             And correct correctly formatted data frame to AnnData object.
             Default is False.
     """
-    if inplicit_conversion:
+    if implicit_conversion:
         return ad.AnnData(data_frame)
 
     return _safe_to_df(data_frame, index_key)

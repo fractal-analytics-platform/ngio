@@ -17,7 +17,8 @@ repos:
     rev: typos-dict-v0.11.20
     hooks:
       - id: typos
-        args: [--force-exclude]  # omitting --write-changes
+        #args: [--force-exclude]  # omitting --write-changes
+        args: [--force-exclude, --write-changes]
 
   - repo: https://github.com/charliermarsh/ruff-pre-commit
     rev: v0.4.8
