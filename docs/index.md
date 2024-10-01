@@ -25,8 +25,8 @@ To get started, check out the [Getting Started](getting-started.md) guide.
 | Table Validation | ✅ | Mid-September | Validate Table fractal V1 + Compliance between Metadata and Data |
 | Table Handling | ✅ | Mid-September | Read, Write ROI, Features, and Masked Tables |
 | Basic Iterators | Ongoing | End-September | Read and Write Iterators for common access patterns |
-| Base Documentation | Ongoing | End-September | API Documentation and Examples |
-| Beta Ready Testing | Ongoing | End-September | Beta Testing; Library is ready for testing, but the API is not stable |
+| Base Documentation | ✅ | End-September | API Documentation and Examples |
+| Beta Ready Testing | ✅ | End-September | Beta Testing; Library is ready for testing, but the API is not stable |
 | Mask Iterators | Ongoing | October | Iterators over Masked Tables |
 | Advanced Iterators | Not started | October | Iterators for advanced access patterns |
 | Parallel Iterators | Not started | End of the Year | Concurrent Iterators for parallel read and write |
@@ -38,4 +38,5 @@ To get started, check out the [Getting Started](getting-started.md) guide.
 `ngio` is developed at the [BioVisionCenter](https://www.biovisioncenter.uzh.ch/en.html) at the University of Zurich. The main contributors are: [@lorenzocerrone](https://github.com/lorenzocerrone), [@jluethi](https://github.com/jluethi).
 
 ## License
+
 `ngio` is released according to the BSD-3-Clause License. See [LICENSE](https://github.com/fractal-analytics-platform/ngio/blob/main/LICENSE)
