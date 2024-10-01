@@ -11,9 +11,7 @@
 Currently, `ngio` is not available on PyPI. You can install it from the source code.
 
 ```bash
-git clone git@github.com:fractal-analytics-platform/ngio.git
-cd ngio
-pip install ".[v2]"
+pip install "ngio[v2]"
 ```
 
 The `v2` extra installs the latest version of `zarr-python` from the `v2` branch.
