@@ -38,4 +38,3 @@ To get started, check out the [Getting Started](https://fractal-analytics-platfo
 | Parallel Iterators | Not started | End of the Year | Concurrent Iterators for parallel read and write |
 | Full Documentation | Not started | End of the Year | Complete Documentation |
 | Release 1.0 (Commitment to API) | Not started | End of the Year | API is stable; breaking changes will be avoided |
-
