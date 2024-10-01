@@ -214,12 +214,6 @@ class ImageLike:
             return data_pipe.get(data=self.array)
         elif mode == "dask":
             return data_pipe.get(data=self.dask_array)
-            if self._dask_lock is None:
-                return data_pipe.get(data=self.dask_array)
-
-            with self._dask_lock:
-                patch = data_pipe.get(data=self.dask_array)
-            return patch
         else:
             raise ValueError(f"Invalid mode {mode}")
 
