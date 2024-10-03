@@ -152,6 +152,10 @@ class ROITableV1:
 
         rois_dict = {}
         for roi in rois:
+            field_index = roi.infos.get("field_index", None)
+            if field_index is None:
+                raise ValueError("Field index is required in the ROI infos.")
+
             rois_dict[roi.field_index] = {
                 "x_micrometer": roi.x,
                 "y_micrometer": roi.y,
@@ -173,7 +177,6 @@ class ROITableV1:
 
         table_df = self.table
         roi = WorldCooROI(
-            field_index=field_index,
             x=table_df.loc[field_index, "x_micrometer"],
             y=table_df.loc[field_index, "y_micrometer"],
             z=table_df.loc[field_index, "z_micrometer"],
@@ -181,6 +184,7 @@ class ROITableV1:
             y_length=table_df.loc[field_index, "len_y_micrometer"],
             z_length=table_df.loc[field_index, "len_z_micrometer"],
             unit="micrometer",
+            infos={"field_index": field_index},
         )
         return roi
 
