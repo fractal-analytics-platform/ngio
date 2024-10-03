@@ -156,7 +156,7 @@ class ROITableV1:
             if field_index is None:
                 raise ValueError("Field index is required in the ROI infos.")
 
-            rois_dict[roi.field_index] = {
+            rois_dict[field_index] = {
                 "x_micrometer": roi.x,
                 "y_micrometer": roi.y,
                 "z_micrometer": roi.z,
@@ -167,7 +167,14 @@ class ROITableV1:
 
         table_df = self.table
         new_table_df = pd.DataFrame.from_dict(rois_dict, orient="index")
-        table_df = pd.concat([table_df, new_table_df], axis=0)
+
+        if not table_df.empty:
+            table_df = pd.concat([table_df, new_table_df], axis=0)
+        else:
+            table_df = new_table_df
+
+        table_df.index.name = "FieldIndex"
+        table_df.index = table_df.index.astype(str)
         self.table = table_df
 
     def get_roi(self, field_index) -> WorldCooROI:

@@ -41,7 +41,6 @@ class WorldCooROI(BaseModel):
     ) -> "RasterCooROI":
         """Convert to raster coordinates."""
         return RasterCooROI(
-            field_index=self.field_index,
             x=_to_raster(self.x, pixel_size.x, dimensions.x),
             y=_to_raster(self.y, pixel_size.y, dimensions.y),
             z=_to_raster(self.z, pixel_size.z, dimensions.z),
