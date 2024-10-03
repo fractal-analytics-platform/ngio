@@ -4,22 +4,15 @@ This class follows the roi_table specification at:
 https://fractal-analytics-platform.github.io/fractal-tasks-core/tables/
 """
 
-from pathlib import Path
+from collections.abc import Iterable
 from typing import Literal
 
-import anndata as ad
+import pandas as pd
 import zarr
-from pandas import DataFrame
 from pydantic import BaseModel
 
 from ngio.core.roi import WorldCooROI
-from ngio.tables._utils import validate_roi_table
-
-
-class ROITableFormattingError(Exception):
-    """Error raised when an ROI table is not formatted correctly."""
-
-    pass
+from ngio.tables.v1.generic_table import BaseTable, write_table_ad
 
 
 class ROITableV1Meta(BaseModel):
@@ -45,6 +38,25 @@ TRANSLATION_COLUMNS = ["translation_x", "translation_y", "translation_z"]
 OPTIONAL_COLUMNS = ORIGIN_COLUMNS + TRANSLATION_COLUMNS
 
 
+def create_empty_roi_table(
+    include_origin: bool = False, include_translation: bool = False
+) -> pd.DataFrame:
+    """Create an empty ROI table."""
+    origin_columns = ORIGIN_COLUMNS if include_origin else []
+    translation_columns = TRANSLATION_COLUMNS if include_translation else []
+
+    columns = [
+        *REQUIRED_COLUMNS,
+        *origin_columns,
+        *translation_columns,
+    ]
+    table = pd.DataFrame(
+        index=pd.Index([], name="FieldIndex", dtype="str"), columns=columns
+    )
+
+    return table
+
+
 class ROITableV1:
     """Class to handle fractal ROI tables.
 
@@ -60,24 +72,16 @@ class ROITableV1:
             group (zarr.Group): The group containing the
                 ROI table.
         """
-        self.table_group = group
         self._meta = ROITableV1Meta(**group.attrs)
-        ad_table = ad.read_zarr(self.table_group)
-
-        table = ad_table.to_df()
-        table = validate_roi_table(
-            table,
-            required_columns=REQUIRED_COLUMNS,
-            optional_columns=OPTIONAL_COLUMNS,
+        self._table_handler = BaseTable(
+            group=group, index_key="FieldIndex", index_type="str"
         )
-        self._table = table
 
     @classmethod
-    def _create_new(
+    def _new(
         cls,
         parent_group: zarr.Group,
         name: str,
-        table: DataFrame | None = None,
         include_origin: bool = False,
         include_translation: bool = False,
         overwrite: bool = False,
@@ -97,47 +101,21 @@ class ROITableV1:
                 in the table.
             overwrite (bool): Whether to overwrite the table if it already exists.
         """
-        table_group = parent_group.create_group(name, overwrite=overwrite)
+        group = parent_group.create_group(name, overwrite=overwrite)
 
-        # Always make sure to write the metadata (in case the write fails)
-        meta = ROITableV1Meta()
-        table_group.attrs.update(meta.model_dump(exclude=None))
-
-        # setup empty dataframe with FieldIndex as index
-        # and self._required_columns as columns
-        origin_columns = ORIGIN_COLUMNS if include_origin else []
-        translation_columns = TRANSLATION_COLUMNS if include_translation else []
-
-        columns = [
-            "FieldIndex",
-            *REQUIRED_COLUMNS,
-            *origin_columns,
-            *translation_columns,
-        ]
-
-        if table is None:
-            table = DataFrame(columns=columns)
-        else:
-            cls._validate_roi_table(table=table)
-        # this should be possible to do duing initialization
-        # but for now this works
-        table = table.set_index("FieldIndex")
-        cls._write(group=table_group, table=table)
-        return cls(table_group)
-
-    @property
-    def data_frame(self) -> DataFrame:
-        """Return the ROI table as a DataFrame."""
-        return self._table
-
-    @data_frame.setter
-    def data_frame(self, table: DataFrame):
-        table = validate_roi_table(
-            data_frame=table,
-            required_columns=REQUIRED_COLUMNS,
-            optional_columns=OPTIONAL_COLUMNS,
+        table = create_empty_roi_table(
+            include_origin=include_origin, include_translation=include_translation
         )
-        self._table = table
+
+        meta = ROITableV1Meta()
+        write_table_ad(
+            group=group,
+            table=table,
+            index_key="FieldIndex",
+            index_type="str",
+            meta=meta,
+        )
+        return cls(group=group)
 
     @property
     def meta(self) -> ROITableV1Meta:
@@ -145,35 +123,55 @@ class ROITableV1:
         return self._meta
 
     @property
+    def table_handler(self) -> BaseTable:
+        """Return the table handler."""
+        return self._table_handler
+
+    @property
+    def table(self) -> pd.DataFrame:
+        """Return the ROI table as a DataFrame."""
+        return self._table_handler.table
+
+    @table.setter
+    def table(self, table: pd.DataFrame):
+        self._table_handler.table = table
+
+    @property
     def list_field_indexes(self) -> list[str]:
         """Return a list of all field indexes in the table."""
-        return self.data_frame.index.tolist()
+        return self.table.index.tolist()
 
-    def add_roi(
-        self, field_index: str, roi: WorldCooROI, overwrite: bool = False
-    ) -> None:
-        """Add a new ROI to the table."""
-        if field_index in self.list_field_indexes and not overwrite:
-            raise ValueError(
-                f"Field index {field_index} already exists in ROI table. "
-                "Set overwrite=True to overwrite"
-            )
+    def append_rois(self, rois: Iterable[WorldCooROI] | WorldCooROI) -> None:
+        """Append ROIs to the current table.
 
-        self.data_frame.loc[field_index] = {
-            "x_micrometer": roi.x,
-            "y_micrometer": roi.y,
-            "z_micrometer": roi.z,
-            "len_x_micrometer": roi.x_length,
-            "len_y_micrometer": roi.y_length,
-            "len_z_micrometer": roi.z_length,
-        }
+        Args:
+            rois (Iterable[WorldCooROI] | WorldCooROI): The ROIs to append.
+        """
+        if isinstance(rois, WorldCooROI):
+            rois = [rois]
+
+        rois_dict = {}
+        for roi in rois:
+            rois_dict[roi.field_index] = {
+                "x_micrometer": roi.x,
+                "y_micrometer": roi.y,
+                "z_micrometer": roi.z,
+                "len_x_micrometer": roi.x_length,
+                "len_y_micrometer": roi.y_length,
+                "len_z_micrometer": roi.z_length,
+            }
+
+        table_df = self.table
+        new_table_df = pd.DataFrame.from_dict(rois_dict, orient="index")
+        table_df = pd.concat([table_df, new_table_df], axis=0)
+        self.table = table_df
 
     def get_roi(self, field_index) -> WorldCooROI:
         """Get an ROI from the table."""
         if field_index not in self.list_field_indexes:
             raise ValueError(f"Field index {field_index} is not in the table")
 
-        table_df = self.data_frame
+        table_df = self.table
         roi = WorldCooROI(
             field_index=field_index,
             x=table_df.loc[field_index, "x_micrometer"],
@@ -193,20 +191,4 @@ class ROITableV1:
 
     def write(self) -> None:
         """Write the crrent state of the table to the Zarr file."""
-        data_frame = validate_roi_table(
-            data_frame=self.data_frame,
-            required_columns=REQUIRED_COLUMNS,
-            optional_columns=OPTIONAL_COLUMNS,
-        )
-        self._write(group=self.table_group, table=data_frame)
-
-    @staticmethod
-    def _write(group: zarr.Group, table: DataFrame) -> None:
-        ad_table = ad.AnnData(table)
-        # anndata can only write from a store and not a group
-        path = Path(group.store.path) / group.path
-        ad_table.write_zarr(path)
-
-        # Always make sure to write the metadata
-        meta = ROITableV1Meta()
-        group.attrs.update(meta.model_dump(exclude=None))
+        self._table_handler.write(self.meta)

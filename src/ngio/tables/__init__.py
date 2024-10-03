@@ -1,6 +1,5 @@
 """Module for handling tables in the Fractal format."""
 
-from ngio.tables._utils import df_from_andata, df_to_andata, validate_roi_table
 from ngio.tables.tables_group import (
     FeatureTable,
     MaskingROITable,
@@ -9,13 +8,4 @@ from ngio.tables.tables_group import (
     TableGroup,
 )
 
-__all__ = [
-    "Table",
-    "ROITable",
-    "FeatureTable",
-    "MaskingROITable",
-    "TableGroup",
-    "df_from_andata",
-    "df_to_andata",
-    "validate_roi_table",
-]
+__all__ = ["Table", "ROITable", "FeatureTable", "MaskingROITable", "TableGroup"]

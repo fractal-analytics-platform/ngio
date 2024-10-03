@@ -1,4 +1,8 @@
+from collections.abc import Callable
+from typing import Literal
+
 import anndata as ad
+import numpy as np
 import pandas as pd
 import pandas.api.types as ptypes
 
@@ -9,115 +13,231 @@ class TableValidationError(Exception):
     pass
 
 
-def _safe_to_df(data_frame: pd.DataFrame, index_key: str) -> pd.DataFrame:
-    columns = data_frame.columns
+Validator = Callable[[pd.DataFrame], pd.DataFrame]
 
-    if index_key not in columns:
-        raise TableValidationError(f"index_key {index_key} not found in data frame")
 
-    if not ptypes.is_integer_dtype(data_frame[index_key]):
-        raise TableValidationError(f"index_key {index_key} must be of integer type")
+def _check_for_mixed_types(series: pd.Series) -> None:
+    """Check if the column has mixed types."""
+    if series.apply(type).nunique() > 1:
+        raise TableValidationError(
+            f"Column {series.name} has mixed types: "
+            f"{series.apply(type).unique()}. "
+            "Type of all elements must be the same."
+        )
 
-    data_frame[index_key] = data_frame[index_key].astype(str)
+
+def _check_for_supported_types(series: pd.Series) -> Literal["str", "numeric"]:
+    """Check if the column has supported types."""
+    if ptypes.is_string_dtype(series):
+        return "str"
+    if ptypes.is_numeric_dtype(series):
+        return "numeric"
+    raise TableValidationError(
+        f"Column {series.name} has unsupported type: {series.dtype}."
+        " Supported types are string and numerics."
+    )
+
+
+def _check_index_key(
+    table_df: pd.DataFrame, index_key: str, index_type: Literal["str", "int"]
+) -> pd.DataFrame:
+    """Check if the index_key correctness.
+
+    - Check if the index_key is present in the data frame.
+        (If the index_key is a column in the DataFrame, it is set as the index)
+    - Check if the index_key is of the correct type.
+
+    Args:
+        table_df (pd.DataFrame): The DataFrame to validate.
+        index_key (str): The column name to use as the index of the DataFrame.
+        index_type (str): The type of the index column in the DataFrame.
+            Either 'str' or 'int'. Default is 'int'.
+
+    Returns:
+        pd.DataFrame: The validated DataFrame.
+    """
+    columns = table_df.columns
+    if index_key in columns:
+        table_df = table_df.set_index(index_key)
+
+    if table_df.index.name != index_key:
+        raise TableValidationError(f"index_key: {index_key} not found in data frame")
+
+    if index_type == "str":
+        if not ptypes.is_string_dtype(table_df.index):
+            raise TableValidationError(f"index_key {index_key} must be of string type")
+
+    elif index_type == "int":
+        if not ptypes.is_integer_dtype(table_df.index):
+            raise TableValidationError(f"index_key {index_key} must be of integer type")
+
+    else:
+        raise TableValidationError(f"index_type {index_type} not recognized")
+
+    return table_df
+
+
+def validate_table(
+    table_df: pd.DataFrame,
+    index_key: str,
+    index_type: Literal["str", "int"],
+    validators: list[Validator] | None,
+) -> pd.DataFrame:
+    """Validate the table DataFrame.
+
+    - Check if the index_key is present in the data frame.
+        (If the index_key is a column in the DataFrame, it is set as the index)
+    - Check if the index_key is of the correct type.
+    - Apply all provided optional validators.
+
+    Args:
+        table_df (pd.DataFrame): The DataFrame to validate.
+        index_key (str): The column name to use as the index of the DataFrame.
+        index_type (str): The type of the index column in the DataFrame.
+        validators (list[Validator]): A list of functions to further validate table.
+
+    Returns:
+        pd.DataFrame: The validated DataFrame.
+    """
+    table_df = _check_index_key(table_df, index_key, index_type)
+
+    if validators is None:
+        return table_df
+
+    # Apply all provided validators
+    for validator in validators:
+        table_df = validator(table_df)
+
+    return table_df
+
+
+def table_df_to_ad(
+    table_df: pd.DataFrame,
+    index_key: str,
+    index_type: Literal["str", "int"] = "int",
+    validators: list[Validator] | None = None,
+) -> ad.AnnData:
+    """Convert a table DataFrame to an AnnData object.
+
+    Args:
+        table_df (pd.DataFrame): A pandas DataFrame representing a fractal table.
+        index_key (str): The column name to use as the index of the DataFrame.
+        index_type (str): The type of the index column in the DataFrame.
+            Either 'str' or 'int'. Default is 'int'.
+        validators (list[Validator]): A list of functions to further validate the table.
+    """
+    # Check if the index_key is present in the data frame + optional validations
+    table_df = validate_table(
+        table_df=table_df,
+        index_key=index_key,
+        index_type=index_type,
+        validators=validators,
+    )
+
+    # Convert the index to string ALWAYS to avoid casting issues in AnnData
+    table_df.index = table_df.index.astype(str)
 
     str_columns, num_columns = [], []
-    for c_name in columns:
-        column_df = data_frame[c_name]
-        if column_df.apply(type).nunique() > 1:
-            raise TableValidationError(
-                f"Column {c_name} has mixed types: "
-                f"{column_df.apply(type).unique()}. "
-                "Type of all elements must be the same."
-            )
+    for c_name in table_df.columns:
+        column_df = table_df[c_name]
+        _check_for_mixed_types(column_df)  # Mixed types are not allowed in the table
+        c_type = _check_for_supported_types(
+            column_df
+        )  # Only string and numeric types are allowed
 
-        if ptypes.is_string_dtype(column_df):
+        if c_type == "str":
             str_columns.append(c_name)
-
-        elif ptypes.is_numeric_dtype(column_df):
+        elif c_type == "numeric":
             num_columns.append(c_name)
-        else:
-            raise TableValidationError(
-                f"Column {c_name} has unsupported type: {column_df.dtype}."
-                " Supported types are string and numerics."
-            )
 
-    obs_df = data_frame[str_columns]
-    obs_df.index = obs_df.index.astype(str)
-    x_df = data_frame[num_columns]
+    # Converting all observations to string
+    obs_df = table_df[str_columns]
+    obs_df.index = table_df.index
+
+    # Converting all numeric columns to float32
+    x_df = table_df[num_columns]
     x_df = x_df.astype("float32")
+    if x_df.empty:
+        # If there are no numeric columns, create an empty array
+        # to avoid AnnData failing to create the object
+        x_df = np.zeros((0, 0), dtype="float32")
     return ad.AnnData(X=x_df, obs=obs_df)
 
 
-def df_to_andata(
-    data_frame: pd.DataFrame,
+def table_ad_to_df(
+    table_ad: ad.AnnData,
     index_key: str = "label",
-    implicit_conversion: bool = False,
-) -> ad.AnnData:
-    """Convert a pandas DataFrame representing a fractal table to an AnnData object.
-
-    Args:
-        data_frame: A pandas DataFrame representing a fractal table.
-        index_key: The column name to use as the index of the DataFrame.
-            Default is 'label'.
-        implicit_conversion: If True, the function will convert the data frame
-            to an AnnData object as it. If False, the function will check the data frame
-            for compatibility.
-            And correct correctly formatted data frame to AnnData object.
-            Default is False.
-    """
-    if implicit_conversion:
-        return ad.AnnData(data_frame)
-
-    return _safe_to_df(data_frame, index_key)
-
-
-def df_from_andata(andata_table: ad.AnnData, index_key: str = "label") -> pd.DataFrame:
+    index_type: Literal["str", "int"] = "int",
+    validators: list[Validator] | None = None,
+) -> pd.DataFrame:
     """Convert a AnnData object representing a fractal table to a pandas DataFrame.
 
     Args:
-        andata_table: An AnnData object representing a fractal table.
-        index_key: The column name to use as the index of the DataFrame.
+        table_ad (ad.AnnData): An AnnData object representing a fractal table.
+        index_key (str): The column name to use as the index of the DataFrame.
             Default is 'label'.
-
+        index_type (str): The type of the index column in the DataFrame.
+            Either 'str' or 'int'. Default is 'int'.
+        validators (list[Validator]): A list of functions to further validate the table.
     """
-    data_frame = andata_table.to_df()
-    data_frame[andata_table.obs_keys()] = andata_table.obs
+    table_df = table_ad.to_df()
 
-    if index_key not in data_frame.columns:
-        raise TableValidationError(f"index_key {index_key} not found in data frame.")
+    table_df[table_ad.obs_keys()] = table_ad.obs
 
-    data_frame[index_key] = data_frame[index_key].astype(int)
-    return data_frame
+    # Set the index of the DataFrame
+    if table_ad.obs.index.name is not None:
+        table_df.index = table_ad.obs.index
+    elif index_key in table_df.columns:
+        table_df = table_df.set_index(index_key)
+    else:
+        raise TableValidationError(
+            f"Index key {index_key} not found in AnnData object."
+        )
+
+    # Cast the index to the correct type
+    if index_type == "str":
+        table_df.index = table_df.index.astype(str)
+    elif index_type == "int":
+        table_df.index = table_df.index.astype(int)
+    else:
+        raise TableValidationError(f"index_type {index_type} not recognized")
+
+    table_df = validate_table(
+        table_df=table_df,
+        index_key=index_key,
+        index_type=index_type,
+        validators=validators,
+    )
+    return table_df
 
 
-def validate_roi_table(
-    data_frame: pd.DataFrame,
+def validate_columns(
+    table_df: pd.DataFrame,
     required_columns: list[str],
-    optional_columns: list[str],
-    index_name: str = "FieldIndex",
+    optional_columns: list[str] | None = None,
 ) -> pd.DataFrame:
-    """Validate the ROI table.
+    """Validate the columns headers of the table.
+
+    If a required column is missing, a TableValidationError is raised.
+    If a list of optional columns is provided, only required and optional columns are
+        allowed in the table.
 
     Args:
-        data_frame: The ROI table as a DataFrame.
-        required_columns: A list of required columns in the ROI table.
-        optional_columns: A list of optional columns in the ROI table.
-        index_name: The name of the index column in the ROI table.
-            Default is 'FieldIndex'.
-    """
-    if data_frame.index.name != index_name:
-        if index_name in data_frame.columns:
-            data_frame = data_frame.set_index(index_name)
-        else:
-            raise TableValidationError(
-                f"{index_name} is required in ROI table. It must be the index or a "
-                "column"
-            )
+        table_df (pd.DataFrame): The DataFrame to validate.
+        required_columns (list[str]): A list of required columns.
+        optional_columns (list[str] | None): A list of optional columns.
+            Default is None.
 
-    table_header = data_frame.columns
+    Returns:
+        pd.DataFrame: The validated DataFrame.
+    """
+    table_header = table_df.columns
     for column in required_columns:
         if column not in table_header:
             raise TableValidationError(f"Column {column} is required in ROI table")
+
+    if optional_columns is None:
+        return table_df
 
     possible_columns = [*required_columns, *optional_columns]
     for column in table_header:
@@ -125,4 +245,17 @@ def validate_roi_table(
             raise TableValidationError(
                 f"Column {column} is not recognized in ROI table"
             )
-    return data_frame
+
+    return table_df
+
+
+def validate_unique_index(table_df: pd.DataFrame) -> pd.DataFrame:
+    """Validate that the index of the table is unique."""
+    if table_df.index.is_unique:
+        return table_df
+
+    # Find the duplicates
+    duplicates = table_df.index[table_df.index.duplicated()].tolist()
+    raise TableValidationError(
+        f"Index of the table contains duplicates values. Duplicate: {duplicates}"
+    )

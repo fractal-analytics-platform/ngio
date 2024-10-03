@@ -5,7 +5,6 @@ The /tables group contains t
 
 from typing import Literal
 
-import pandas as pd
 import zarr
 
 from ngio.io import StoreLike
@@ -139,7 +138,6 @@ class TableGroup:
     def new(
         self,
         name: str,
-        table: pd.DataFrame | None = None,
         table_type: str = "roi_table",
         overwrite: bool = False,
         version: str = "1",
@@ -156,10 +154,9 @@ class TableGroup:
             raise ValueError(f"Table {name} already exists in the group.")
 
         table_impl = _find_table_impl(table_type=table_type, version=version)
-        new_table = table_impl._create_new(
+        new_table = table_impl._new(
             parent_group=self._group,
             name=name,
-            table=table,
             overwrite=overwrite,
             **type_specific_kwargs,
         )
