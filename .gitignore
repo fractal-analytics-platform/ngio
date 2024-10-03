@@ -118,4 +118,6 @@ pixi.lock
 
 *.zarr
 
+# ignore data directory
 data/
+*.zip
