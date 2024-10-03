@@ -2,6 +2,10 @@
 
 from importlib.metadata import PackageNotFoundError, version
 
+from ngio.core import Image, Label, NgffImage
+
+__all__ = ["Image", "Label", "NgffImage"]
+
 try:
     __version__ = version("ngio")
 except PackageNotFoundError:  # pragma: no cover
