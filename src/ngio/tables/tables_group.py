@@ -9,16 +9,7 @@ import zarr
 
 from ngio.io import StoreLike
 from ngio.pydantic_utils import BaseWithExtraFields
-from ngio.tables.v1 import FeatureTableV1, ROITableV1
-
-
-class MaskingROITableV1:
-    """Placeholder for Masking ROI Table V1."""
-
-    def __init__(self, group: zarr.Group) -> None:
-        """Initialize the class from an existing group."""
-        raise NotImplementedError("Masking ROI Table V1 not implemented.")
-
+from ngio.tables.v1 import FeatureTableV1, MaskingROITableV1, ROITableV1
 
 ROITable = ROITableV1
 IMPLEMENTED_ROI_TABLES = {"1": ROITableV1}

@@ -17,6 +17,18 @@ class TestTableGroup:
             overwrite=False,
         )
 
-        assert ngff_image.table.list() == ["feat_table", "roi_table"]
+        ngff_image.table.new(
+            name="masking_roi_table",
+            table_type="masking_roi_table",
+            label_image="region",
+            overwrite=False,
+        )
+
+        assert ngff_image.table.list() == [
+            "feat_table",
+            "roi_table",
+            "masking_roi_table",
+        ]
         assert ngff_image.table.list(type="roi_table") == ["roi_table"]
         assert ngff_image.table.list(type="feature_table") == ["feat_table"]
+        assert ngff_image.table.list(type="masking_roi_table") == ["masking_roi_table"]

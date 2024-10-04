@@ -19,7 +19,7 @@ class MaskingROITableV1Meta(BaseModel):
     """Metadata for the ROI table."""
 
     fractal_table_version: Literal["1"] = "1"
-    type: Literal["roi_table"] = "masking_roi_table"
+    type: Literal["masking_roi_table"] = "masking_roi_table"
     region: dict[Literal["path"], str]
     instance_key: str = "label"
 
