@@ -6,19 +6,13 @@ https://fractal-analytics-platform.github.io/fractal-tasks-core/tables/
 
 from typing import Literal
 
-import anndata as ad
+import pandas as pd
 import zarr
-from pandas import DataFrame
 from pydantic import BaseModel
 
+from ngio.core.label_handler import Label
 from ngio.core.roi import WorldCooROI
-from ngio.tables._utils import table_ad_to_df, table_df_to_ad
-
-
-class ROITableFormattingError(Exception):
-    """Error raised when an ROI table is not formatted correctly."""
-
-    pass
+from ngio.tables.v1.generic_table import REQUIRED_COLUMNS, BaseTable, write_table_ad
 
 
 class MaskingROITableV1Meta(BaseModel):
@@ -30,26 +24,22 @@ class MaskingROITableV1Meta(BaseModel):
     instance_key: str = "label"
 
 
-REQUIRED_COLUMNS = [
-    "label",
-    "x_micrometer",
-    "y_micrometer",
-    "z_micrometer",
-    "len_x_micrometer",
-    "len_y_micrometer",
-    "len_z_micrometer",
-]
+def create_empty_roi_table() -> pd.DataFrame:
+    """Create an empty ROI table."""
+    table = pd.DataFrame(
+        index=pd.Index([], name="label", dtype="str"), columns=REQUIRED_COLUMNS
+    )
+
+    return table
 
 
 class MaskingROITableV1:
-    """Class to handle fractal ROI tables.
+    """Class to handle fractal Masking ROI tables.
 
-    To know more about the ROI table format, please refer to the
+    To know more about the Masking ROI table format, please refer to the
     specification at:
     https://fractal-analytics-platform.github.io/fractal-tasks-core/tables/
     """
-
-    _index_type = "int"
 
     def __init__(self, group: zarr.Group):
         """Initialize the class from an existing group.
@@ -58,26 +48,21 @@ class MaskingROITableV1:
             group (zarr.Group): The group containing the
                 ROI table.
         """
-        self.table_group = group
         self._meta = MaskingROITableV1Meta(**group.attrs)
-        self._instance_key = self._meta.instance_key
-        ad_table = ad.read_zarr(self.table_group)
-
-        self._table = table_ad_to_df(
-            ad_table, index_key=self._instance_key, index_type=self._index_type
+        self._table_handler = BaseTable(
+            group=group, index_key=self._meta.instance_key, index_type="int"
         )
 
     @classmethod
-    def _create_new(
+    def _new(
         cls,
         parent_group: zarr.Group,
         name: str,
-        table: DataFrame | None = None,
-        include_origin: bool = False,
-        include_translation: bool = False,
+        label_image: str,
+        instance_key: str = "label",
         overwrite: bool = False,
     ):
-        """Create a new ROI table.
+        """Create a new Masking ROI table.
 
         Note this method is not meant to be called directly.
         But should be called from the TablesHandler class.
@@ -86,34 +71,28 @@ class MaskingROITableV1:
             parent_group (zarr.Group): The parent group where the ROI table
                 will be created.
             name (str): The name of the ROI table.
-            table (DataFrame): The ROI table as a DataFrame.
-            include_origin (bool): Whether to include the origin columns in the table.
-            include_translation (bool): Whether to include the translation columns
-                in the table.
+            label_image (str): Name of the label image.
+            instance_key (str): The column name to use as the index of the DataFrame.
+                Default is 'label'.
             overwrite (bool): Whether to overwrite the table if it already exists.
         """
-        raise NotImplementedError
+        group = parent_group.create_group(name, overwrite=overwrite)
 
-    @property
-    def table(self) -> DataFrame:
-        """Return the ROI table as a DataFrame."""
-        return self._table
-
-    @table.setter
-    def table(self, table: DataFrame):
-        self._table = table
-
-    def as_anndata(self):
-        """Return the ROI table as an anndata object."""
-        return table_df_to_ad(
-            self.table, index_key=self._instance_key, index_type=self._index_type
+        table = pd.DataFrame(
+            index=pd.Index([], name=instance_key, dtype="int"), columns=REQUIRED_COLUMNS
         )
 
-    def from_anndata(self, ad_table: ad.AnnData):
-        """Set the table from an anndata object."""
-        self.table = table_ad_to_df(
-            ad_table, index_key=self._instance_key, index_type=self._index_type
+        meta = MaskingROITableV1Meta(
+            region={"path": label_image}, instance_key=instance_key
         )
+        write_table_ad(
+            group=group,
+            table=table,
+            index_key=instance_key,
+            index_type="int",
+            meta=meta,
+        )
+        return cls(group=group)
 
     @property
     def meta(self) -> MaskingROITableV1Meta:
@@ -121,34 +100,61 @@ class MaskingROITableV1:
         return self._meta
 
     @property
-    def instance_key(self) -> str:
-        """Return the instance key of the ROI table."""
-        return self._meta.instance_key
+    def table_handler(self) -> BaseTable:
+        """Return the table handler."""
+        return self._table_handler
 
     @property
-    def list_labels(self) -> list[int]:
-        """Return a list of all labels in the table."""
-        return self.table[self.instance_key].tolist()
+    def table(self) -> pd.DataFrame:
+        """Return the ROI table as a DataFrame."""
+        return self._table_handler.table
 
-    def add_roi(
-        self, field_index: str, roi: WorldCooROI, overwrite: bool = False
-    ) -> None:
-        """Add a new ROI to the table."""
-        raise NotImplementedError
+    @table.setter
+    def table(self, table: pd.DataFrame):
+        self._table_handler.table = table
 
-    def get_roi(self, field_index) -> WorldCooROI:
+    @property
+    def list_labels(self) -> list[str]:
+        """Return a list of all field indexes in the table."""
+        return self.table.index.tolist()
+
+    def from_label(self, label: Label, overwrite: bool = False) -> None:
+        """Create a new ROI table from a label.
+
+        Args:
+            label (Label): The label to create the ROI table from.
+            overwrite (bool): Whether to overwrite the elements in the table.
+        """
+        if not overwrite and self.table.empty:
+            raise ValueError(
+                "The table is not empty. Set overwrite to True to proceed."
+            )
+        raise NotImplementedError("Method not implemented yet.")
+
+    def get_roi(self, label: int) -> WorldCooROI:
         """Get an ROI from the table."""
-        raise NotImplementedError
+        if label not in self.list_labels:
+            raise ValueError(f"Field index {label} not found in the table.")
+
+        table_df = self.table.loc[label]
+
+        roi = WorldCooROI(
+            x=table_df.loc["x_micrometer"],
+            y=table_df.loc["y_micrometer"],
+            z=table_df.loc["z_micrometer"],
+            x_length=table_df.loc["len_x_micrometer"],
+            y_length=table_df.loc["len_y_micrometer"],
+            z_length=table_df.loc["len_z_micrometer"],
+            unit="micrometer",
+            infos={"label": label, "label_image": self.meta.region["path"]},
+        )
+        return roi
 
     @property
     def list_rois(self) -> list[WorldCooROI]:
         """List all ROIs in the table."""
-        raise NotImplementedError
+        return [self.get_roi(label) for label in self.list_labels]
 
     def write(self) -> None:
         """Write the crrent state of the table to the Zarr file."""
-        raise NotImplementedError
-
-    @staticmethod
-    def _write(group: zarr.Group, table: DataFrame) -> None:
-        raise NotImplementedError
+        self._table_handler.write(self.meta)

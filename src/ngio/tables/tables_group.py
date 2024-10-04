@@ -145,13 +145,11 @@ class TableGroup:
     ) -> Table:
         """Add a new table to the group."""
         list_of_tables = self._get_list_of_tables()
+        if not overwrite and name in list_of_tables:
+            raise ValueError(f"Table {name} already exists in the group.")
 
         if overwrite and name in list_of_tables:
-            self._group.attrs["tables"] = [
-                table for table in list_of_tables if table != name
-            ]
-        elif not overwrite and name in list_of_tables:
-            raise ValueError(f"Table {name} already exists in the group.")
+            list_of_tables.remove(name)
 
         table_impl = _find_table_impl(table_type=table_type, version=version)
         new_table = table_impl._new(

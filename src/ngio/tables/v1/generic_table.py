@@ -10,6 +10,15 @@ from pydantic import BaseModel
 
 from ngio.tables._utils import Validator, table_ad_to_df, table_df_to_ad, validate_table
 
+REQUIRED_COLUMNS = [
+    "x_micrometer",
+    "y_micrometer",
+    "z_micrometer",
+    "len_x_micrometer",
+    "len_y_micrometer",
+    "len_z_micrometer",
+]
+
 
 def write_table_ad(
     group: zarr.Group,
@@ -145,7 +154,6 @@ class BaseTable:
         """Set the validators of the table."""
         self._validators = validators
 
-    @property
     def add_validator(self, validator: Validator) -> None:
         """Add a validator to the table."""
         if self._validators is None:

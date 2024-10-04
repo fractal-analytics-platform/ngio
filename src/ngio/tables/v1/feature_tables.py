@@ -54,7 +54,7 @@ class FeatureTableV1:
         cls,
         parent_group: zarr.Group,
         name: str,
-        region: str,
+        label_image: str,
         instance_key: str = "label",
         overwrite: bool = False,
     ) -> None:
@@ -64,7 +64,7 @@ class FeatureTableV1:
             parent_group (zarr.Group): The parent group where the ROI table
                 will be created.
             name (str): The name of the ROI table.
-            region (str): The path to the region of interest.
+            label_image (str): The path to the label image.
             instance_key (str): The column name to use as the index of the DataFrame.
                 Default is 'label'.
             overwrite (bool): If True, the table will be overwritten if it exists.
@@ -72,7 +72,9 @@ class FeatureTableV1:
         """
         group = parent_group.create_group(name, overwrite=overwrite)
         table = pd.DataFrame(index=pd.Index([], name=instance_key, dtype="int"))
-        meta = FeatureTableV1Meta(region={"path": region}, instance_key=instance_key)
+        meta = FeatureTableV1Meta(
+            region={"path": label_image}, instance_key=instance_key
+        )
         write_table_ad(
             group=group,
             table=table,

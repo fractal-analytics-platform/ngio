@@ -12,7 +12,7 @@ import zarr
 from pydantic import BaseModel
 
 from ngio.core.roi import WorldCooROI
-from ngio.tables.v1.generic_table import BaseTable, write_table_ad
+from ngio.tables.v1.generic_table import REQUIRED_COLUMNS, BaseTable, write_table_ad
 
 
 class ROITableV1Meta(BaseModel):
@@ -22,14 +22,6 @@ class ROITableV1Meta(BaseModel):
     type: Literal["roi_table"] = "roi_table"
 
 
-REQUIRED_COLUMNS = [
-    "x_micrometer",
-    "y_micrometer",
-    "z_micrometer",
-    "len_x_micrometer",
-    "len_y_micrometer",
-    "len_z_micrometer",
-]
 ORIGIN_COLUMNS = [
     "x_micrometer_original",
     "y_micrometer_original",
@@ -182,14 +174,14 @@ class ROITableV1:
         if field_index not in self.list_field_indexes:
             raise ValueError(f"Field index {field_index} is not in the table")
 
-        table_df = self.table
+        table_df = self.table.loc[field_index]
         roi = WorldCooROI(
-            x=table_df.loc[field_index, "x_micrometer"],
-            y=table_df.loc[field_index, "y_micrometer"],
-            z=table_df.loc[field_index, "z_micrometer"],
-            x_length=table_df.loc[field_index, "len_x_micrometer"],
-            y_length=table_df.loc[field_index, "len_y_micrometer"],
-            z_length=table_df.loc[field_index, "len_z_micrometer"],
+            x=table_df.loc["x_micrometer"],
+            y=table_df.loc["y_micrometer"],
+            z=table_df.loc["z_micrometer"],
+            x_length=table_df.loc["len_x_micrometer"],
+            y_length=table_df.loc["len_y_micrometer"],
+            z_length=table_df.loc["len_z_micrometer"],
             unit="micrometer",
             infos={"field_index": field_index},
         )

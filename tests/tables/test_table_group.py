@@ -7,7 +7,7 @@ class TestTableGroup:
         ngff_image.table.new(
             name="feat_table",
             table_type="feature_table",
-            region="region",
+            label_image="region",
             overwrite=True,
         )
 
