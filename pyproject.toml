@@ -36,20 +36,23 @@ dependencies = [
     "numpy<2",
     "anndata", 
     "pydantic",
+    "pandas>=1.2.0,<2",
     "requests",
     "aiohttp", 
-    "dask[complete]",
+    "dask[array]",
+    "dask[distributed]",
 ]
 
 # https://peps.python.org/pep-0621/#dependencies-optional-dependencies
 # "extras" (e.g. for `pip install .[test]`)
 [project.optional-dependencies]
 # add dependencies used for testing here
-test = ["zarr<3.0.0a0", "pytest", "pytest-cov"]
+test = ["zarr<3", "pytest", "pytest-cov"]
 
 # add anything else you like to have in your dev environment here
 dev2 = [
-    "zarr<3.0.0a0",
+    "zarr<3",
+    "fractal-tasks-core==1.3.1",
     "matplotlib",
     "ipython",
     "pytest",
