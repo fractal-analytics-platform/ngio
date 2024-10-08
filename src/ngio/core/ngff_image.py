@@ -121,14 +121,18 @@ class NgffImage:
             path=path,
             pixel_size=pixel_size,
             highest_resolution=highest_resolution,
+            label_group=LabelGroup(self.group, image_ref=None),
         )
 
     def _update_omero_window(self) -> None:
         """Update the OMERO window."""
         meta = self.image_meta
         image = self.get_image(highest_resolution=True)
-        max_dtype = np.iinfo(image.array.dtype).max
-        start, end = image.dask_array.min().compute(), image.dask_array.max().compute()
+        max_dtype = np.iinfo(image.on_disk_array.dtype).max
+        start, end = (
+            image.on_disk_dask_array.min().compute(),
+            image.on_disk_dask_array.max().compute(),
+        )
 
         channel_list = meta.omero.channels
 
@@ -169,8 +173,8 @@ class NgffImage:
         default_kwargs = {
             "store": store,
             "shape": image_0.on_disk_shape,
-            "chunks": image_0.array.chunks,
-            "dtype": image_0.array.dtype,
+            "chunks": image_0.on_disk_array.chunks,
+            "dtype": image_0.on_disk_array.dtype,
             "on_disk_axis": image_0.dataset.on_disk_axes_names,
             "pixel_sizes": image_0.pixel_size,
             "xy_scaling_factor": self.image_meta.xy_scaling_factor,

@@ -21,5 +21,9 @@ class TestNgffImage:
         assert new_image_handler.channel_labels == image_handler.channel_labels
         assert new_image_handler.shape == image_handler.shape
         assert new_image_handler.pixel_size.zyx == image_handler.pixel_size.zyx
-        assert new_image_handler.array.shape == image_handler.array.shape
-        assert new_image_handler.array.chunks == image_handler.array.chunks
+        assert (
+            new_image_handler.on_disk_array.shape == image_handler.on_disk_array.shape
+        )
+        assert (
+            new_image_handler.on_disk_array.chunks == image_handler.on_disk_array.chunks
+        )

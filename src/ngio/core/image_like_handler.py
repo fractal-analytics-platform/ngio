@@ -171,14 +171,14 @@ class ImageLike:
 
     # Method to get the data of the image
     @property
-    def array(self) -> zarr.Array:
+    def on_disk_array(self) -> zarr.Array:
         """Return the image data as a Zarr array."""
         return self._array
 
     @property
-    def dask_array(self) -> da.core.Array:
+    def on_disk_dask_array(self) -> da.core.Array:
         """Return the image data as a Dask array."""
-        return da.from_zarr(self.array)
+        return da.from_zarr(self.on_disk_array)
 
     @property
     def dimensions(self) -> Dimensions:
@@ -211,9 +211,9 @@ class ImageLike:
     ) -> ArrayLike:
         """Return the data transform pipe."""
         if mode == "numpy":
-            return data_pipe.get(data=self.array)
+            return data_pipe.get(data=self.on_disk_array)
         elif mode == "dask":
-            return data_pipe.get(data=self.dask_array)
+            return data_pipe.get(data=self.on_disk_dask_array)
         else:
             raise ValueError(f"Invalid mode {mode}")
 
@@ -224,13 +224,13 @@ class ImageLike:
     ) -> None:
         """Set the data transform pipe."""
         if isinstance(patch, np.ndarray):
-            data_pipe.set(data=self.array, patch=patch)
+            data_pipe.set(data=self.on_disk_array, patch=patch)
 
         elif isinstance(patch, (da.core.Array, Delayed)):  # noqa: UP038
             if self._dask_lock is None:
-                return data_pipe.set(data=self.array, patch=patch)
+                return data_pipe.set(data=self.on_disk_array, patch=patch)
 
-            array = self.array
+            array = self.on_disk_array
             with self._dask_lock:
                 data_pipe.set(data=array, patch=patch)
         else:
@@ -282,7 +282,7 @@ class ImageLike:
         )
         return DataTransformPipe(slicer=slicer)
 
-    def get_data_from_roi(
+    def array_from_roi(
         self,
         roi: WorldCooROI,
         t: int | slice | None = None,
@@ -305,7 +305,7 @@ class ImageLike:
         return_array = self._get_pipe(data_pipe=data_pipe, mode=mode)
         return return_array
 
-    def set_data_from_roi(
+    def set_array_from_roi(
         self,
         roi: WorldCooROI,
         patch: ArrayLike,
@@ -327,7 +327,7 @@ class ImageLike:
         )
         self._set_pipe(data_pipe=data_pipe, patch=patch)
 
-    def get_data(
+    def array(
         self,
         x: int | slice | None = None,
         y: int | slice | None = None,
@@ -353,7 +353,7 @@ class ImageLike:
         )
         return self._get_pipe(data_pipe=data_pipe, mode=mode)
 
-    def set_data(
+    def set_array(
         self,
         patch: ArrayLike,
         x: int | slice | None = None,
@@ -420,12 +420,12 @@ class ImageLike:
             partial_zoom = partial(zoom, zoom=zoom_factors, order=order)
             out_image = da.map_blocks(
                 partial_zoom,
-                source_image.dask_array,
+                source_image.on_disk_dask_array,
                 # dtype = source_image.dask_array,
-                chunks=target_image.array.chunks,
+                chunks=target_image.on_disk_array.chunks,
             )
-            out_image = out_image.astype(target_image.array.dtype)
+            out_image = out_image.astype(target_image.on_disk_array.dtype)
             # da.to_zarr(out_image, target_image.array, overwrite=True)
-            target_image.array[...] = out_image.compute()
+            target_image.on_disk_array[...] = out_image.compute()
             # compute the transformation
             processed_paths.append(target_image)

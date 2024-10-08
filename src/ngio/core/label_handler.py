@@ -61,7 +61,7 @@ class Label(ImageLike):
         """Return the metadata of the image."""
         return super().metadata
 
-    def get_data_from_roi(
+    def array_from_roi(
         self,
         roi: WorldCooROI,
         t: int | slice | None = None,
@@ -76,7 +76,7 @@ class Label(ImageLike):
             mode (str): The mode to return the data.
             preserve_dimensions (bool): Whether to preserve the dimensions of the data.
         """
-        return super().get_data_from_roi(
+        return super().array_from_roi(
             roi=roi, t=t, c=None, mode=mode, preserve_dimensions=preserve_dimensions
         )
 
@@ -99,7 +99,7 @@ class Label(ImageLike):
             patch=patch, roi=roi, t=t, c=None, preserve_dimensions=preserve_dimensions
         )
 
-    def get_data(
+    def array(
         self,
         x: int | slice | None = None,
         y: int | slice | None = None,
@@ -118,7 +118,7 @@ class Label(ImageLike):
             mode (str): The mode to return the data.
             preserve_dimensions (bool): Whether to preserve the dimensions of the data.
         """
-        return super().get_data(
+        return super().array(
             x=x,
             y=y,
             z=z,
@@ -128,7 +128,7 @@ class Label(ImageLike):
             preserve_dimensions=preserve_dimensions,
         )
 
-    def set_data(
+    def set_array(
         self,
         patch: ArrayLike,
         x: int | slice | None = None,
@@ -147,7 +147,7 @@ class Label(ImageLike):
             t (int | slice | None): The time index or slice.
             preserve_dimensions (bool): Whether to preserve the dimensions of the data.
         """
-        return super().set_data(
+        return super().set_array(
             patch=patch,
             x=x,
             y=y,
@@ -156,6 +156,35 @@ class Label(ImageLike):
             c=None,
             preserve_dimensions=preserve_dimensions,
         )
+
+    def mask(
+        self,
+        roi: WorldCooROI,
+        t: int | slice | None = None,
+        mode: Literal["numpy"] = "numpy",
+        preserve_dimensions: bool = False,
+    ) -> ArrayLike:
+        """Return the image data from a region of interest (ROI).
+
+        Args:
+            roi (WorldCooROI): The region of interest.
+            t (int | slice | None): The time index or slice.
+            c (int | slice | None): The channel index or slice.
+            mask_mode (str): Masking mode
+            mode (str): The mode to return the data.
+            preserve_dimensions (bool): Whether to preserve the dimensions of the data.
+        """
+        mask = self.array_from_roi(
+            roi=roi, t=t, mode=mode, preserve_dimensions=preserve_dimensions
+        )
+
+        label = roi.infos.get("label", None)
+        if label is None:
+            raise ValueError(
+                "Label not found in the ROI. Please provide a valid ROI Object."
+            )
+        mask = mask == label
+        return mask
 
     def consolidate(self) -> None:
         """Consolidate the label group.
@@ -250,7 +279,7 @@ class LabelGroup:
             label_0 = self.get(list_of_labels[0])
             metadata = label_0.metadata
             on_disk_shape = label_0.on_disk_shape
-            chunks = label_0.array.chunks
+            chunks = label_0.on_disk_array.chunks
             dataset = label_0.dataset
         else:
             label_0 = self._image_ref
@@ -262,12 +291,12 @@ class LabelGroup:
                     + label_0.on_disk_shape[channel_index + 1 :]
                 )
                 chunks = (
-                    label_0.array.chunks[:channel_index]
-                    + label_0.array.chunks[channel_index + 1 :]
+                    label_0.on_disk_array.chunks[:channel_index]
+                    + label_0.on_disk_array.chunks[channel_index + 1 :]
                 )
             else:
                 on_disk_shape = label_0.on_disk_shape
-                chunks = label_0.array.chunks
+                chunks = label_0.on_disk_array.chunks
 
             metadata = metadata.remove_axis("c")
             dataset = metadata.get_highest_resolution_dataset()
@@ -276,7 +305,7 @@ class LabelGroup:
             "store": new_label_group,
             "shape": on_disk_shape,
             "chunks": chunks,
-            "dtype": label_0.array.dtype,
+            "dtype": label_0.on_disk_array.dtype,
             "on_disk_axis": dataset.on_disk_axes_names,
             "pixel_sizes": dataset.pixel_size,
             "xy_scaling_factor": metadata.xy_scaling_factor,

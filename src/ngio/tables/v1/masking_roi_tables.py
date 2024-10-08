@@ -134,9 +134,12 @@ class MaskingROITableV1:
     def get_roi(self, label: int) -> WorldCooROI:
         """Get an ROI from the table."""
         if label not in self.list_labels:
-            raise ValueError(f"Field index {label} not found in the table.")
+            raise ValueError(f"Label {label} not found in the table.")
 
         table_df = self.table.loc[label]
+
+        region_path = self.meta.region["path"]
+        label_name = region_path.split("/")[-1]
 
         roi = WorldCooROI(
             x=table_df.loc["x_micrometer"],
@@ -146,7 +149,11 @@ class MaskingROITableV1:
             y_length=table_df.loc["len_y_micrometer"],
             z_length=table_df.loc["len_z_micrometer"],
             unit="micrometer",
-            infos={"label": label, "label_image": self.meta.region["path"]},
+            infos={
+                "label": label,
+                "label_image": region_path,
+                "label_name": label_name,
+            },
         )
         return roi
 
