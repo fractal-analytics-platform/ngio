@@ -33,7 +33,7 @@ classifiers = [
 ]
 # add your package dependencies here
 dependencies = [
-    "numpy<2",
+    "numpy",
     "anndata", 
     "pydantic",
     "pandas>=1.2.0",
