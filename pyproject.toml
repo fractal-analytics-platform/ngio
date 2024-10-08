@@ -36,7 +36,7 @@ dependencies = [
     "numpy<2",
     "anndata", 
     "pydantic",
-    "pandas>=1.2.0,<2",
+    "pandas>=1.2.0",
     "requests",
     "aiohttp", 
     "dask[array]",
