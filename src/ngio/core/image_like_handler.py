@@ -282,7 +282,7 @@ class ImageLike:
         )
         return DataTransformPipe(slicer=slicer)
 
-    def array_from_roi(
+    def get_array_from_roi(
         self,
         roi: WorldCooROI,
         t: int | slice | None = None,
@@ -327,7 +327,7 @@ class ImageLike:
         )
         self._set_pipe(data_pipe=data_pipe, patch=patch)
 
-    def array(
+    def get_array(
         self,
         x: int | slice | None = None,
         y: int | slice | None = None,

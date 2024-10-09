@@ -118,7 +118,7 @@ class TableGroup:
                     list_of_typed_tables.append(table_name)
             return list_of_typed_tables
 
-    def get(self, name: str) -> Table:
+    def get_table(self, name: str) -> Table:
         """Get a label from the group."""
         list_of_tables = self._get_list_of_tables()
         if name not in list_of_tables:

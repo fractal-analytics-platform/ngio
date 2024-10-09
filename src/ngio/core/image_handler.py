@@ -75,7 +75,7 @@ class Image(ImageLike):
         """Return the index of the channel."""
         return self.metadata.get_channel_idx(label=label, wavelength_id=wavelength_id)
 
-    def masked_array(
+    def get_array_masked(
         self,
         roi: WorldCooROI,
         t: int | slice | None = None,

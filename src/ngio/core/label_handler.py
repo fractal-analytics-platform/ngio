@@ -61,7 +61,7 @@ class Label(ImageLike):
         """Return the metadata of the image."""
         return super().metadata
 
-    def array_from_roi(
+    def get_array_from_roi(
         self,
         roi: WorldCooROI,
         t: int | slice | None = None,
@@ -76,11 +76,11 @@ class Label(ImageLike):
             mode (str): The mode to return the data.
             preserve_dimensions (bool): Whether to preserve the dimensions of the data.
         """
-        return super().array_from_roi(
+        return super().get_array_from_roi(
             roi=roi, t=t, c=None, mode=mode, preserve_dimensions=preserve_dimensions
         )
 
-    def set_data_from_roi(
+    def set_array_from_roi(
         self,
         patch: ArrayLike,
         roi: WorldCooROI,
@@ -95,11 +95,11 @@ class Label(ImageLike):
             t (int | slice | None): The time index or slice.
             preserve_dimensions (bool): Whether to preserve the dimensions of the data.
         """
-        return super().set_data_from_roi(
+        return super().set_array_from_roi(
             patch=patch, roi=roi, t=t, c=None, preserve_dimensions=preserve_dimensions
         )
 
-    def array(
+    def get_array(
         self,
         x: int | slice | None = None,
         y: int | slice | None = None,
@@ -118,7 +118,7 @@ class Label(ImageLike):
             mode (str): The mode to return the data.
             preserve_dimensions (bool): Whether to preserve the dimensions of the data.
         """
-        return super().array(
+        return super().get_array(
             x=x,
             y=y,
             z=z,
@@ -174,7 +174,7 @@ class Label(ImageLike):
             mode (str): The mode to return the data.
             preserve_dimensions (bool): Whether to preserve the dimensions of the data.
         """
-        mask = self.array_from_roi(
+        mask = self.get_array_from_roi(
             roi=roi, t=t, mode=mode, preserve_dimensions=preserve_dimensions
         )
 
@@ -219,7 +219,17 @@ class LabelGroup:
         """List all labels in the group."""
         return self._group.attrs.get("labels", [])
 
-    def get(
+    def num_levels(self, name: str) -> int:
+        """Get the number of levels in the labels."""
+        label = self.get_label(name)
+        return label.metadata.num_levels
+
+    def levels_paths(self, name: str) -> list[str]:
+        """Get the paths of the levels in the labels."""
+        label = self.get_label(name)
+        return label.metadata.levels_paths
+
+    def get_label(
         self,
         name: str,
         path: str | None = None,
@@ -276,7 +286,7 @@ class LabelGroup:
         new_label_group = self._group.create_group(name, overwrite=overwrite)
 
         if self._image_ref is None:
-            label_0 = self.get(list_of_labels[0])
+            label_0 = self.get_label(list_of_labels[0])
             metadata = label_0.metadata
             on_disk_shape = label_0.on_disk_shape
             chunks = label_0.on_disk_array.chunks
@@ -326,4 +336,4 @@ class LabelGroup:
 
         if name not in self.list():
             self._group.attrs["labels"] = [*list_of_labels, name]
-        return self.get(name)
+        return self.get_label(name)
