@@ -28,8 +28,8 @@ The `v2` extra installs the latest version of `zarr-python` from the `v2` branch
 
 ## Example Usage
 
-Currently, the library is not yet stable. However, you can see some example usage in our [demo notebooks](https://fractal-analytics-platform.github.io/ngio/notebooks/).
+Currently, the library is not yet stable. However, you can see some example usage in our demo notebooks:
 
 - [Basic Usage](https://fractal-analytics-platform.github.io/ngio/notebooks/basic_usage/)
-- [Image/Label/Tables](https://fractal-analytics-platform.github.io/ngio/notebooks/basic_usage/ngff-image/)
-- [Processing](https://fractal-analytics-platform.github.io/ngio/notebooks/basic_usage/ngff-image/)
+- [Image/Label/Tables](https://fractal-analytics-platform.github.io/ngio/notebooks/image/)
+- [Processing](https://fractal-analytics-platform.github.io/ngio/notebooks/processing/)
