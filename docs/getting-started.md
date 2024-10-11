@@ -8,14 +8,13 @@
 
 ## Installation
 
-Currently, `ngio` is not available on PyPI. You can install it from the source code.
+The library can be installed from PyPI using pip:
 
 ```bash
-pip install "ngio[v2]"
+pip install "ngio[core]"
 ```
 
-The `v2` extra installs the latest version of `zarr-python` from the `v2` branch.
-`ngio` is currently not completely compatible with the `v3` release of `zarr-python`.
+The `core` extra installs the the `zarr-python` dependency. As of now, `zarr-python` is required to be installed separately, due to the transition to the new `zarr-v3` library.
 
 ## `ngio` API Overview
 
