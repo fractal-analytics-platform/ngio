@@ -635,11 +635,10 @@
 <p>The documentation is still under development. It is not yet complete and may contain errors and inaccuracies.</p>
 </div>
 <h2 id="installation">Installation</h2>
-<p>Currently, <code>ngio</code> is not available on PyPI. You can install it from the source code.</p>
-<div class="highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;ngio[v2]&quot;</span>
+<p>The library can be installed from PyPI using pip:</p>
+<div class="highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;ngio[core]&quot;</span>
 </code></pre></div>
-<p>The <code>v2</code> extra installs the latest version of <code>zarr-python</code> from the <code>v2</code> branch.
-<code>ngio</code> is currently not completely compatible with the <code>v3</code> release of <code>zarr-python</code>.</p>
+<p>The <code>core</code> extra installs the the <code>zarr-python</code> dependency. As of now, <code>zarr-python</code> is required to be installed separately, due to the transition to the new <code>zarr-v3</code> library.</p>
 <h2 id="ngio-api-overview"><code>ngio</code> API Overview</h2>
 <p><code>ngio</code> implements an abstract object base API for handling OME-Zarr files. The three main objects are <code>NgffImage</code>, <code>Image</code> (<code>Label</code>), and <code>ROITables</code>.</p>
 <ul>

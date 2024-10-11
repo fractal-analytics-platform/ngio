@@ -1088,6 +1088,10 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <h1 id="basic-usage">Basic Usage<a class="anchor-link" href="#basic-usage">¶</a></h1><p>In this notebook we will show how to use the 'ngffImage' class to manage a OME-NGFF image.</p>
 <p>For this example we will use a small example image that can be downloaded from the following link: <a href="https://zenodo.org/records/13305156">example ome-zarr</a></p>
+<p>You can download the example image (on Linux and Mac os) by running the following command:</p>
+<div class="highlight"><pre><span></span>bash<span class="w"> </span>setup_data.sh
+</pre></div>
+<p>from the root of the repository.</p>
 <h2 id="ngffimage">NgffImage<a class="anchor-link" href="#ngffimage">¶</a></h2><p>The <code>NgffImage</code> provides a high-level interface to read, write and manipulate NGFF images.
 A <code>NgffImage</code> can be created from a storelike object (e.g. a path to a directory or a zarr store) or from a <code>zarr.Group</code> object.</p>
 </div>
@@ -1362,14 +1366,14 @@ label_nuclei.pixel_size=PixelSize(x=0.1625, y=0.1625, z=1.0, unit=micrometer)
 </clipboard-copy>
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">"List of Tables: "</span><span class="p">,</span> <span class="n">ngff_image</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">list</span><span class="p">())</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">" - Feature tables: "</span><span class="p">,</span> <span class="n">ngff_image</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">list</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="s1">'feature_table'</span><span class="p">))</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">" - Roi tables: "</span><span class="p">,</span> <span class="n">ngff_image</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">list</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="s1">'roi_table'</span><span class="p">))</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">" - Masking Roi tables: "</span><span class="p">,</span> <span class="n">ngff_image</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">list</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="s1">'masking_roi_table'</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">" - Feature tables: "</span><span class="p">,</span> <span class="n">ngff_image</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">list</span><span class="p">(</span><span class="n">table_type</span><span class="o">=</span><span class="s1">'feature_table'</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">" - Roi tables: "</span><span class="p">,</span> <span class="n">ngff_image</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">list</span><span class="p">(</span><span class="n">table_type</span><span class="o">=</span><span class="s1">'roi_table'</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">" - Masking Roi tables: "</span><span class="p">,</span> <span class="n">ngff_image</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">list</span><span class="p">(</span><span class="n">table_type</span><span class="o">=</span><span class="s1">'masking_roi_table'</span><span class="p">))</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-5">print("List of Tables: ", ngff_image.table.list())
-print(" - Feature tables: ", ngff_image.table.list(type='feature_table'))
-print(" - Roi tables: ", ngff_image.table.list(type='roi_table'))
-print(" - Masking Roi tables: ", ngff_image.table.list(type='masking_roi_table'))</div>
+print(" - Feature tables: ", ngff_image.table.list(table_type='feature_table'))
+print(" - Roi tables: ", ngff_image.table.list(table_type='roi_table'))
+print(" - Masking Roi tables: ", ngff_image.table.list(table_type='masking_roi_table'))</div>
 </div>
 </div>
 </div>
@@ -1615,7 +1619,7 @@ feature_table.table</div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Loading a roi table</span>
 <span class="n">roi_table</span> <span class="o">=</span> <span class="n">ngff_image</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">get_table</span><span class="p">(</span><span class="s2">"FOV_ROI_table"</span><span class="p">)</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">roi_table</span><span class="o">.</span><span class="n">list_field_indexes</span><span class="si">=}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">roi_table</span><span class="o">.</span><span class="n">field_indexes</span><span class="si">=}</span><span class="s2">"</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">roi_table</span><span class="o">.</span><span class="n">get_roi</span><span class="p">(</span><span class="s1">'FOV_1'</span><span class="p">)</span><span class="si">=}</span><span class="s2">"</span><span class="p">)</span>
 
 <span class="n">roi_table</span><span class="o">.</span><span class="n">table</span>
@@ -1623,7 +1627,7 @@ feature_table.table</div>
 <div class="clipboard-copy-txt" id="cell-7"># Loading a roi table
 roi_table = ngff_image.table.get_table("FOV_ROI_table")
 
-print(f"{roi_table.list_field_indexes=}")
+print(f"{roi_table.field_indexes=}")
 print(f"{roi_table.get_roi('FOV_1')=}")
 
 roi_table.table</div>
@@ -1638,7 +1642,7 @@ roi_table.table</div>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>roi_table.list_field_indexes=['FOV_1', 'FOV_2', 'FOV_3', 'FOV_4']
+<pre>roi_table.field_indexes=['FOV_1', 'FOV_2', 'FOV_3', 'FOV_4']
 roi_table.get_roi('FOV_1')=WorldCooROI(x_length=416.0, y_length=351.0, z_length=1.0, x=0.0, y=0.0, z=0.0)
 </pre>
 </div>
@@ -1797,60 +1801,6 @@ print(f"{new_ngff_image.num_levels=}")</div>
 new_ngff_image.levels_paths=['0', '1', '2', '3', '4']
 new_ngff_image.num_levels=5
 </pre>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
-<div class="CodeMirror cm-s-jupyter">
-<div class="zeroclipboard-container">
-<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-9">
-<div>
-<span class="notice" hidden="">Copied!</span>
-<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
-<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
-<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
-</svg>
-</div>
-</clipboard-copy>
-</div>
-<div class="highlight-ipynb hl-python"><pre><span></span>
-</pre></div>
-<div class="clipboard-copy-txt" id="cell-9"></div>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
-<div class="CodeMirror cm-s-jupyter">
-<div class="zeroclipboard-container">
-<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-10">
-<div>
-<span class="notice" hidden="">Copied!</span>
-<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
-<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
-<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
-</svg>
-</div>
-</clipboard-copy>
-</div>
-<div class="highlight-ipynb hl-python"><pre><span></span>
-</pre></div>
-<div class="clipboard-copy-txt" id="cell-10"></div>
 </div>
 </div>
 </div>
