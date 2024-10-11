@@ -183,32 +183,32 @@ class ImageLike:
     @property
     def is_time_series(self) -> bool:
         """Return whether the image is a time series."""
-        return self.dimensions.is_time_series()
+        return self.dimensions.is_time_series
 
     @property
     def is_2d(self) -> bool:
         """Return whether the image is 2D."""
-        return self.dimensions.is_2d()
+        return self.dimensions.is_2d
 
     @property
     def is_2d_time_series(self) -> bool:
         """Return whether the image is a 2D time series."""
-        return self.dimensions.is_2d_time_series()
+        return self.dimensions.is_2d_time_series
 
     @property
     def is_3d(self) -> bool:
         """Return whether the image is 3D."""
-        return self.dimensions.is_3d()
+        return self.dimensions.is_3d
 
     @property
     def is_3d_time_series(self) -> bool:
         """Return whether the image is a 3D time series."""
-        return self.dimensions.is_3d_time_series()
+        return self.dimensions.is_3d_time_series
 
     @property
     def is_multi_channels(self) -> bool:
         """Return whether the image has multiple channels."""
-        return self.dimensions.is_multi_channels()
+        return self.dimensions.is_multi_channels
 
     # Methods to get the image data as is on disk
     @property
