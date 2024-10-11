@@ -101,7 +101,7 @@ class ImageLike:
 
         self._array = self._group[self.dataset.path]
         self._diminesions = Dimensions(
-            on_disk_array=self._array.shape,
+            on_disk_shape=self._array.shape,
             axes_names=self._dataset.axes_names,
             axes_order=self._dataset.axes_order,
         )
