@@ -29,6 +29,8 @@ class TestTableGroup:
             "roi_table",
             "masking_roi_table",
         ]
-        assert ngff_image.table.list(type="roi_table") == ["roi_table"]
-        assert ngff_image.table.list(type="feature_table") == ["feat_table"]
-        assert ngff_image.table.list(type="masking_roi_table") == ["masking_roi_table"]
+        assert ngff_image.table.list(table_type="roi_table") == ["roi_table"]
+        assert ngff_image.table.list(table_type="feature_table") == ["feat_table"]
+        assert ngff_image.table.list(table_type="masking_roi_table") == [
+            "masking_roi_table"
+        ]

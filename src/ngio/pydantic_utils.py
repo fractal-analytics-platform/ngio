@@ -1,6 +1,7 @@
 """Utility functions for Pydantic models."""
 
 import os
+from collections import namedtuple
 from typing import TypeVar
 
 from pydantic import BaseModel, Field, model_serializer, model_validator
@@ -44,3 +45,8 @@ def unique_items_validator(values: list[T]) -> list[T]:
         if value in values[ind:]:
             raise ValueError(f"Non-unique values in {values}.")
     return values
+
+
+def named_tuple_from_pydantic_model(model: BaseModel) -> namedtuple:
+    """Create a namedtuple from a Pydantic model."""
+    return namedtuple(name=model.__name__, field_names=model.model_fields.keys())

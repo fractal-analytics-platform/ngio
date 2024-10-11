@@ -22,12 +22,14 @@ IMPLEMENTED_MASKING_ROI_TABLES = {"1": MaskingROITableV1}
 
 Table = ROITable | FeatureTable | MaskingROITable
 
+TableType = Literal["roi_table", "feature_table", "masking_roi_table"]
+
 
 class CommonMeta(BaseWithExtraFields):
     """Common metadata for all tables."""
 
     type: Literal["roi_table", "feature_table", "masking_roi_table"]
-    fractal_table_version: str
+    fractal_table_version: str = "1"
 
 
 def _find_table_impl(
@@ -54,11 +56,25 @@ def _find_table_impl(
         raise ValueError(f"Table type {table_type} not recognized.")
 
 
-def _get_table_impl(group: zarr.Group) -> Table:
-    common_meta = CommonMeta(**group.attrs)
-    return _find_table_impl(
-        table_type=common_meta.type, version=common_meta.fractal_table_version
-    )(group=group)
+def _get_table_impl(
+    group: zarr.Group,
+    validate_metadata: bool = True,
+    table_type: TableType | None = None,
+    validate_table: bool = True,
+) -> Table:
+    if validate_metadata:
+        common_meta = CommonMeta(**group.attrs)
+    else:
+        common_meta = CommonMeta.model_construct(**group.attrs)
+        if table_type is None:
+            raise ValueError(
+                "Table type must be provided if metadata is not validated."
+            )
+        version = common_meta.fractal_table_version
+
+    return _find_table_impl(table_type=table_type, version=version)(
+        group=group, validate_metadata=validate_metadata, validate_table=validate_table
+    )
 
 
 class TableGroup:
@@ -90,41 +106,62 @@ class TableGroup:
 
     def list(
         self,
-        type: Literal["roi_table", "feature_table", "masking_roi_table"] | None = None,
+        table_type: TableType | None = None,
     ) -> list[str]:
         """List all labels in the group.
 
         Args:
-            type (str): The type of table to list.
+            table_type (str): The type of table to list.
                 If None, all tables are listed.
                 Allowed values are: 'roi_table', 'feature_table', 'masking_roi_table'.
         """
         list_of_tables = self._get_list_of_tables()
         self._validate_list_of_tables(list_of_tables=list_of_tables)
-        if type is None:
+        if table_type is None:
             return list_of_tables
 
         else:
-            if type not in ["roi_table", "feature_table", "masking_roi_table"]:
+            if table_type not in ["roi_table", "feature_table", "masking_roi_table"]:
                 raise ValueError(
-                    f"Table type {type} not recognized. "
+                    f"Table type {table_type} not recognized. "
                     " Allowed values are: 'roi', 'feature', 'masking_roi'."
                 )
             list_of_typed_tables = []
             for table_name in list_of_tables:
                 table = self._group[table_name]
                 common_meta = CommonMeta(**table.attrs)
-                if common_meta.type == type:
+                if common_meta.type == table_type:
                     list_of_typed_tables.append(table_name)
             return list_of_typed_tables
 
-    def get_table(self, name: str) -> Table:
-        """Get a label from the group."""
+    def get_table(
+        self,
+        name: str,
+        table_type: TableType | None = None,
+        validate_metadata: bool = True,
+        validate_table: bool = True,
+    ) -> Table:
+        """Get a label from the group.
+
+        Args:
+            name (str): The name of the table to get.
+            table_type (str): The type of table to get.
+                If None, all the table type will be inferred from the metadata.
+                Allowed values are: 'roi_table', 'feature_table', 'masking_roi_table'.
+            validate_metadata (bool): Whether to validate the metadata of the table.
+            validate_table (bool): Whether to validate the table.
+
+        """
         list_of_tables = self._get_list_of_tables()
         if name not in list_of_tables:
             raise ValueError(f"Table {name} not found in the group.")
 
-        return _get_table_impl(group=self._group[name])
+        return _get_table_impl(
+            group=self._group[name],
+            validate_metadata=validate_metadata,
+            table_type=table_type,
+            validate_table=validate_table,
+        )
 
     def new(
         self,

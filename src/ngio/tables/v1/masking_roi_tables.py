@@ -12,7 +12,7 @@ from pydantic import BaseModel
 
 from ngio.core.label_handler import Label
 from ngio.core.roi import WorldCooROI
-from ngio.tables.v1.generic_table import REQUIRED_COLUMNS, BaseTable, write_table_ad
+from ngio.tables.v1._generic_table import REQUIRED_COLUMNS, BaseTable, write_table_ad
 
 
 class MaskingROITableV1Meta(BaseModel):
@@ -41,16 +41,33 @@ class MaskingROITableV1:
     https://fractal-analytics-platform.github.io/fractal-tasks-core/tables/
     """
 
-    def __init__(self, group: zarr.Group):
+    def __init__(
+        self,
+        group: zarr.Group,
+        validate_metadata: bool = True,
+        validate_table: bool = True,
+    ):
         """Initialize the class from an existing group.
 
         Args:
             group (zarr.Group): The group containing the
                 ROI table.
+            validate_metadata (bool): If True, the metadata is validated.
+            validate_table (bool): If True, the table is validated.
         """
-        self._meta = MaskingROITableV1Meta(**group.attrs)
+        if validate_metadata:
+            self._meta = MaskingROITableV1Meta(**group.attrs)
+        else:
+            self._meta = MaskingROITableV1Meta.model_construct(**group.attrs)
+
+        # Validate the table is not implemented for the Masking ROI table
+        validators = None
+        validators = validators if validate_table else None
         self._table_handler = BaseTable(
-            group=group, index_key=self._meta.instance_key, index_type="int"
+            group=group,
+            index_key=self._meta.instance_key,
+            index_type="int",
+            validators=validators,
         )
 
     @classmethod
