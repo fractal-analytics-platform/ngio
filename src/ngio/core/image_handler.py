@@ -94,6 +94,10 @@ class Image(ImageLike):
             mode (str): The mode to return the data.
             preserve_dimensions (bool): Whether to preserve the dimensions of the data.
         """
+        label_name = roi.infos.get("label_name", None)
+        if label_name is None:
+            raise ValueError("The label name must be provided in the ROI infos.")
+
         data_pipe = self._build_roi_pipe(
             roi=roi, t=t, c=c, preserve_dimensions=preserve_dimensions
         )
@@ -101,9 +105,7 @@ class Image(ImageLike):
         if mask_mode == "bbox":
             return self._get_pipe(data_pipe=data_pipe, mode=mode)
 
-        label = self._label_group.get(
-            roi.infos["label_name"], pixel_size=self.pixel_size
-        )
+        label = self._label_group.get_label(label_name, pixel_size=self.pixel_size)
 
         mask = label.mask(
             roi,
