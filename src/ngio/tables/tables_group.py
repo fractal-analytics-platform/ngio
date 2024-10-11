@@ -61,19 +61,24 @@ def _get_table_impl(
     validate_metadata: bool = True,
     table_type: TableType | None = None,
     validate_table: bool = True,
+    index_key: str | None = None,
 ) -> Table:
     if validate_metadata:
         common_meta = CommonMeta(**group.attrs)
+        table_type = common_meta.type
     else:
         common_meta = CommonMeta.model_construct(**group.attrs)
         if table_type is None:
             raise ValueError(
                 "Table type must be provided if metadata is not validated."
             )
-        version = common_meta.fractal_table_version
 
+    version = common_meta.fractal_table_version
     return _find_table_impl(table_type=table_type, version=version)(
-        group=group, validate_metadata=validate_metadata, validate_table=validate_table
+        group=group,
+        validate_metadata=validate_metadata,
+        validate_table=validate_table,
+        index_key=index_key,
     )
 
 
@@ -140,6 +145,7 @@ class TableGroup:
         table_type: TableType | None = None,
         validate_metadata: bool = True,
         validate_table: bool = True,
+        index_key: str | None = None,
     ) -> Table:
         """Get a label from the group.
 
@@ -150,7 +156,9 @@ class TableGroup:
                 Allowed values are: 'roi_table', 'feature_table', 'masking_roi_table'.
             validate_metadata (bool): Whether to validate the metadata of the table.
             validate_table (bool): Whether to validate the table.
-
+            index_key (str): The column name to use as the index of the DataFrame.
+                This is usually defined in the metadata of the table, if given here,
+                it will overwrite the metadata.
         """
         list_of_tables = self._get_list_of_tables()
         if name not in list_of_tables:
@@ -161,6 +169,7 @@ class TableGroup:
             validate_metadata=validate_metadata,
             table_type=table_type,
             validate_table=validate_table,
+            index_key=index_key,
         )
 
     def new(

@@ -62,6 +62,7 @@ class ROITableV1:
         group: zarr.Group,
         validate_metadata: bool = True,
         validate_table: bool = True,
+        index_key: str | None = None,
     ):
         """Initialize the class from an existing group.
 
@@ -70,6 +71,7 @@ class ROITableV1:
                 ROI table.
             validate_metadata (bool): If True, the metadata is validated.
             validate_table (bool): If True, the table is validated.
+            index_key (str): The column name to use as the index of the DataFrame.
         """
         if validate_metadata:
             self._meta = ROITableV1Meta(**group.attrs)
@@ -80,8 +82,10 @@ class ROITableV1:
         validators = None
         validators = validators if validate_table else None
 
+        index_key = "FieldIndex" if index_key is None else index_key
+
         self._table_handler = BaseTable(
-            group=group, index_key="FieldIndex", index_type="str", validators=validators
+            group=group, index_key=index_key, index_type="str", validators=validators
         )
 
     @classmethod

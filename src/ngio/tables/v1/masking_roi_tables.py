@@ -46,6 +46,7 @@ class MaskingROITableV1:
         group: zarr.Group,
         validate_metadata: bool = True,
         validate_table: bool = True,
+        index_key: str | None = None,
     ):
         """Initialize the class from an existing group.
 
@@ -54,6 +55,7 @@ class MaskingROITableV1:
                 ROI table.
             validate_metadata (bool): If True, the metadata is validated.
             validate_table (bool): If True, the table is validated.
+            index_key (str): The column name to use as the index of the DataFrame.
         """
         if validate_metadata:
             self._meta = MaskingROITableV1Meta(**group.attrs)
@@ -63,9 +65,11 @@ class MaskingROITableV1:
         # Validate the table is not implemented for the Masking ROI table
         validators = None
         validators = validators if validate_table else None
+
+        index_key = index_key if index_key is not None else self._meta.instance_key
         self._table_handler = BaseTable(
             group=group,
-            index_key=self._meta.instance_key,
+            index_key=index_key,
             index_type="int",
             validators=validators,
         )
