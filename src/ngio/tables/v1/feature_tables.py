@@ -13,17 +13,11 @@ from pydantic import BaseModel
 from ngio.tables.v1.generic_table import BaseTable, write_table_ad
 
 
-class FeatureTableFormattingError(Exception):
-    """Error raised when an ROI table is not formatted correctly."""
-
-    pass
-
-
 class FeatureTableV1Meta(BaseModel):
     """Metadata for the ROI table."""
 
-    region: dict[Literal["path"], str]
-    instance_key: str = "label"
+    region: dict[Literal["path"], str] | None = None
+    instance_key: str | None = "label"
     fractal_table_version: Literal["1"] = "1"
     type: Literal["feature_table"] = "feature_table"
 

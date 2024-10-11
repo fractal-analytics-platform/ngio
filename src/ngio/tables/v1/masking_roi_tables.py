@@ -158,7 +158,7 @@ class MaskingROITableV1:
         return roi
 
     @property
-    def list_rois(self) -> list[WorldCooROI]:
+    def rois(self) -> list[WorldCooROI]:
         """List all ROIs in the table."""
         return [self.get_roi(label) for label in self.list_labels]
 

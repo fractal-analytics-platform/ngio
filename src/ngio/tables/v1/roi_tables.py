@@ -129,7 +129,7 @@ class ROITableV1:
         self._table_handler.table = table
 
     @property
-    def list_field_indexes(self) -> list[str]:
+    def field_indexes(self) -> list[str]:
         """Return a list of all field indexes in the table."""
         return self.table.index.tolist()
 
@@ -171,7 +171,7 @@ class ROITableV1:
 
     def get_roi(self, field_index) -> WorldCooROI:
         """Get an ROI from the table."""
-        if field_index not in self.list_field_indexes:
+        if field_index not in self.field_indexes:
             raise ValueError(f"Field index {field_index} is not in the table")
 
         table_df = self.table.loc[field_index]
@@ -188,9 +188,9 @@ class ROITableV1:
         return roi
 
     @property
-    def list_rois(self) -> list[WorldCooROI]:
+    def rois(self) -> list[WorldCooROI]:
         """List all ROIs in the table."""
-        return [self.get_roi(field_index) for field_index in self.list_field_indexes]
+        return [self.get_roi(field_index) for field_index in self.field_indexes]
 
     def write(self) -> None:
         """Write the crrent state of the table to the Zarr file."""

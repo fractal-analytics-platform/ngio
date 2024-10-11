@@ -120,7 +120,7 @@ class BaseTable:
         self._table = table
 
     @property
-    def list_index(self) -> list[int | str]:
+    def index(self) -> list[int | str]:
         """Return a list of all the labels in the table."""
         return self.table.index.tolist()
 
