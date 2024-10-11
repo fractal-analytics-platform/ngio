@@ -101,7 +101,7 @@ class ImageLike:
 
         self._array = self._group[self.dataset.path]
         self._diminesions = Dimensions(
-            array=self._array,
+            on_disk_array=self._array.shape,
             axes_names=self._dataset.axes_names,
             axes_order=self._dataset.axes_order,
         )
@@ -169,7 +169,48 @@ class ImageLike:
 
         return self.dataset.pixel_size
 
-    # Method to get the data of the image
+    # Utility methods to get the image dimensionality
+    @property
+    def dimensions(self) -> Dimensions:
+        """Return an object representation the dimensions of the image."""
+        return self._diminesions
+
+    @property
+    def shape(self) -> tuple[int, ...]:
+        """Return the shape of the image in canonical order (TCZYX)."""
+        return self.dimensions.shape
+
+    @property
+    def is_time_series(self) -> bool:
+        """Return whether the image is a time series."""
+        return self.dimensions.is_time_series()
+
+    @property
+    def is_2d(self) -> bool:
+        """Return whether the image is 2D."""
+        return self.dimensions.is_2d()
+
+    @property
+    def is_2d_time_series(self) -> bool:
+        """Return whether the image is a 2D time series."""
+        return self.dimensions.is_2d_time_series()
+
+    @property
+    def is_3d(self) -> bool:
+        """Return whether the image is 3D."""
+        return self.dimensions.is_3d()
+
+    @property
+    def is_3d_time_series(self) -> bool:
+        """Return whether the image is a 3D time series."""
+        return self.dimensions.is_3d_time_series()
+
+    @property
+    def is_multi_channels(self) -> bool:
+        """Return whether the image has multiple channels."""
+        return self.dimensions.is_multi_channels()
+
+    # Methods to get the image data as is on disk
     @property
     def on_disk_array(self) -> zarr.Array:
         """Return the image data as a Zarr array."""
@@ -181,20 +222,11 @@ class ImageLike:
         return da.from_zarr(self.on_disk_array)
 
     @property
-    def dimensions(self) -> Dimensions:
-        """Return the dimensions of the image."""
-        return self._diminesions
-
-    @property
-    def shape(self) -> tuple[int, ...]:
-        """Return the shape of the image."""
-        return self.dimensions.shape
-
-    @property
     def on_disk_shape(self) -> tuple[int, ...]:
         """Return the shape of the image."""
         return self.dimensions.on_disk_shape
 
+    # Methods to get the image data in the canonical order
     def init_lock(self, lock_id: str | None = None) -> None:
         """Set the lock for the Dask array."""
         # Unique zarr array identifier

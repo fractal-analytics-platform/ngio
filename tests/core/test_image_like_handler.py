@@ -17,9 +17,9 @@ class TestImageLikeHandler:
         shape = image_handler.dimensions.shape
         assert image_handler.shape == shape
         assert image_handler.dimensions.z == 10
-        assert image_handler.dimensions.is_3D()
+        assert image_handler.dimensions.is_3d()
         assert not image_handler.dimensions.is_time_series()
-        assert image_handler.dimensions.has_multiple_channels()
+        assert image_handler.dimensions.is_multi_channels()
 
         assert image_handler.on_disk_array.shape == shape
         assert image_handler.on_disk_dask_array.shape == shape

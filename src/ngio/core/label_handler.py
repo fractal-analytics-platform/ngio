@@ -202,6 +202,7 @@ class LabelGroup:
         self,
         group: StoreLike | zarr.Group,
         image_ref: Image | None = None,
+        cache: bool = True,
     ) -> None:
         """Initialize the LabelGroupHandler."""
         if not isinstance(group, zarr.Group):
@@ -214,6 +215,7 @@ class LabelGroup:
             self._group: zarr.Group = group["labels"]
 
         self._image_ref = image_ref
+        self._metadata_cache = cache
 
     def list(self) -> list[str]:
         """List all labels in the group."""
@@ -257,6 +259,7 @@ class LabelGroup:
             path=path,
             pixel_size=pixel_size,
             highest_resolution=highest_resolution,
+            cache=self._metadata_cache,
         )
 
     def derive(
