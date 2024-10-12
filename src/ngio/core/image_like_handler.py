@@ -9,12 +9,12 @@ import dask.array as da
 import numpy as np
 import zarr
 from dask.delayed import Delayed
-from dask.distributed import Lock
 from scipy.ndimage import zoom
 
 from ngio._common_types import ArrayLike
 from ngio.core.dimensions import Dimensions
 from ngio.core.roi import WorldCooROI
+from ngio.core.utils import Lock
 from ngio.io import StoreOrGroup, open_group_wrapper
 from ngio.ngff_meta import (
     Dataset,
@@ -229,6 +229,10 @@ class ImageLike:
     # Methods to get the image data in the canonical order
     def init_lock(self, lock_id: str | None = None) -> None:
         """Set the lock for the Dask array."""
+        if Lock is None:
+            raise ImportError(
+                "Lock is not available. Please install dask[distributed]."
+            )
         # Unique zarr array identifier
         array_path = (
             Path(self._group.store.path) / self._group.path / self._dataset.path

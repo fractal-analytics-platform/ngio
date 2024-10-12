@@ -14,6 +14,11 @@ from ngio.ngff_meta.fractal_image_meta import (
     TimeUnits,
 )
 
+try:
+    from dask.distributed import Lock
+except ImportError:
+    Lock = None
+
 
 def _build_empty_pyramid(
     group,
