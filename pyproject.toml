@@ -40,21 +40,21 @@ dependencies = [
     "requests",
     "aiohttp", 
     "dask[array]",
-    "dask[distributed]",
-    "dask-image",
 ]
 
 # https://peps.python.org/pep-0621/#dependencies-optional-dependencies
 # "extras" (e.g. for `pip install .[test]`)
 [project.optional-dependencies]
 # add dependencies used for testing here
-core = ["zarr<3"]
+core = ["zarr<3", "dask[distributed]", "dask-image"]
 
 test = ["zarr<3", "pytest", "pytest-cov"]
 
 # add anything else you like to have in your dev environment here
 dev2 = [
     "zarr<3",
+    "dask[distributed]",
+    "dask-image",
     "scikit-image",
     "matplotlib",
     "ipython",
@@ -70,6 +70,8 @@ dev2 = [
 
 dev3 = [
     "zarr==v3.0.0-alpha.4",
+    "dask[distributed]",
+    "dask-image",
     "ipython",
     "pytest",
     "pytest-cov",
