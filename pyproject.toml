@@ -197,7 +197,7 @@ ignore = [
 
 [tool.pixi.project]
 channels = ["conda-forge"]
-platforms = ["osx-arm64"]
+platforms = ["osx-arm64", "linux-64", "win-64"]
 
 [tool.pixi.pypi-dependencies]
 # zarr = { path = "../zarr-python/", editable = true }
@@ -206,6 +206,7 @@ ngio = { path = ".", editable = true }
 
 [tool.pixi.environments]
 default = { solve-group = "default" }
+core = { features = ["core"], solve-group = "core" }
 dev2 = { features = ["dev2"], solve-group = "v2" }
 dev3 = { features = ["dev3"], solve-group = "v3" }
 test = { features = ["test"], solve-group = "v2_test" }
