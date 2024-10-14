@@ -170,15 +170,15 @@ class ROITableV1:
     def set_rois(
         self,
         rois: Iterable[WorldCooROI] | WorldCooROI,
-        mode: Literal["override", "append"] = "append",
+        overwrite: bool = False,
     ) -> None:
         """Append ROIs to the current table.
 
         Args:
             rois (Iterable[WorldCooROI] | WorldCooROI): The ROIs to append.
-            mode (str): The mode to use when appending the ROIs.
-                override: Override the current table with the new ROIs.
-                append: Append the new ROIs to the current table.
+            overwrite (bool): Whether to overwrite the ROIs if they already exist.
+                If False, the ROIs will be appended. If True, the ROIs will be
+                overwritten.
         """
         if isinstance(rois, WorldCooROI):
             rois = [rois]
@@ -205,15 +205,10 @@ class ROITableV1:
         table_df = self.table
         new_table_df = pd.DataFrame.from_dict(rois_dict, orient="index")
 
-        if mode == "override" or table_df.empty:
+        if overwrite or table_df.empty:
             table_df = new_table_df
-        elif mode == "append":
-            table_df = pd.concat([table_df, new_table_df], axis=0)
         else:
-            raise ValueError(
-                f"Invalid mode: {mode} for setting the ROIs. "
-                "Use 'override' or 'append'."
-            )
+            table_df = pd.concat([table_df, new_table_df], axis=0)
 
         table_df.index.name = "FieldIndex"
         table_df.index = table_df.index.astype(str)
