@@ -4,8 +4,10 @@ The /tables group contains t
 """
 
 from typing import Literal
+from warnings import warn
 
 import zarr
+from pydantic import ValidationError
 
 from ngio.io import StoreLike
 from ngio.pydantic_utils import BaseWithExtraFields
@@ -134,9 +136,15 @@ class TableGroup:
             list_of_typed_tables = []
             for table_name in list_of_tables:
                 table = self._group[table_name]
-                common_meta = CommonMeta(**table.attrs)
-                if common_meta.type == table_type:
-                    list_of_typed_tables.append(table_name)
+                try:
+                    common_meta = CommonMeta(**table.attrs)
+                    if common_meta.type == table_type:
+                        list_of_typed_tables.append(table_name)
+                except ValidationError:
+                    warn(
+                        f"Table {table_name} metadata is not correctly formatted.",
+                        stacklevel=1,
+                    )
             return list_of_typed_tables
 
     def get_table(
