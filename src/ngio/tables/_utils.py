@@ -64,10 +64,28 @@ def _check_index_key(
         raise TableValidationError(f"index_key: {index_key} not found in data frame")
 
     if index_type == "str":
+        if ptypes.is_integer_dtype(table_df.index):
+            # Convert the int index to string is generally safe
+            table_df.index = table_df.index.astype(str)
+
         if not ptypes.is_string_dtype(table_df.index):
             raise TableValidationError(f"index_key {index_key} must be of string type")
 
     elif index_type == "int":
+        if ptypes.is_string_dtype(table_df.index):
+            # Try to convert the string index to int
+            try:
+                table_df.index = table_df.index.astype(int)
+            except ValueError as e:
+                if "invalid literal for int() with base 10" in str(e):
+                    raise TableValidationError(
+                        f"index_key {index_key} must be of "
+                        "integer type, but found string. We "
+                        "tried implicit conversion failed."
+                    ) from None
+                else:
+                    raise e from e
+
         if not ptypes.is_integer_dtype(table_df.index):
             raise TableValidationError(f"index_key {index_key} must be of integer type")
 
