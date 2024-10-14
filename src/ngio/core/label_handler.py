@@ -56,7 +56,7 @@ class Label(ImageLike):
             strict=strict,
             meta_mode="label",
             cache=cache,
-            label_group=label_group,
+            _label_group=label_group,
         )
 
     @property
