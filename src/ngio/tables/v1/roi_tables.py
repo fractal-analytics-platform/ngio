@@ -201,7 +201,7 @@ class ROITableV1:
 
         table_df.index.name = "FieldIndex"
         table_df.index = table_df.index.astype(str)
-        self.table = table_df
+        self.set_table(table_df)
 
     def _gater_optional_columns(self, series: pd.Series) -> dict:
         """Gather the optional columns from a series."""
