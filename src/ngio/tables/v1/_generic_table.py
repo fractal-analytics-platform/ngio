@@ -92,6 +92,12 @@ class BaseTable:
 
     @table.setter
     def table(self, table: pd.DataFrame) -> None:
+        raise NotImplementedError(
+            "Setting the table directly is not supported. "
+            "Please use the 'set_table' method."
+        )
+
+    def set_table(self, table: pd.DataFrame) -> None:
         table = validate_table(
             table_df=table,
             index_key=self.index_key,

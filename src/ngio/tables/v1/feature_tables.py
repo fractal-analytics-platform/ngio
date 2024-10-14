@@ -118,7 +118,13 @@ class FeatureTableV1:
     @table.setter
     def table(self, table: pd.DataFrame):
         """Set the feature table."""
-        self._table_handler.table = table
+        raise NotImplementedError(
+            "Setting the table is not implemented. Please use the 'set_table' method."
+        )
+
+    def set_table(self, table: pd.DataFrame):
+        """Set the feature table."""
+        self._table_handler.set_table(table)
 
     def label_image_name(self, get_full_path: bool = False) -> str:
         """Return the name of the label image.
