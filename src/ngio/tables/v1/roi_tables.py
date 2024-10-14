@@ -167,11 +167,18 @@ class ROITableV1:
         """Return a list of all field indexes in the table."""
         return self.table.index.tolist()
 
-    def append_rois(self, rois: Iterable[WorldCooROI] | WorldCooROI) -> None:
+    def set_rois(
+        self,
+        rois: Iterable[WorldCooROI] | WorldCooROI,
+        mode: Literal["override", "append"] = "append",
+    ) -> None:
         """Append ROIs to the current table.
 
         Args:
             rois (Iterable[WorldCooROI] | WorldCooROI): The ROIs to append.
+            mode (str): The mode to use when appending the ROIs.
+                override: Override the current table with the new ROIs.
+                append: Append the new ROIs to the current table.
         """
         if isinstance(rois, WorldCooROI):
             rois = [rois]
@@ -191,13 +198,22 @@ class ROITableV1:
                 "len_z_micrometer": roi.z_length,
             }
 
+            for column in OPTIONAL_COLUMNS:
+                if column in roi.infos:
+                    rois_dict[field_index][column] = roi.infos[column]
+
         table_df = self.table
         new_table_df = pd.DataFrame.from_dict(rois_dict, orient="index")
 
-        if not table_df.empty:
+        if mode == "override" or table_df.empty:
+            table_df = new_table_df
+        elif mode == "append":
             table_df = pd.concat([table_df, new_table_df], axis=0)
         else:
-            table_df = new_table_df
+            raise ValueError(
+                f"Invalid mode: {mode} for setting the ROIs. "
+                "Use 'override' or 'append'."
+            )
 
         table_df.index.name = "FieldIndex"
         table_df.index = table_df.index.astype(str)
@@ -205,16 +221,11 @@ class ROITableV1:
 
     def _gater_optional_columns(self, series: pd.Series) -> dict:
         """Gather the optional columns from a series."""
-        origin_dict = {}
+        optional_dict = {}
         for column in OPTIONAL_COLUMNS:
             if column in series.index:
-                origin_dict[column] = series[column]
-
-        translation_dict = {}
-        for column in TRANSLATION_COLUMNS:
-            if column in series.index:
-                translation_dict[column] = series[column]
-        return {**origin_dict, **translation_dict}
+                optional_dict[column] = series[column]
+        return optional_dict
 
     def get_roi(self, field_index) -> WorldCooROI:
         """Get an ROI from the table."""
