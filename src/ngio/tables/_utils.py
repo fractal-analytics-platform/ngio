@@ -26,10 +26,12 @@ def _check_for_mixed_types(series: pd.Series) -> None:
         )
 
 
-def _check_for_supported_types(series: pd.Series) -> Literal["str", "numeric"]:
+def _check_for_supported_types(series: pd.Series) -> Literal["str", "int", "numeric"]:
     """Check if the column has supported types."""
     if ptypes.is_string_dtype(series):
         return "str"
+    if ptypes.is_integer_dtype(series):
+        return "int"
     if ptypes.is_numeric_dtype(series):
         return "numeric"
     raise TableValidationError(
@@ -152,10 +154,11 @@ def table_df_to_ad(
         validators=validators,
     )
 
+    # DO NOT SKIP
     # Convert the index to string ALWAYS to avoid casting issues in AnnData
     table_df.index = table_df.index.astype(str)
 
-    str_columns, num_columns = [], []
+    str_columns, int_columns, num_columns = [], [], []
     for c_name in table_df.columns:
         column_df = table_df[c_name]
         _check_for_mixed_types(column_df)  # Mixed types are not allowed in the table
@@ -165,20 +168,26 @@ def table_df_to_ad(
 
         if c_type == "str":
             str_columns.append(c_name)
+
+        elif c_type == "int":
+            int_columns.append(c_name)
+
         elif c_type == "numeric":
             num_columns.append(c_name)
 
     # Converting all observations to string
-    obs_df = table_df[str_columns]
+    obs_df = table_df[str_columns + int_columns]
     obs_df.index = table_df.index
 
-    # Converting all numeric columns to float32
     x_df = table_df[num_columns]
-    x_df = x_df.astype("float32")
+
+    if x_df.dtypes.nunique() > 1:
+        x_df = x_df.astype("float64")
+
     if x_df.empty:
         # If there are no numeric columns, create an empty array
         # to avoid AnnData failing to create the object
-        x_df = np.zeros((0, 0), dtype="float32")
+        x_df = np.zeros((0, 0), dtype="float64")
 
     return ad.AnnData(X=x_df, obs=obs_df)
 
@@ -212,14 +221,6 @@ def table_ad_to_df(
         raise TableValidationError(
             f"Index key {index_key} not found in AnnData object."
         )
-
-    # Cast the index to the correct type
-    if index_type == "str":
-        table_df.index = table_df.index.astype(str)
-    elif index_type == "int":
-        table_df.index = table_df.index.astype(int)
-    else:
-        raise TableValidationError(f"index_type {index_type} not recognized")
 
     table_df = validate_table(
         table_df=table_df,
