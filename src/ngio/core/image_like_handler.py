@@ -42,6 +42,7 @@ class ImageLike:
         strict: bool = True,
         meta_mode: Literal["image", "label"] = "image",
         cache: bool = True,
+        _label_group=None,
     ) -> None:
         """Initialize the MultiscaleHandler in read mode.
 
@@ -57,6 +58,7 @@ class ImageLike:
             to match the requested "pixel_size".
         meta_mode (str): The mode of the metadata handler.
         cache (bool): Whether to cache the metadata.
+        _label_group (LabelGroup): The group containing the label data (internal use).
         """
         if not strict:
             warn("Strict mode is not fully supported yet.", UserWarning, stacklevel=2)
@@ -88,6 +90,8 @@ class ImageLike:
 
         self._init_dataset(dataset)
         self._dask_lock = None
+
+        self._label_group = _label_group
 
     def _init_dataset(self, dataset: Dataset):
         """Set the dataset of the image.
@@ -414,6 +418,47 @@ class ImageLike:
             x=x, y=y, z=z, t=t, c=c, preserve_dimensions=preserve_dimensions
         )
         self._set_pipe(data_pipe=data_pipe, patch=patch)
+
+    def get_array_masked(
+        self,
+        roi: WorldCooROI,
+        t: int | slice | None = None,
+        c: int | slice | None = None,
+        mask_mode: Literal["bbox", "mask"] = "bbox",
+        mode: Literal["numpy"] = "numpy",
+        preserve_dimensions: bool = False,
+    ) -> ArrayLike:
+        """Return the image data from a region of interest (ROI).
+
+        Args:
+            roi (WorldCooROI): The region of interest.
+            t (int | slice | None): The time index or slice.
+            c (int | slice | None): The channel index or slice.
+            mask_mode (str): Masking mode
+            mode (str): The mode to return the data.
+            preserve_dimensions (bool): Whether to preserve the dimensions of the data.
+        """
+        label_name = roi.infos.get("label_name", None)
+        if label_name is None:
+            raise ValueError("The label name must be provided in the ROI infos.")
+
+        data_pipe = self._build_roi_pipe(
+            roi=roi, t=t, c=c, preserve_dimensions=preserve_dimensions
+        )
+
+        if mask_mode == "bbox":
+            return self._get_pipe(data_pipe=data_pipe, mode=mode)
+
+        label = self._label_group.get_label(label_name, pixel_size=self.pixel_size)
+
+        mask = label.mask(
+            roi,
+            t=t,
+            mode=mode,
+        )
+        array = self._get_pipe(data_pipe=data_pipe, mode=mode)
+        where_func = np.where if mode == "numpy" else da.where
+        return where_func(mask, array, 0)
 
     def consolidate(self, order: int = 1) -> None:
         """Consolidate the Zarr array."""

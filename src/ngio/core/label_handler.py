@@ -30,6 +30,7 @@ class Label(ImageLike):
         highest_resolution: bool = False,
         strict: bool = True,
         cache: bool = True,
+        label_group=None,
     ) -> None:
         """Initialize the the Label Object.
 
@@ -44,6 +45,7 @@ class Label(ImageLike):
         strict (bool): Whether to raise an error where a pixel size is not found
             to match the requested "pixel_size".
         cache (bool): Whether to cache the metadata.
+        label_group: The group containing the labels.
         """
         super().__init__(
             store,
@@ -54,6 +56,7 @@ class Label(ImageLike):
             strict=strict,
             meta_mode="label",
             cache=cache,
+            label_group=label_group,
         )
 
     @property

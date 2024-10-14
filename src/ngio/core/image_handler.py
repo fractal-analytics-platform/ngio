@@ -1,13 +1,6 @@
 """A module to handle OME-NGFF images stored in Zarr format."""
 
-from typing import Literal
-
-import dask.array as da
-import numpy as np
-
-from ngio._common_types import ArrayLike
 from ngio.core.image_like_handler import ImageLike
-from ngio.core.roi import WorldCooROI
 from ngio.io import StoreOrGroup
 from ngio.ngff_meta.fractal_image_meta import ImageMeta, PixelSize
 
@@ -44,6 +37,7 @@ class Image(ImageLike):
         strict (bool): Whether to raise an error where a pixel size is not found
             to match the requested "pixel_size".
         cache (bool): Whether to cache the metadata.
+        label_group: The group containing the labels.
         """
         super().__init__(
             store=store,
@@ -54,8 +48,8 @@ class Image(ImageLike):
             strict=strict,
             meta_mode="image",
             cache=cache,
+            _label_group=label_group,
         )
-        self._label_group = label_group
 
     @property
     def metadata(self) -> ImageMeta:
@@ -74,47 +68,3 @@ class Image(ImageLike):
     ) -> int:
         """Return the index of the channel."""
         return self.metadata.get_channel_idx(label=label, wavelength_id=wavelength_id)
-
-    def get_array_masked(
-        self,
-        roi: WorldCooROI,
-        t: int | slice | None = None,
-        c: int | slice | None = None,
-        mask_mode: Literal["bbox", "mask"] = "bbox",
-        mode: Literal["numpy"] = "numpy",
-        preserve_dimensions: bool = False,
-    ) -> ArrayLike:
-        """Return the image data from a region of interest (ROI).
-
-        Args:
-            roi (WorldCooROI): The region of interest.
-            t (int | slice | None): The time index or slice.
-            c (int | slice | None): The channel index or slice.
-            mask_mode (str): Masking mode
-            mode (str): The mode to return the data.
-            preserve_dimensions (bool): Whether to preserve the dimensions of the data.
-        """
-        label_name = roi.infos.get("label_name", None)
-        if label_name is None:
-            raise ValueError("The label name must be provided in the ROI infos.")
-
-        data_pipe = self._build_roi_pipe(
-            roi=roi, t=t, c=c, preserve_dimensions=preserve_dimensions
-        )
-
-        if mask_mode == "bbox":
-            return self._get_pipe(data_pipe=data_pipe, mode=mode)
-
-        label = self._label_group.get_label(label_name, pixel_size=self.pixel_size)
-
-        mask = label.mask(
-            roi,
-            t=t,
-            mode=mode,
-        )
-        array = self._get_pipe(data_pipe=data_pipe, mode=mode)
-        if mode == "numpy":
-            return_array = np.where(mask, array, 0)
-        else:
-            return_array = da.where(mask, array, 0)
-        return return_array
