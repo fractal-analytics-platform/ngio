@@ -100,14 +100,12 @@ class BaseTable:
         )
         self._table = table
 
-    @property
     def as_anndata(self) -> ad.AnnData:
         """Return the ROI table as an AnnData object."""
         return table_df_to_ad(
             self.table, index_key=self.index_key, index_type=self.index_type
         )
 
-    @property
     def from_anndata(self, table_ad: ad.AnnData) -> None:
         """Return the ROI table as an AnnData object."""
         table = table_ad_to_df(

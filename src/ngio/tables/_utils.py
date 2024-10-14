@@ -161,6 +161,7 @@ def table_df_to_ad(
         # If there are no numeric columns, create an empty array
         # to avoid AnnData failing to create the object
         x_df = np.zeros((0, 0), dtype="float32")
+
     return ad.AnnData(X=x_df, obs=obs_df)
 
 
