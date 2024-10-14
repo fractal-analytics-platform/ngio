@@ -5,6 +5,7 @@ https://fractal-analytics-platform.github.io/fractal-tasks-core/tables/
 """
 
 from collections.abc import Iterable
+from functools import partial
 from typing import Literal
 
 import pandas as pd
@@ -12,6 +13,7 @@ import zarr
 from pydantic import BaseModel
 
 from ngio.core.roi import WorldCooROI
+from ngio.tables._utils import validate_columns
 from ngio.tables.v1._generic_table import REQUIRED_COLUMNS, BaseTable, write_table_ad
 
 
@@ -79,7 +81,13 @@ class ROITableV1:
             self._meta = ROITableV1Meta.model_construct(**group.attrs)
 
         # Validate the table is not implemented for the ROI table
-        validators = None
+        validators = [
+            partial(
+                validate_columns,
+                required_columns=REQUIRED_COLUMNS,
+                optional_columns=OPTIONAL_COLUMNS,
+            )
+        ]
         validators = validators if validate_table else None
 
         index_key = "FieldIndex" if index_key is None else index_key
@@ -188,6 +196,19 @@ class ROITableV1:
         table_df.index = table_df.index.astype(str)
         self.table = table_df
 
+    def _gater_optional_columns(self, series: pd.Series) -> dict:
+        """Gather the optional columns from a series."""
+        origin_dict = {}
+        for column in OPTIONAL_COLUMNS:
+            if column in series.index:
+                origin_dict[column] = series[column]
+
+        translation_dict = {}
+        for column in TRANSLATION_COLUMNS:
+            if column in series.index:
+                translation_dict[column] = series[column]
+        return {**origin_dict, **translation_dict}
+
     def get_roi(self, field_index) -> WorldCooROI:
         """Get an ROI from the table."""
         if field_index not in self.field_indexes:
@@ -202,7 +223,7 @@ class ROITableV1:
             y_length=table_df.loc["len_y_micrometer"],
             z_length=table_df.loc["len_z_micrometer"],
             unit="micrometer",
-            infos={"FieldIndex": field_index},
+            infos={"FieldIndex": field_index, **self._gater_optional_columns(table_df)},
         )
         return roi
 

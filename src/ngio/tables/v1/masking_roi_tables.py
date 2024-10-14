@@ -4,6 +4,7 @@ This class follows the roi_table specification at:
 https://fractal-analytics-platform.github.io/fractal-tasks-core/tables/
 """
 
+from functools import partial
 from typing import Literal
 
 import pandas as pd
@@ -12,6 +13,7 @@ from pydantic import BaseModel
 
 from ngio.core.label_handler import Label
 from ngio.core.roi import WorldCooROI
+from ngio.tables._utils import validate_columns
 from ngio.tables.v1._generic_table import REQUIRED_COLUMNS, BaseTable, write_table_ad
 
 
@@ -63,7 +65,7 @@ class MaskingROITableV1:
             self._meta = MaskingROITableV1Meta.model_construct(**group.attrs)
 
         # Validate the table is not implemented for the Masking ROI table
-        validators = None
+        validators = [partial(validate_columns, required_columns=REQUIRED_COLUMNS)]
         validators = validators if validate_table else None
 
         index_key = index_key if index_key is not None else self._meta.instance_key

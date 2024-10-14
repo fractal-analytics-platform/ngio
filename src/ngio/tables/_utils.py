@@ -230,6 +230,13 @@ def table_ad_to_df(
     return table_df
 
 
+####################################################################################################
+#
+# Common table validators
+#
+####################################################################################################
+
+
 def validate_columns(
     table_df: pd.DataFrame,
     required_columns: list[str],
