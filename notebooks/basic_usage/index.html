@@ -1321,9 +1321,58 @@ print(f"{label_nuclei.pixel_size=}")</div>
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
 <pre>List of Labels:  ['nuclei', 'wf_2_labels', 'wf_3_labels', 'wf_4_labels']
-label_nuclei.shape=(1, 4320, 5120)
-label_nuclei.pixel_size=PixelSize(x=0.1625, y=0.1625, z=1.0, unit=micrometer)
 </pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr" tabindex="0">
+<pre>
+<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
+<span class="ansi-red-fg">TypeError</span>                                 Traceback (most recent call last)
+Cell <span class="ansi-green-fg">In[4], line 3</span>
+<span class="ansi-green-intense-fg ansi-bold">      1</span> <span style="color: rgb(0,135,0)">print</span>(<span style="color: rgb(175,0,0)">"</span><span style="color: rgb(175,0,0)">List of Labels: </span><span style="color: rgb(175,0,0)">"</span>, ngff_image<span style="color: rgb(98,98,98)">.</span>label<span style="color: rgb(98,98,98)">.</span>list())
+<span class="ansi-green-fg">----&gt; 3</span> label_nuclei <span style="color: rgb(98,98,98)">=</span> <span class="ansi-yellow-bg">ngff_image</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">.</span><span class="ansi-yellow-bg">label</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">.</span><span class="ansi-yellow-bg">get_label</span><span class="ansi-yellow-bg">(</span><span class="ansi-yellow-bg" style="color: rgb(175,0,0)">"</span><span class="ansi-yellow-bg" style="color: rgb(175,0,0)">nuclei</span><span class="ansi-yellow-bg" style="color: rgb(175,0,0)">"</span><span class="ansi-yellow-bg">,</span><span class="ansi-yellow-bg"> </span><span class="ansi-yellow-bg">path</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">=</span><span class="ansi-yellow-bg" style="color: rgb(175,0,0)">"</span><span class="ansi-yellow-bg" style="color: rgb(175,0,0)">0</span><span class="ansi-yellow-bg" style="color: rgb(175,0,0)">"</span><span class="ansi-yellow-bg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">      4</span> <span style="color: rgb(0,135,0)">print</span>(<span style="color: rgb(175,0,0)">f</span><span style="color: rgb(175,0,0)">"</span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>label_nuclei<span style="color: rgb(98,98,98)">.</span>shape<span class="ansi-bold" style="color: rgb(175,95,135)">=}</span><span style="color: rgb(175,0,0)">"</span>)
+<span class="ansi-green-intense-fg ansi-bold">      5</span> <span style="color: rgb(0,135,0)">print</span>(<span style="color: rgb(175,0,0)">f</span><span style="color: rgb(175,0,0)">"</span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>label_nuclei<span style="color: rgb(98,98,98)">.</span>pixel_size<span class="ansi-bold" style="color: rgb(175,95,135)">=}</span><span style="color: rgb(175,0,0)">"</span>)
+
+File <span class="ansi-green-fg">/opt/hostedtoolcache/Python/3.12.7/x64/lib/python3.12/site-packages/ngio/core/label_handler.py:260</span>, in <span class="ansi-cyan-fg">LabelGroup.get_label</span><span class="ansi-blue-fg">(self, name, path, pixel_size, highest_resolution)</span>
+<span class="ansi-green-intense-fg ansi-bold">    257</span> <span class="ansi-bold" style="color: rgb(0,135,0)">if</span> path <span class="ansi-bold" style="color: rgb(175,0,255)">is</span> <span class="ansi-bold" style="color: rgb(175,0,255)">not</span> <span class="ansi-bold" style="color: rgb(0,135,0)">None</span> <span class="ansi-bold" style="color: rgb(175,0,255)">or</span> pixel_size <span class="ansi-bold" style="color: rgb(175,0,255)">is</span> <span class="ansi-bold" style="color: rgb(175,0,255)">not</span> <span class="ansi-bold" style="color: rgb(0,135,0)">None</span>:
+<span class="ansi-green-intense-fg ansi-bold">    258</span>     highest_resolution <span style="color: rgb(98,98,98)">=</span> <span class="ansi-bold" style="color: rgb(0,135,0)">False</span>
+<span class="ansi-green-fg">--&gt; 260</span> <span class="ansi-bold" style="color: rgb(0,135,0)">return</span> <span class="ansi-yellow-bg">Label</span><span class="ansi-yellow-bg">(</span>
+<span class="ansi-green-intense-fg ansi-bold">    261</span> <span class="ansi-yellow-bg">    </span><span class="ansi-yellow-bg">store</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">=</span><span class="ansi-yellow-bg" style="color: rgb(0,135,0)">self</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">.</span><span class="ansi-yellow-bg">_group</span><span class="ansi-yellow-bg">[</span><span class="ansi-yellow-bg">name</span><span class="ansi-yellow-bg">]</span><span class="ansi-yellow-bg">,</span>
+<span class="ansi-green-intense-fg ansi-bold">    262</span> <span class="ansi-yellow-bg">    </span><span class="ansi-yellow-bg">path</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">=</span><span class="ansi-yellow-bg">path</span><span class="ansi-yellow-bg">,</span>
+<span class="ansi-green-intense-fg ansi-bold">    263</span> <span class="ansi-yellow-bg">    </span><span class="ansi-yellow-bg">pixel_size</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">=</span><span class="ansi-yellow-bg">pixel_size</span><span class="ansi-yellow-bg">,</span>
+<span class="ansi-green-intense-fg ansi-bold">    264</span> <span class="ansi-yellow-bg">    </span><span class="ansi-yellow-bg">highest_resolution</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">=</span><span class="ansi-yellow-bg">highest_resolution</span><span class="ansi-yellow-bg">,</span>
+<span class="ansi-green-intense-fg ansi-bold">    265</span> <span class="ansi-yellow-bg">    </span><span class="ansi-yellow-bg">cache</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">=</span><span class="ansi-yellow-bg" style="color: rgb(0,135,0)">self</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">.</span><span class="ansi-yellow-bg">_metadata_cache</span><span class="ansi-yellow-bg">,</span>
+<span class="ansi-green-intense-fg ansi-bold">    266</span> <span class="ansi-yellow-bg">)</span>
+
+File <span class="ansi-green-fg">/opt/hostedtoolcache/Python/3.12.7/x64/lib/python3.12/site-packages/ngio/core/label_handler.py:50</span>, in <span class="ansi-cyan-fg">Label.__init__</span><span class="ansi-blue-fg">(self, store, path, idx, pixel_size, highest_resolution, strict, cache, label_group)</span>
+<span class="ansi-green-intense-fg ansi-bold">     23</span> <span class="ansi-bold" style="color: rgb(0,135,0)">def</span> <span style="color: rgb(0,0,255)">__init__</span>(
+<span class="ansi-green-intense-fg ansi-bold">     24</span>     <span style="color: rgb(0,135,0)">self</span>,
+<span class="ansi-green-intense-fg ansi-bold">     25</span>     store: StoreOrGroup,
+<span class="ansi-green-fg">   (...)</span>
+<span class="ansi-green-intense-fg ansi-bold">     33</span>     label_group<span style="color: rgb(98,98,98)">=</span><span class="ansi-bold" style="color: rgb(0,135,0)">None</span>,
+<span class="ansi-green-intense-fg ansi-bold">     34</span> ) <span style="color: rgb(98,98,98)">-</span><span style="color: rgb(98,98,98)">&gt;</span> <span class="ansi-bold" style="color: rgb(0,135,0)">None</span>:
+<span class="ansi-green-intense-fg ansi-bold">     35</span> <span style="color: rgb(188,188,188)">    </span><span style="color: rgb(175,0,0)">"""Initialize the the Label Object.</span>
+<span class="ansi-green-intense-fg ansi-bold">     36</span> 
+<span class="ansi-green-intense-fg ansi-bold">     37</span> <span style="color: rgb(175,0,0)">    Note: Only one of `path`, `idx`, 'pixel_size' or 'highest_resolution'</span>
+<span class="ansi-green-fg">   (...)</span>
+<span class="ansi-green-intense-fg ansi-bold">     48</span> <span style="color: rgb(175,0,0)">    label_group: The group containing the labels.</span>
+<span class="ansi-green-intense-fg ansi-bold">     49</span> <span style="color: rgb(175,0,0)">    """</span>
+<span class="ansi-green-fg">---&gt; 50</span>     <span class="ansi-yellow-bg" style="color: rgb(0,135,0)">super</span><span class="ansi-yellow-bg">(</span><span class="ansi-yellow-bg">)</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">.</span><span class="ansi-yellow-bg" style="color: rgb(0,0,255)">__init__</span><span class="ansi-yellow-bg">(</span>
+<span class="ansi-green-intense-fg ansi-bold">     51</span> <span class="ansi-yellow-bg">        </span><span class="ansi-yellow-bg">store</span><span class="ansi-yellow-bg">,</span>
+<span class="ansi-green-intense-fg ansi-bold">     52</span> <span class="ansi-yellow-bg">        </span><span class="ansi-yellow-bg">path</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">=</span><span class="ansi-yellow-bg">path</span><span class="ansi-yellow-bg">,</span>
+<span class="ansi-green-intense-fg ansi-bold">     53</span> <span class="ansi-yellow-bg">        </span><span class="ansi-yellow-bg">idx</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">=</span><span class="ansi-yellow-bg">idx</span><span class="ansi-yellow-bg">,</span>
+<span class="ansi-green-intense-fg ansi-bold">     54</span> <span class="ansi-yellow-bg">        </span><span class="ansi-yellow-bg">pixel_size</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">=</span><span class="ansi-yellow-bg">pixel_size</span><span class="ansi-yellow-bg">,</span>
+<span class="ansi-green-intense-fg ansi-bold">     55</span> <span class="ansi-yellow-bg">        </span><span class="ansi-yellow-bg">highest_resolution</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">=</span><span class="ansi-yellow-bg">highest_resolution</span><span class="ansi-yellow-bg">,</span>
+<span class="ansi-green-intense-fg ansi-bold">     56</span> <span class="ansi-yellow-bg">        </span><span class="ansi-yellow-bg">strict</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">=</span><span class="ansi-yellow-bg">strict</span><span class="ansi-yellow-bg">,</span>
+<span class="ansi-green-intense-fg ansi-bold">     57</span> <span class="ansi-yellow-bg">        </span><span class="ansi-yellow-bg">meta_mode</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">=</span><span class="ansi-yellow-bg" style="color: rgb(175,0,0)">"</span><span class="ansi-yellow-bg" style="color: rgb(175,0,0)">label</span><span class="ansi-yellow-bg" style="color: rgb(175,0,0)">"</span><span class="ansi-yellow-bg">,</span>
+<span class="ansi-green-intense-fg ansi-bold">     58</span> <span class="ansi-yellow-bg">        </span><span class="ansi-yellow-bg">cache</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">=</span><span class="ansi-yellow-bg">cache</span><span class="ansi-yellow-bg">,</span>
+<span class="ansi-green-intense-fg ansi-bold">     59</span> <span class="ansi-yellow-bg">        </span><span class="ansi-yellow-bg">label_group</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">=</span><span class="ansi-yellow-bg">label_group</span><span class="ansi-yellow-bg">,</span>
+<span class="ansi-green-intense-fg ansi-bold">     60</span> <span class="ansi-yellow-bg">    </span><span class="ansi-yellow-bg">)</span>
+
+<span class="ansi-red-fg">TypeError</span>: ImageLike.__init__() got an unexpected keyword argument 'label_group'</pre>
 </div>
 </div>
 </div>
