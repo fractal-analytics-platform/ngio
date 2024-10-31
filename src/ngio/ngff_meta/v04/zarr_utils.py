@@ -194,7 +194,7 @@ def write_ngff_image_meta_v04(group: Group, meta: ImageLabelMeta) -> None:
                 c.extra_fields["color"] = "00FFFF"
 
     meta04 = fractal_ngff_image_meta_to_vanilla_v04(meta=meta)
-    group.attrs.update(meta04.model_dump(exclude=None))
+    group.attrs.update(meta04.model_dump(exclude_none=True))
 
 
 class NgffImageMetaZarrHandlerV04:

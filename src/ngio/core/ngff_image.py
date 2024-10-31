@@ -131,9 +131,13 @@ class NgffImage:
             "num_levels": self.num_levels,
             "name": name,
             "channel_labels": image_0.channel_labels,
-            "channel_wavelengths": None,
-            "channel_kwargs": None,
-            "omero_kwargs": None,
+            "channel_wavelengths": [
+                ch.wavelength_id for ch in self.image_meta.omero.channels
+            ],
+            "channel_kwargs": [
+                ch.extra_fields for ch in self.image_meta.omero.channels
+            ],
+            "omero_kwargs": self.image_meta.omero.extra_fields,
             "overwrite": overwrite,
             "version": self.image_meta.version,
         }

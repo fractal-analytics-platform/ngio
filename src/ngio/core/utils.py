@@ -1,6 +1,7 @@
 """Utility functions for creating and manipulating images."""
 
 import math
+from collections.abc import Collection
 from typing import Any
 
 from ngio.io import StoreLike
@@ -23,10 +24,10 @@ except ImportError:
 def _build_empty_pyramid(
     group,
     image_meta,
-    shape: list[int],
-    chunks: list[int] | None = None,
+    shape: Collection[int],
+    chunks: Collection[int] | None = None,
     dtype: str = "uint16",
-    on_disk_axis: list[str] = ("t", "c", "z", "y", "x"),
+    on_disk_axis: Collection[str] = ("t", "c", "z", "y", "x"),
     xy_scaling_factor: float = 2.0,
     z_scaling_factor: float = 1.0,
 ):
@@ -66,22 +67,16 @@ def _build_empty_pyramid(
         shape = list(_shape)
 
         if chunks is not None:
-            _chunks = []
-            for c, sc in zip(chunks, scaling_factor, strict=True):
-                if math.floor(c / sc) % 2 == 0:
-                    _chunks.append(math.floor(c / sc))
-                else:
-                    _chunks.append(math.ceil(c / sc))
-            chunks = list(_chunks)
+            chunks = [min(c, s) for c, s in zip(chunks, shape, strict=True)]
     return None
 
 
 def create_empty_ome_zarr_image(
     store: StoreLike,
-    shape: list[int],
-    chunks: list[int] | None = None,
+    shape: Collection[int],
+    chunks: Collection[int] | None = None,
     dtype: str = "uint16",
-    on_disk_axis: list[str] = ("t", "c", "z", "y", "x"),
+    on_disk_axis: Collection[str] = ("t", "c", "z", "y", "x"),
     pixel_sizes: PixelSize | None = None,
     xy_scaling_factor: float = 2.0,
     z_scaling_factor: float = 1.0,
@@ -104,6 +99,8 @@ def create_empty_ome_zarr_image(
         )
 
     if "c" in on_disk_axis:
+        shape = tuple(shape)
+        on_disk_axis = tuple(on_disk_axis)
         num_channels = shape[on_disk_axis.index("c")]
         if channel_labels is None:
             channel_labels = [f"C{i:02d}" for i in range(num_channels)]
@@ -154,10 +151,10 @@ def create_empty_ome_zarr_image(
 
 def create_empty_ome_zarr_label(
     store: StoreLike,
-    shape: list[int],
-    chunks: list[int] | None = None,
+    shape: Collection[int],
+    chunks: Collection[int] | None = None,
     dtype: str = "uint16",
-    on_disk_axis: list[str] = ("t", "z", "y", "x"),
+    on_disk_axis: Collection[str] = ("t", "z", "y", "x"),
     pixel_sizes: PixelSize | None = None,
     xy_scaling_factor: float = 2.0,
     z_scaling_factor: float = 1.0,

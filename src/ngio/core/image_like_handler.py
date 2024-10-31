@@ -1,6 +1,5 @@
 """Generic class to handle Image-like data in a OME-NGFF file."""
 
-from functools import partial
 from pathlib import Path
 from typing import Literal
 from warnings import warn
@@ -9,7 +8,6 @@ import dask.array as da
 import numpy as np
 import zarr
 from dask.delayed import Delayed
-from scipy.ndimage import zoom
 
 from ngio._common_types import ArrayLike
 from ngio.core.dimensions import Dimensions
@@ -23,7 +21,7 @@ from ngio.ngff_meta import (
     SpaceUnits,
     get_ngff_image_meta_handler,
 )
-from ngio.pipes import DataTransformPipe, NaiveSlicer, RoiSlicer
+from ngio.pipes import DataTransformPipe, NaiveSlicer, RoiSlicer, on_disk_zoom
 
 
 class ImageLike:
@@ -143,11 +141,6 @@ class ImageLike:
     @property
     def path(self) -> str:
         """Return the path of the dataset (relative to the root group)."""
-        return self.dataset.path
-
-    @property
-    def channel_labels(self) -> list[str]:
-        """Return the names of the channels in the image."""
         return self.dataset.path
 
     @property
@@ -347,8 +340,8 @@ class ImageLike:
 
     def set_array_from_roi(
         self,
-        roi: WorldCooROI,
         patch: ArrayLike,
+        roi: WorldCooROI,
         t: int | slice | None = None,
         c: int | slice | None = None,
         preserve_dimensions: bool = False,
@@ -356,8 +349,8 @@ class ImageLike:
         """Set the image data from a region of interest (ROI).
 
         Args:
-            roi (WorldCooROI): The region of interest.
             patch (ArrayLike): The patch to set.
+            roi (WorldCooROI): The region of interest.
             t (int | slice | None): The time index or slice.
             c (int | slice | None): The channel index or slice.
             preserve_dimensions (bool): Whether to preserve the dimensions of the data.
@@ -460,7 +453,29 @@ class ImageLike:
         where_func = np.where if mode == "numpy" else da.where
         return where_func(mask, array, 0)
 
-    def consolidate(self, order: int = 1) -> None:
+    def set_array_masked(
+        self,
+        patch: ArrayLike,
+        roi: WorldCooROI,
+        t: int | slice | None = None,
+        c: int | slice | None = None,
+        preserve_dimensions: bool = False,
+    ) -> None:
+        """Set the image data from a region of interest (ROI).
+
+        Args:
+            patch (ArrayLike): The patch to set.
+            roi (WorldCooROI): The region of interest.
+            t (int | slice | None): The time index or slice.
+            c (int | slice | None): The channel index or slice.
+            preserve_dimensions (bool): Whether to preserve the dimensions of the data.
+        """
+        data_pipe = self._build_roi_pipe(
+            roi=roi, t=t, c=c, preserve_dimensions=preserve_dimensions
+        )
+        self._set_pipe(data_pipe=data_pipe, patch=patch)
+
+    def consolidate(self, order: Literal[0, 1, 2] = 1) -> None:
         """Consolidate the Zarr array."""
         processed_paths = [self]
 
@@ -490,23 +505,11 @@ class ImageLike:
             source_image = processed_paths[source]
             target_image = todo_image.pop(target)
 
-            zoom_factors = tuple(
-                [
-                    s1 / s2
-                    for s1, s2 in zip(
-                        target_image.shape, source_image.shape, strict=False
-                    )
-                ]
+            on_disk_zoom(
+                source=source_image.on_disk_array,
+                target=target_image.on_disk_array,
+                order=order,
             )
-            partial_zoom = partial(zoom, zoom=zoom_factors, order=order)
-            out_image = da.map_blocks(
-                partial_zoom,
-                source_image.on_disk_dask_array,
-                # dtype = source_image.dask_array,
-                chunks=target_image.on_disk_array.chunks,
-            )
-            out_image = out_image.astype(target_image.on_disk_array.dtype)
-            # da.to_zarr(out_image, target_image.array, overwrite=True)
-            target_image.on_disk_array[...] = out_image.compute()
+
             # compute the transformation
             processed_paths.append(target_image)

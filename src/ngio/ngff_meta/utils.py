@@ -1,5 +1,6 @@
 """Utility functions for creating and modifying metadata."""
 
+from collections.abc import Collection
 from typing import Any
 
 from ngio.ngff_meta.fractal_image_meta import (
@@ -19,7 +20,7 @@ from ngio.ngff_meta.fractal_image_meta import (
 
 
 def _create_multiscale_meta(
-    on_disk_axis: list[str] = ("t", "c", "z", "y", "x"),
+    on_disk_axis: Collection[str] = ("t", "c", "z", "y", "x"),
     pixel_sizes: PixelSize | None = None,
     xy_scaling_factor: float = 2.0,
     z_scaling_factor: float = 1.0,
@@ -72,7 +73,7 @@ def _create_multiscale_meta(
 
 
 def create_image_metadata(
-    on_disk_axis: list[str] = ("t", "c", "z", "y", "x"),
+    on_disk_axis: Collection[str] = ("t", "c", "z", "y", "x"),
     pixel_sizes: PixelSize | None = None,
     xy_scaling_factor: float = 2.0,
     z_scaling_factor: float = 1.0,
@@ -163,7 +164,7 @@ def create_image_metadata(
 
 
 def create_label_metadata(
-    on_disk_axis: list[str] = ("t", "c", "z", "y", "x"),
+    on_disk_axis: Collection[str] = ("t", "c", "z", "y", "x"),
     pixel_sizes: PixelSize | None = None,
     xy_scaling_factor: float = 2.0,
     z_scaling_factor: float = 1.0,
