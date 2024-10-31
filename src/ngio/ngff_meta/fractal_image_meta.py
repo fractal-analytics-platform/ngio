@@ -100,12 +100,12 @@ class PixelSize(BaseModel):
     unit: SpaceUnits = SpaceUnits.micrometer
     virtual: bool = False
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Return the string representation of the object."""
         return f"PixelSize(x={self.x}, y={self.y}, z={self.z}, unit={self.unit.value})"
 
     @classmethod
-    def from_list(cls, sizes: list[float], unit: SpaceUnits):
+    def from_list(cls, sizes: list[float], unit: SpaceUnits) -> "PixelSize":
         """Build a PixelSize object from a list of sizes.
 
         Note: The order of the sizes must be z, y, x.
@@ -262,7 +262,7 @@ class Axis:
         return self._unit
 
     @unit.setter
-    def unit(self, unit: SpaceUnits | TimeUnits | None):
+    def unit(self, unit: SpaceUnits | TimeUnits | None) -> None:
         """Set the unit of the axis."""
         self._unit = unit
 
@@ -826,7 +826,7 @@ class LabelMeta(BaseMeta):
 
     def add_axis(
         self, axis_name: str, scale: float = 1, translation: float | None = None
-    ) -> BaseMeta:
+    ) -> "LabelMeta":
         """Add an axis to the metadata."""
         # Check if the axis is a channel
         axis = Axis.lazy_create(
@@ -837,9 +837,10 @@ class LabelMeta(BaseMeta):
         if axis.type == AxisType.channel:
             raise ValueError("Channel axes are not allowed in LabelMeta.")
 
-        return super().add_axis(
+        meta = super().add_axis(
             axis_name=axis_name, scale=scale, translation=translation
         )
+        return meta
 
 
 class ImageMeta(BaseMeta):
@@ -866,6 +867,8 @@ class ImageMeta(BaseMeta):
         """Get the channels in the image."""
         if self._omero is None:
             return []
+        assert self.omero is not None
+        assert self.omero.channels is not None
         return self.omero.channels
 
     @property

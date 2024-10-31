@@ -111,6 +111,7 @@ def _numpy_zoom(
     out_array = zoom(
         source_array, zoom=_scale, order=order, mode="grid-constant", grid_mode=True
     )
+    assert isinstance(out_array, np.ndarray)
     return out_array
 
 
@@ -119,7 +120,7 @@ def on_disk_zoom(
     target: zarr.Array,
     order: Literal[0, 1, 2] = 1,
     mode: Literal["dask", "numpy"] = "dask",
-):
+) -> None:
     """Apply a zoom operation from a source zarr array to a target zarr array.
 
     Args:
@@ -154,7 +155,7 @@ def on_disk_coarsen(
     target: zarr.Array,
     aggregation_function: np.ufunc,
     coarsening_setup: dict[int, int],
-):
+) -> None:
     """Apply a coarsening operation from a source zarr array to a target zarr array.
 
     Args:
