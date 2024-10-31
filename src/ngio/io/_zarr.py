@@ -8,6 +8,9 @@ from packaging.version import Version
 zarr_version = version("zarr")
 ZARR_PYTHON_V = 2 if Version(zarr_version) < Version("3.0.0a") else 3
 
+if ZARR_PYTHON_V == 2:
+    from zarr.errors import ContainsGroupError, GroupNotFoundError
+
 # Zarr v3 Imports
 # import zarr.store
 # from zarr.core.common import AccessModeLiteral, ZarrFormat
@@ -57,10 +60,23 @@ def _open_group_v2_v3(
     Returns:
         zarr.Group: The opened Zarr group.
     """
+    print(mode)
     if ZARR_PYTHON_V == 3:
         return zarr.open_group(store=store, mode=mode, zarr_format=zarr_format)
     else:
-        return zarr.open_group(store=store, mode=mode, zarr_version=zarr_format)
+        try:
+            group = zarr.open_group(store=store, mode=mode)
+
+        except ContainsGroupError as e:
+            raise FileExistsError(
+                f"A Zarr group already exists at {store}, "
+                "consider setting overwrite=True."
+            ) from e
+
+        except GroupNotFoundError as e:
+            raise FileNotFoundError(f"No Zarr group found at {store}") from e
+
+        return group
 
 
 def _is_group_readonly(group: zarr.Group) -> bool:
