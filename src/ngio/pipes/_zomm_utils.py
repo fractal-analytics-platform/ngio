@@ -53,6 +53,11 @@ def _dask_zoom(
     Returns:
         da.Array: The zoomed array.
     """
+    # This function follow the implementation from:
+    # https://github.com/ome/ome-zarr-py/blob/master/ome_zarr/dask_utils.py
+    # The module was contributed by Andreas Eisenbarth @aeisenbarth
+    # See https://github.com/toloudis/ome-zarr-py/pull/
+
     _scale, _target_shape = _zoom_inputs_check(
         source_array=source_array, scale=scale, target_shape=target_shape
     )

@@ -375,12 +375,12 @@ class Dataset:
         return self._ordered_axes
 
     @property
-    def on_disk_axes_names(self) -> list[Axis]:
+    def on_disk_axes_names(self) -> list[str]:
         """Get the axes in the on-disk order."""
         return [ax.name for ax in self._on_disk_axes]
 
     @property
-    def axes_order(self) -> list[str]:
+    def axes_order(self) -> list[int]:
         """Get the mapping between the canonical order and the on-disk order.
 
         Example:

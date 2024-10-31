@@ -169,14 +169,16 @@ def fractal_ngff_image_meta_to_vanilla_v04(
     )
 
 
-def load_ngff_image_meta_v04(group: Group) -> ImageLabelMeta:
+def load_ngff_image_meta_v04(
+    group: Group, meta_mode: Literal["image", "label"]
+) -> ImageLabelMeta:
     """Load the OME-NGFF 0.4 image meta model."""
     if not check_ngff_image_meta_v04(store=group):
         raise ValueError(
             "The Zarr store does not contain the correct OME-Zarr version."
         )
     meta04 = load_vanilla_ngff_image_meta_v04(group=group)
-    return vanilla_ngff_image_meta_v04_to_fractal(meta04=meta04)
+    return vanilla_ngff_image_meta_v04_to_fractal(meta04=meta04, meta_mode=meta_mode)
 
 
 def write_ngff_image_meta_v04(group: Group, meta: ImageLabelMeta) -> None:
@@ -229,7 +231,7 @@ class NgffImageMetaZarrHandlerV04:
 
         self.meta_mode = meta_mode
         self.cache = cache
-        self._meta = None
+        self._meta: None | ImageLabelMeta = None
 
     @property
     def zarr_version(self) -> int:
@@ -241,7 +243,7 @@ class NgffImageMetaZarrHandlerV04:
         return 2
 
     @property
-    def store(self):
+    def store(self) -> StoreOrGroup:
         """Return the Zarr store."""
         return self._store
 
@@ -264,10 +266,12 @@ class NgffImageMetaZarrHandlerV04:
 
         if self.cache:
             if self._meta is None:
-                self._meta = load_ngff_image_meta_v04(self.group)
+                self._meta = load_ngff_image_meta_v04(
+                    self.group, meta_mode=self.meta_mode
+                )
             return self._meta
 
-        return load_ngff_image_meta_v04(self.group)
+        return load_ngff_image_meta_v04(self.group, meta_mode=self.meta_mode)
 
     def write_meta(self, meta: ImageLabelMeta) -> None:
         """Write the OME-NGFF 0.4 metadata."""

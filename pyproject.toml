@@ -154,9 +154,9 @@ show_error_codes = true
 pretty = true
 
 # # module specific overrides
-# [[tool.mypy.overrides]]
-# module = ["numpy.*",]
-# ignore_errors = true
+[[tool.mypy.overrides]]
+module = ["numpy.*",]
+ignore_errors = true
 
 # https://docs.pytest.org/
 [tool.pytest.ini_options]

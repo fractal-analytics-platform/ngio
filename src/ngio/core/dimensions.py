@@ -54,29 +54,31 @@ class Dimensions:
         return self._shape_dict
 
     @property
-    def t(self) -> int:
+    def t(self) -> int | None:
         """Return the time dimension."""
         return self._shape_dict.get("t", None)
 
     @property
-    def c(self) -> int:
+    def c(self) -> int | None:
         """Return the channel dimension."""
         return self._shape_dict.get("c", None)
 
     @property
-    def z(self) -> int:
+    def z(self) -> int | None:
         """Return the z dimension."""
         return self._shape_dict.get("z", None)
 
     @property
     def y(self) -> int:
         """Return the y dimension."""
-        return self._shape_dict.get("y")
+        assert "y" in self._shape_dict
+        return self._shape_dict["y"]
 
     @property
     def x(self) -> int:
         """Return the x dimension."""
-        return self._shape_dict.get("x")
+        assert "x" in self._shape_dict
+        return self._shape_dict["x"]
 
     @property
     def on_disk_ndim(self) -> int:
@@ -100,9 +102,7 @@ class Dimensions:
     @property
     def is_2d_time_series(self) -> bool:
         """Return whether the data is a 2D time series."""
-        is_2d = self.is_2d()
-        is_time_series = self.is_time_series()
-        return is_2d and is_time_series
+        return self.is_2d and self.is_time_series
 
     @property
     def is_3d(self) -> bool:
@@ -114,9 +114,7 @@ class Dimensions:
     @property
     def is_3d_time_series(self) -> bool:
         """Return whether the data is a 3D time series."""
-        is_3d = self.is_3d()
-        is_time_series = self.is_time_series()
-        return is_3d and is_time_series
+        return self.is_3d and self.is_time_series
 
     @property
     def is_multi_channels(self) -> bool:

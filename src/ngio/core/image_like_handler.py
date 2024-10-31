@@ -1,7 +1,7 @@
 """Generic class to handle Image-like data in a OME-NGFF file."""
 
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 from warnings import warn
 
 import dask.array as da
@@ -30,6 +30,8 @@ class ImageLike:
     This class provides methods to access image data and ROI tables.
     """
 
+    _virtual_pixel_size: PixelSize | None
+
     def __init__(
         self,
         store: StoreOrGroup,
@@ -40,7 +42,7 @@ class ImageLike:
         strict: bool = True,
         meta_mode: Literal["image", "label"] = "image",
         cache: bool = True,
-        _label_group=None,
+        _label_group: Any = None,
     ) -> None:
         """Initialize the MultiscaleHandler in read mode.
 
@@ -91,7 +93,7 @@ class ImageLike:
 
         self._label_group = _label_group
 
-    def _init_dataset(self, dataset: Dataset):
+    def _init_dataset(self, dataset: Dataset) -> None:
         """Set the dataset of the image.
 
         This method is for internal use only.
@@ -111,7 +113,7 @@ class ImageLike:
     def _debug_set_new_dataset(
         self,
         new_dataset: Dataset,
-    ):
+    ) -> None:
         """Debug method to change the the dataset metadata.
 
         This methods allow to change dataset after initialization.
@@ -216,7 +218,7 @@ class ImageLike:
     @property
     def on_disk_dask_array(self) -> da.core.Array:
         """Return the image data as a Dask array."""
-        return da.from_zarr(self.on_disk_array)
+        return da.from_zarr(self.on_disk_array)  # type: ignore
 
     @property
     def on_disk_shape(self) -> tuple[int, ...]:
@@ -283,6 +285,7 @@ class ImageLike:
         roi_coo = roi.to_raster_coo(
             pixel_size=self.dataset.pixel_size, dimensions=self.dimensions
         )
+
         slicer = RoiSlicer(
             on_disk_axes_name=self.dataset.on_disk_axes_names,
             axes_order=self.dataset.axes_order,
@@ -315,7 +318,7 @@ class ImageLike:
         )
         return DataTransformPipe(slicer=slicer)
 
-    def get_array_from_roi(
+    def _get_array_from_roi(
         self,
         roi: WorldCooROI,
         t: int | slice | None = None,
@@ -338,7 +341,7 @@ class ImageLike:
         return_array = self._get_pipe(data_pipe=data_pipe, mode=mode)
         return return_array
 
-    def set_array_from_roi(
+    def _set_array_from_roi(
         self,
         patch: ArrayLike,
         roi: WorldCooROI,
@@ -360,7 +363,7 @@ class ImageLike:
         )
         self._set_pipe(data_pipe=data_pipe, patch=patch)
 
-    def get_array(
+    def _get_array(
         self,
         x: int | slice | None = None,
         y: int | slice | None = None,
@@ -386,7 +389,7 @@ class ImageLike:
         )
         return self._get_pipe(data_pipe=data_pipe, mode=mode)
 
-    def set_array(
+    def _set_array(
         self,
         patch: ArrayLike,
         x: int | slice | None = None,
@@ -475,7 +478,7 @@ class ImageLike:
         )
         self._set_pipe(data_pipe=data_pipe, patch=patch)
 
-    def consolidate(self, order: Literal[0, 1, 2] = 1) -> None:
+    def _consolidate(self, order: Literal[0, 1, 2] = 1) -> None:
         """Consolidate the Zarr array."""
         processed_paths = [self]
 

@@ -4,8 +4,9 @@ import math
 from collections.abc import Collection
 from typing import Any
 
-from ngio.io import StoreLike
+from ngio.io import Group, StoreLike
 from ngio.ngff_meta import (
+    ImageLabelMeta,
     create_image_metadata,
     create_label_metadata,
     get_ngff_image_meta_handler,
@@ -22,15 +23,15 @@ except ImportError:
 
 
 def _build_empty_pyramid(
-    group,
-    image_meta,
+    group: Group,
+    image_meta: ImageLabelMeta,
     shape: Collection[int],
     chunks: Collection[int] | None = None,
     dtype: str = "uint16",
-    on_disk_axis: Collection[str] = ("t", "c", "z", "y", "x"),
+    on_disk_axis: Collection[str] = ("t", "c", "z", "y"),
     xy_scaling_factor: float = 2.0,
     z_scaling_factor: float = 1.0,
-):
+) -> None:
     # Return the an Image object
     scaling_factor = []
     for ax in on_disk_axis:

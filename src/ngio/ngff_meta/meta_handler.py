@@ -28,7 +28,7 @@ class NgffImageMetaHandler(Protocol):
         ...
 
     @property
-    def store(self):
+    def store(self) -> StoreOrGroup:
         """Return the Zarr store."""
         ...
 
@@ -38,7 +38,7 @@ class NgffImageMetaHandler(Protocol):
         ...
 
     @staticmethod
-    def check_version(store: StoreOrGroup = None) -> bool:
+    def check_version(store: StoreOrGroup) -> bool:
         """Check if the version of the metadata is supported."""
         ...
 

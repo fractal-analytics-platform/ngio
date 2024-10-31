@@ -1,8 +1,13 @@
 """A module to handle OME-NGFF images stored in Zarr format."""
 
+from typing import Any, Literal
+
+from ngio._common_types import ArrayLike
 from ngio.core.image_like_handler import ImageLike
+from ngio.core.roi import WorldCooROI
 from ngio.io import StoreOrGroup
-from ngio.ngff_meta.fractal_image_meta import ImageMeta, PixelSize
+from ngio.ngff_meta import PixelSize
+from ngio.ngff_meta.fractal_image_meta import ImageMeta
 
 
 class Image(ImageLike):
@@ -22,7 +27,7 @@ class Image(ImageLike):
         highest_resolution: bool = False,
         strict: bool = True,
         cache: bool = True,
-        label_group=None,
+        label_group: Any = None,
     ) -> None:
         """Initialize the the Image Object.
 
@@ -54,7 +59,9 @@ class Image(ImageLike):
     @property
     def metadata(self) -> ImageMeta:
         """Return the metadata of the image."""
-        return super().metadata
+        meta = super().metadata
+        assert isinstance(meta, ImageMeta)
+        return meta
 
     @property
     def channel_labels(self) -> list[str]:
@@ -68,3 +75,129 @@ class Image(ImageLike):
     ) -> int:
         """Return the index of the channel."""
         return self.metadata.get_channel_idx(label=label, wavelength_id=wavelength_id)
+
+    def get_array_from_roi(
+        self,
+        roi: WorldCooROI,
+        c: int | str | None = None,
+        t: int | slice | None = None,
+        mode: Literal["numpy"] | Literal["dask"] = "numpy",
+        preserve_dimensions: bool = False,
+    ) -> ArrayLike:
+        """Return the image data from a region of interest (ROI).
+
+        Args:
+            roi (WorldCooROI): The region of interest.
+            c (int | str | None): The channel index or label.
+            t (int | slice | None): The time index or slice.
+            mode (str): The mode to return the data.
+            preserve_dimensions (bool): Whether to preserve the dimensions of the data.
+
+        Returns:
+            ArrayLike: The image data.
+        """
+        if isinstance(c, str):
+            c = self.get_channel_idx(label=c)
+
+        return self._get_array_from_roi(
+            roi=roi, t=t, c=c, mode=mode, preserve_dimensions=preserve_dimensions
+        )
+
+    def set_array_from_roi(
+        self,
+        patch: ArrayLike,
+        roi: WorldCooROI,
+        c: int | str | None = None,
+        t: int | slice | None = None,
+        preserve_dimensions: bool = False,
+    ) -> None:
+        """Set the image data from a region of interest (ROI).
+
+        Args:
+            roi (WorldCooROI): The region of interest.
+            patch (ArrayLike): The patch to set.
+            c (int | str | None): The channel index or label.
+            t (int | slice | None): The time index or slice.
+            preserve_dimensions (bool): Whether to preserve the dimensions of the data.
+
+        """
+        if isinstance(c, str):
+            c = self.get_channel_idx(label=c)
+
+        return self._set_array_from_roi(
+            patch=patch, roi=roi, t=t, c=c, preserve_dimensions=preserve_dimensions
+        )
+
+    def get_array(
+        self,
+        x: int | slice | None = None,
+        y: int | slice | None = None,
+        z: int | slice | None = None,
+        c: int | str | None = None,
+        t: int | slice | None = None,
+        mode: Literal["numpy"] | Literal["dask"] = "numpy",
+        preserve_dimensions: bool = False,
+    ) -> ArrayLike:
+        """Return the image data.
+
+        Args:
+            x (int | slice | None): The x index or slice.
+            y (int | slice | None): The y index or slice.
+            z (int | slice | None): The z index or slice.
+            c (int | str | None): The channel index or label.
+            t (int | slice | None): The time index or slice.
+            mode (str): The mode to return the data.
+            preserve_dimensions (bool): Whether to preserve the dimensions of the data.
+
+        Returns:
+            ArrayLike: The image data.
+        """
+        if isinstance(c, str):
+            c = self.get_channel_idx(label=c)
+
+        return self._get_array(
+            x=x,
+            y=y,
+            z=z,
+            t=t,
+            c=c,
+            mode=mode,
+            preserve_dimensions=preserve_dimensions,
+        )
+
+    def set_array(
+        self,
+        patch: ArrayLike,
+        x: int | slice | None = None,
+        y: int | slice | None = None,
+        z: int | slice | None = None,
+        c: int | str | None = None,
+        t: int | slice | None = None,
+        preserve_dimensions: bool = False,
+    ) -> None:
+        """Set the image data in the zarr array.
+
+        Args:
+            patch (ArrayLike): The patch to set.
+            x (int | slice | None): The x index or slice.
+            y (int | slice | None): The y index or slice.
+            z (int | slice | None): The z index or slice.
+            c (int | str | None): The channel index or label.
+            t (int | slice | None): The time index or slice.
+            preserve_dimensions (bool): Whether to preserve the dimensions of the data.
+        """
+        if isinstance(c, str):
+            c = self.get_channel_idx(label=c)
+        return self._set_array(
+            patch=patch,
+            x=x,
+            y=y,
+            z=z,
+            t=t,
+            c=c,
+            preserve_dimensions=preserve_dimensions,
+        )
+
+    def consolidate(self, order: Literal[0, 1, 2] = 1) -> None:
+        """Consolidate the image."""
+        self._consolidate(order=order)

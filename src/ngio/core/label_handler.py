@@ -1,6 +1,6 @@
 """A module to handle OME-NGFF images stored in Zarr format."""
 
-from typing import Literal
+from typing import Any, Literal
 
 import zarr
 
@@ -30,13 +30,14 @@ class Label(ImageLike):
         highest_resolution: bool = False,
         strict: bool = True,
         cache: bool = True,
-        label_group=None,
+        label_group: Any = None,
     ) -> None:
         """Initialize the the Label Object.
 
         Note: Only one of `path`, `idx`, 'pixel_size' or 'highest_resolution'
         should be provided.
 
+        Args:
         store (StoreOrGroup): The Zarr store or group containing the image data.
         path (str | None): The path to the level.
         idx (int | None): The index of the level.
@@ -62,7 +63,9 @@ class Label(ImageLike):
     @property
     def metadata(self) -> LabelMeta:
         """Return the metadata of the image."""
-        return super().metadata
+        meta = super().metadata
+        assert isinstance(meta, LabelMeta)
+        return meta
 
     def get_array_from_roi(
         self,
@@ -79,7 +82,7 @@ class Label(ImageLike):
             mode (str): The mode to return the data.
             preserve_dimensions (bool): Whether to preserve the dimensions of the data.
         """
-        return super().get_array_from_roi(
+        return self._get_array_from_roi(
             roi=roi, t=t, c=None, mode=mode, preserve_dimensions=preserve_dimensions
         )
 
@@ -98,7 +101,7 @@ class Label(ImageLike):
             t (int | slice | None): The time index or slice.
             preserve_dimensions (bool): Whether to preserve the dimensions of the data.
         """
-        return super().set_array_from_roi(
+        return self._set_array_from_roi(
             patch=patch, roi=roi, t=t, c=None, preserve_dimensions=preserve_dimensions
         )
 
@@ -121,7 +124,7 @@ class Label(ImageLike):
             mode (str): The mode to return the data.
             preserve_dimensions (bool): Whether to preserve the dimensions of the data.
         """
-        return super().get_array(
+        return self._get_array(
             x=x,
             y=y,
             z=z,
@@ -150,7 +153,7 @@ class Label(ImageLike):
             t (int | slice | None): The time index or slice.
             preserve_dimensions (bool): Whether to preserve the dimensions of the data.
         """
-        return super().set_array(
+        return self._set_array(
             patch=patch,
             x=x,
             y=y,
@@ -177,7 +180,7 @@ class Label(ImageLike):
             mode (str): The mode to return the data.
             preserve_dimensions (bool): Whether to preserve the dimensions of the data.
         """
-        mask = self.get_array_from_roi(
+        mask = self._get_array_from_roi(
             roi=roi, t=t, mode=mode, preserve_dimensions=preserve_dimensions
         )
 
@@ -195,7 +198,7 @@ class Label(ImageLike):
         This method consolidates the label group by
         filling all other pyramid levels with the data
         """
-        return super().consolidate(order=0)
+        return self._consolidate(order=0)
 
 
 class LabelGroup:
@@ -222,7 +225,9 @@ class LabelGroup:
 
     def list(self) -> list[str]:
         """List all labels in the group."""
-        return self._group.attrs.get("labels", [])
+        _labels = self._group.attrs.get("labels", [])
+        assert isinstance(_labels, list)
+        return _labels
 
     def num_levels(self, name: str) -> int:
         """Get the number of levels in the labels."""
@@ -269,7 +274,7 @@ class LabelGroup:
         self,
         name: str,
         overwrite: bool = False,
-        **kwargs,
+        **kwargs: dict,
     ) -> Label:
         """Derive a new label from an existing label.
 

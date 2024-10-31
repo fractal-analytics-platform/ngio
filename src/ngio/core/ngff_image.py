@@ -28,7 +28,9 @@ class NgffImage:
     @property
     def image_meta(self) -> ImageMeta:
         """Get the image metadata."""
-        return self._image_meta.load_meta()
+        meta = self._image_meta.load_meta()
+        assert isinstance(meta, ImageMeta)
+        return meta
 
     @property
     def num_levels(self) -> int:
@@ -101,7 +103,7 @@ class NgffImage:
         store: StoreLike,
         name: str,
         overwrite: bool = True,
-        **kwargs,
+        **kwargs: dict,
     ) -> "NgffImage":
         """Derive a new image from the current image.
 

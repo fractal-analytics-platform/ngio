@@ -14,12 +14,12 @@ class TestLabel:
         assert label_handler.shape == image_handler.shape[1:]
 
         shape = label_handler.shape
-        assert label_handler.get_array(mode="dask").shape == shape
+        assert label_handler._get_array(mode="dask").shape == shape
 
-        label_handler.set_array(patch=da.ones((10, 256, 256), dtype=np.uint16))
-        assert label_handler.get_array(t=0, z=0, x=0, y=0) == 1
+        label_handler._set_array(patch=da.ones((10, 256, 256), dtype=np.uint16))
+        assert label_handler._get_array(t=0, z=0, x=0, y=0) == 1
 
-        label_handler.consolidate()
+        label_handler._consolidate()
 
         label_handler_1 = ngff_image.label.get_label(name="label")
-        assert label_handler_1.get_array(t=0, z=0, x=0, y=0) == 1
+        assert label_handler_1._get_array(t=0, z=0, x=0, y=0) == 1

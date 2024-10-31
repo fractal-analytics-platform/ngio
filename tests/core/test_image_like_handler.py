@@ -24,19 +24,19 @@ class TestImageLikeHandler:
         assert image_handler.on_disk_array.shape == shape
         assert image_handler.on_disk_dask_array.shape == shape
 
-        assert image_handler.get_array(c=0).shape == shape[1:]
+        assert image_handler._get_array(c=0).shape == shape[1:]
         assert (
-            image_handler.get_array(c=0, preserve_dimensions=True).shape
+            image_handler._get_array(c=0, preserve_dimensions=True).shape
             == (1,) + shape[1:]
         )
 
-        image_handler.set_array(patch=np.ones((3, 10, 256, 256), dtype=np.uint16))
-        assert image_handler.get_array(c=0, t=0, z=0, x=0, y=0) == 1
+        image_handler._set_array(patch=np.ones((3, 10, 256, 256), dtype=np.uint16))
+        assert image_handler._get_array(c=0, t=0, z=0, x=0, y=0) == 1
 
-        image_handler.consolidate(order=0)
+        image_handler._consolidate(order=0)
 
         image_handler_1 = ImageLike(store=ome_zarr_image_v04_path, path="1")
-        assert image_handler_1.get_array(c=0, t=0, z=0, x=0, y=0) == 1
+        assert image_handler_1._get_array(c=0, t=0, z=0, x=0, y=0) == 1
 
     @pytest.mark.skip("Not implemented yet")
     def test_ngff_image_from_pixel_size(self, ome_zarr_image_v04_path):
