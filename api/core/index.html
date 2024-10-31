@@ -18,7 +18,7 @@
       
       
       <link rel="icon" href="../../images/favicon.ico">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.40">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.43">
     
     
       
@@ -26,7 +26,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.8c3ca2c6.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.0253249f.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.06af60db.min.css">
@@ -955,7 +955,13 @@
 <span class="normal">143</span>
 <span class="normal">144</span>
 <span class="normal">145</span>
-<span class="normal">146</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">NgffImage</span><span class="p">:</span>
+<span class="normal">146</span>
+<span class="normal">147</span>
+<span class="normal">148</span>
+<span class="normal">149</span>
+<span class="normal">150</span>
+<span class="normal">151</span>
+<span class="normal">152</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">NgffImage</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A class to handle OME-NGFF images.&quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">store</span><span class="p">:</span> <span class="n">StoreLike</span><span class="p">,</span> <span class="n">cache</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -972,7 +978,9 @@
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">image_meta</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ImageMeta</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the image metadata.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_image_meta</span><span class="o">.</span><span class="n">load_meta</span><span class="p">()</span>
+        <span class="n">meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_image_meta</span><span class="o">.</span><span class="n">load_meta</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">meta</span><span class="p">,</span> <span class="n">ImageMeta</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">meta</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">num_levels</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
@@ -1045,7 +1053,7 @@
         <span class="n">store</span><span class="p">:</span> <span class="n">StoreLike</span><span class="p">,</span>
         <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">overwrite</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;NgffImage&quot;</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Derive a new image from the current image.</span>
 
@@ -1075,9 +1083,13 @@
             <span class="s2">&quot;num_levels&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_levels</span><span class="p">,</span>
             <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
             <span class="s2">&quot;channel_labels&quot;</span><span class="p">:</span> <span class="n">image_0</span><span class="o">.</span><span class="n">channel_labels</span><span class="p">,</span>
-            <span class="s2">&quot;channel_wavelengths&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
-            <span class="s2">&quot;channel_kwargs&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
-            <span class="s2">&quot;omero_kwargs&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">&quot;channel_wavelengths&quot;</span><span class="p">:</span> <span class="p">[</span>
+                <span class="n">ch</span><span class="o">.</span><span class="n">wavelength_id</span> <span class="k">for</span> <span class="n">ch</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_meta</span><span class="o">.</span><span class="n">omero</span><span class="o">.</span><span class="n">channels</span>
+            <span class="p">],</span>
+            <span class="s2">&quot;channel_kwargs&quot;</span><span class="p">:</span> <span class="p">[</span>
+                <span class="n">ch</span><span class="o">.</span><span class="n">extra_fields</span> <span class="k">for</span> <span class="n">ch</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_meta</span><span class="o">.</span><span class="n">omero</span><span class="o">.</span><span class="n">channels</span>
+            <span class="p">],</span>
+            <span class="s2">&quot;omero_kwargs&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_meta</span><span class="o">.</span><span class="n">omero</span><span class="o">.</span><span class="n">extra_fields</span><span class="p">,</span>
             <span class="s2">&quot;overwrite&quot;</span><span class="p">:</span> <span class="n">overwrite</span><span class="p">,</span>
             <span class="s2">&quot;version&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_meta</span><span class="o">.</span><span class="n">version</span><span class="p">,</span>
         <span class="p">}</span>
@@ -1210,7 +1222,7 @@
 
 
 <h4 id="ngio.core.NgffImage.derive_new_image" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">derive_new_image</span><span class="p">(</span><span class="n">store</span><span class="p">:</span> <span class="n">StoreLike</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">overwrite</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NgffImage</span></code>
+            <code class="highlight language-python"><span class="n">derive_new_image</span><span class="p">(</span><span class="n">store</span><span class="p">:</span> <span class="n">StoreLike</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">overwrite</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NgffImage</span></code>
 
 </h4>
 
@@ -1224,7 +1236,7 @@
     <ul>
         <li class="doc-section-item field-body">
             <b><code>store</code></b>
-              (<code>StoreLike</code>)
+              (<code><span title="ngio.io.StoreLike">StoreLike</span></code>)
           –
           <div class="doc-md-description">
             <p>The store to create the new image in.</p>
@@ -1232,7 +1244,7 @@
         </li>
         <li class="doc-section-item field-body">
             <b><code>name</code></b>
-              (<code>str</code>)
+              (<code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a></code>)
           –
           <div class="doc-md-description">
             <p>The name of the new image.</p>
@@ -1240,7 +1252,7 @@
         </li>
         <li class="doc-section-item field-body">
             <b><code>overwrite</code></b>
-              (<code>bool</code>, default:
+              (<code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#bool">bool</a></code>, default:
                   <code>True</code>
 )
           –
@@ -1250,6 +1262,9 @@
         </li>
         <li class="doc-section-item field-body">
             <b><code>**kwargs</code></b>
+              (<code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#dict">dict</a></code>, default:
+                  <code>{}</code>
+)
           –
           <div class="doc-md-description">
             <p>Additional keyword arguments.
@@ -1262,7 +1277,7 @@ Follow the same signature as <code>create_empty_ome_zarr_image</code>.</p>
 <p><span class="doc-section-title">Returns:</span></p>
     <ul>
         <li class="doc-section-item field-body">
-<b><code>NgffImage</code></b> (              <code>NgffImage</code>
+<b><code>NgffImage</code></b> (              <code><a class="autorefs autorefs-internal" title="ngio.core.ngff_image.NgffImage" href="#ngio.core.NgffImage">NgffImage</a></code>
 )          –
           <div class="doc-md-description">
             <p>The new image.</p>
@@ -1272,9 +1287,7 @@ Follow the same signature as <code>create_empty_ome_zarr_image</code>.</p>
 
             <details class="quote">
               <summary>Source code in <code>ngio/core/ngff_image.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 99</span>
-<span class="normal">100</span>
-<span class="normal">101</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">101</span>
 <span class="normal">102</span>
 <span class="normal">103</span>
 <span class="normal">104</span>
@@ -1319,12 +1332,18 @@ Follow the same signature as <code>create_empty_ome_zarr_image</code>.</p>
 <span class="normal">143</span>
 <span class="normal">144</span>
 <span class="normal">145</span>
-<span class="normal">146</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">derive_new_image</span><span class="p">(</span>
+<span class="normal">146</span>
+<span class="normal">147</span>
+<span class="normal">148</span>
+<span class="normal">149</span>
+<span class="normal">150</span>
+<span class="normal">151</span>
+<span class="normal">152</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">derive_new_image</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">store</span><span class="p">:</span> <span class="n">StoreLike</span><span class="p">,</span>
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">overwrite</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-    <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;NgffImage&quot;</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Derive a new image from the current image.</span>
 
@@ -1354,9 +1373,13 @@ Follow the same signature as <code>create_empty_ome_zarr_image</code>.</p>
         <span class="s2">&quot;num_levels&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_levels</span><span class="p">,</span>
         <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
         <span class="s2">&quot;channel_labels&quot;</span><span class="p">:</span> <span class="n">image_0</span><span class="o">.</span><span class="n">channel_labels</span><span class="p">,</span>
-        <span class="s2">&quot;channel_wavelengths&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="s2">&quot;channel_kwargs&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="s2">&quot;omero_kwargs&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">&quot;channel_wavelengths&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="n">ch</span><span class="o">.</span><span class="n">wavelength_id</span> <span class="k">for</span> <span class="n">ch</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_meta</span><span class="o">.</span><span class="n">omero</span><span class="o">.</span><span class="n">channels</span>
+        <span class="p">],</span>
+        <span class="s2">&quot;channel_kwargs&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="n">ch</span><span class="o">.</span><span class="n">extra_fields</span> <span class="k">for</span> <span class="n">ch</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_meta</span><span class="o">.</span><span class="n">omero</span><span class="o">.</span><span class="n">channels</span>
+        <span class="p">],</span>
+        <span class="s2">&quot;omero_kwargs&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_meta</span><span class="o">.</span><span class="n">omero</span><span class="o">.</span><span class="n">extra_fields</span><span class="p">,</span>
         <span class="s2">&quot;overwrite&quot;</span><span class="p">:</span> <span class="n">overwrite</span><span class="p">,</span>
         <span class="s2">&quot;version&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_meta</span><span class="o">.</span><span class="n">version</span><span class="p">,</span>
     <span class="p">}</span>
@@ -1391,7 +1414,7 @@ Follow the same signature as <code>create_empty_ome_zarr_image</code>.</p>
     <ul>
         <li class="doc-section-item field-body">
             <b><code>path</code></b>
-              (<code>str | None</code>, default:
+              (<code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#str">str</a> | None</code>, default:
                   <code>None</code>
 )
           –
@@ -1401,7 +1424,7 @@ Follow the same signature as <code>create_empty_ome_zarr_image</code>.</p>
         </li>
         <li class="doc-section-item field-body">
             <b><code>pixel_size</code></b>
-              (<code>tuple[float, ...] | list[float] | None</code>, default:
+              (<code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#tuple">tuple</a>[<a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a>, ...] | <a class="autorefs autorefs-external" href="https://docs.python.org/3/library/stdtypes.html#list">list</a>[<a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#float">float</a>] | None</code>, default:
                   <code>None</code>
 )
           –
@@ -1412,7 +1435,7 @@ size of the level.</p>
         </li>
         <li class="doc-section-item field-body">
             <b><code>highest_resolution</code></b>
-              (<code>bool</code>, default:
+              (<code><a class="autorefs autorefs-external" href="https://docs.python.org/3/library/functions.html#bool">bool</a></code>, default:
                   <code>True</code>
 )
           –
@@ -1427,7 +1450,7 @@ resolution level</p>
 <p><span class="doc-section-title">Returns:</span></p>
     <ul>
         <li class="doc-section-item field-body">
-<b><code>ImageHandler</code></b> (              <code>Image</code>
+<b><code>ImageHandler</code></b> (              <code><span title="ngio.core.image_handler.Image">Image</span></code>
 )          –
           <div class="doc-md-description">
             <p>The image handler.</p>
@@ -1437,9 +1460,7 @@ resolution level</p>
 
             <details class="quote">
               <summary>Source code in <code>ngio/core/ngff_image.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">43</span>
-<span class="normal">44</span>
-<span class="normal">45</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">45</span>
 <span class="normal">46</span>
 <span class="normal">47</span>
 <span class="normal">48</span>
@@ -1466,7 +1487,9 @@ resolution level</p>
 <span class="normal">69</span>
 <span class="normal">70</span>
 <span class="normal">71</span>
-<span class="normal">72</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_image</span><span class="p">(</span>
+<span class="normal">72</span>
+<span class="normal">73</span>
+<span class="normal">74</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_image</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -1531,7 +1554,7 @@ resolution level</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">October 14, 2024</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">October 31, 2024</span>
   </span>
 
     
@@ -1541,7 +1564,7 @@ resolution level</p>
     <span class="md-icon" title="Created">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">October 14, 2024</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">October 31, 2024</span>
   </span>
 
     
@@ -1655,7 +1678,7 @@ resolution level</p>
     <script id="__config" type="application/json">{"base": "../..", "features": ["content.tooltips", "content.code.annotate", "navigation.instant", "navigation.instant.progress", "navigation.sections", "navigation.path", "navigation.indexes", "navigation.footer", "toc.follow", "search.suggest", "search.share"], "search": "../../assets/javascripts/workers/search.6ce7567c.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.525ec568.min.js"></script>
+      <script src="../../assets/javascripts/bundle.83f73b43.min.js"></script>
       
     
   </body>
