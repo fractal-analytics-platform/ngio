@@ -868,7 +868,6 @@ class ImageMeta(BaseMeta):
         if self._omero is None:
             return []
         assert self.omero is not None
-        assert self.omero.channels is not None
         return self.omero.channels
 
     @property

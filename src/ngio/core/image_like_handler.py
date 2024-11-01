@@ -415,7 +415,7 @@ class ImageLike:
         )
         self._set_pipe(data_pipe=data_pipe, patch=patch)
 
-    def get_array_masked(
+    def _get_array_masked(
         self,
         roi: WorldCooROI,
         t: int | slice | None = None,
@@ -456,7 +456,7 @@ class ImageLike:
         where_func = np.where if mode == "numpy" else da.where
         return where_func(mask, array, 0)
 
-    def set_array_masked(
+    def _set_array_masked(
         self,
         patch: ArrayLike,
         roi: WorldCooROI,
