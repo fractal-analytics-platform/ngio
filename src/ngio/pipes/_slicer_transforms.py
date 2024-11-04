@@ -6,7 +6,7 @@ from dask import array as da
 import dask
 from dask.delayed import Delayed
 
-from ngio._common_types import ArrayLike
+from ngio.utils._common_types import ArrayLike
 from ngio.core.roi import RasterCooROI
 import zarr
 

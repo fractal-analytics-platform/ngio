@@ -2,7 +2,7 @@ from typing import Protocol
 
 from scipy.ndimage import zoom
 
-from ngio._common_types import ArrayLike
+from ngio.utils._common_types import ArrayLike
 
 
 class Transform(Protocol):

@@ -5,7 +5,7 @@ import numpy as np
 from ngio.core.image_handler import Image
 from ngio.core.label_handler import LabelGroup
 from ngio.core.utils import create_empty_ome_zarr_image
-from ngio.io import StoreLike, open_group_wrapper
+from ngio.io import AccessModeLiteral, StoreLike, open_group_wrapper
 from ngio.ngff_meta import get_ngff_image_meta_handler
 from ngio.ngff_meta.fractal_image_meta import ImageMeta, PixelSize
 from ngio.tables.tables_group import TableGroup
@@ -14,16 +14,19 @@ from ngio.tables.tables_group import TableGroup
 class NgffImage:
     """A class to handle OME-NGFF images."""
 
-    def __init__(self, store: StoreLike, cache: bool = False) -> None:
+    def __init__(
+        self, store: StoreLike, cache: bool = False, mode: AccessModeLiteral = "r+"
+    ) -> None:
         """Initialize the NGFFImage in read mode."""
         self.store = store
-        self.group = open_group_wrapper(store=store, mode="r+")
+        self._mode = mode
+        self.group = open_group_wrapper(store=store, mode=self._mode)
         self._image_meta = get_ngff_image_meta_handler(
             self.group, meta_mode="image", cache=cache
         )
         self._metadata_cache = cache
-        self.table = TableGroup(self.group)
-        self.label = LabelGroup(self.group, image_ref=self.get_image())
+        self.table = TableGroup(self.group, mode=self._mode)
+        self.label = LabelGroup(self.group, image_ref=self.get_image(), mode=self._mode)
 
     @property
     def image_meta(self) -> ImageMeta:

@@ -4,13 +4,13 @@ from typing import Any, Literal
 
 import zarr
 
-from ngio._common_types import ArrayLike
 from ngio.core.image_handler import Image
 from ngio.core.image_like_handler import ImageLike
 from ngio.core.roi import WorldCooROI
 from ngio.core.utils import create_empty_ome_zarr_label
-from ngio.io import StoreLike, StoreOrGroup
+from ngio.io import AccessModeLiteral, StoreLike, StoreOrGroup
 from ngio.ngff_meta.fractal_image_meta import LabelMeta, PixelSize
+from ngio.utils._common_types import ArrayLike
 
 
 class Label(ImageLike):
@@ -209,16 +209,19 @@ class LabelGroup:
         group: StoreLike | zarr.Group,
         image_ref: Image | None = None,
         cache: bool = True,
+        mode: AccessModeLiteral = "r+",
     ) -> None:
         """Initialize the LabelGroupHandler."""
+        self._mode = mode
         if not isinstance(group, zarr.Group):
-            group = zarr.open_group(group, mode="a")
+            group = zarr.open_group(group, mode=self._mode)
 
         if "labels" not in group:
             self._group = group.create_group("labels")
             self._group.attrs["labels"] = []  # initialize the labels attribute
         else:
-            self._group: zarr.Group = group["labels"]
+            self._group = group["labels"]
+            assert isinstance(self._group, zarr.Group)
 
         self._image_ref = image_ref
         self._metadata_cache = cache

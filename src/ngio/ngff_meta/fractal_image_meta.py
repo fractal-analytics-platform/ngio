@@ -12,7 +12,7 @@ import numpy as np
 from pydantic import BaseModel, Field
 from typing_extensions import Self
 
-from ngio.pydantic_utils import BaseWithExtraFields
+from ngio.utils._pydantic_utils import BaseWithExtraFields
 
 
 class Channel(BaseWithExtraFields):

@@ -9,7 +9,6 @@ import numpy as np
 import zarr
 from dask.delayed import Delayed
 
-from ngio._common_types import ArrayLike
 from ngio.core.dimensions import Dimensions
 from ngio.core.roi import WorldCooROI
 from ngio.core.utils import Lock
@@ -22,6 +21,7 @@ from ngio.ngff_meta import (
     get_ngff_image_meta_handler,
 )
 from ngio.pipes import DataTransformPipe, NaiveSlicer, RoiSlicer, on_disk_zoom
+from ngio.utils._common_types import ArrayLike
 
 
 class ImageLike:

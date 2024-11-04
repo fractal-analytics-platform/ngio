@@ -9,9 +9,9 @@ from warnings import warn
 import zarr
 from pydantic import ValidationError
 
-from ngio.io import StoreLike
-from ngio.pydantic_utils import BaseWithExtraFields
+from ngio.io import AccessModeLiteral, StoreLike
 from ngio.tables.v1 import FeatureTableV1, MaskingROITableV1, ROITableV1
+from ngio.utils._pydantic_utils import BaseWithExtraFields
 
 ROITable = ROITableV1
 IMPLEMENTED_ROI_TABLES = {"1": ROITableV1}
@@ -30,12 +30,12 @@ TableType = Literal["roi_table", "feature_table", "masking_roi_table"]
 class CommonMeta(BaseWithExtraFields):
     """Common metadata for all tables."""
 
-    type: Literal["roi_table", "feature_table", "masking_roi_table"]
+    type: TableType
     fractal_table_version: str = "1"
 
 
 def _find_table_impl(
-    table_type: Literal["roi_table", "feature_table", "masking_roi_table"],
+    table_type: TableType,
     version: str,
 ) -> Table:
     """Find the type of table in the group."""
@@ -87,10 +87,13 @@ def _get_table_impl(
 class TableGroup:
     """A class to handle the /labels group in an OME-NGFF file."""
 
-    def __init__(self, group: StoreLike | zarr.Group) -> None:
+    def __init__(
+        self, group: StoreLike | zarr.Group, mode: AccessModeLiteral = "r+"
+    ) -> None:
         """Initialize the LabelGroupHandler."""
+        self._mode = mode
         if not isinstance(group, zarr.Group):
-            group = zarr.open_group(group, mode="a")
+            group = zarr.open_group(group, mode=self._mode)
 
         if "tables" not in group:
             self._group = group.create_group("tables")
@@ -109,6 +112,8 @@ class TableGroup:
         """Return the list of tables."""
         list_of_tables = self._group.attrs.get("tables", [])
         self._validate_list_of_tables(list_of_tables)
+        assert isinstance(list_of_tables, list)
+        assert all(isinstance(table_name, str) for table_name in list_of_tables)
         return list_of_tables
 
     def list(
@@ -183,10 +188,10 @@ class TableGroup:
     def new(
         self,
         name: str,
-        table_type: str = "roi_table",
+        table_type: TableType = "roi_table",
         overwrite: bool = False,
         version: str = "1",
-        **type_specific_kwargs,
+        **type_specific_kwargs: dict,
     ) -> Table:
         """Add a new table to the group."""
         list_of_tables = self._get_list_of_tables()
@@ -206,4 +211,5 @@ class TableGroup:
 
         self._group.attrs["tables"] = [*list_of_tables, name]
 
+        assert isinstance(new_table, ROITable | FeatureTable | MaskingROITable)
         return new_table

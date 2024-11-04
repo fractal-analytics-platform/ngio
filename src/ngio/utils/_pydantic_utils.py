@@ -2,7 +2,7 @@
 
 import os
 from collections import namedtuple
-from typing import TypeVar
+from typing import Any, NamedTuple, TypeVar
 
 from pydantic import BaseModel, Field, model_serializer, model_validator
 
@@ -21,13 +21,13 @@ class BaseWithExtraFields(BaseModel):
     extra_fields: dict = Field(default_factory=dict)
 
     @model_validator(mode="before")
-    def _collect_extra_fields(cls, values):
+    def _collect_extra_fields(cls, values: dict[str, Any]) -> dict[str, Any]:
         extra = {k: v for k, v in values.items() if k not in cls.model_fields}
         values["extra_fields"] = extra
         return values
 
     @model_serializer(mode="wrap")
-    def _custom_serializer(self, handler):
+    def _custom_serializer(self, handler: Any) -> dict[str, Any]:
         basic_dict = handler(self)
         extra = basic_dict.pop("extra_fields")
         return {**basic_dict, **extra}
@@ -47,6 +47,6 @@ def unique_items_validator(values: list[T]) -> list[T]:
     return values
 
 
-def named_tuple_from_pydantic_model(model: BaseModel) -> namedtuple:
+def named_tuple_from_pydantic_model(model: BaseModel) -> NamedTuple:
     """Create a namedtuple from a Pydantic model."""
-    return namedtuple(name=model.__name__, field_names=model.model_fields.keys())
+    return namedtuple(name=model.__name__, field_names=model.model_fields.keys())  # type: ignore

@@ -2,12 +2,12 @@
 
 from typing import Any, Literal
 
-from ngio._common_types import ArrayLike
 from ngio.core.image_like_handler import ImageLike
 from ngio.core.roi import WorldCooROI
 from ngio.io import StoreOrGroup
 from ngio.ngff_meta import PixelSize
 from ngio.ngff_meta.fractal_image_meta import ImageMeta
+from ngio.utils._common_types import ArrayLike
 
 
 class Image(ImageLike):

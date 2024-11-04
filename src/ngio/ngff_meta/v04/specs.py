@@ -7,7 +7,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator
 
-from ngio.pydantic_utils import (
+from ngio.utils._pydantic_utils import (
     SKIP_NGFF_VALIDATION,
     BaseWithExtraFields,
     unique_items_validator,

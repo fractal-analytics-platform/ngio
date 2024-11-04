@@ -1,8 +1,8 @@
 """A module to handle data transforms for image data."""
 
-from ngio._common_types import ArrayLike
 from ngio.pipes._slicer_transforms import SlicerTransform
 from ngio.pipes._transforms import Transform
+from ngio.utils._common_types import ArrayLike
 
 
 class DataTransformPipe:
