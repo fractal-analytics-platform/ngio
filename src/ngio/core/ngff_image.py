@@ -94,10 +94,10 @@ class NgffImage:
         max_dtype = np.iinfo(image.on_disk_array.dtype).max
 
         start = da.percentile(
-            lowest_res_image.on_disk_dask_array, min_percentile
+            lowest_res_image.on_disk_dask_array, min_percentile, method="nearest"
         ).compute()
         end = da.percentile(
-            lowest_res_image.on_disk_dask_array, max_percentile
+            lowest_res_image.on_disk_dask_array, max_percentile, method="nearest"
         ).compute()
 
         if meta.omero is None:
