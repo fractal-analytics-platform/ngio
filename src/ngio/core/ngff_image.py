@@ -94,11 +94,16 @@ class NgffImage:
         max_dtype = np.iinfo(image.on_disk_array.dtype).max
 
         start = da.percentile(
-            lowest_res_image.on_disk_dask_array, min_percentile, method="nearest"
+            lowest_res_image.on_disk_dask_array.ravel(),
+            min_percentile,
+            method="nearest",
         ).compute()
         end = da.percentile(
-            lowest_res_image.on_disk_dask_array, max_percentile, method="nearest"
+            lowest_res_image.on_disk_dask_array.ravel(),
+            max_percentile,
+            method="nearest",
         ).compute()
+        print(f"Setting window to {start} - {end}")
 
         if meta.omero is None:
             raise ValueError("OMERO metadata is not present in the image.")
