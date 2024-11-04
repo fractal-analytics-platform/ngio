@@ -1,5 +1,6 @@
 """Abstract class for handling OME-NGFF images."""
 
+import dask.array as da
 import numpy as np
 
 from ngio.core.image_handler import Image
@@ -76,16 +77,31 @@ class NgffImage:
             cache=self._metadata_cache,
         )
 
-    def _update_omero_window(self) -> None:
+    def _update_omero_window(
+        self, min_percentile: int = 5, max_percentile: int = 95
+    ) -> None:
         """Update the OMERO window."""
         meta = self.image_meta
-        image = self.get_image(highest_resolution=True)
-        max_dtype = np.iinfo(image.on_disk_array.dtype).max
-        start, end = (
-            image.on_disk_dask_array.min().compute(),
-            image.on_disk_dask_array.max().compute(),
-        )
 
+        lowest_res_image = self.get_image(highest_resolution=True)
+        lowest_res_shape = lowest_res_image.shape
+        for path in self.levels_paths:
+            image = self.get_image(path=path)
+            if np.prod(image.shape) < np.prod(lowest_res_shape):
+                lowest_res_shape = image.shape
+                lowest_res_image = image
+
+        max_dtype = np.iinfo(image.on_disk_array.dtype).max
+
+        start = da.percentile(
+            lowest_res_image.on_disk_dask_array, min_percentile
+        ).compute()
+        end = da.percentile(
+            lowest_res_image.on_disk_dask_array, max_percentile
+        ).compute()
+
+        if meta.omero is None:
+            raise ValueError("OMERO metadata is not present in the image.")
         channel_list = meta.omero.channels
 
         new_channel_list = []
@@ -122,6 +138,15 @@ class NgffImage:
         """
         image_0 = self.get_image(highest_resolution=True)
 
+        # Get the channel information if it exists
+        omero = self.image_meta.omero
+        if omero is not None:
+            channels = omero.channels
+            omero_kwargs = omero.extra_fields
+        else:
+            channels = []
+            omero_kwargs = {}
+
         default_kwargs = {
             "store": store,
             "shape": image_0.on_disk_shape,
@@ -136,13 +161,9 @@ class NgffImage:
             "num_levels": self.num_levels,
             "name": name,
             "channel_labels": image_0.channel_labels,
-            "channel_wavelengths": [
-                ch.wavelength_id for ch in self.image_meta.omero.channels
-            ],
-            "channel_kwargs": [
-                ch.extra_fields for ch in self.image_meta.omero.channels
-            ],
-            "omero_kwargs": self.image_meta.omero.extra_fields,
+            "channel_wavelengths": [ch.wavelength_id for ch in channels],
+            "channel_kwargs": [ch.extra_fields for ch in channels],
+            "omero_kwargs": omero_kwargs,
             "overwrite": overwrite,
             "version": self.image_meta.version,
         }
