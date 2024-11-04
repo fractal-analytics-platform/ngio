@@ -823,8 +823,7 @@
 
               <details class="quote">
                 <summary>Source code in <code>ngio/core/ngff_image.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 14</span>
-<span class="normal"> 15</span>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 15</span>
 <span class="normal"> 16</span>
 <span class="normal"> 17</span>
 <span class="normal"> 18</span>
@@ -964,7 +963,28 @@
 <span class="normal">152</span>
 <span class="normal">153</span>
 <span class="normal">154</span>
-<span class="normal">155</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">NgffImage</span><span class="p">:</span>
+<span class="normal">155</span>
+<span class="normal">156</span>
+<span class="normal">157</span>
+<span class="normal">158</span>
+<span class="normal">159</span>
+<span class="normal">160</span>
+<span class="normal">161</span>
+<span class="normal">162</span>
+<span class="normal">163</span>
+<span class="normal">164</span>
+<span class="normal">165</span>
+<span class="normal">166</span>
+<span class="normal">167</span>
+<span class="normal">168</span>
+<span class="normal">169</span>
+<span class="normal">170</span>
+<span class="normal">171</span>
+<span class="normal">172</span>
+<span class="normal">173</span>
+<span class="normal">174</span>
+<span class="normal">175</span>
+<span class="normal">176</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">NgffImage</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A class to handle OME-NGFF images.&quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
@@ -1029,16 +1049,31 @@
             <span class="n">cache</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_metadata_cache</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_update_omero_window</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">_update_omero_window</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">min_percentile</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span> <span class="n">max_percentile</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">95</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Update the OMERO window.&quot;&quot;&quot;</span>
         <span class="n">meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_meta</span>
-        <span class="n">image</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_image</span><span class="p">(</span><span class="n">highest_resolution</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="n">max_dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">iinfo</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">on_disk_array</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">max</span>
-        <span class="n">start</span><span class="p">,</span> <span class="n">end</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">image</span><span class="o">.</span><span class="n">on_disk_dask_array</span><span class="o">.</span><span class="n">min</span><span class="p">()</span><span class="o">.</span><span class="n">compute</span><span class="p">(),</span>
-            <span class="n">image</span><span class="o">.</span><span class="n">on_disk_dask_array</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="o">.</span><span class="n">compute</span><span class="p">(),</span>
-        <span class="p">)</span>
 
+        <span class="n">lowest_res_image</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_image</span><span class="p">(</span><span class="n">highest_resolution</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">lowest_res_shape</span> <span class="o">=</span> <span class="n">lowest_res_image</span><span class="o">.</span><span class="n">shape</span>
+        <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">levels_paths</span><span class="p">:</span>
+            <span class="n">image</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_image</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">path</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">lowest_res_shape</span><span class="p">):</span>
+                <span class="n">lowest_res_shape</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">shape</span>
+                <span class="n">lowest_res_image</span> <span class="o">=</span> <span class="n">image</span>
+
+        <span class="n">max_dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">iinfo</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">on_disk_array</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">max</span>
+
+        <span class="n">start</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span>
+            <span class="n">lowest_res_image</span><span class="o">.</span><span class="n">on_disk_dask_array</span><span class="p">,</span> <span class="n">min_percentile</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
+        <span class="n">end</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span>
+            <span class="n">lowest_res_image</span><span class="o">.</span><span class="n">on_disk_dask_array</span><span class="p">,</span> <span class="n">max_percentile</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">meta</span><span class="o">.</span><span class="n">omero</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;OMERO metadata is not present in the image.&quot;</span><span class="p">)</span>
         <span class="n">channel_list</span> <span class="o">=</span> <span class="n">meta</span><span class="o">.</span><span class="n">omero</span><span class="o">.</span><span class="n">channels</span>
 
         <span class="n">new_channel_list</span> <span class="o">=</span> <span class="p">[]</span>
@@ -1075,6 +1110,15 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">image_0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_image</span><span class="p">(</span><span class="n">highest_resolution</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
+        <span class="c1"># Get the channel information if it exists</span>
+        <span class="n">omero</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_meta</span><span class="o">.</span><span class="n">omero</span>
+        <span class="k">if</span> <span class="n">omero</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">channels</span> <span class="o">=</span> <span class="n">omero</span><span class="o">.</span><span class="n">channels</span>
+            <span class="n">omero_kwargs</span> <span class="o">=</span> <span class="n">omero</span><span class="o">.</span><span class="n">extra_fields</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">channels</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">omero_kwargs</span> <span class="o">=</span> <span class="p">{}</span>
+
         <span class="n">default_kwargs</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;store&quot;</span><span class="p">:</span> <span class="n">store</span><span class="p">,</span>
             <span class="s2">&quot;shape&quot;</span><span class="p">:</span> <span class="n">image_0</span><span class="o">.</span><span class="n">on_disk_shape</span><span class="p">,</span>
@@ -1089,13 +1133,9 @@
             <span class="s2">&quot;num_levels&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_levels</span><span class="p">,</span>
             <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
             <span class="s2">&quot;channel_labels&quot;</span><span class="p">:</span> <span class="n">image_0</span><span class="o">.</span><span class="n">channel_labels</span><span class="p">,</span>
-            <span class="s2">&quot;channel_wavelengths&quot;</span><span class="p">:</span> <span class="p">[</span>
-                <span class="n">ch</span><span class="o">.</span><span class="n">wavelength_id</span> <span class="k">for</span> <span class="n">ch</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_meta</span><span class="o">.</span><span class="n">omero</span><span class="o">.</span><span class="n">channels</span>
-            <span class="p">],</span>
-            <span class="s2">&quot;channel_kwargs&quot;</span><span class="p">:</span> <span class="p">[</span>
-                <span class="n">ch</span><span class="o">.</span><span class="n">extra_fields</span> <span class="k">for</span> <span class="n">ch</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_meta</span><span class="o">.</span><span class="n">omero</span><span class="o">.</span><span class="n">channels</span>
-            <span class="p">],</span>
-            <span class="s2">&quot;omero_kwargs&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_meta</span><span class="o">.</span><span class="n">omero</span><span class="o">.</span><span class="n">extra_fields</span><span class="p">,</span>
+            <span class="s2">&quot;channel_wavelengths&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">ch</span><span class="o">.</span><span class="n">wavelength_id</span> <span class="k">for</span> <span class="n">ch</span> <span class="ow">in</span> <span class="n">channels</span><span class="p">],</span>
+            <span class="s2">&quot;channel_kwargs&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">ch</span><span class="o">.</span><span class="n">extra_fields</span> <span class="k">for</span> <span class="n">ch</span> <span class="ow">in</span> <span class="n">channels</span><span class="p">],</span>
+            <span class="s2">&quot;omero_kwargs&quot;</span><span class="p">:</span> <span class="n">omero_kwargs</span><span class="p">,</span>
             <span class="s2">&quot;overwrite&quot;</span><span class="p">:</span> <span class="n">overwrite</span><span class="p">,</span>
             <span class="s2">&quot;version&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_meta</span><span class="o">.</span><span class="n">version</span><span class="p">,</span>
         <span class="p">}</span>
@@ -1199,8 +1239,7 @@
 
             <details class="quote">
               <summary>Source code in <code>ngio/core/ngff_image.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">17</span>
-<span class="normal">18</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">18</span>
 <span class="normal">19</span>
 <span class="normal">20</span>
 <span class="normal">21</span>
@@ -1211,7 +1250,8 @@
 <span class="normal">26</span>
 <span class="normal">27</span>
 <span class="normal">28</span>
-<span class="normal">29</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+<span class="normal">29</span>
+<span class="normal">30</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span> <span class="n">store</span><span class="p">:</span> <span class="n">StoreLike</span><span class="p">,</span> <span class="n">cache</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">mode</span><span class="p">:</span> <span class="n">AccessModeLiteral</span> <span class="o">=</span> <span class="s2">&quot;r+&quot;</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Initialize the NGFFImage in read mode.&quot;&quot;&quot;</span>
@@ -1299,23 +1339,7 @@ Follow the same signature as <code>create_empty_ome_zarr_image</code>.</p>
 
             <details class="quote">
               <summary>Source code in <code>ngio/core/ngff_image.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">104</span>
-<span class="normal">105</span>
-<span class="normal">106</span>
-<span class="normal">107</span>
-<span class="normal">108</span>
-<span class="normal">109</span>
-<span class="normal">110</span>
-<span class="normal">111</span>
-<span class="normal">112</span>
-<span class="normal">113</span>
-<span class="normal">114</span>
-<span class="normal">115</span>
-<span class="normal">116</span>
-<span class="normal">117</span>
-<span class="normal">118</span>
-<span class="normal">119</span>
-<span class="normal">120</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">120</span>
 <span class="normal">121</span>
 <span class="normal">122</span>
 <span class="normal">123</span>
@@ -1350,7 +1374,28 @@ Follow the same signature as <code>create_empty_ome_zarr_image</code>.</p>
 <span class="normal">152</span>
 <span class="normal">153</span>
 <span class="normal">154</span>
-<span class="normal">155</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">derive_new_image</span><span class="p">(</span>
+<span class="normal">155</span>
+<span class="normal">156</span>
+<span class="normal">157</span>
+<span class="normal">158</span>
+<span class="normal">159</span>
+<span class="normal">160</span>
+<span class="normal">161</span>
+<span class="normal">162</span>
+<span class="normal">163</span>
+<span class="normal">164</span>
+<span class="normal">165</span>
+<span class="normal">166</span>
+<span class="normal">167</span>
+<span class="normal">168</span>
+<span class="normal">169</span>
+<span class="normal">170</span>
+<span class="normal">171</span>
+<span class="normal">172</span>
+<span class="normal">173</span>
+<span class="normal">174</span>
+<span class="normal">175</span>
+<span class="normal">176</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">derive_new_image</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">store</span><span class="p">:</span> <span class="n">StoreLike</span><span class="p">,</span>
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -1371,6 +1416,15 @@ Follow the same signature as <code>create_empty_ome_zarr_image</code>.</p>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">image_0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_image</span><span class="p">(</span><span class="n">highest_resolution</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
+    <span class="c1"># Get the channel information if it exists</span>
+    <span class="n">omero</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_meta</span><span class="o">.</span><span class="n">omero</span>
+    <span class="k">if</span> <span class="n">omero</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">channels</span> <span class="o">=</span> <span class="n">omero</span><span class="o">.</span><span class="n">channels</span>
+        <span class="n">omero_kwargs</span> <span class="o">=</span> <span class="n">omero</span><span class="o">.</span><span class="n">extra_fields</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">channels</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">omero_kwargs</span> <span class="o">=</span> <span class="p">{}</span>
+
     <span class="n">default_kwargs</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;store&quot;</span><span class="p">:</span> <span class="n">store</span><span class="p">,</span>
         <span class="s2">&quot;shape&quot;</span><span class="p">:</span> <span class="n">image_0</span><span class="o">.</span><span class="n">on_disk_shape</span><span class="p">,</span>
@@ -1385,13 +1439,9 @@ Follow the same signature as <code>create_empty_ome_zarr_image</code>.</p>
         <span class="s2">&quot;num_levels&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_levels</span><span class="p">,</span>
         <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
         <span class="s2">&quot;channel_labels&quot;</span><span class="p">:</span> <span class="n">image_0</span><span class="o">.</span><span class="n">channel_labels</span><span class="p">,</span>
-        <span class="s2">&quot;channel_wavelengths&quot;</span><span class="p">:</span> <span class="p">[</span>
-            <span class="n">ch</span><span class="o">.</span><span class="n">wavelength_id</span> <span class="k">for</span> <span class="n">ch</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_meta</span><span class="o">.</span><span class="n">omero</span><span class="o">.</span><span class="n">channels</span>
-        <span class="p">],</span>
-        <span class="s2">&quot;channel_kwargs&quot;</span><span class="p">:</span> <span class="p">[</span>
-            <span class="n">ch</span><span class="o">.</span><span class="n">extra_fields</span> <span class="k">for</span> <span class="n">ch</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_meta</span><span class="o">.</span><span class="n">omero</span><span class="o">.</span><span class="n">channels</span>
-        <span class="p">],</span>
-        <span class="s2">&quot;omero_kwargs&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_meta</span><span class="o">.</span><span class="n">omero</span><span class="o">.</span><span class="n">extra_fields</span><span class="p">,</span>
+        <span class="s2">&quot;channel_wavelengths&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">ch</span><span class="o">.</span><span class="n">wavelength_id</span> <span class="k">for</span> <span class="n">ch</span> <span class="ow">in</span> <span class="n">channels</span><span class="p">],</span>
+        <span class="s2">&quot;channel_kwargs&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">ch</span><span class="o">.</span><span class="n">extra_fields</span> <span class="k">for</span> <span class="n">ch</span> <span class="ow">in</span> <span class="n">channels</span><span class="p">],</span>
+        <span class="s2">&quot;omero_kwargs&quot;</span><span class="p">:</span> <span class="n">omero_kwargs</span><span class="p">,</span>
         <span class="s2">&quot;overwrite&quot;</span><span class="p">:</span> <span class="n">overwrite</span><span class="p">,</span>
         <span class="s2">&quot;version&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_meta</span><span class="o">.</span><span class="n">version</span><span class="p">,</span>
     <span class="p">}</span>
@@ -1472,8 +1522,7 @@ resolution level</p>
 
             <details class="quote">
               <summary>Source code in <code>ngio/core/ngff_image.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">48</span>
-<span class="normal">49</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">49</span>
 <span class="normal">50</span>
 <span class="normal">51</span>
 <span class="normal">52</span>
@@ -1501,7 +1550,8 @@ resolution level</p>
 <span class="normal">74</span>
 <span class="normal">75</span>
 <span class="normal">76</span>
-<span class="normal">77</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_image</span><span class="p">(</span>
+<span class="normal">77</span>
+<span class="normal">78</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_image</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
