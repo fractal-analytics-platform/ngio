@@ -1066,10 +1066,10 @@
         <span class="n">max_dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">iinfo</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">on_disk_array</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">max</span>
 
         <span class="n">start</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span>
-            <span class="n">lowest_res_image</span><span class="o">.</span><span class="n">on_disk_dask_array</span><span class="p">,</span> <span class="n">min_percentile</span>
+            <span class="n">lowest_res_image</span><span class="o">.</span><span class="n">on_disk_dask_array</span><span class="p">,</span> <span class="n">min_percentile</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;nearest&quot;</span>
         <span class="p">)</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
         <span class="n">end</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span>
-            <span class="n">lowest_res_image</span><span class="o">.</span><span class="n">on_disk_dask_array</span><span class="p">,</span> <span class="n">max_percentile</span>
+            <span class="n">lowest_res_image</span><span class="o">.</span><span class="n">on_disk_dask_array</span><span class="p">,</span> <span class="n">max_percentile</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;nearest&quot;</span>
         <span class="p">)</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="n">meta</span><span class="o">.</span><span class="n">omero</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
