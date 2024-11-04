@@ -5,6 +5,8 @@ from typing import Literal
 import zarr
 from packaging.version import Version
 
+from ngio.utils import NgioFileExistsError, NgioFileNotFoundError
+
 zarr_version = version("zarr")
 ZARR_PYTHON_V = 2 if Version(zarr_version) < Version("3.0.0a") else 3
 
@@ -68,13 +70,13 @@ def _open_group_v2_v3(
             group = zarr.open_group(store=store, mode=mode)
 
         except ContainsGroupError as e:
-            raise FileExistsError(
+            raise NgioFileExistsError(
                 f"A Zarr group already exists at {store}, "
                 "consider setting overwrite=True."
             ) from e
 
         except GroupNotFoundError as e:
-            raise FileNotFoundError(f"No Zarr group found at {store}") from e
+            raise NgioFileNotFoundError(f"No Zarr group found at {store}") from e
 
         return group
 
