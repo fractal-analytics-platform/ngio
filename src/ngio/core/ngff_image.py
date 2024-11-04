@@ -10,6 +10,7 @@ from ngio.io import AccessModeLiteral, StoreLike, open_group_wrapper
 from ngio.ngff_meta import get_ngff_image_meta_handler
 from ngio.ngff_meta.fractal_image_meta import ImageMeta, PixelSize
 from ngio.tables.tables_group import TableGroup
+from ngio.utils import ngio_logger
 
 
 class NgffImage:
@@ -28,6 +29,8 @@ class NgffImage:
         self._metadata_cache = cache
         self.table = TableGroup(self.group, mode=self._mode)
         self.label = LabelGroup(self.group, image_ref=self.get_image(), mode=self._mode)
+        ngio_logger.info(f"Opened image located in store: {store}")
+        ngio_logger.info(f"- Image number of levels: {self.num_levels}")
 
     @property
     def image_meta(self) -> ImageMeta:
@@ -68,7 +71,7 @@ class NgffImage:
         if path is not None or pixel_size is not None:
             highest_resolution = False
 
-        return Image(
+        image = Image(
             store=self.group,
             path=path,
             pixel_size=pixel_size,
@@ -76,6 +79,10 @@ class NgffImage:
             label_group=LabelGroup(self.group, image_ref=None),
             cache=self._metadata_cache,
         )
+        ngio_logger.info(f"Opened image at path: {image.path}")
+        ngio_logger.info(f"- {image.dimensions}")
+        ngio_logger.info(f"- {image.pixel_size}")
+        return image
 
     def _update_omero_window(
         self, min_percentile: int = 5, max_percentile: int = 95
@@ -103,7 +110,6 @@ class NgffImage:
             max_percentile,
             method="nearest",
         ).compute()
-        print(f"Setting window to {start} - {end}")
 
         if meta.omero is None:
             raise ValueError("OMERO metadata is not present in the image.")

@@ -62,7 +62,6 @@ def _open_group_v2_v3(
     Returns:
         zarr.Group: The opened Zarr group.
     """
-    print(mode)
     if ZARR_PYTHON_V == 3:
         return zarr.open_group(store=store, mode=mode, zarr_format=zarr_format)
     else:

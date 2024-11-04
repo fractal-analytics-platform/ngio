@@ -100,7 +100,7 @@ class PixelSize(BaseModel):
     unit: SpaceUnits = SpaceUnits.micrometer
     virtual: bool = False
 
-    def __repr__(self) -> str:
+    def __str__(self) -> str:
         """Return the string representation of the object."""
         return f"PixelSize(x={self.x}, y={self.y}, z={self.z}, unit={self.unit.value})"
 

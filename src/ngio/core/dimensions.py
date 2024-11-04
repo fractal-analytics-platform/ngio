@@ -39,6 +39,17 @@ class Dimensions:
         self._shape = [self._on_disk_shape[i] for i in axes_order]
         self._shape_dict = dict(zip(axes_names, self._shape, strict=True))
 
+    def __str__(self) -> str:
+        """Return the string representation of the object."""
+        _dimensions = ", ".join(
+            [f"{name}={self._shape_dict[name]}" for name in self._axes_names]
+        )
+        return f"Dimensions({_dimensions})"
+
+    def __repr__(self) -> str:
+        """Return the string representation of the object."""
+        return str(self)
+
     @property
     def shape(self) -> tuple[int, ...]:
         """Return the shape as a tuple in the canonical order."""

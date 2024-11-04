@@ -10,6 +10,7 @@ from ngio.io._zarr import (
     _open_group_v2_v3,
     _pass_through_group,
 )
+from ngio.utils import ngio_logger
 
 # Zarr v3 Imports
 # import zarr.store
@@ -40,8 +41,14 @@ def open_group_wrapper(
         zarr.Group: The opened Zarr group.
     """
     if isinstance(store, zarr.Group):
-        return _pass_through_group(store, mode=mode, zarr_format=zarr_format)
+        _group = _pass_through_group(store, mode=mode, zarr_format=zarr_format)
+        ngio_logger.debug(
+            f"Passing through group: {_group}, "
+            f"located in store: {_group.store.path}"
+        )
+        return _group
 
     store = _check_store(store)
-
-    return _open_group_v2_v3(store=store, mode=mode, zarr_format=zarr_format)
+    _group = _open_group_v2_v3(store=store, mode=mode, zarr_format=zarr_format)
+    ngio_logger.debug(f"Opened located in store: {store}")
+    return _group

@@ -197,6 +197,7 @@ def table_ad_to_df(
     index_key: str = "label",
     index_type: Literal["str", "int"] = "int",
     validators: list[Validator] | None = None,
+    validate_index_name: bool = False,
 ) -> pd.DataFrame:
     """Convert a AnnData object representing a fractal table to a pandas DataFrame.
 
@@ -207,16 +208,24 @@ def table_ad_to_df(
         index_type (str): The type of the index column in the DataFrame.
             Either 'str' or 'int'. Default is 'int'.
         validators (list[Validator]): A list of functions to further validate the table.
+        validate_index_name (bool): If True, the index name is validated.
     """
     table_df = table_ad.to_df()
-
     table_df[table_ad.obs_keys()] = table_ad.obs
 
     # Set the index of the DataFrame
-    if table_ad.obs.index.name is not None:
-        table_df.index = table_ad.obs.index
-    elif index_key in table_df.columns:
+    if index_key in table_df.columns:
         table_df = table_df.set_index(index_key)
+    elif table_ad.obs.index.name is not None:
+        if validate_index_name:
+            if table_ad.obs.index.name != index_key:
+                raise TableValidationError(
+                    f"Index key {index_key} not found in AnnData object."
+                )
+        table_df.index = table_ad.obs.index
+    elif table_ad.obs.index.name is None:
+        table_df.index = table_ad.obs.index
+        table_df.index.name = index_key
     else:
         raise TableValidationError(
             f"Index key {index_key} not found in AnnData object."
