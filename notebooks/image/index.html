@@ -1072,8 +1072,8 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -1102,19 +1102,6 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 from ngio.core.ngff_image import NgffImage
 
 ngff_image = NgffImage("../../data/20200812-CardiomyocyteDifferentiation14-Cycle1_mip.zarr/B/03/0")</div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell-outputWrapper">
-<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
-</div>
-<div class="jp-OutputArea jp-Cell-outputArea">
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>r+
-</pre>
 </div>
 </div>
 </div>
@@ -1181,9 +1168,9 @@ print(f"{image.dimensions=}")</div>
 <pre>Image information:
 image.shape=(3, 1, 4320, 5120)
 image.axes_names=['c', 'z', 'y', 'x']
-image.pixel_size=PixelSize(x=0.1625, y=0.1625, z=1.0, unit=micrometer)
+image.pixel_size=PixelSize(x=0.1625, y=0.1625, z=1.0, unit=&lt;SpaceUnits.micrometer: 'micrometer'&gt;, virtual=False)
 image.channel_labels=['DAPI', 'nanog', 'Lamin B1']
-image.dimensions=&lt;ngio.core.dimensions.Dimensions object at 0x7fc4b362d550&gt;
+image.dimensions=Dimensions(c=3, z=1, y=4320, x=5120)
 </pre>
 </div>
 </div>
@@ -1613,8 +1600,8 @@ plt.show()</div>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>image.pixel_size=PixelSize(x=0.1625, y=0.1625, z=1.0, unit=micrometer)
-image_2.pixel_size=PixelSize(x=0.65, y=0.65, z=1.0, unit=micrometer)
+<pre>image.pixel_size=PixelSize(x=0.1625, y=0.1625, z=1.0, unit=&lt;SpaceUnits.micrometer: 'micrometer'&gt;, virtual=False)
+image_2.pixel_size=PixelSize(x=0.65, y=0.65, z=1.0, unit=&lt;SpaceUnits.micrometer: 'micrometer'&gt;, virtual=False)
 </pre>
 </div>
 </div>
@@ -2040,32 +2027,32 @@ New list of feature table: ['regionprops_DAPI', 'nuclei_measurements_wf3', 'nucl
 <tbody>
 <tr>
 <th>1</th>
-<td>0.661703</td>
-<td>0.227840</td>
+<td>0.834962</td>
+<td>0.192472</td>
 <td>FOV_1</td>
 </tr>
 <tr>
 <th>2</th>
-<td>0.854002</td>
-<td>0.105421</td>
+<td>0.003756</td>
+<td>0.511533</td>
 <td>FOV_1</td>
 </tr>
 <tr>
 <th>3</th>
-<td>0.346671</td>
-<td>0.627418</td>
+<td>0.557745</td>
+<td>0.430770</td>
 <td>FOV_1</td>
 </tr>
 <tr>
 <th>4</th>
-<td>0.555233</td>
-<td>0.097685</td>
+<td>0.575052</td>
+<td>0.086243</td>
 <td>FOV_1</td>
 </tr>
 <tr>
 <th>5</th>
-<td>0.396141</td>
-<td>0.040076</td>
+<td>0.571119</td>
+<td>0.740856</td>
 <td>FOV_1</td>
 </tr>
 <tr>
@@ -2076,32 +2063,32 @@ New list of feature table: ['regionprops_DAPI', 'nuclei_measurements_wf3', 'nucl
 </tr>
 <tr>
 <th>2987</th>
-<td>0.533780</td>
-<td>0.637647</td>
+<td>0.749236</td>
+<td>0.172993</td>
 <td>FOV_4</td>
 </tr>
 <tr>
 <th>2991</th>
-<td>0.728878</td>
-<td>0.893781</td>
+<td>0.220877</td>
+<td>0.616718</td>
 <td>FOV_4</td>
 </tr>
 <tr>
 <th>2993</th>
-<td>0.705498</td>
-<td>0.235493</td>
+<td>0.901004</td>
+<td>0.004006</td>
 <td>FOV_4</td>
 </tr>
 <tr>
 <th>2995</th>
-<td>0.500946</td>
-<td>0.777372</td>
+<td>0.944005</td>
+<td>0.846868</td>
 <td>FOV_4</td>
 </tr>
 <tr>
 <th>2996</th>
-<td>0.322058</td>
-<td>0.399301</td>
+<td>0.556068</td>
+<td>0.999179</td>
 <td>FOV_4</td>
 </tr>
 </tbody>

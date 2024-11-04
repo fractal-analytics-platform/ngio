@@ -1097,8 +1097,8 @@ A <code>NgffImage</code> can be created from a storelike object (e.g. a path to 
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -1121,19 +1121,6 @@ A <code>NgffImage</code> can be created from a storelike object (e.g. a path to 
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-1">from ngio.core import NgffImage
 ngff_image = NgffImage("../../data/20200812-CardiomyocyteDifferentiation14-Cycle1_mip.zarr/B/03/0")</div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell-outputWrapper">
-<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
-</div>
-<div class="jp-OutputArea jp-Cell-outputArea">
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>r+
-</pre>
 </div>
 </div>
 </div>
@@ -1270,11 +1257,11 @@ print(f"{image.pixel_size=}")</div>
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
 <pre>image.shape=(3, 1, 4320, 5120)
-image.pixel_size=PixelSize(x=0.1625, y=0.1625, z=1.0, unit=micrometer)
+image.pixel_size=PixelSize(x=0.1625, y=0.1625, z=1.0, unit=&lt;SpaceUnits.micrometer: 'micrometer'&gt;, virtual=False)
 image.shape=(3, 1, 4320, 5120)
-image.pixel_size=PixelSize(x=0.1625, y=0.1625, z=1.0, unit=micrometer)
+image.pixel_size=PixelSize(x=0.1625, y=0.1625, z=1.0, unit=&lt;SpaceUnits.micrometer: 'micrometer'&gt;, virtual=False)
 image.shape=(3, 1, 1080, 1280)
-image.pixel_size=PixelSize(x=0.65, y=0.65, z=1.0, unit=micrometer)
+image.pixel_size=PixelSize(x=0.65, y=0.65, z=1.0, unit=&lt;SpaceUnits.micrometer: 'micrometer'&gt;, virtual=True)
 </pre>
 </div>
 </div>
@@ -1335,7 +1322,7 @@ print(f"{label_nuclei.pixel_size=}")</div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
 <pre>List of Labels:  ['nuclei', 'wf_2_labels', 'wf_3_labels', 'wf_4_labels']
 label_nuclei.shape=(1, 4320, 5120)
-label_nuclei.pixel_size=PixelSize(x=0.1625, y=0.1625, z=1.0, unit=micrometer)
+label_nuclei.pixel_size=PixelSize(x=0.1625, y=0.1625, z=1.0, unit=&lt;SpaceUnits.micrometer: 'micrometer'&gt;, virtual=False)
 </pre>
 </div>
 </div>
@@ -1810,9 +1797,7 @@ print(f"{new_ngff_image.num_levels=}")</div>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>w
-r+
-new_ngff_image.store='../../data/new_ome.zarr'
+<pre>new_ngff_image.store='../../data/new_ome.zarr'
 new_ngff_image.levels_paths=['0', '1', '2', '3', '4']
 new_ngff_image.num_levels=5
 </pre>
