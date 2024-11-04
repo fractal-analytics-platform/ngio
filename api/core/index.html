@@ -984,7 +984,12 @@
 <span class="normal">173</span>
 <span class="normal">174</span>
 <span class="normal">175</span>
-<span class="normal">176</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">NgffImage</span><span class="p">:</span>
+<span class="normal">176</span>
+<span class="normal">177</span>
+<span class="normal">178</span>
+<span class="normal">179</span>
+<span class="normal">180</span>
+<span class="normal">181</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">NgffImage</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A class to handle OME-NGFF images.&quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
@@ -1066,11 +1071,16 @@
         <span class="n">max_dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">iinfo</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">on_disk_array</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">max</span>
 
         <span class="n">start</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span>
-            <span class="n">lowest_res_image</span><span class="o">.</span><span class="n">on_disk_dask_array</span><span class="p">,</span> <span class="n">min_percentile</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;nearest&quot;</span>
+            <span class="n">lowest_res_image</span><span class="o">.</span><span class="n">on_disk_dask_array</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span>
+            <span class="n">min_percentile</span><span class="p">,</span>
+            <span class="n">method</span><span class="o">=</span><span class="s2">&quot;nearest&quot;</span><span class="p">,</span>
         <span class="p">)</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
         <span class="n">end</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span>
-            <span class="n">lowest_res_image</span><span class="o">.</span><span class="n">on_disk_dask_array</span><span class="p">,</span> <span class="n">max_percentile</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;nearest&quot;</span>
+            <span class="n">lowest_res_image</span><span class="o">.</span><span class="n">on_disk_dask_array</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span>
+            <span class="n">max_percentile</span><span class="p">,</span>
+            <span class="n">method</span><span class="o">=</span><span class="s2">&quot;nearest&quot;</span><span class="p">,</span>
         <span class="p">)</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Setting window to </span><span class="si">{</span><span class="n">start</span><span class="si">}</span><span class="s2"> - </span><span class="si">{</span><span class="n">end</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">meta</span><span class="o">.</span><span class="n">omero</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;OMERO metadata is not present in the image.&quot;</span><span class="p">)</span>
@@ -1339,12 +1349,7 @@ Follow the same signature as <code>create_empty_ome_zarr_image</code>.</p>
 
             <details class="quote">
               <summary>Source code in <code>ngio/core/ngff_image.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">120</span>
-<span class="normal">121</span>
-<span class="normal">122</span>
-<span class="normal">123</span>
-<span class="normal">124</span>
-<span class="normal">125</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">125</span>
 <span class="normal">126</span>
 <span class="normal">127</span>
 <span class="normal">128</span>
@@ -1395,7 +1400,12 @@ Follow the same signature as <code>create_empty_ome_zarr_image</code>.</p>
 <span class="normal">173</span>
 <span class="normal">174</span>
 <span class="normal">175</span>
-<span class="normal">176</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">derive_new_image</span><span class="p">(</span>
+<span class="normal">176</span>
+<span class="normal">177</span>
+<span class="normal">178</span>
+<span class="normal">179</span>
+<span class="normal">180</span>
+<span class="normal">181</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">derive_new_image</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">store</span><span class="p">:</span> <span class="n">StoreLike</span><span class="p">,</span>
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
