@@ -216,19 +216,22 @@ class LabelGroup:
         if not isinstance(group, zarr.Group):
             group = zarr.open_group(group, mode=self._mode)
 
-        if "labels" not in group:
-            self._group = group.create_group("labels")
-            self._group.attrs["labels"] = []  # initialize the labels attribute
-        else:
-            self._group = group["labels"]
-            assert isinstance(self._group, zarr.Group)
+        label_group = group.get("labels", None)
+        if label_group is None and mode != "r":
+            label_group = group.create_group("labels")
+            label_group.attrs["labels"] = []  # initialize the labels attribute
+
+        assert isinstance(label_group, zarr.Group) or label_group is None
+        self._label_group = label_group
 
         self._image_ref = image_ref
         self._metadata_cache = cache
 
     def list(self) -> list[str]:
         """List all labels in the group."""
-        _labels = self._group.attrs.get("labels", [])
+        if self._label_group is None:
+            return []
+        _labels = self._label_group.attrs.get("labels", [])
         assert isinstance(_labels, list)
         return _labels
 
@@ -259,6 +262,9 @@ class LabelGroup:
             highest_resolution (bool, optional): Whether to get the highest
                 resolution level
         """
+        if self._label_group is None:
+            raise ValueError("No labels found in the group.")
+
         if name not in self.list():
             raise ValueError(f"Label {name} not found in the group.")
 
@@ -266,7 +272,7 @@ class LabelGroup:
             highest_resolution = False
 
         return Label(
-            store=self._group[name],
+            store=self._label_group[name],
             path=path,
             pixel_size=pixel_size,
             highest_resolution=highest_resolution,
@@ -287,17 +293,20 @@ class LabelGroup:
                 Default is False.
             **kwargs: Additional keyword arguments to pass to the new label.
         """
+        if self._label_group is None:
+            raise ValueError("Cannot derive a new label. Group is empty or read-only.")
+
         list_of_labels = self.list()
 
         if overwrite and name in list_of_labels:
-            self._group.attrs["label"] = [
+            self._label_group.attrs["label"] = [
                 label for label in list_of_labels if label != name
             ]
         elif not overwrite and name in list_of_labels:
             raise ValueError(f"Label {name} already exists in the group.")
 
         # create the new label
-        new_label_group = self._group.create_group(name, overwrite=overwrite)
+        new_label_group = self._label_group.create_group(name, overwrite=overwrite)
 
         if self._image_ref is None:
             label_0 = self.get_label(list_of_labels[0])
@@ -349,5 +358,5 @@ class LabelGroup:
         )
 
         if name not in self.list():
-            self._group.attrs["labels"] = [*list_of_labels, name]
+            self._label_group.attrs["labels"] = [*list_of_labels, name]
         return self.get_label(name)
