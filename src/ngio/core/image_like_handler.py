@@ -99,11 +99,11 @@ class ImageLike:
         This method is for internal use only.
         """
         self._dataset = dataset
+        self._array = self._group.get(self._dataset.path, None)
 
-        if self._dataset.path not in self._group.array_keys():
+        if self._array is None:
             raise ValueError(f"Dataset {self._dataset.path} not found in the group.")
 
-        self._array = self._group[self.dataset.path]
         self._diminesions = Dimensions(
             on_disk_shape=self._array.shape,
             axes_names=self._dataset.axes_names,

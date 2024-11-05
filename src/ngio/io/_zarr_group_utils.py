@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import fsspec
 import zarr
 
 from ngio.io._zarr import (
@@ -22,8 +23,14 @@ def _check_store(store: StoreLike) -> StoreLike:
     if isinstance(store, str) or isinstance(store, Path):
         return store
 
+    if isinstance(store, fsspec.mapping.FSMap) or isinstance(
+        store, zarr.storage.FSStore
+    ):
+        return store
+
     raise NotImplementedError(
-        "RemoteStore is not yet supported. Please use LocalStore."
+        f"Store type {type(store)} is not supported. supported types are: "
+        "str, Path, fsspec.mapping.FSMap, zarr.storage.FSStore"
     )
 
 
