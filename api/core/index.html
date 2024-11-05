@@ -994,7 +994,10 @@
 <span class="normal">184</span>
 <span class="normal">185</span>
 <span class="normal">186</span>
-<span class="normal">187</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">NgffImage</span><span class="p">:</span>
+<span class="normal">187</span>
+<span class="normal">188</span>
+<span class="normal">189</span>
+<span class="normal">190</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">NgffImage</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A class to handle OME-NGFF images.&quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
@@ -1066,7 +1069,7 @@
         <span class="k">return</span> <span class="n">image</span>
 
     <span class="k">def</span> <span class="nf">_update_omero_window</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">min_percentile</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span> <span class="n">max_percentile</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">95</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">start_percentile</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span> <span class="n">end_percentile</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">95</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Update the OMERO window.&quot;&quot;&quot;</span>
         <span class="n">meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_meta</span>
@@ -1080,33 +1083,36 @@
                 <span class="n">lowest_res_image</span> <span class="o">=</span> <span class="n">image</span>
 
         <span class="n">max_dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">iinfo</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">on_disk_array</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">max</span>
-
-        <span class="n">start</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span>
-            <span class="n">lowest_res_image</span><span class="o">.</span><span class="n">on_disk_dask_array</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span>
-            <span class="n">min_percentile</span><span class="p">,</span>
-            <span class="n">method</span><span class="o">=</span><span class="s2">&quot;nearest&quot;</span><span class="p">,</span>
-        <span class="p">)</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
-        <span class="n">end</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span>
-            <span class="n">lowest_res_image</span><span class="o">.</span><span class="n">on_disk_dask_array</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span>
-            <span class="n">max_percentile</span><span class="p">,</span>
-            <span class="n">method</span><span class="o">=</span><span class="s2">&quot;nearest&quot;</span><span class="p">,</span>
-        <span class="p">)</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
+        <span class="n">num_c</span> <span class="o">=</span> <span class="n">lowest_res_image</span><span class="o">.</span><span class="n">dimensions</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;c&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">meta</span><span class="o">.</span><span class="n">omero</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># TODO:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;OMERO metadata is not present in the image.&quot;</span><span class="p">)</span>
-        <span class="n">channel_list</span> <span class="o">=</span> <span class="n">meta</span><span class="o">.</span><span class="n">omero</span><span class="o">.</span><span class="n">channels</span>
 
-        <span class="n">new_channel_list</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">channel</span> <span class="ow">in</span> <span class="n">channel_list</span><span class="p">:</span>
+        <span class="n">channel_list</span> <span class="o">=</span> <span class="n">meta</span><span class="o">.</span><span class="n">omero</span><span class="o">.</span><span class="n">channels</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">channel_list</span><span class="p">)</span> <span class="o">!=</span> <span class="n">num_c</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The number of channels does not match the image.&quot;</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">c</span><span class="p">,</span> <span class="n">channel</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">channel_list</span><span class="p">):</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">get_array</span><span class="p">(</span><span class="n">c</span><span class="o">=</span><span class="n">c</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;dask&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+            <span class="n">start_percentile</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span>
+                <span class="n">data</span><span class="p">,</span> <span class="n">start_percentile</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;nearest&quot;</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
+            <span class="n">end_percentile</span> <span class="o">=</span> <span class="n">da</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span>
+                <span class="n">data</span><span class="p">,</span> <span class="n">start_percentile</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;nearest&quot;</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
             <span class="n">channel</span><span class="o">.</span><span class="n">extra_fields</span><span class="p">[</span><span class="s2">&quot;window&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-                <span class="s2">&quot;start&quot;</span><span class="p">:</span> <span class="n">start</span><span class="p">,</span>
-                <span class="s2">&quot;end&quot;</span><span class="p">:</span> <span class="n">end</span><span class="p">,</span>
+                <span class="s2">&quot;start&quot;</span><span class="p">:</span> <span class="n">start_percentile</span><span class="p">,</span>
+                <span class="s2">&quot;end&quot;</span><span class="p">:</span> <span class="n">end_percentile</span><span class="p">,</span>
                 <span class="s2">&quot;min&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
                 <span class="s2">&quot;max&quot;</span><span class="p">:</span> <span class="n">max_dtype</span><span class="p">,</span>
             <span class="p">}</span>
-            <span class="n">new_channel_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">channel</span><span class="p">)</span>
+            <span class="n">ngio_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Updated window for channel </span><span class="si">{</span><span class="n">channel</span><span class="o">.</span><span class="n">label</span><span class="si">}</span><span class="s2">. &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;Start: </span><span class="si">{</span><span class="n">start_percentile</span><span class="si">}</span><span class="s2">, End: </span><span class="si">{</span><span class="n">end_percentile</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+            <span class="n">meta</span><span class="o">.</span><span class="n">omero</span><span class="o">.</span><span class="n">channels</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="o">=</span> <span class="n">channel</span>
 
-        <span class="n">meta</span><span class="o">.</span><span class="n">omero</span><span class="o">.</span><span class="n">channels</span> <span class="o">=</span> <span class="n">new_channel_list</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_image_meta</span><span class="o">.</span><span class="n">write_meta</span><span class="p">(</span><span class="n">meta</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">derive_new_image</span><span class="p">(</span>
@@ -1363,10 +1369,7 @@ Follow the same signature as <code>create_empty_ome_zarr_image</code>.</p>
 
             <details class="quote">
               <summary>Source code in <code>ngio/core/ngff_image.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">131</span>
-<span class="normal">132</span>
-<span class="normal">133</span>
-<span class="normal">134</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">134</span>
 <span class="normal">135</span>
 <span class="normal">136</span>
 <span class="normal">137</span>
@@ -1419,7 +1422,10 @@ Follow the same signature as <code>create_empty_ome_zarr_image</code>.</p>
 <span class="normal">184</span>
 <span class="normal">185</span>
 <span class="normal">186</span>
-<span class="normal">187</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">derive_new_image</span><span class="p">(</span>
+<span class="normal">187</span>
+<span class="normal">188</span>
+<span class="normal">189</span>
+<span class="normal">190</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">derive_new_image</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">store</span><span class="p">:</span> <span class="n">StoreLike</span><span class="p">,</span>
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -1648,7 +1654,7 @@ resolution level</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">November 4, 2024</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">November 5, 2024</span>
   </span>
 
     
@@ -1658,7 +1664,7 @@ resolution level</p>
     <span class="md-icon" title="Created">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">November 4, 2024</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">November 5, 2024</span>
   </span>
 
     
