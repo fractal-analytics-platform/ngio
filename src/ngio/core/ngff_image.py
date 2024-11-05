@@ -84,10 +84,18 @@ class NgffImage:
         ngio_logger.info(f"- {image.pixel_size}")
         return image
 
-    def _update_omero_window(
+    def update_omero_window(
         self, start_percentile: int = 5, end_percentile: int = 95
     ) -> None:
-        """Update the OMERO window."""
+        """Update the OMERO window.
+
+        This will setup percentiles based values for the window of each channel.
+
+        Args:
+            start_percentile (int): The start percentile.
+            end_percentile (int): The end percentile
+
+        """
         meta = self.image_meta
 
         lowest_res_image = self.get_image(highest_resolution=True)
@@ -102,8 +110,9 @@ class NgffImage:
         num_c = lowest_res_image.dimensions.get("c", 1)
 
         if meta.omero is None:
-            # TODO:
-            raise ValueError("OMERO metadata is not present in the image.")
+            raise NotImplementedError(
+                "OMERO metadata not found. " " Please add OMERO metadata to the image."
+            )
 
         channel_list = meta.omero.channels
         if len(channel_list) != num_c:
@@ -111,15 +120,15 @@ class NgffImage:
 
         for c, channel in enumerate(channel_list):
             data = image.get_array(c=c, mode="dask").ravel()
-            start_percentile = da.percentile(
+            _start_percentile = da.percentile(
                 data, start_percentile, method="nearest"
             ).compute()
-            end_percentile = da.percentile(
-                data, start_percentile, method="nearest"
+            _end_percentile = da.percentile(
+                data, end_percentile, method="nearest"
             ).compute()
             channel.extra_fields["window"] = {
-                "start": start_percentile,
-                "end": end_percentile,
+                "start": _start_percentile,
+                "end": _end_percentile,
                 "min": 0,
                 "max": max_dtype,
             }
