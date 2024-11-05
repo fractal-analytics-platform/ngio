@@ -85,7 +85,7 @@ class NgffImage:
         return image
 
     def _update_omero_window(
-        self, min_percentile: int = 5, max_percentile: int = 95
+        self, start_percentile: int = 5, end_percentile: int = 95
     ) -> None:
         """Update the OMERO window."""
         meta = self.image_meta
@@ -99,33 +99,36 @@ class NgffImage:
                 lowest_res_image = image
 
         max_dtype = np.iinfo(image.on_disk_array.dtype).max
-
-        start = da.percentile(
-            lowest_res_image.on_disk_dask_array.ravel(),
-            min_percentile,
-            method="nearest",
-        ).compute()
-        end = da.percentile(
-            lowest_res_image.on_disk_dask_array.ravel(),
-            max_percentile,
-            method="nearest",
-        ).compute()
+        num_c = lowest_res_image.dimensions.get("c", 1)
 
         if meta.omero is None:
+            # TODO:
             raise ValueError("OMERO metadata is not present in the image.")
-        channel_list = meta.omero.channels
 
-        new_channel_list = []
-        for channel in channel_list:
+        channel_list = meta.omero.channels
+        if len(channel_list) != num_c:
+            raise ValueError("The number of channels does not match the image.")
+
+        for c, channel in enumerate(channel_list):
+            data = image.get_array(c=c, mode="dask").ravel()
+            start_percentile = da.percentile(
+                data, start_percentile, method="nearest"
+            ).compute()
+            end_percentile = da.percentile(
+                data, start_percentile, method="nearest"
+            ).compute()
             channel.extra_fields["window"] = {
-                "start": start,
-                "end": end,
+                "start": start_percentile,
+                "end": end_percentile,
                 "min": 0,
                 "max": max_dtype,
             }
-            new_channel_list.append(channel)
+            ngio_logger.info(
+                f"Updated window for channel {channel.label}. "
+                f"Start: {start_percentile}, End: {end_percentile}"
+            )
+            meta.omero.channels[c] = channel
 
-        meta.omero.channels = new_channel_list
         self._image_meta.write_meta(meta)
 
     def derive_new_image(

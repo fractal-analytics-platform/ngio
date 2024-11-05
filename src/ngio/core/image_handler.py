@@ -130,6 +130,7 @@ class Image(ImageLike):
 
     def get_array(
         self,
+        *,
         x: int | slice | None = None,
         y: int | slice | None = None,
         z: int | slice | None = None,

@@ -91,6 +91,10 @@ class Dimensions:
         assert "x" in self._shape_dict
         return self._shape_dict["x"]
 
+    def get(self, ax_name: str, default: int = 1) -> int:
+        """Return the dimension of the given axis name."""
+        return self._shape_dict.get(ax_name, default)
+
     @property
     def on_disk_ndim(self) -> int:
         """Return the number of dimensions on disk."""
