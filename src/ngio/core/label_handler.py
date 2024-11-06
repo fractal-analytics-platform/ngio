@@ -30,6 +30,7 @@ class Label(ImageLike):
         highest_resolution: bool = False,
         strict: bool = True,
         cache: bool = True,
+        mode: AccessModeLiteral = "r+",
         label_group: Any = None,
     ) -> None:
         """Initialize the the Label Object.
@@ -46,6 +47,7 @@ class Label(ImageLike):
         strict (bool): Whether to raise an error where a pixel size is not found
             to match the requested "pixel_size".
         cache (bool): Whether to cache the metadata.
+        mode (AccessModeLiteral): The mode to open the group in.
         label_group: The group containing the labels.
         """
         super().__init__(
@@ -57,6 +59,7 @@ class Label(ImageLike):
             strict=strict,
             meta_mode="label",
             cache=cache,
+            mode=mode,
             _label_group=label_group,
         )
 
@@ -217,7 +220,7 @@ class LabelGroup:
             group = zarr.open_group(group, mode=self._mode)
 
         label_group = group.get("labels", None)
-        if label_group is None and mode != "r":
+        if label_group is None and not group.read_only:
             label_group = group.create_group("labels")
             label_group.attrs["labels"] = []  # initialize the labels attribute
 
@@ -240,7 +243,7 @@ class LabelGroup:
         label = self.get_label(name)
         return label.metadata.num_levels
 
-    def levels_paths(self, name: str) -> list:
+    def levels_paths(self, name: str) -> list[str]:
         """Get the paths of the levels in the labels."""
         label = self.get_label(name)
         return label.metadata.levels_paths

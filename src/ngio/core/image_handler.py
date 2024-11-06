@@ -4,7 +4,7 @@ from typing import Any, Literal
 
 from ngio.core.image_like_handler import ImageLike
 from ngio.core.roi import WorldCooROI
-from ngio.io import StoreOrGroup
+from ngio.io import AccessModeLiteral, StoreOrGroup
 from ngio.ngff_meta import PixelSize
 from ngio.ngff_meta.fractal_image_meta import ImageMeta
 from ngio.utils._common_types import ArrayLike
@@ -27,6 +27,7 @@ class Image(ImageLike):
         highest_resolution: bool = False,
         strict: bool = True,
         cache: bool = True,
+        mode: AccessModeLiteral = "r+",
         label_group: Any = None,
     ) -> None:
         """Initialize the the Image Object.
@@ -42,6 +43,7 @@ class Image(ImageLike):
         strict (bool): Whether to raise an error where a pixel size is not found
             to match the requested "pixel_size".
         cache (bool): Whether to cache the metadata.
+        mode (AccessModeLiteral): The mode to open the group in.
         label_group: The group containing the labels.
         """
         super().__init__(
@@ -53,6 +55,7 @@ class Image(ImageLike):
             strict=strict,
             meta_mode="image",
             cache=cache,
+            mode=mode,
             _label_group=label_group,
         )
 

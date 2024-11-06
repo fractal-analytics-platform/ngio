@@ -97,7 +97,8 @@ class TableGroup:
             group = zarr.open_group(group, mode=self._mode)
 
         table_group = group.get("tables", None)
-        if table_group is None and mode != "r":
+
+        if table_group is None and not group.read_only:
             table_group = group.create_group("tables")
             table_group.attrs["tables"] = []
 
