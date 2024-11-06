@@ -11,6 +11,7 @@ from pydantic import ValidationError
 
 from ngio.io import AccessModeLiteral, StoreLike
 from ngio.tables.v1 import FeatureTableV1, MaskingROITableV1, ROITableV1
+from ngio.utils import ngio_logger
 from ngio.utils._pydantic_utils import BaseWithExtraFields
 
 ROITable = ROITableV1
@@ -95,22 +96,38 @@ class TableGroup:
         if not isinstance(group, zarr.Group):
             group = zarr.open_group(group, mode=self._mode)
 
-        if "tables" not in group:
-            self._group = group.create_group("tables")
-        else:
-            self._group: zarr.Group = group["tables"]
+        table_group = group.get("tables", None)
+
+        if table_group is None and not group.read_only:
+            table_group = group.create_group("tables")
+            table_group.attrs["tables"] = []
+
+        assert isinstance(table_group, zarr.Group) or table_group is None
+        self._table_group = table_group
 
     def _validate_list_of_tables(self, list_of_tables: list[str]) -> None:
-        """Validate the list of tables."""
-        list_of_groups = list(self._group.group_keys())
+        """Validate the list of tables.
+
+        Args:
+            list_of_tables (list[str]): The list of tables to validate.
+        """
+        if self._table_group is None:
+            return None
 
         for table_name in list_of_tables:
-            if table_name not in list_of_groups:
-                raise ValueError(f"Table {table_name} not found in the group.")
+            table = self._table_group.get(table_name, None)
+            if table is None:
+                ngio_logger.warning(
+                    f"Table {table_name} not found in the group. "
+                    "Consider removing it from the list of tables."
+                )
 
     def _get_list_of_tables(self) -> list[str]:
         """Return the list of tables."""
-        list_of_tables = self._group.attrs.get("tables", [])
+        if self._table_group is None:
+            return []
+
+        list_of_tables = self._table_group.attrs.get("tables", [])
         self._validate_list_of_tables(list_of_tables)
         assert isinstance(list_of_tables, list)
         assert all(isinstance(table_name, str) for table_name in list_of_tables)
@@ -127,6 +144,9 @@ class TableGroup:
                 If None, all tables are listed.
                 Allowed values are: 'roi_table', 'feature_table', 'masking_roi_table'.
         """
+        if self._table_group is None:
+            return []
+
         list_of_tables = self._get_list_of_tables()
         self._validate_list_of_tables(list_of_tables=list_of_tables)
         if table_type is None:
@@ -140,7 +160,7 @@ class TableGroup:
                 )
             list_of_typed_tables = []
             for table_name in list_of_tables:
-                table = self._group[table_name]
+                table = self._table_group[table_name]
                 try:
                     common_meta = CommonMeta(**table.attrs)
                     if common_meta.type == table_type:
@@ -173,12 +193,15 @@ class TableGroup:
                 This is usually defined in the metadata of the table, if given here,
                 it will overwrite the metadata.
         """
+        if self._table_group is None:
+            raise ValueError("No tables group found in the group.")
+
         list_of_tables = self._get_list_of_tables()
         if name not in list_of_tables:
             raise ValueError(f"Table {name} not found in the group.")
 
         return _get_table_impl(
-            group=self._group[name],
+            group=self._table_group[name],
             validate_metadata=validate_metadata,
             table_type=table_type,
             validate_table=validate_table,
@@ -194,6 +217,9 @@ class TableGroup:
         **type_specific_kwargs: dict,
     ) -> Table:
         """Add a new table to the group."""
+        if self._table_group is None:
+            raise ValueError("No tables group found in the group.")
+
         list_of_tables = self._get_list_of_tables()
         if not overwrite and name in list_of_tables:
             raise ValueError(f"Table {name} already exists in the group.")
@@ -203,13 +229,13 @@ class TableGroup:
 
         table_impl = _find_table_impl(table_type=table_type, version=version)
         new_table = table_impl._new(
-            parent_group=self._group,
+            parent_group=self._table_group,
             name=name,
             overwrite=overwrite,
             **type_specific_kwargs,
         )
 
-        self._group.attrs["tables"] = [*list_of_tables, name]
+        self._table_group.attrs["tables"] = [*list_of_tables, name]
 
         assert isinstance(new_table, ROITable | FeatureTable | MaskingROITable)
         return new_table

@@ -12,7 +12,7 @@ from dask.delayed import Delayed
 from ngio.core.dimensions import Dimensions
 from ngio.core.roi import WorldCooROI
 from ngio.core.utils import Lock
-from ngio.io import StoreOrGroup, open_group_wrapper
+from ngio.io import AccessModeLiteral, StoreOrGroup, open_group_wrapper
 from ngio.ngff_meta import (
     Dataset,
     ImageLabelMeta,
@@ -42,6 +42,7 @@ class ImageLike:
         strict: bool = True,
         meta_mode: Literal["image", "label"] = "image",
         cache: bool = True,
+        mode: AccessModeLiteral = "r+",
         _label_group: Any = None,
     ) -> None:
         """Initialize the MultiscaleHandler in read mode.
@@ -63,8 +64,9 @@ class ImageLike:
         if not strict:
             warn("Strict mode is not fully supported yet.", UserWarning, stacklevel=2)
 
+        self._mode = mode
         if not isinstance(store, zarr.Group):
-            store = open_group_wrapper(store=store, mode="r+")
+            store = open_group_wrapper(store=store, mode=self._mode)
 
         self._group = store
 
@@ -99,11 +101,11 @@ class ImageLike:
         This method is for internal use only.
         """
         self._dataset = dataset
+        self._array = self._group.get(self._dataset.path, None)
 
-        if self._dataset.path not in self._group.array_keys():
+        if self._array is None:
             raise ValueError(f"Dataset {self._dataset.path} not found in the group.")
 
-        self._array = self._group[self.dataset.path]
         self._diminesions = Dimensions(
             on_disk_shape=self._array.shape,
             axes_names=self._dataset.axes_names,

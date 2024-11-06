@@ -23,12 +23,17 @@ class NgffImage:
         self.store = store
         self._mode = mode
         self.group = open_group_wrapper(store=store, mode=self._mode)
+
+        if self.group.read_only:
+            self._mode = "r"
+
         self._image_meta = get_ngff_image_meta_handler(
             self.group, meta_mode="image", cache=cache
         )
         self._metadata_cache = cache
         self.table = TableGroup(self.group, mode=self._mode)
         self.label = LabelGroup(self.group, image_ref=self.get_image(), mode=self._mode)
+
         ngio_logger.info(f"Opened image located in store: {store}")
         ngio_logger.info(f"- Image number of levels: {self.num_levels}")
 
@@ -76,8 +81,9 @@ class NgffImage:
             path=path,
             pixel_size=pixel_size,
             highest_resolution=highest_resolution,
-            label_group=LabelGroup(self.group, image_ref=None),
+            label_group=LabelGroup(self.group, image_ref=None, mode=self._mode),
             cache=self._metadata_cache,
+            mode=self._mode,
         )
         ngio_logger.info(f"Opened image at path: {image.path}")
         ngio_logger.info(f"- {image.dimensions}")
