@@ -1,7 +1,4 @@
-"""Module for handling the /tables group in an OME-NGFF file.
-
-The /tables group contains t
-"""
+"""Module for handling the /tables group in an OME-NGFF file."""
 
 from typing import Literal
 from warnings import warn

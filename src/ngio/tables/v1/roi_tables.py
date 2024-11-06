@@ -104,7 +104,7 @@ class ROITableV1:
         include_origin: bool = False,
         include_translation: bool = False,
         overwrite: bool = False,
-    ):
+    ) -> "ROITableV1":
         """Create a new ROI table.
 
         Note this method is not meant to be called directly.
@@ -152,13 +152,13 @@ class ROITableV1:
         return self._table_handler.table
 
     @table.setter
-    def table(self, table: pd.DataFrame):
+    def table(self, table: pd.DataFrame) -> None:
         """Set the feature table."""
         raise NotImplementedError(
             "Setting the table is not implemented. Please use the 'set_table' method."
         )
 
-    def set_table(self, table: pd.DataFrame):
+    def set_table(self, table: pd.DataFrame) -> None:
         """Set the feature table."""
         self._table_handler.set_table(table)
 
@@ -222,7 +222,7 @@ class ROITableV1:
                 optional_dict[column] = series[column]
         return optional_dict
 
-    def get_roi(self, field_index) -> WorldCooROI:
+    def get_roi(self, field_index: str) -> WorldCooROI:
         """Get an ROI from the table."""
         if field_index not in self.field_indexes:
             raise ValueError(f"Field index {field_index} is not in the table")
@@ -245,6 +245,6 @@ class ROITableV1:
         """List all ROIs in the table."""
         return [self.get_roi(field_index) for field_index in self.field_indexes]
 
-    def write(self) -> None:
+    def consolidate(self) -> None:
         """Write the crrent state of the table to the Zarr file."""
-        self._table_handler.write(self.meta)
+        self._table_handler.consolidate(self.meta)

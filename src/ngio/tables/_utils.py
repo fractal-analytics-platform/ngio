@@ -6,12 +6,7 @@ import numpy as np
 import pandas as pd
 import pandas.api.types as ptypes
 
-
-class TableValidationError(Exception):
-    """Error raised when a table is not formatted correctly."""
-
-    pass
-
+from ngio.utils import NgioTableValidationError
 
 Validator = Callable[[pd.DataFrame], pd.DataFrame]
 
@@ -19,7 +14,7 @@ Validator = Callable[[pd.DataFrame], pd.DataFrame]
 def _check_for_mixed_types(series: pd.Series) -> None:
     """Check if the column has mixed types."""
     if series.apply(type).nunique() > 1:
-        raise TableValidationError(
+        raise NgioTableValidationError(
             f"Column {series.name} has mixed types: "
             f"{series.apply(type).unique()}. "
             "Type of all elements must be the same."
@@ -34,7 +29,7 @@ def _check_for_supported_types(series: pd.Series) -> Literal["str", "int", "nume
         return "int"
     if ptypes.is_numeric_dtype(series):
         return "numeric"
-    raise TableValidationError(
+    raise NgioTableValidationError(
         f"Column {series.name} has unsupported type: {series.dtype}."
         " Supported types are string and numerics."
     )
@@ -63,7 +58,9 @@ def _check_index_key(
         table_df = table_df.set_index(index_key)
 
     if table_df.index.name != index_key:
-        raise TableValidationError(f"index_key: {index_key} not found in data frame")
+        raise NgioTableValidationError(
+            f"index_key: {index_key} not found in data frame"
+        )
 
     if index_type == "str":
         if ptypes.is_integer_dtype(table_df.index):
@@ -71,7 +68,9 @@ def _check_index_key(
             table_df.index = table_df.index.astype(str)
 
         if not ptypes.is_string_dtype(table_df.index):
-            raise TableValidationError(f"index_key {index_key} must be of string type")
+            raise NgioTableValidationError(
+                f"index_key {index_key} must be of string type"
+            )
 
     elif index_type == "int":
         if ptypes.is_string_dtype(table_df.index):
@@ -80,7 +79,7 @@ def _check_index_key(
                 table_df.index = table_df.index.astype(int)
             except ValueError as e:
                 if "invalid literal for int() with base 10" in str(e):
-                    raise TableValidationError(
+                    raise NgioTableValidationError(
                         f"index_key {index_key} must be of "
                         "integer type, but found string. We "
                         "tried implicit conversion failed."
@@ -89,10 +88,12 @@ def _check_index_key(
                     raise e from e
 
         if not ptypes.is_integer_dtype(table_df.index):
-            raise TableValidationError(f"index_key {index_key} must be of integer type")
+            raise NgioTableValidationError(
+                f"index_key {index_key} must be of integer type"
+            )
 
     else:
-        raise TableValidationError(f"index_type {index_type} not recognized")
+        raise NgioTableValidationError(f"index_type {index_type} not recognized")
 
     return table_df
 
@@ -219,7 +220,7 @@ def table_ad_to_df(
     elif table_ad.obs.index.name is not None:
         if validate_index_name:
             if table_ad.obs.index.name != index_key:
-                raise TableValidationError(
+                raise NgioTableValidationError(
                     f"Index key {index_key} not found in AnnData object."
                 )
         table_df.index = table_ad.obs.index
@@ -227,7 +228,7 @@ def table_ad_to_df(
         table_df.index = table_ad.obs.index
         table_df.index.name = index_key
     else:
-        raise TableValidationError(
+        raise NgioTableValidationError(
             f"Index key {index_key} not found in AnnData object."
         )
 
@@ -270,7 +271,7 @@ def validate_columns(
     table_header = table_df.columns
     for column in required_columns:
         if column not in table_header:
-            raise TableValidationError(f"Column {column} is required in ROI table")
+            raise NgioTableValidationError(f"Column {column} is required in ROI table")
 
     if optional_columns is None:
         return table_df
@@ -278,7 +279,7 @@ def validate_columns(
     possible_columns = [*required_columns, *optional_columns]
     for column in table_header:
         if column not in possible_columns:
-            raise TableValidationError(
+            raise NgioTableValidationError(
                 f"Column {column} is not recognized in ROI table"
             )
 
@@ -292,6 +293,6 @@ def validate_unique_index(table_df: pd.DataFrame) -> pd.DataFrame:
 
     # Find the duplicates
     duplicates = table_df.index[table_df.index.duplicated()].tolist()
-    raise TableValidationError(
+    raise NgioTableValidationError(
         f"Index of the table contains duplicates values. Duplicate: {duplicates}"
     )

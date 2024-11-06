@@ -2,7 +2,6 @@
 
 from pathlib import Path
 from typing import Any, Literal
-from warnings import warn
 
 import dask.array as da
 import numpy as np
@@ -21,6 +20,7 @@ from ngio.ngff_meta import (
     get_ngff_image_meta_handler,
 )
 from ngio.pipes import DataTransformPipe, NaiveSlicer, RoiSlicer, on_disk_zoom
+from ngio.utils import ngio_logger
 from ngio.utils._common_types import ArrayLike
 
 
@@ -62,7 +62,7 @@ class ImageLike:
         _label_group (LabelGroup): The group containing the label data (internal use).
         """
         if not strict:
-            warn("Strict mode is not fully supported yet.", UserWarning, stacklevel=2)
+            ngio_logger.warning("Strict mode is not fully supported yet.")
 
         self._mode = mode
         if not isinstance(store, zarr.Group):
