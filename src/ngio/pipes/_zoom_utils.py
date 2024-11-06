@@ -20,11 +20,12 @@ def _zoom_inputs_check(
 
     if scale is None:
         assert target_shape is not None, "Target shape must be provided"
-        assert len(target_shape) == source_array.ndim, (
-            "Target shape must have the "
-            "same number of dimensions as "
-            "the source array"
-        )
+        if len(target_shape) != source_array.ndim:
+            raise ValueError(
+                "Target shape must have the "
+                "same number of dimensions as "
+                "the source array"
+            )
         _scale = np.array(target_shape) / np.array(source_array.shape)
         _target_shape = target_shape
     else:
@@ -142,6 +143,7 @@ def on_disk_zoom(
 
     if mode == "numpy":
         target[...] = _numpy_zoom(source[...], target_shape=target.shape, order=order)
+        return None
 
     source_array = da.from_zarr(source)
     target_array = _dask_zoom(source_array, target_shape=target.shape, order=order)
@@ -154,7 +156,6 @@ def on_disk_coarsen(
     source: zarr.Array,
     target: zarr.Array,
     aggregation_function: np.ufunc,
-    coarsening_setup: dict[int, int],
 ) -> None:
     """Apply a coarsening operation from a source zarr array to a target zarr array.
 
@@ -162,19 +163,25 @@ def on_disk_coarsen(
         source (zarr.Array): The source array to coarsen.
         target (zarr.Array): The target array to save the coarsened result to.
         aggregation_function (np.ufunc): The aggregation function to use.
-        coarsening_setup (dict[int, int]): The coarsening setup to use.
     """
     source_array = da.from_zarr(source)
 
-    for ax, factor in coarsening_setup.items():
-        if ax >= source_array.ndim:
-            raise ValueError(
-                "Coarsening axis must be less than the number of dimensions"
-            )
-        if factor <= 0:
-            raise ValueError("Coarsening factor must be greater than 0")
+    _scale, _target_shape = _zoom_inputs_check(
+        source_array=source_array, scale=None, target_shape=target.shape
+    )
 
-        assert isinstance(factor, int), "Coarsening factor must be an integer"
+    assert (
+        _target_shape == target.shape
+    ), "Target shape must match the target array shape"
+    coarsening_setup = {}
+    for i, s in enumerate(_scale):
+        factor = 1 / s
+        if factor.is_integer():
+            coarsening_setup[i] = int(factor)
+        else:
+            raise ValueError(
+                "Coarsening factor must be an integer, got " f"{factor} on axis {i}"
+            )
 
     out_target = da.coarsen(
         aggregation_function, source_array, coarsening_setup, trim_excess=True
