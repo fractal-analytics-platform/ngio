@@ -2,6 +2,8 @@ import json
 from importlib.metadata import version
 from pathlib import Path
 
+import fsspec
+import fsspec.implementations.http
 import zarr
 from packaging.version import Version
 from pytest import fixture
@@ -11,7 +13,7 @@ ZARR_PYTHON_V = 2 if Version(zarr_version) < Version("3.0.0a") else 3
 
 
 @fixture
-def ome_zarr_image_v04_path(tmpdir):
+def ome_zarr_image_v04_path(tmpdir: str) -> Path:
     zarr_path = Path(tmpdir) / "test_ome_ngff_v04.zarr"
 
     if ZARR_PYTHON_V == 3:
@@ -37,3 +39,12 @@ def ome_zarr_image_v04_path(tmpdir):
             group.zeros(name=path, shape=shape)
 
     return zarr_path
+
+
+@fixture
+def ome_zarr_image_v04_fs() -> fsspec.mapping.FSMap:
+    fs = fsspec.implementations.http.HTTPFileSystem(client_kwargs={})
+    store = fs.get_mapper(
+        "https://raw.githubusercontent.com/fractal-analytics-platform/fractal-tasks-core/refs/heads/main/tests/data/plate_ones.zarr/B/03/0/"
+    )
+    return store

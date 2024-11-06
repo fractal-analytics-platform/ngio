@@ -243,7 +243,7 @@ class LabelGroup:
         label = self.get_label(name)
         return label.metadata.num_levels
 
-    def levels_paths(self, name: str) -> list[str]:
+    def levels_paths(self, name: str) -> list:
         """Get the paths of the levels in the labels."""
         label = self.get_label(name)
         return label.metadata.levels_paths
