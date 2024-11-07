@@ -366,7 +366,7 @@ class LabelGroup:
 
         create_empty_ome_zarr_label(
             store=new_label_group,
-            shape=on_disk_shape,
+            on_disk_shape=on_disk_shape,
             chunks=chunks,
             dtype=ref_0.on_disk_array.dtype,
             on_disk_axis=dataset.on_disk_axes_names,

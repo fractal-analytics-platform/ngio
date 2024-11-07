@@ -271,7 +271,9 @@ def validate_columns(
     table_header = table_df.columns
     for column in required_columns:
         if column not in table_header:
-            raise NgioTableValidationError(f"Column {column} is required in ROI table")
+            raise NgioTableValidationError(
+                f"Could not find required column: {column} in the table"
+            )
 
     if optional_columns is None:
         return table_df
@@ -280,7 +282,8 @@ def validate_columns(
     for column in table_header:
         if column not in possible_columns:
             raise NgioTableValidationError(
-                f"Column {column} is not recognized in ROI table"
+                f"Could not find column: {column} in the list of possible columns. ",
+                f"Possible columns are: {possible_columns}",
             )
 
     return table_df

@@ -25,7 +25,7 @@ except ImportError:
 def _build_empty_pyramid(
     group: Group,
     image_meta: ImageLabelMeta,
-    shape: Collection[int],
+    on_disk_shape: Collection[int],
     chunks: Collection[int] | None = None,
     dtype: str = "uint16",
     on_disk_axis: Collection[str] = ("t", "c", "z", "y"),
@@ -42,6 +42,21 @@ def _build_empty_pyramid(
         else:
             scaling_factor.append(1.0)
 
+    if chunks is not None and len(on_disk_shape) != len(chunks):
+        raise ValueError(
+            "The shape and chunks must have the same number " "of dimensions."
+        )
+
+    if len(on_disk_shape) != len(scaling_factor):
+        raise ValueError(
+            "The shape and scaling factor must have the same number " "of dimensions."
+        )
+
+    if len(on_disk_shape) != len(on_disk_axis):
+        raise ValueError(
+            "The shape and on-disk axis must have the same number " "of dimensions."
+        )
+
     for dataset in image_meta.datasets:
         path = dataset.path
 
@@ -52,7 +67,7 @@ def _build_empty_pyramid(
 
         group.zeros(
             name=path,
-            shape=shape,
+            shape=on_disk_shape,
             dtype=dtype,
             chunks=chunks,
             dimension_separator="/",
@@ -60,15 +75,15 @@ def _build_empty_pyramid(
 
         # Todo redo this with when a proper build of pyramid is implemented
         _shape = []
-        for s, sc in zip(shape, scaling_factor, strict=True):
+        for s, sc in zip(on_disk_shape, scaling_factor, strict=True):
             if math.floor(s / sc) % 2 == 0:
                 _shape.append(math.floor(s / sc))
             else:
                 _shape.append(math.ceil(s / sc))
-        shape = list(_shape)
+        on_disk_shape = list(_shape)
 
         if chunks is not None:
-            chunks = [min(c, s) for c, s in zip(chunks, shape, strict=True)]
+            chunks = [min(c, s) for c, s in zip(chunks, on_disk_shape, strict=True)]
     return None
 
 
@@ -93,7 +108,30 @@ def create_empty_ome_zarr_image(
     overwrite: bool = True,
     version: str = "0.4",
 ) -> None:
-    """Create an empty OME-Zarr image with the given shape and metadata."""
+    """Create an empty OME-Zarr image with the given shape and metadata.
+
+    Args:
+        store (StoreLike): The store to create the image in.
+        on_disk_shape (Collection[int]): The shape of the image on disk.
+        on_disk_axis (Collection[str]): The order of the axes on disk.
+        chunks (Collection[int] | None): The chunk shape for the image.
+        dtype (str): The data type of the image.
+        pixel_sizes (PixelSize | None): The pixel size of the image.
+        xy_scaling_factor (float): The scaling factor in the x and y dimensions.
+        z_scaling_factor (float): The scaling factor in the z dimension.
+        time_spacing (float): The spacing between time points.
+        time_units (TimeUnits | str): The units of the time axis.
+        levels (int | list[str]): The number of levels in the pyramid.
+        path_names (list[str] | None): The names of the paths in the image.
+        name (str | None): The name of the image.
+        channel_labels (list[str] | None): The labels of the channels.
+        channel_wavelengths (list[str] | None): The wavelengths of the channels.
+        channel_kwargs (list[dict[str, Any]] | None): The extra fields for the channels.
+        omero_kwargs (dict[str, Any] | None): The extra fields for the image.
+        overwrite (bool): Whether to overwrite the image if it exists.
+        version (str): The version of the OME-Zarr format.
+
+    """
     if len(on_disk_shape) != len(on_disk_axis):
         raise ValueError(
             "The number of dimensions in the shape must match the number of "
@@ -142,7 +180,7 @@ def create_empty_ome_zarr_image(
     _build_empty_pyramid(
         group=group,
         image_meta=image_meta,
-        shape=on_disk_shape,
+        on_disk_shape=on_disk_shape,
         chunks=chunks,
         dtype=dtype,
         on_disk_axis=on_disk_axis,
@@ -153,7 +191,7 @@ def create_empty_ome_zarr_image(
 
 def create_empty_ome_zarr_label(
     store: StoreLike,
-    shape: Collection[int],
+    on_disk_shape: Collection[int],
     chunks: Collection[int] | None = None,
     dtype: str = "uint16",
     on_disk_axis: Collection[str] = ("t", "z", "y", "x"),
@@ -167,8 +205,26 @@ def create_empty_ome_zarr_label(
     overwrite: bool = True,
     version: str = "0.4",
 ) -> None:
-    """Create an empty OME-Zarr image with the given shape and metadata."""
-    if len(shape) != len(on_disk_axis):
+    """Create an empty OME-Zarr image with the given shape and metadata.
+
+    Args:
+        store (StoreLike): The store to create the image in.
+        on_disk_shape (Collection[int]): The shape of the image on disk.
+        chunks (Collection[int] | None): The chunk shape for the image.
+        dtype (str): The data type of the image.
+        on_disk_axis (Collection[str]): The order of the axes on disk.
+        pixel_sizes (PixelSize | None): The pixel size of the image.
+        xy_scaling_factor (float): The scaling factor in the x and y dimensions.
+        z_scaling_factor (float): The scaling factor in the z dimension.
+        time_spacing (float): The spacing between time points.
+        time_units (TimeUnits | str | None): The units of the time axis.
+        levels (int | list[str]): The number of levels in the pyramid.
+        name (str | None): The name of the image.
+        overwrite (bool): Whether to overwrite the image if it exists.
+        version (str): The version of the OME-Zarr format
+
+    """
+    if len(on_disk_shape) != len(on_disk_axis):
         raise ValueError(
             "The number of dimensions in the shape must match the number of "
             "axes in the on-disk axis."
@@ -199,7 +255,7 @@ def create_empty_ome_zarr_label(
     _build_empty_pyramid(
         group=group,
         image_meta=image_meta,
-        shape=shape,
+        on_disk_shape=on_disk_shape,
         chunks=chunks,
         dtype=dtype,
         on_disk_axis=on_disk_axis,
