@@ -178,7 +178,7 @@ class NgffImage:
 
         default_kwargs = {
             "store": store,
-            "shape": image_0.on_disk_shape,
+            "on_disk_shape": image_0.on_disk_shape,
             "chunks": image_0.on_disk_array.chunks,
             "dtype": image_0.on_disk_array.dtype,
             "on_disk_axis": image_0.dataset.on_disk_axes_names,
@@ -187,7 +187,7 @@ class NgffImage:
             "z_scaling_factor": self.image_meta.z_scaling_factor,
             "time_spacing": image_0.dataset.time_spacing,
             "time_units": image_0.dataset.time_axis_unit,
-            "num_levels": self.num_levels,
+            "levels": self.num_levels,
             "name": name,
             "channel_labels": image_0.channel_labels,
             "channel_wavelengths": [ch.wavelength_id for ch in channels],

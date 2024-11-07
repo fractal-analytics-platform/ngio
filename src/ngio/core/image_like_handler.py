@@ -227,6 +227,10 @@ class ImageLike:
         """Return the shape of the image."""
         return self.dimensions.on_disk_shape
 
+    def find_axis(self, axis_name: str) -> int | None:
+        """Return the index of the given axis name."""
+        return self.dimensions.find_axis(axis_name)
+
     # Methods to get the image data in the canonical order
     def init_lock(self, lock_id: str | None = None) -> None:
         """Set the lock for the Dask array."""

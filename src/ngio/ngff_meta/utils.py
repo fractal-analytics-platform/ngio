@@ -26,9 +26,9 @@ def _create_multiscale_meta(
     z_scaling_factor: float = 1.0,
     pixel_units: SpaceUnits | str = SpaceUnits.micrometer,
     time_spacing: float = 1.0,
-    time_units: TimeUnits | str = TimeUnits.s,
-    num_levels: int = 5,
-) -> tuple[list[Dataset], Omero]:
+    time_units: TimeUnits | str | None = None,
+    levels: int | list[str] = 5,
+) -> list[Dataset]:
     """Create a image metadata object from scratch."""
     allowed_axes_names = (
         SpaceNames.allowed_names()
@@ -40,6 +40,9 @@ def _create_multiscale_meta(
             raise ValueError(
                 f"Invalid axis name: {ax}, allowed names: {allowed_axes_names}"
             )
+
+    if isinstance(pixel_units, str):
+        pixel_units = SpaceUnits(pixel_units)
 
     if pixel_sizes is None:
         pixel_sizes = PixelSize(z=1.0, y=1.0, x=1.0, unit=pixel_units)
@@ -53,9 +56,23 @@ def _create_multiscale_meta(
         "x": xy_scaling_factor,
     }
 
+    if time_units is None:
+        time_units = TimeUnits.s
+
+    if isinstance(time_units, str):
+        time_units = TimeUnits(time_units)
+
     axes = Axis.batch_create(on_disk_axis, time_unit=time_units, space_unit=pixel_units)
     datasets = []
-    for level in range(num_levels):
+
+    if isinstance(levels, int):
+        paths = [str(i) for i in range(levels)]
+    elif isinstance(levels, list):
+        if not all(isinstance(level, str) for level in levels):
+            raise ValueError(f"All levels must be strings. Got: {levels}")
+        paths = levels
+
+    for level, path in enumerate(paths):
         scale = [
             pixel_sizes_dict.get(ax, 1.0) * scaling_factor_dict.get(ax, 1.0) ** level
             for ax in on_disk_axis
@@ -63,7 +80,7 @@ def _create_multiscale_meta(
 
         datasets.append(
             Dataset(
-                path=str(level),
+                path=path,
                 on_disk_axes=axes,
                 on_disk_scale=scale,
                 on_disk_translation=None,
@@ -79,7 +96,7 @@ def create_image_metadata(
     z_scaling_factor: float = 1.0,
     time_spacing: float = 1.0,
     time_units: TimeUnits | str = TimeUnits.s,
-    num_levels: int = 5,
+    levels: int | list[str] = 5,
     name: str | None = None,
     channel_labels: list[str] | None = None,
     channel_wavelengths: list[str] | None = None,
@@ -102,7 +119,7 @@ def create_image_metadata(
             different than 1.0 for the z axis.
         time_spacing: The time spacing (If the time axis is present).
         time_units: The units of the time spacing (If the time axis is present).
-        num_levels: The number of levels in the pyramid.
+        levels: The number of levels in the pyramid or the list of paths.
         name: The name of the metadata.
         channel_labels: The names of the channels.
         channel_wavelengths: The wavelengths of the channels.
@@ -118,7 +135,7 @@ def create_image_metadata(
         z_scaling_factor=z_scaling_factor,
         time_spacing=time_spacing,
         time_units=time_units,
-        num_levels=num_levels,
+        levels=levels,
     )
 
     if channel_labels is None:
@@ -169,8 +186,8 @@ def create_label_metadata(
     xy_scaling_factor: float = 2.0,
     z_scaling_factor: float = 1.0,
     time_spacing: float = 1.0,
-    time_units: TimeUnits | str = TimeUnits.s,
-    num_levels: int = 5,
+    time_units: TimeUnits | str | None = None,
+    levels: int | list[str] = 5,
     name: str | None = None,
     version: str = "0.4",
 ) -> LabelMeta:
@@ -189,7 +206,7 @@ def create_label_metadata(
             different than 1.0 for the z axis.
         time_spacing: The time spacing (If the time axis is present).
         time_units: The units of the time spacing (If the time axis is present).
-        num_levels: The number of levels in the pyramid.
+        levels: The number of levels in the pyramid or the list of paths.
         name: The name of the metadata.
         version: The version of NGFF metadata.
     """
@@ -200,60 +217,10 @@ def create_label_metadata(
         z_scaling_factor=z_scaling_factor,
         time_spacing=time_spacing,
         time_units=time_units,
-        num_levels=num_levels,
+        levels=levels,
     )
     return LabelMeta(
         version=version,
         name=name,
         datasets=datasets,
     )
-
-
-def remove_axis_from_metadata(
-    metadata: ImageMeta,
-    *,
-    axis_name: str | None = None,
-) -> ImageMeta:
-    """Remove an axis from the metadata.
-
-    Args:
-        metadata: A ImageMeta object.
-        axis_name: The name of the axis to remove.
-    """
-    return metadata.remove_axis(axis_name=axis_name)
-
-
-def add_axis_to_metadata(
-    metadata: ImageMeta | LabelMeta,
-    axis_name: str,
-    scale: float = 1.0,
-) -> ImageMeta | LabelMeta:
-    """Add an axis to the ImageMeta or LabelMeta object.
-
-    Args:
-        metadata: A ImageMeta or LabelMeta object.
-        axis_name: The name of the axis to add.
-        scale: The scale of the axis
-    """
-    return metadata.add_axis(
-        axis_name=axis_name,
-        scale=scale,
-    )
-
-
-def derive_image_metadata(
-    image: ImageMeta,
-    name: str,
-    start_level: int = 0,
-) -> ImageMeta:
-    """Derive a new image metadata from an existing one."""
-    pass
-
-
-def derive_label_metadata(
-    image: ImageMeta,
-    name: str,
-    start_level: int = 0,
-) -> LabelMeta:
-    """Derive a new label metadata from an existing one."""
-    pass

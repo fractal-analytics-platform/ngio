@@ -74,16 +74,17 @@ def _build_empty_pyramid(
 
 def create_empty_ome_zarr_image(
     store: StoreLike,
-    shape: Collection[int],
+    on_disk_shape: Collection[int],
+    on_disk_axis: Collection[str] = ("t", "c", "z", "y", "x"),
     chunks: Collection[int] | None = None,
     dtype: str = "uint16",
-    on_disk_axis: Collection[str] = ("t", "c", "z", "y", "x"),
     pixel_sizes: PixelSize | None = None,
     xy_scaling_factor: float = 2.0,
     z_scaling_factor: float = 1.0,
     time_spacing: float = 1.0,
     time_units: TimeUnits | str = TimeUnits.s,
-    num_levels: int = 5,
+    levels: int | list[str] = 5,
+    path_names: list[str] | None = None,
     name: str | None = None,
     channel_labels: list[str] | None = None,
     channel_wavelengths: list[str] | None = None,
@@ -93,16 +94,16 @@ def create_empty_ome_zarr_image(
     version: str = "0.4",
 ) -> None:
     """Create an empty OME-Zarr image with the given shape and metadata."""
-    if len(shape) != len(on_disk_axis):
+    if len(on_disk_shape) != len(on_disk_axis):
         raise ValueError(
             "The number of dimensions in the shape must match the number of "
             "axes in the on-disk axis."
         )
 
     if "c" in on_disk_axis:
-        shape = tuple(shape)
+        on_disk_shape = tuple(on_disk_shape)
         on_disk_axis = tuple(on_disk_axis)
-        num_channels = shape[on_disk_axis.index("c")]
+        num_channels = on_disk_shape[on_disk_axis.index("c")]
         if channel_labels is None:
             channel_labels = [f"C{i:02d}" for i in range(num_channels)]
         else:
@@ -120,7 +121,7 @@ def create_empty_ome_zarr_image(
         z_scaling_factor=z_scaling_factor,
         time_spacing=time_spacing,
         time_units=time_units,
-        num_levels=num_levels,
+        levels=levels,
         name=name,
         channel_labels=channel_labels,
         channel_wavelengths=channel_wavelengths,
@@ -141,7 +142,7 @@ def create_empty_ome_zarr_image(
     _build_empty_pyramid(
         group=group,
         image_meta=image_meta,
-        shape=shape,
+        shape=on_disk_shape,
         chunks=chunks,
         dtype=dtype,
         on_disk_axis=on_disk_axis,
@@ -160,8 +161,8 @@ def create_empty_ome_zarr_label(
     xy_scaling_factor: float = 2.0,
     z_scaling_factor: float = 1.0,
     time_spacing: float = 1.0,
-    time_units: TimeUnits | str = TimeUnits.s,
-    num_levels: int = 5,
+    time_units: TimeUnits | str | None = None,
+    levels: int | list[str] = 5,
     name: str | None = None,
     overwrite: bool = True,
     version: str = "0.4",
@@ -180,7 +181,7 @@ def create_empty_ome_zarr_label(
         z_scaling_factor=z_scaling_factor,
         time_spacing=time_spacing,
         time_units=time_units,
-        num_levels=num_levels,
+        levels=levels,
         name=name,
         version=version,
     )
