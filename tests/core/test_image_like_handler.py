@@ -19,7 +19,7 @@ class TestImageLikeHandler:
         assert image_handler.dimensions.shape == (3, 10, 256, 256)
         shape = image_handler.dimensions.shape
         assert image_handler.shape == shape
-        assert image_handler.dimensions.z == 10
+        assert image_handler.dimensions.get("z") == 10
         assert image_handler.is_3d
         assert not image_handler.is_time_series
         assert image_handler.is_multi_channels
@@ -54,7 +54,7 @@ class TestImageLikeHandler:
         assert image_handler.dimensions.shape == (2, 2, 4320, 2560)
         shape = image_handler.dimensions.shape
         assert image_handler.shape == shape
-        assert image_handler.dimensions.z == 2
+        assert image_handler.dimensions.get("z") == 2
         assert image_handler.is_3d
         assert not image_handler.is_time_series
         assert image_handler.is_multi_channels

@@ -164,7 +164,7 @@ class BaseTable:
             self._validators = []
         self._validators.append(validator)
 
-    def write(self, meta: BaseModel) -> None:
+    def consolidate(self, meta: BaseModel) -> None:
         """Write the current state of the table to the Zarr file."""
         table = self.table
         table = validate_table(

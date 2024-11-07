@@ -6,13 +6,59 @@ But they can be built from the OME standard metadata, and the
 can be converted to the OME standard.
 """
 
+from collections.abc import Collection
 from enum import Enum
+from typing import Any
 
 import numpy as np
 from pydantic import BaseModel, Field
 from typing_extensions import Self
 
 from ngio.utils._pydantic_utils import BaseWithExtraFields
+
+
+class NgffVersion(str, Enum):
+    """Allowed NGFF versions."""
+
+    v04 = "0.4"
+
+
+################################################################################################
+#
+# Omero Section of the Metadata is used to store channel information and visualisation
+# settings.
+# This section is transitory and will be likely changed in the future.
+#
+#################################################################################################
+
+
+class Window(BaseModel):
+    """Window model to be used by the Viewer."""
+
+    min: int | float
+    max: int | float
+    start: int | float
+    end: int | float
+
+    @classmethod
+    def from_type(cls, data_type: str) -> "Window":
+        """Create a Window object from a window type."""
+        type_info = np.iinfo(data_type)
+        return cls(
+            min=type_info.min, max=type_info.max, start=type_info.min, end=type_info.max
+        )
+
+
+class ChannelVisualisation(BaseWithExtraFields):
+    """Channel visualisation model.
+
+    Contains the information about the visualisation of a channel.
+    """
+
+    color: str
+    window: Window
+    active: bool = True
+    inverted: bool = False
 
 
 class Channel(BaseWithExtraFields):
@@ -28,6 +74,25 @@ class Channel(BaseWithExtraFields):
     label: str
     wavelength_id: str | None = None
 
+    @classmethod
+    def lazy_init(
+        cls,
+        label: str,
+        wavelength_id: str | None = None,
+        color: str = "00FFFF",
+        data_type: Any = np.uint16,
+    ) -> "Channel":
+        """Create a Channel object with the default unit."""
+        channel_visualization = ChannelVisualisation(
+            color=color, window=Window.from_type(data_type)
+        )
+
+        return cls(
+            label=label,
+            wavelength_id=wavelength_id,
+            **channel_visualization.model_dump(),
+        )
+
 
 class Omero(BaseWithExtraFields):
     """Information about the OMERO metadata.
@@ -39,6 +104,16 @@ class Omero(BaseWithExtraFields):
     """
 
     channels: list[Channel] = Field(default_factory=list)
+
+
+################################################################################################
+#
+# Axis Types and Units
+# We define a small set of axis types and units that can be used in the metadata.
+# This axis types are more restrictive than the OME standard.
+# We do that to simplify the data processing.
+#
+#################################################################################################
 
 
 class AxisType(str, Enum):
@@ -91,63 +166,6 @@ class ChannelNames(str, Enum):
         return list(ChannelNames.__members__.keys())
 
 
-class PixelSize(BaseModel):
-    """PixelSize class to store the pixel size in 3D space."""
-
-    x: float = Field(..., ge=0)
-    y: float = Field(..., ge=0)
-    z: float = Field(1.0, ge=0)
-    unit: SpaceUnits = SpaceUnits.micrometer
-    virtual: bool = False
-
-    def __str__(self) -> str:
-        """Return the string representation of the object."""
-        return f"PixelSize(x={self.x}, y={self.y}, z={self.z}, unit={self.unit.value})"
-
-    @classmethod
-    def from_list(cls, sizes: list[float], unit: SpaceUnits) -> "PixelSize":
-        """Build a PixelSize object from a list of sizes.
-
-        Note: The order of the sizes must be z, y, x.
-
-        Args:
-            sizes(list[float]): The list of sizes.
-            unit(SpaceUnits): The unit of the sizes.
-        """
-        if len(sizes) == 2:
-            return cls(y=sizes[0], x=sizes[1], unit=unit)
-        elif len(sizes) == 3:
-            return cls(z=sizes[0], y=sizes[1], x=sizes[2], unit=unit)
-        else:
-            raise ValueError("Invalid pixel size list. Must have 2 or 3 elements.")
-
-    def as_dict(self) -> dict:
-        """Return the pixel size as a dictionary."""
-        return {"z": self.z, "y": self.y, "x": self.x}
-
-    @property
-    def zyx(self) -> tuple:
-        """Return the voxel size in z, y, x order."""
-        return self.z, self.y, self.x
-
-    @property
-    def yx(self) -> tuple:
-        """Return the xy plane pixel size in y, x order."""
-        return self.y, self.x
-
-    def voxel_volume(self) -> float:
-        """Return the volume of a voxel."""
-        return self.y * self.x * (self.z or 1)
-
-    def xy_plane_area(self) -> float:
-        """Return the area of the xy plane."""
-        return self.y * self.x
-
-    def distance(self, other: "PixelSize") -> float:
-        """Return the distance between two pixel sizes."""
-        return np.linalg.norm(np.array(self.zyx) - np.array(other.zyx))
-
-
 class TimeUnits(str, Enum):
     """Allowed time units."""
 
@@ -171,6 +189,93 @@ class TimeNames(str, Enum):
         return list(TimeNames.__members__.keys())
 
 
+################################################################################################
+#
+# PixelSize model
+# The PixelSize model is used to store the pixel size in 3D space.
+# The model does not store scaling factors and units for other axes.
+#
+#################################################################################################
+
+
+class PixelSize(BaseModel):
+    """PixelSize class to store the pixel size in 3D space."""
+
+    x: float = Field(..., ge=0)
+    y: float = Field(..., ge=0)
+    z: float = Field(1.0, ge=0)
+    unit: SpaceUnits = SpaceUnits.micrometer
+    virtual: bool = False
+
+    def __str__(self) -> str:
+        """Return the string representation of the object."""
+        return f"PixelSize(x={self.x}, y={self.y}, z={self.z}, unit={self.unit.value})"
+
+    @classmethod
+    def from_list(
+        cls, sizes: list[float], unit: SpaceUnits = SpaceUnits.micrometer
+    ) -> "PixelSize":
+        """Build a PixelSize object from a list of sizes.
+
+        Note: The order of the sizes must be z, y, x.
+
+        Args:
+            sizes(list[float]): The list of sizes.
+            unit(SpaceUnits): The unit of the sizes.
+        """
+        if len(sizes) == 2:
+            return cls(y=sizes[0], x=sizes[1], z=1, unit=unit)
+        elif len(sizes) == 3:
+            return cls(z=sizes[0], y=sizes[1], x=sizes[2], unit=unit)
+        else:
+            raise ValueError("Invalid pixel size list. Must have 2 or 3 elements.")
+
+    def as_dict(self) -> dict:
+        """Return the pixel size as a dictionary."""
+        return {"z": self.z, "y": self.y, "x": self.x}
+
+    @property
+    def zyx(self) -> tuple:
+        """Return the voxel size in z, y, x order."""
+        return self.z, self.y, self.x
+
+    @property
+    def yx(self) -> tuple:
+        """Return the xy plane pixel size in y, x order."""
+        return self.y, self.x
+
+    @property
+    def voxel_volume(self) -> float:
+        """Return the volume of a voxel."""
+        return self.y * self.x * self.z
+
+    @property
+    def xy_plane_area(self) -> float:
+        """Return the area of the xy plane."""
+        return self.y * self.x
+
+    def distance(self, other: "PixelSize") -> float:
+        """Return the distance between two pixel sizes."""
+        return float(np.linalg.norm(np.array(self.zyx) - np.array(other.zyx)))
+
+
+################################################################################################
+#
+# Axis and Dataset models are the two core components of the OME-NFF
+#  multiscale metadata.
+# The Axis model is used to store the information about an axis (name, unit, type).
+# The Dataset model is used to store the information about a
+#  dataset (path, axes, scale).
+#
+# The Dataset and Axis have two representations:
+#  - on_disk: The representation of the metadata as stored on disk. This representation
+#   preserves the order of the axes and the scale transformation.
+#  - canonical: The representation of the metadata in the canonical order.
+#   This representation is used to simplify the data processing.
+#
+#################################################################################################
+
+
 class Axis:
     """Axis infos model."""
 
@@ -192,6 +297,7 @@ class Axis:
             name = name.value
 
         self._name = name
+        self._unit = unit
 
         if name in TimeNames.allowed_names():
             self._type = AxisType.time
@@ -239,7 +345,7 @@ class Axis:
     @classmethod
     def batch_create(
         cls,
-        axes_names: list[str | SpaceNames | TimeNames],
+        axes_names: Collection[str | SpaceNames | TimeNames],
         time_unit: TimeUnits | None = None,
         space_unit: SpaceUnits | None = None,
     ) -> list["Axis"]:
@@ -273,7 +379,9 @@ class Axis:
 
     def model_dump(self) -> dict:
         """Return the axis information in a dictionary."""
-        return {"name": self.name, "unit": self.unit, "type": self.type}
+        _dict = {"name": self.name, "unit": self.unit, "type": self.type}
+        # Remove None values
+        return {k: v for k, v in _dict.items() if v is not None}
 
 
 class Dataset:
@@ -352,9 +460,13 @@ class Dataset:
 
         # Compute the index mapping between the canonical order and the actual order
         _map = {ax.name: i for i, ax in enumerate(on_disk_axes)}
-        self._index_mapping = {
-            name: _map.get(name, None) for name in self._canonical_order
-        }
+
+        self._index_mapping = {}
+        for name in self._canonical_order:
+            _index = _map.get(name, None)
+            if _index is not None:
+                self._index_mapping[name] = _index
+
         self._ordered_axes = [
             on_disk_axes[i] for i in self._index_mapping.values() if i is not None
         ]
@@ -393,12 +505,13 @@ class Dataset:
         return [on_disk_axes.index(ax) for ax in canonical_axes]
 
     @property
-    def reverse_axes_order(self) -> list[str]:
+    def reverse_axes_order(self) -> list[int]:
         """Get the mapping between the on-disk order and the canonical order.
 
         It is the inverse of the axes_order.
         """
-        return np.argsort(self.axes_order)
+        sorted_order = np.argsort(self.axes_order).tolist()
+        return sorted_order  # type: ignore
 
     @property
     def scale(self) -> list[float]:
@@ -408,10 +521,11 @@ class Dataset:
     @property
     def time_spacing(self) -> float:
         """Get the time spacing of the dataset."""
-        if "t" not in self.axes_names:
+        t = self.index_mapping.get("t")
+        if t is None:
             return 1.0
 
-        scale_t = self.scale[self.index_mapping.get("t")]
+        scale_t = self.scale[t]
         return scale_t
 
     @property
@@ -442,7 +556,14 @@ class Dataset:
         types = [ax.unit for ax in self.axes if ax.type == AxisType.space]
         if len(set(types)) > 1:
             raise ValueError("Inconsistent spatial axes units.")
-        return types[0]
+        return_type = types[0]
+        if return_type is None:
+            raise ValueError("Spatial axes must have a unit.")
+        if return_type not in SpaceUnits.allowed_names():
+            raise ValueError(f"Invalid space unit {return_type}.")
+        if isinstance(return_type, str):
+            return_type = SpaceUnits(return_type)
+        return return_type
 
     @property
     def pixel_size(self) -> PixelSize:
@@ -453,15 +574,24 @@ class Dataset:
             if ax.type == AxisType.space:
                 pixel_sizes[ax.name] = scale
 
-        return PixelSize(**pixel_sizes, unit=self.space_axes_unit)
+        return PixelSize(
+            x=pixel_sizes["x"],
+            y=pixel_sizes["y"],
+            z=pixel_sizes.get("z", 1.0),
+            unit=self.space_axes_unit,
+        )
 
     @property
     def time_axis_unit(self) -> TimeUnits | None:
         """Get the unit of the time axis."""
         types = [ax.unit for ax in self.axes if ax.type == AxisType.time]
-        if len(set(types)) > 1:
-            raise ValueError("Inconsistent time axis units.")
-        return types[0] if types else None
+        if len(types) == 0:
+            return None
+        elif len(types) == 1:
+            assert isinstance(types[0], TimeUnits)
+            return types[0]
+        else:
+            raise ValueError("Multiple time axes found. Only one time axis is allowed.")
 
     def remove_axis(self, axis_name: str) -> "Dataset":
         """Remove an axis from the dataset.
@@ -497,82 +627,20 @@ class Dataset:
             canonical_order=self._canonical_order,
         )
 
-    def add_axis(
-        self, axis_name: str, scale: float = 1.0, translation: float | None = None
-    ) -> "Dataset":
-        """Add an axis to the dataset.
 
-        Args:
-            axis_name(str): The name of the axis to add.
-            scale(float): The scale of the axis.
-            translation(float | None): The translation of the axis.
-        """
-        if axis_name in self.axes_names:
-            raise ValueError(f"Axis {axis_name} already exists in the dataset.")
-
-        axis = Axis.lazy_create(
-            name=axis_name,
-            space_unit=self.space_axes_unit,
-            time_unit=self.time_axis_unit,
-        )
-
-        new_on_disk_axes = self._on_disk_axes.copy()
-        new_on_disk_axes.append(axis)
-
-        new_scale = self._scale.copy()
-        new_scale.append(scale)
-
-        if self._translation is not None:
-            new_translation = self._translation.copy()
-            new_translation.append(translation)
-        else:
-            new_translation = None
-
-        return Dataset(
-            path=self.path,
-            on_disk_axes=new_on_disk_axes,
-            on_disk_scale=new_scale,
-            on_disk_translation=new_translation,
-            canonical_order=self._canonical_order,
-        )
-
-    def to_canonical_order(self) -> "Dataset":
-        """Return a new Dataset where the axes are in the canonical order."""
-        new_axes = self._ordered_axes
-        new_scale = self.scale
-        new_translation = self.translation
-        return Dataset(
-            path=self.path,
-            on_disk_axes=new_axes,
-            on_disk_scale=new_scale,
-            on_disk_translation=new_translation,
-        )
-
-    def on_disk_model_dump(self) -> dict:
-        """Return the dataset information in the on_disk order."""
-        return {
-            "path": self.path,
-            "axes": [ax.model_dump(exclude_none=True) for ax in self._on_disk_axes],
-            "scale": self._scale,
-            "translation": self._translation,
-        }
-
-    def ordered_model_dump(self) -> dict:
-        """Return the dataset information in the canonical order."""
-        return {
-            "path": self.path,
-            "axes": [ax.model_dump(exclude_none=True) for ax in self.axes],
-            "scale": self.scale,
-            "translation": self.translation,
-        }
-
-
+################################################################################################
+#
+# BaseMeta, ImageMeta and LabelMeta are the core models to represent the multiscale the
+#  OME-NGFF spec on memory. The are the only interfaces to interact with
+#  the metadata on-disk and the metadata in memory.
+#
+#################################################################################################
 class BaseMeta:
     """Base class for ImageMeta and LabelMeta."""
 
-    def __init__(self, version: str, name: str, datasets: list[Dataset]) -> None:
+    def __init__(self, version: str, name: str | None, datasets: list[Dataset]) -> None:
         """Initialize the ImageMeta object."""
-        self._version = version
+        self._version = NgffVersion(version)
         self._name = name
 
         if len(datasets) == 0:
@@ -581,12 +649,12 @@ class BaseMeta:
         self._datasets = datasets
 
     @property
-    def version(self) -> str:
+    def version(self) -> NgffVersion:
         """Version of the OME-NFF metadata used to build the object."""
         return self._version
 
     @property
-    def name(self) -> str:
+    def name(self) -> str | None:
         """Name of the image."""
         return self._name
 
@@ -747,8 +815,12 @@ class BaseMeta:
     def xy_scaling_factor(self) -> float:
         """Get the xy scaling factor of the dataset."""
         scaling_factors = self._scaling_factors()
-        x_scaling_f = scaling_factors[self.index_mapping.get("x")]
-        y_scaling_f = scaling_factors[self.index_mapping.get("y")]
+        x, y = self.index_mapping.get("x"), self.index_mapping.get("y")
+        if x is None or y is None:
+            raise ValueError("Mandatory axes x and y not found.")
+
+        x_scaling_f = scaling_factors[x]
+        y_scaling_f = scaling_factors[y]
 
         if not np.allclose(x_scaling_f, y_scaling_f):
             raise ValueError("Inconsistent xy scaling factor.")
@@ -758,9 +830,11 @@ class BaseMeta:
     def z_scaling_factor(self) -> float:
         """Get the z scaling factor of the dataset."""
         scaling_factors = self._scaling_factors()
-        if "z" not in self.axes_names:
+        z = self.index_mapping.get("z")
+        if z is None:
             return 1.0
-        z_scaling_f = scaling_factors[self.index_mapping.get("z")]
+
+        z_scaling_f = scaling_factors[z]
         return z_scaling_f
 
     def translation(
@@ -794,28 +868,11 @@ class BaseMeta:
             version=self.version, name=self.name, datasets=new_datasets
         )
 
-    def add_axis(
-        self, axis_name: str, scale: float = 1.0, translation: float | None = None
-    ) -> Self:
-        """Add an axis to the metadata.
-
-        Args:
-            axis_name(str): The name of the axis to add.
-            scale(float): The scale of the axis.
-            translation(float | None): The translation of the axis.
-        """
-        new_datasets = [
-            dataset.add_axis(axis_name, scale, translation) for dataset in self.datasets
-        ]
-        return self.__class__(
-            version=self.version, name=self.name, datasets=new_datasets
-        )
-
 
 class LabelMeta(BaseMeta):
     """Label metadata model."""
 
-    def __init__(self, version: str, name: str, datasets: list[Dataset]) -> None:
+    def __init__(self, version: str, name: str | None, datasets: list[Dataset]) -> None:
         """Initialize the ImageMeta object."""
         super().__init__(version, name, datasets)
 
@@ -824,24 +881,6 @@ class LabelMeta(BaseMeta):
             if ax.type == AxisType.channel:
                 raise ValueError("Channel axes are not allowed in ImageMeta.")
 
-    def add_axis(
-        self, axis_name: str, scale: float = 1, translation: float | None = None
-    ) -> "LabelMeta":
-        """Add an axis to the metadata."""
-        # Check if the axis is a channel
-        axis = Axis.lazy_create(
-            name=axis_name,
-            space_unit=self.space_axes_unit,
-            time_unit=self.time_axis_unit,
-        )
-        if axis.type == AxisType.channel:
-            raise ValueError("Channel axes are not allowed in LabelMeta.")
-
-        meta = super().add_axis(
-            axis_name=axis_name, scale=scale, translation=translation
-        )
-        return meta
-
 
 class ImageMeta(BaseMeta):
     """Image metadata model."""
@@ -849,12 +888,56 @@ class ImageMeta(BaseMeta):
     def __init__(
         self,
         version: str,
-        name: str,
+        name: str | None,
         datasets: list[Dataset],
         omero: Omero | None = None,
     ) -> None:
         """Initialize the ImageMeta object."""
         super().__init__(version=version, name=name, datasets=datasets)
+        self._omero = omero
+
+    def build_omero(
+        self,
+        channels_names: list[str],
+        channels_wavelengths: list[str] | None = None,
+        channels_extra_fields: list[dict[str, Any]] | None = None,
+        omero_kwargs: dict[str, Any] | None = None,
+    ) -> None:
+        """Build a default OMERO metadata.
+
+        Args:
+            channels_names(list[str]): The names of the channels.
+            channels_wavelengths(list[str] | None): The wavelength IDs of the channels.
+            channels_extra_fields(list[dict[str, Any]] | None): The extra fields of
+                the channels.
+            omero_kwargs(dict[str, Any] | None): Additional OMERO metadata.
+        """
+        omero_kwargs = {} if omero_kwargs is None else omero_kwargs
+
+        if channels_wavelengths is None:
+            channels_wavelengths = channels_names
+        else:
+            if len(channels_wavelengths) != len(channels_names):
+                raise ValueError(
+                    "Channels names and wavelengths " "must have the same length."
+                )
+
+        if channels_extra_fields is None:
+            channels_extra_fields = [{} for _ in channels_names]
+        else:
+            if len(channels_extra_fields) != len(channels_names):
+                raise ValueError(
+                    "Channels names and extra fields " "must have the same length."
+                )
+        channels = []
+        for ch_name, ch_wavelength, ch_extra in zip(
+            channels_names, channels_wavelengths, channels_extra_fields, strict=True
+        ):
+            ch = Channel(
+                label=ch_name, wavelength_id=ch_wavelength, extra_fields=ch_extra
+            )
+            channels.append(ch)
+        omero = Omero(channels=channels, extra_fields=omero_kwargs)
         self._omero = omero
 
     @property
@@ -883,7 +966,11 @@ class ImageMeta(BaseMeta):
     @property
     def channel_wavelength_ids(self) -> list[str]:
         """Get the wavelength IDs of the channels in the image."""
-        return [channel.wavelength_id for channel in self.channels]
+        return [
+            channel.wavelength_id
+            for channel in self.channels
+            if channel.wavelength_id is not None
+        ]
 
     def _get_channel_idx_by_label(self, label: str) -> int | None:
         """Get the index of a channel by its label."""
@@ -907,7 +994,7 @@ class ImageMeta(BaseMeta):
 
     def get_channel_idx(
         self, label: str | None = None, wavelength_id: str | None = None
-    ) -> int:
+    ) -> int | None:
         """Get the index of a channel by its label or wavelength ID."""
         # Only one of the arguments must be provided
         if sum([label is not None, wavelength_id is not None]) != 1:
@@ -922,25 +1009,13 @@ class ImageMeta(BaseMeta):
                 "get_channel_idx must receive either label or wavelength_id."
             )
 
-    def remove_axis(self, axis_name: str) -> "ImageMeta":
-        """Remove an axis from the metadata.
-
-        Args:
-            axis_name(str): The name of the axis to remove.
-        """
-        new_image = super().remove_axis(axis_name=axis_name)
-
-        # If the removed axis is a channel, remove the channel from the omero metadata
-        if axis_name in ChannelNames.allowed_names():
-            new_omero = Omero(channels=[], **self.omero.extra_fields)
-            return ImageMeta(
-                version=new_image.version,
-                name=new_image.name,
-                datasets=new_image.datasets,
-                omero=new_omero,
-            )
-
-        return new_image
+    def to_label(self, name: str | None = None) -> LabelMeta:
+        """Convert the ImageMeta to a LabelMeta."""
+        image_meta = self.remove_axis("c")
+        name = self.name if name is None else name
+        return LabelMeta(
+            version=self.version, name=self.name, datasets=image_meta.datasets
+        )
 
 
 ImageLabelMeta = ImageMeta | LabelMeta

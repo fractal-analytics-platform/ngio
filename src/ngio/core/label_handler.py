@@ -1,5 +1,6 @@
 """A module to handle OME-NGFF images stored in Zarr format."""
 
+import builtins
 from typing import Any, Literal
 
 import zarr
@@ -285,6 +286,8 @@ class LabelGroup:
     def derive(
         self,
         name: str,
+        reference: ImageLike | None = None,
+        levels: int | builtins.list[str] = 5,
         overwrite: bool = False,
         **kwargs: dict,
     ) -> Label:
@@ -292,6 +295,9 @@ class LabelGroup:
 
         Args:
             name (str): The name of the new label.
+            reference (ImageLike | None): The reference image to use for the new label.
+            levels (int | list[str]): The number of levels to create or
+                a list of paths names.
             overwrite (bool): If True, the label will be overwritten if it exists.
                 Default is False.
             **kwargs: Additional keyword arguments to pass to the new label.
@@ -311,44 +317,46 @@ class LabelGroup:
         # create the new label
         new_label_group = self._label_group.create_group(name, overwrite=overwrite)
 
-        if self._image_ref is None:
-            label_0 = self.get_label(list_of_labels[0])
-            metadata = label_0.metadata
-            on_disk_shape = label_0.on_disk_shape
-            chunks = label_0.on_disk_array.chunks
-            dataset = label_0.dataset
-        else:
-            label_0 = self._image_ref
-            metadata = label_0.metadata
-            channel_index = metadata.index_mapping.get("c", None)
-            if channel_index is not None:
-                on_disk_shape = (
-                    label_0.on_disk_shape[:channel_index]
-                    + label_0.on_disk_shape[channel_index + 1 :]
-                )
-                chunks = (
-                    label_0.on_disk_array.chunks[:channel_index]
-                    + label_0.on_disk_array.chunks[channel_index + 1 :]
-                )
-            else:
-                on_disk_shape = label_0.on_disk_shape
-                chunks = label_0.on_disk_array.chunks
+        ref_0 = self._image_ref if reference is None else reference
+        assert isinstance(ref_0, ImageLike)
 
+        if isinstance(levels, int):
+            paths = [str(i) for i in range(levels)]
+        elif isinstance(levels, list):
+            if not all(isinstance(level, str) for level in levels):
+                raise ValueError(f"All levels must be strings. Got: {levels}")
+            paths = levels
+
+        on_disk_ch_index = ref_0.find_axis("c")
+        metadata = ref_0.metadata
+
+        if on_disk_ch_index is None:
+            on_disk_shape = ref_0.on_disk_shape
+            chunks = ref_0.on_disk_array.chunks
+        else:
             metadata = metadata.remove_axis("c")
-            dataset = metadata.get_highest_resolution_dataset()
+            on_disk_shape = (
+                ref_0.on_disk_shape[:on_disk_ch_index]
+                + ref_0.on_disk_shape[on_disk_ch_index + 1 :]
+            )
+            chunks = (
+                ref_0.on_disk_array.chunks[:on_disk_ch_index]
+                + ref_0.on_disk_array.chunks[on_disk_ch_index + 1 :]
+            )
+        dataset = metadata.get_dataset(path=paths[0])
 
         default_kwargs = {
             "store": new_label_group,
             "shape": on_disk_shape,
             "chunks": chunks,
-            "dtype": label_0.on_disk_array.dtype,
+            "dtype": ref_0.on_disk_array.dtype,
             "on_disk_axis": dataset.on_disk_axes_names,
             "pixel_sizes": dataset.pixel_size,
             "xy_scaling_factor": metadata.xy_scaling_factor,
             "z_scaling_factor": metadata.z_scaling_factor,
             "time_spacing": dataset.time_spacing,
             "time_units": dataset.time_axis_unit,
-            "num_levels": metadata.num_levels,
+            "levels": paths,
             "name": name,
             "overwrite": overwrite,
             "version": metadata.version,
@@ -357,7 +365,20 @@ class LabelGroup:
         default_kwargs.update(kwargs)
 
         create_empty_ome_zarr_label(
-            **default_kwargs,
+            store=new_label_group,
+            on_disk_shape=on_disk_shape,
+            chunks=chunks,
+            dtype=ref_0.on_disk_array.dtype,
+            on_disk_axis=dataset.on_disk_axes_names,
+            pixel_sizes=dataset.pixel_size,
+            xy_scaling_factor=metadata.xy_scaling_factor,
+            z_scaling_factor=metadata.z_scaling_factor,
+            time_spacing=dataset.time_spacing,
+            time_units=dataset.time_axis_unit,
+            levels=paths,
+            name=name,
+            overwrite=overwrite,
+            version=metadata.version,
         )
 
         if name not in self.list():

@@ -50,11 +50,12 @@ core = ["zarr<3", "dask[distributed]", "dask-image"]
 
 test = ["zarr<3", "pytest", "pytest-cov"]
 
-# add anything else you like to have in your dev environment here
 dev2 = [
     "zarr<3",
     "dask[distributed]",
     "dask-image",
+    "napari",
+    "pyqt5",
     "scikit-image",
     "matplotlib",
     "ipython",
@@ -66,7 +67,7 @@ dev2 = [
     "pre-commit",
     "rich",              # https://github.com/Textualize/rich
     "ruff",
-]
+] # add anything else you like to have in your dev environment here
 
 dev3 = [
     "zarr==v3.0.0-alpha.4",

@@ -84,7 +84,7 @@ class MaskingROITableV1:
         label_image: str,
         instance_key: str = "label",
         overwrite: bool = False,
-    ):
+    ) -> "MaskingROITableV1":
         """Create a new Masking ROI table.
 
         Note this method is not meant to be called directly.
@@ -133,18 +133,18 @@ class MaskingROITableV1:
         return self._table_handler.table
 
     @table.setter
-    def table(self, table: pd.DataFrame):
+    def table(self, table: pd.DataFrame) -> None:
         """Set the feature table."""
         raise NotImplementedError(
             "Setting the table is not implemented. Please use the 'set_table' method."
         )
 
-    def set_table(self, table: pd.DataFrame):
+    def set_table(self, table: pd.DataFrame) -> None:
         """Set the feature table."""
         self._table_handler.set_table(table)
 
     @property
-    def list_labels(self) -> list[str]:
+    def list_labels(self) -> list[int]:
         """Return a list of all field indexes in the table."""
         return self.table.index.tolist()
 
@@ -192,6 +192,6 @@ class MaskingROITableV1:
         """List all ROIs in the table."""
         return [self.get_roi(label) for label in self.list_labels]
 
-    def write(self) -> None:
+    def consolidate(self) -> None:
         """Write the crrent state of the table to the Zarr file."""
-        self._table_handler.write(self.meta)
+        self._table_handler.consolidate(self.meta)

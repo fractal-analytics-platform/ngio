@@ -116,13 +116,13 @@ class FeatureTableV1:
         return self._table_handler.table
 
     @table.setter
-    def table(self, table: pd.DataFrame):
+    def table(self, table: pd.DataFrame) -> None:
         """Set the feature table."""
         raise NotImplementedError(
             "Setting the table is not implemented. Please use the 'set_table' method."
         )
 
-    def set_table(self, table: pd.DataFrame):
+    def set_table(self, table: pd.DataFrame) -> None:
         """Set the feature table."""
         self._table_handler.set_table(table)
 
@@ -141,6 +141,6 @@ class FeatureTableV1:
 
         return path.split("/")[-1]
 
-    def write(self):
+    def consolidate(self) -> None:
         """Write the table to the group."""
-        self._table_handler.write(meta=self.meta)
+        self._table_handler.consolidate(meta=self.meta)
