@@ -105,7 +105,9 @@ class PixelSize(BaseModel):
         return f"PixelSize(x={self.x}, y={self.y}, z={self.z}, unit={self.unit.value})"
 
     @classmethod
-    def from_list(cls, sizes: list[float], unit: SpaceUnits) -> "PixelSize":
+    def from_list(
+        cls, sizes: list[float], unit: SpaceUnits = SpaceUnits.micrometer
+    ) -> "PixelSize":
         """Build a PixelSize object from a list of sizes.
 
         Note: The order of the sizes must be z, y, x.
@@ -115,7 +117,7 @@ class PixelSize(BaseModel):
             unit(SpaceUnits): The unit of the sizes.
         """
         if len(sizes) == 2:
-            return cls(y=sizes[0], x=sizes[1], unit=unit)
+            return cls(y=sizes[0], x=sizes[1], z=1, unit=unit)
         elif len(sizes) == 3:
             return cls(z=sizes[0], y=sizes[1], x=sizes[2], unit=unit)
         else:
@@ -135,10 +137,12 @@ class PixelSize(BaseModel):
         """Return the xy plane pixel size in y, x order."""
         return self.y, self.x
 
+    @property
     def voxel_volume(self) -> float:
         """Return the volume of a voxel."""
-        return self.y * self.x * (self.z or 1)
+        return self.y * self.x * self.z
 
+    @property
     def xy_plane_area(self) -> float:
         """Return the area of the xy plane."""
         return self.y * self.x
