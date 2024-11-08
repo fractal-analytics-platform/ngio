@@ -132,12 +132,12 @@ class NgffImage:
             _end_percentile = da.percentile(
                 data, end_percentile, method="nearest"
             ).compute()
-            channel.extra_fields["window"] = {
-                "start": _start_percentile,
-                "end": _end_percentile,
-                "min": 0,
-                "max": max_dtype,
-            }
+
+            channel.channel_visualisation.start = _start_percentile
+            channel.channel_visualisation.end = _end_percentile
+            channel.channel_visualisation.min = 0
+            channel.channel_visualisation.max = max_dtype
+
             ngio_logger.info(
                 f"Updated window for channel {channel.label}. "
                 f"Start: {start_percentile}, End: {end_percentile}"
