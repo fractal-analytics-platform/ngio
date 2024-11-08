@@ -12,6 +12,7 @@ from ngio.ngff_meta import (
     get_ngff_image_meta_handler,
 )
 from ngio.ngff_meta.fractal_image_meta import (
+    ChannelVisualisation,
     PixelSize,
     TimeUnits,
 )
@@ -99,11 +100,10 @@ def create_empty_ome_zarr_image(
     time_spacing: float = 1.0,
     time_units: TimeUnits | str = TimeUnits.s,
     levels: int | list[str] = 5,
-    path_names: list[str] | None = None,
     name: str | None = None,
     channel_labels: list[str] | None = None,
     channel_wavelengths: list[str] | None = None,
-    channel_kwargs: list[dict[str, Any]] | None = None,
+    channel_visualization: list[ChannelVisualisation] | None = None,
     omero_kwargs: dict[str, Any] | None = None,
     overwrite: bool = True,
     version: str = "0.4",
@@ -126,7 +126,8 @@ def create_empty_ome_zarr_image(
         name (str | None): The name of the image.
         channel_labels (list[str] | None): The labels of the channels.
         channel_wavelengths (list[str] | None): The wavelengths of the channels.
-        channel_kwargs (list[dict[str, Any]] | None): The extra fields for the channels.
+        channel_visualization (list[ChannelVisualisation] | None): A list of
+            channel visualisation objects.
         omero_kwargs (dict[str, Any] | None): The extra fields for the image.
         overwrite (bool): Whether to overwrite the image if it exists.
         version (str): The version of the OME-Zarr format.
@@ -163,7 +164,7 @@ def create_empty_ome_zarr_image(
         name=name,
         channel_labels=channel_labels,
         channel_wavelengths=channel_wavelengths,
-        channel_kwargs=channel_kwargs,
+        channel_visualization=channel_visualization,
         omero_kwargs=omero_kwargs,
         version=version,
     )

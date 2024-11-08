@@ -191,7 +191,7 @@ class NgffImage:
             "name": name,
             "channel_labels": image_0.channel_labels,
             "channel_wavelengths": [ch.wavelength_id for ch in channels],
-            "channel_kwargs": [ch.extra_fields for ch in channels],
+            "channel_visualization": [ch.channel_visualisation for ch in channels],
             "omero_kwargs": omero_kwargs,
             "overwrite": overwrite,
             "version": self.image_meta.version,

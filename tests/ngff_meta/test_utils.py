@@ -2,7 +2,7 @@ import numpy as np
 
 
 class TestUtils:
-    def test_create_fractal_meta_with_t(self):
+    def test_create_fractal_meta_with_t(self) -> None:
         from ngio.ngff_meta import create_image_metadata
 
         meta = create_image_metadata(
@@ -16,7 +16,7 @@ class TestUtils:
             name="test",
             channel_labels=["DAPI", "nanog", "Lamin B1"],
             channel_wavelengths=["A01_C01", "A02_C02", "A03_C03"],
-            channel_kwargs=None,
+            channel_visualization=None,
             omero_kwargs=None,
             version="0.4",
         )
@@ -29,7 +29,7 @@ class TestUtils:
 
         assert meta.num_levels == 5
 
-    def test_create_fractal_meta(self):
+    def test_create_fractal_meta(self) -> None:
         from ngio.ngff_meta import create_image_metadata
 
         meta = create_image_metadata(
@@ -43,7 +43,7 @@ class TestUtils:
             name="test",
             channel_labels=["DAPI", "nanog", "Lamin B1"],
             channel_wavelengths=["A01_C01", "A02_C02", "A03_C03"],
-            channel_kwargs=None,
+            channel_visualization=None,
             omero_kwargs=None,
             version="0.4",
         )
@@ -56,7 +56,7 @@ class TestUtils:
 
         assert meta.num_levels == 5
 
-    def test_create_fractal_meta_with_non_canonical_order(self):
+    def test_create_fractal_meta_with_non_canonical_order(self) -> None:
         from ngio.ngff_meta import create_image_metadata
 
         meta = create_image_metadata(
@@ -70,7 +70,7 @@ class TestUtils:
             name="test",
             channel_labels=["DAPI", "nanog", "Lamin B1"],
             channel_wavelengths=["A01_C01", "A02_C02", "A03_C03"],
-            channel_kwargs=None,
+            channel_visualization=None,
             omero_kwargs=None,
             version="0.4",
         )
@@ -89,7 +89,7 @@ class TestUtils:
             name="test",
             channel_labels=["DAPI", "nanog", "Lamin B1"],
             channel_wavelengths=["A01_C01", "A02_C02", "A03_C03"],
-            channel_kwargs=None,
+            channel_visualization=None,
             omero_kwargs=None,
             version="0.4",
         )
@@ -97,7 +97,7 @@ class TestUtils:
         assert meta.axes_names == ["t", "c", "z", "y", "x"]
         assert meta.space_axes_names == ["z", "y", "x"]
 
-    def test_create_fractal_label_meta(self):
+    def test_create_fractal_label_meta(self) -> None:
         from ngio.ngff_meta import create_label_metadata
 
         meta = create_label_metadata(

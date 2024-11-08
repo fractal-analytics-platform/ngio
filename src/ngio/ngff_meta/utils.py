@@ -7,6 +7,7 @@ from ngio.ngff_meta.fractal_image_meta import (
     Axis,
     Channel,
     ChannelNames,
+    ChannelVisualisation,
     Dataset,
     ImageMeta,
     LabelMeta,
@@ -100,7 +101,7 @@ def create_image_metadata(
     name: str | None = None,
     channel_labels: list[str] | None = None,
     channel_wavelengths: list[str] | None = None,
-    channel_kwargs: list[dict[str, Any]] | None = None,
+    channel_visualization: list[ChannelVisualisation] | None = None,
     omero_kwargs: dict[str, Any] | None = None,
     version: str = "0.4",
 ) -> ImageMeta:
@@ -123,7 +124,7 @@ def create_image_metadata(
         name: The name of the metadata.
         channel_labels: The names of the channels.
         channel_wavelengths: The wavelengths of the channels.
-        channel_kwargs: The additional channel kwargs.
+        channel_visualization: The visualization of the channels.
         omero_kwargs: The additional omero kwargs.
         version: The version of NGFF metadata.
 
@@ -155,19 +156,25 @@ def create_image_metadata(
                 "channel labels."
             )
 
-    if channel_kwargs is None:
-        channel_kwargs = [{}] * len(channel_labels)
+    if channel_visualization is None:
+        channel_visualization = [ChannelVisualisation() for _ in channel_labels]
     else:
-        if len(channel_kwargs) != len(channel_labels):
+        if len(channel_visualization) != len(channel_labels):
             raise ValueError(
                 "The number of channel kwargs must match the number of channel labels."
             )
 
     channels = []
-    for label, wavelengths, kwargs in zip(
-        channel_labels, channel_wavelengths, channel_kwargs, strict=True
+    for label, wavelengths, ch_visualization in zip(
+        channel_labels, channel_wavelengths, channel_visualization, strict=True
     ):
-        channels.append(Channel(label=label, wavelength_id=wavelengths, **kwargs))
+        channels.append(
+            Channel(
+                label=label,
+                wavelength_id=wavelengths,
+                channel_visualisation=ch_visualization,
+            )
+        )
 
     omero_kwargs = {} if omero_kwargs is None else omero_kwargs
     omero = Omero(channels=channels, **omero_kwargs)

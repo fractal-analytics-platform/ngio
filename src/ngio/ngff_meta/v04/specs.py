@@ -26,12 +26,9 @@ class Window04(BaseModel):
 class Channel04(BaseWithExtraFields):
     """Model for `Omero.channels`."""
 
-    active: bool = True
-    # coefficient: int | None = None
+    label: str
     color: str
-    # family: str | None = None
-    # inverted: bool | None = None
-    label: str | None = None
+    active: bool = True
     window: Window04 | None = None
 
 

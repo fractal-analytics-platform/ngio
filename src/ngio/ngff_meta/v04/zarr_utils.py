@@ -11,6 +11,8 @@ from ngio.io import (
 from ngio.io._zarr import _is_group_readonly
 from ngio.ngff_meta.fractal_image_meta import (
     Axis,
+    Channel,
+    ChannelVisualisation,
     Dataset,
     ImageLabelMeta,
     ImageMeta,
@@ -19,6 +21,7 @@ from ngio.ngff_meta.fractal_image_meta import (
 )
 from ngio.ngff_meta.v04.specs import (
     Axis04,
+    Channel04,
     Dataset04,
     Multiscale04,
     NgffImageMeta04,
@@ -26,6 +29,7 @@ from ngio.ngff_meta.v04.specs import (
     ScaleCoordinateTransformation04,
     Transformation04,
     TranslationCoordinateTransformation04,
+    Window04,
 )
 
 
@@ -100,6 +104,74 @@ def _transform_dataset(
     return fractal_datasets
 
 
+def vanilla_omero_v04_to_fractal(omero04: Omero04) -> Omero:
+    """Convert the Omero04 to Omero."""
+    list_channels = []
+    for channel04 in omero04.channels:
+        # Convert the window to a dictionary
+        label = channel04.label
+        wavelength_id = channel04.extra_fields.get("wavelength_id", label)
+
+        if channel04.window is None:
+            window04 = Window04(
+                start=0,
+                end=65535,
+                min=0,
+                max=65535,
+            )
+        else:
+            window04 = channel04.window
+
+        ch_visualisation = ChannelVisualisation(
+            color=channel04.color,
+            active=channel04.active,
+            start=window04.start,
+            end=window04.end,
+            min=window04.min,
+            max=window04.max,
+            **channel04.extra_fields,
+        )
+
+        channel = Channel(
+            label=label,
+            wavelength_id=wavelength_id,
+            channel_visualisation=ch_visualisation,
+        )
+        list_channels.append(channel)
+
+    return Omero(
+        channels=list_channels,
+        **omero04.extra_fields,
+    )
+
+
+def fractal_omero_to_vanilla_v04(omero: Omero) -> Omero04:
+    """Convert the Omero to Omero04."""
+    list_channels04 = []
+    for channel in omero.channels:
+        # Convert the window to a Window04 object
+        window04 = Window04(
+            start=channel.channel_visualisation.start,
+            end=channel.channel_visualisation.end,
+            min=channel.channel_visualisation.min,
+            max=channel.channel_visualisation.max,
+        )
+        channel04 = Channel04(
+            label=channel.label,
+            color=channel.channel_visualisation.color,
+            active=channel.channel_visualisation.active,
+            window=window04,
+            **channel.channel_visualisation.extra_fields,
+        )
+        list_channels04.append(channel04)
+
+    return Omero04(
+        version="0.4",
+        channels=list_channels04,
+        **omero.extra_fields,
+    )
+
+
 def vanilla_ngff_image_meta_v04_to_fractal(
     meta04: NgffImageMeta04,
     meta_mode: Literal["image", "label"] = "image",
@@ -123,7 +195,10 @@ def vanilla_ngff_image_meta_v04_to_fractal(
             datasets=fractal_datasets,
         )
 
-    fractal_omero = None if meta04.omero is None else Omero(**meta04.omero.model_dump())
+    if meta04.omero is not None:
+        fractal_omero = vanilla_omero_v04_to_fractal(omero04=meta04.omero)
+    else:
+        fractal_omero = None
 
     return ImageMeta(
         version="0.4",
@@ -162,7 +237,11 @@ def fractal_ngff_image_meta_to_vanilla_v04(
     if isinstance(meta, LabelMeta):
         return NgffImageMeta04(multiscales=[multiscale04])
 
-    omero04 = None if meta.omero is None else Omero04(**meta.omero.model_dump())
+    if meta.omero is not None:
+        omero04 = fractal_omero_to_vanilla_v04(meta.omero)
+    else:
+        omero04 = None
+
     return NgffImageMeta04(
         multiscales=[multiscale04],
         omero=omero04,
@@ -189,12 +268,6 @@ def write_ngff_image_meta_v04(group: Group, meta: ImageLabelMeta) -> None:
             raise ValueError(
                 "The Zarr store does not contain the correct OME-Zarr version."
             )
-
-    if isinstance(meta, ImageMeta) and meta.omero is not None:
-        for c in meta.omero.channels:
-            if "color" not in c.extra_fields:
-                c.extra_fields["color"] = "00FFFF"
-
     meta04 = fractal_ngff_image_meta_to_vanilla_v04(meta=meta)
     group.attrs.update(meta04.model_dump(exclude_none=True))
 
