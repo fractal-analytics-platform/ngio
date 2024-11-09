@@ -157,7 +157,9 @@ def create_image_metadata(
             )
 
     if channel_visualization is None:
-        channel_visualization = [ChannelVisualisation() for _ in channel_labels]
+        channel_visualization = [
+            ChannelVisualisation(color=label) for label in channel_labels
+        ]
     else:
         if len(channel_visualization) != len(channel_labels):
             raise ValueError(
