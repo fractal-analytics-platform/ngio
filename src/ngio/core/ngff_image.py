@@ -90,10 +90,10 @@ class NgffImage:
         ngio_logger.info(f"- {image.pixel_size}")
         return image
 
-    def update_omero_window(
-        self, start_percentile: int = 5, end_percentile: int = 95
-    ) -> None:
-        """Update the OMERO window.
+    def _compute_percentiles(
+        self, start_percentile: float, end_percentile: float
+    ) -> tuple[list[float], list[float]]:
+        """Compute the percentiles for the window.
 
         This will setup percentiles based values for the window of each channel.
 
@@ -112,7 +112,6 @@ class NgffImage:
                 lowest_res_shape = image.shape
                 lowest_res_image = image
 
-        max_dtype = np.iinfo(image.on_disk_array.dtype).max
         num_c = lowest_res_image.dimensions.get("c", 1)
 
         if meta.omero is None:
@@ -124,8 +123,9 @@ class NgffImage:
         if len(channel_list) != num_c:
             raise ValueError("The number of channels does not match the image.")
 
-        for c, channel in enumerate(channel_list):
-            data = image.get_array(c=c, mode="dask").ravel()
+        starts, ends = [], []
+        for c in range(num_c):
+            data = lowest_res_image.get_array(c=c, mode="dask").ravel()
             _start_percentile = da.percentile(
                 data, start_percentile, method="nearest"
             ).compute()
@@ -133,8 +133,89 @@ class NgffImage:
                 data, end_percentile, method="nearest"
             ).compute()
 
-            channel.channel_visualisation.start = _start_percentile
-            channel.channel_visualisation.end = _end_percentile
+            starts.append(_start_percentile)
+            ends.append(_end_percentile)
+
+        return starts, ends
+
+    def set_omero(
+        self,
+        labels: list[str],
+        wavelengths: list[str] | None = None,
+        colors: list[str] | None = None,
+        adjust_window: bool = True,
+        start_percentile: int = 5,
+        end_percentile: int = 95,
+        active: list[bool] | None = None,
+        write: bool = True,
+    ) -> None:
+        """Set the OMERO metadata for the image.
+
+        Args:
+            labels (list[str]): The labels of the channels.
+            wavelengths (list[str], optional): The wavelengths of the channels.
+            colors (list[str], optional): The colors of the channels.
+            adjust_window (bool, optional): Whether to adjust the window.
+            start_percentile (int, optional): The start percentile.
+            end_percentile (int, optional): The end percentile.
+            active (list[bool], optional): Whether the channel is active.
+            write (bool, optional): Whether to write the metadata to the image.
+        """
+        image_ref = self.get_image()
+
+        if adjust_window:
+            start, end = self._compute_percentiles(
+                start_percentile=start_percentile, end_percentile=end_percentile
+            )
+
+        self.image_meta.omero_lazy_init(
+            labels=labels,
+            wavelength_ids=wavelengths,
+            colors=colors,
+            active=active,
+            start=start,
+            end=end,
+            data_type=image_ref.on_disk_array.dtype,
+        )
+
+    def update_omero_window(
+        self, start_percentile: int = 5, end_percentile: int = 95
+    ) -> None:
+        """Update the OMERO window.
+
+        This will setup percentiles based values for the window of each channel.
+
+        Args:
+            start_percentile (int): The start percentile.
+            end_percentile (int): The end percentile
+
+        """
+        start, ends = self._compute_percentiles(
+            start_percentile=start_percentile, end_percentile=end_percentile
+        )
+        meta = self.image_meta
+        ref_image = self.get_image()
+
+        max_dtype = np.iinfo(ref_image.on_disk_array.dtype).max
+        num_c = ref_image.dimensions.get("c", 1)
+
+        if meta.omero is None:
+            raise NotImplementedError(
+                "OMERO metadata not found. " " Please add OMERO metadata to the image."
+            )
+
+        channel_list = meta.omero.channels
+        if len(channel_list) != num_c:
+            raise ValueError("The number of channels does not match the image.")
+
+        if len(channel_list) != len(start):
+            raise ValueError("The number of channels does not match the image.")
+
+        for c, (channel, s, e) in enumerate(
+            zip(channel_list, start, ends, strict=True)
+        ):
+            channel.channel_visualisation.start = s
+            channel.channel_visualisation.end = e
             channel.channel_visualisation.min = 0
             channel.channel_visualisation.max = max_dtype
 

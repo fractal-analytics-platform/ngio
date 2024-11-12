@@ -71,12 +71,20 @@ class Image(ImageLike):
         """Return the names of the channels in the image."""
         return self.metadata.channel_labels
 
+    @property
+    def num_channels(self) -> int:
+        """Return the number of channels in the image."""
+        return self.dimensions.get("c", 1)
+
     def get_channel_idx(
         self,
         label: str | None = None,
         wavelength_id: str | None = None,
-    ) -> int:
-        """Return the index of the channel."""
+    ) -> int | None:
+        """Return the index of the channel.
+
+        If the channels are not labelled, the index returned is none
+        """
         return self.metadata.get_channel_idx(label=label, wavelength_id=wavelength_id)
 
     def get_array_from_roi(

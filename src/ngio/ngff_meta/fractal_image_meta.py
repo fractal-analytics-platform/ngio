@@ -163,6 +163,7 @@ class ChannelVisualisation(BaseWithExtraFields):
         color: str | NgioColors | None = None,
         start: int | float | None = None,
         end: int | float | None = None,
+        active: bool = True,
         data_type: Any = np.uint16,
     ) -> "ChannelVisualisation":
         """Create a ChannelVisualisation object with the default unit.
@@ -172,6 +173,7 @@ class ChannelVisualisation(BaseWithExtraFields):
             start(int | float | None): The start value of the channel.
             end(int | float | None): The end value of the channel.
             data_type(Any): The data type of the channel.
+            active(bool): Whether the channel should be shown by default.
         """
         start = start if start is not None else np.iinfo(data_type).min
         end = end if end is not None else np.iinfo(data_type).max
@@ -181,6 +183,7 @@ class ChannelVisualisation(BaseWithExtraFields):
             max=np.iinfo(data_type).max,
             start=start,
             end=end,
+            active=active,
         )
 
 
@@ -206,6 +209,7 @@ class Channel(BaseModel):
         color: str | NgioColors | None = None,
         start: int | float | None = None,
         end: int | float | None = None,
+        active: bool = True,
         data_type: Any = np.uint16,
     ) -> "Channel":
         """Create a Channel object with the default unit.
@@ -217,6 +221,7 @@ class Channel(BaseModel):
                 If None, the color will be picked based on the label.
             start(int | float | None): The start value of the channel.
             end(int | float | None): The end value of the channel.
+            active(bool): Whether the channel should be shown by default.
             data_type(Any): The data type of the channel.
         """
         if color is None:
@@ -225,7 +230,7 @@ class Channel(BaseModel):
             color = label
 
         channel_visualization = ChannelVisualisation.lazy_init(
-            color=color, start=start, end=end, data_type=data_type
+            color=color, start=start, end=end, active=active, data_type=data_type
         )
         return cls(
             label=label,
@@ -267,18 +272,19 @@ class Omero(BaseWithExtraFields):
     @classmethod
     def lazy_init(
         cls,
-        channels: Collection[str] | int,
+        labels: Collection[str] | int,
         wavelength_id: Collection[str] | None = None,
         colors: Collection[str | NgioColors] | None = None,
         start: Collection[int | float] | int | float | None = None,
         end: Collection[int | float] | int | float | None = None,
+        active: Collection[bool] | None = None,
         data_type: Any = np.uint16,
         **omero_kwargs: dict,
     ) -> "Omero":
         """Create an Omero object with the default unit.
 
         Args:
-            channels(Collection[str] | int): The list of channels in the image.
+            labels(Collection[str] | int): The list of channels names in the image.
                 If an integer is provided, the channels will be named "channel_i".
             wavelength_id(Collection[str] | None): The wavelength ID of the channel.
                 If None, the wavelength ID will be the same as the channel name.
@@ -292,34 +298,40 @@ class Omero(BaseWithExtraFields):
                 data type.
             data_type(Any): The data type of the channel. Will be used to set the
                 min and max values of the channel.
+            active (Collection[bool] | None):active(bool): Whether the channel should
+                be shown by default.
             omero_kwargs(dict): Extra fields to store in the omero attributes.
         """
-        if isinstance(channels, int):
-            channels = [f"channel_{i}" for i in range(channels)]
+        if isinstance(labels, int):
+            labels = [f"channel_{i}" for i in range(labels)]
 
-        channels = _check_elements(channels, str)
-        channels = _check_unique(channels)
+        labels = _check_elements(labels, str)
+        labels = _check_unique(labels)
 
-        _wavelength_id: Collection[str | None] = [None] * len(channels)
+        _wavelength_id: Collection[str | None] = [None] * len(labels)
         if isinstance(wavelength_id, Collection):
             _wavelength_id = _check_elements(wavelength_id, str)
             _wavelength_id = _check_unique(wavelength_id)
 
-        _colors: Collection[str | NgioColors] = ["random"] * len(channels)
+        _colors: Collection[str | NgioColors] = ["random"] * len(labels)
         if isinstance(colors, Collection):
             _colors = _check_elements(colors, str | NgioColors)
 
-        _start: Collection[int | float | None] = [None] * len(channels)
+        _start: Collection[int | float | None] = [None] * len(labels)
         if isinstance(start, Collection):
             _start = _check_elements(start, (int, float))
 
-        _end: Collection[int | float | None] = [None] * len(channels)
+        _end: Collection[int | float | None] = [None] * len(labels)
         if isinstance(end, Collection):
             _end = _check_elements(end, (int, float))
 
+        _active: Collection[bool] = [True] * len(labels)
+        if isinstance(active, Collection):
+            _active = _check_elements(active, bool)
+
         omero_channels = []
-        for ch_name, w_id, color, s, e in zip(
-            channels, _wavelength_id, _colors, _start, _end, strict=True
+        for ch_name, w_id, color, s, e, a in zip(
+            labels, _wavelength_id, _colors, _start, _end, _active, strict=True
         ):
             omero_channels.append(
                 Channel.lazy_init(
@@ -328,6 +340,7 @@ class Omero(BaseWithExtraFields):
                     color=color,
                     start=s,
                     end=e,
+                    active=a,
                     data_type=data_type,
                 )
             )
@@ -1128,54 +1141,50 @@ class ImageMeta(BaseMeta):
         super().__init__(version=version, name=name, datasets=datasets)
         self._omero = omero
 
-    def build_omero(
-        self,
-        channels_names: list[str],
-        channels_wavelengths: list[str] | None = None,
-        channels_extra_fields: list[dict[str, Any]] | None = None,
-        omero_kwargs: dict[str, Any] | None = None,
-    ) -> None:
-        """Build a default OMERO metadata.
-
-        Args:
-            channels_names(list[str]): The names of the channels.
-            channels_wavelengths(list[str] | None): The wavelength IDs of the channels.
-            channels_extra_fields(list[dict[str, Any]] | None): The extra fields of
-                the channels.
-            omero_kwargs(dict[str, Any] | None): Additional OMERO metadata.
-        """
-        omero_kwargs = {} if omero_kwargs is None else omero_kwargs
-
-        if channels_wavelengths is None:
-            channels_wavelengths = channels_names
-        else:
-            if len(channels_wavelengths) != len(channels_names):
-                raise ValueError(
-                    "Channels names and wavelengths " "must have the same length."
-                )
-
-        if channels_extra_fields is None:
-            channels_extra_fields = [{} for _ in channels_names]
-        else:
-            if len(channels_extra_fields) != len(channels_names):
-                raise ValueError(
-                    "Channels names and extra fields " "must have the same length."
-                )
-        channels = []
-        for ch_name, ch_wavelength, ch_extra in zip(
-            channels_names, channels_wavelengths, channels_extra_fields, strict=True
-        ):
-            ch = Channel(
-                label=ch_name, wavelength_id=ch_wavelength, extra_fields=ch_extra
-            )
-            channels.append(ch)
-        omero = Omero(channels=channels, extra_fields=omero_kwargs)
-        self._omero = omero
-
     @property
     def omero(self) -> Omero | None:
         """Get the OMERO metadata."""
         return self._omero
+
+    def set_omero(self, omero: Omero) -> None:
+        """Set omero metadata."""
+        self._omero = omero
+
+    def lazy_init_omero(
+        self,
+        labels: list[str] | int,
+        wavelength_ids: list[str] | None = None,
+        colors: list[str] | None = None,
+        active: list[bool] | None = None,
+        start: list[int | float] | None = None,
+        end: list[int | float] | None = None,
+        data_type: Any = np.uint16,
+    ) -> None:
+        """Set the OMERO metadata for the image.
+
+        Args:
+            labels (list[str]|int): The labels of the channels.
+            wavelength_ids (list[str], optional): The wavelengths of the channels.
+            colors (list[str], optional): The colors of the channels.
+            adjust_window (bool, optional): Whether to adjust the window.
+            start_percentile (int, optional): The start percentile.
+            end_percentile (int, optional): The end percentile.
+            active (list[bool], optional): Whether the channel is active.
+            start (list[int | float], optional): The start value of the channel.
+            end (list[int | float], optional): The end value of the channel.
+            end (int): The end value of the channel.
+            data_type (Any): The data type of the channel.
+        """
+        omero = Omero.lazy_init(
+            labels=labels,
+            wavelength_id=wavelength_ids,
+            colors=colors,
+            active=active,
+            start=start,
+            end=end,
+            data_type=data_type,
+        )
+        self.set_omero(omero=omero)
 
     @property
     def channels(self) -> list[Channel]:
@@ -1186,23 +1195,14 @@ class ImageMeta(BaseMeta):
         return self.omero.channels
 
     @property
-    def num_channels(self) -> int:
-        """Get the number of channels in the image."""
-        return len(self.channels)
-
-    @property
     def channel_labels(self) -> list[str]:
         """Get the labels of the channels in the image."""
         return [channel.label for channel in self.channels]
 
     @property
-    def channel_wavelength_ids(self) -> list[str]:
+    def channel_wavelength_ids(self) -> list[str | None]:
         """Get the wavelength IDs of the channels in the image."""
-        return [
-            channel.wavelength_id
-            for channel in self.channels
-            if channel.wavelength_id is not None
-        ]
+        return [channel.wavelength_id for channel in self.channels]
 
     def _get_channel_idx_by_label(self, label: str) -> int | None:
         """Get the index of a channel by its label."""
