@@ -2,6 +2,7 @@
 
 import math
 from collections.abc import Collection
+from enum import Enum
 from typing import Any
 
 from ngio.io import Group, StoreLike
@@ -21,6 +22,20 @@ try:
     from dask.distributed import Lock
 except ImportError:
     Lock = None
+
+
+class State(Enum):
+    """The state of an object.
+
+    It can either be:
+        - "Memory"
+        - "Consolidated"
+        If the state is "Memory" means that some data/metadata is not stored on disk.
+        The state can be write on disk using .consolidate()
+    """
+
+    MEMORY = "Memory"
+    CONSOLIDATED = "Consolidated"
 
 
 def _build_empty_pyramid(

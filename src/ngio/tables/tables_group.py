@@ -6,6 +6,7 @@ from warnings import warn
 import zarr
 from pydantic import ValidationError
 
+from ngio.core.utils import State
 from ngio.io import AccessModeLiteral, StoreLike
 from ngio.tables.v1 import FeatureTableV1, MaskingROITableV1, ROITableV1
 from ngio.utils import ngio_logger
@@ -101,6 +102,13 @@ class TableGroup:
 
         assert isinstance(table_group, zarr.Group) or table_group is None
         self._table_group = table_group
+
+        if table_group is None or table_group.read_only:
+            self._state = State.MEMORY
+        else:
+            self._state = State.CONSOLIDATED
+
+        self._virtual_tables: list[Table] = []
 
     def _validate_list_of_tables(self, list_of_tables: list[str]) -> None:
         """Validate the list of tables.

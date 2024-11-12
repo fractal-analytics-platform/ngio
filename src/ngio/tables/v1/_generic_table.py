@@ -8,6 +8,7 @@ import pandas as pd
 import zarr
 from pydantic import BaseModel
 
+from ngio.core.utils import State
 from ngio.tables._utils import Validator, table_ad_to_df, table_df_to_ad, validate_table
 
 REQUIRED_COLUMNS = [
@@ -84,6 +85,7 @@ class BaseTable:
             index_type=self._index_type,
             validators=self._validators,
         )
+        self.state = State.CONSOLIDATED
 
     @property
     def table(self) -> pd.DataFrame:
