@@ -11,6 +11,7 @@ class TestLabel:
         ngff_image = NgffImage(ome_zarr_image_v04_path)
         image_handler = ngff_image.get_image(path="0")
         label_handler = ngff_image.label.derive(name="label")
+        label_handler.__repr__()
 
         assert label_handler.array_path == f"{ome_zarr_image_v04_path}/labels/label/0"
         assert ngff_image.label.list() == ["label"]

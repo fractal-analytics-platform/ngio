@@ -1,5 +1,8 @@
+from pathlib import Path
+
+
 class TestTableGroup:
-    def test_table_group(self, ome_zarr_image_v04_path):
+    def test_table_group(self, ome_zarr_image_v04_path: Path) -> None:
         from ngio.core.ngff_image import NgffImage
 
         ngff_image = NgffImage(ome_zarr_image_v04_path)
