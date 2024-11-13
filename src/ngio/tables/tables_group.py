@@ -59,6 +59,7 @@ def _find_table_impl(
 
 def _get_table_impl(
     group: zarr.Group,
+    name: str,
     validate_metadata: bool = True,
     table_type: TableType | None = None,
     validate_table: bool = True,
@@ -77,6 +78,7 @@ def _get_table_impl(
     version = common_meta.fractal_table_version
     return _find_table_impl(table_type=table_type, version=version)(
         group=group,
+        name=name,
         validate_metadata=validate_metadata,
         validate_table=validate_table,
         index_key=index_key,
@@ -207,6 +209,7 @@ class TableGroup:
 
         return _get_table_impl(
             group=self._table_group[name],
+            name=name,
             validate_metadata=validate_metadata,
             table_type=table_type,
             validate_table=validate_table,

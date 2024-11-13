@@ -59,6 +59,18 @@ class Image(ImageLike):
             _label_group=label_group,
         )
 
+    def __repr__(self) -> str:
+        """Return the string representation of the class."""
+        name = "Image("
+        len_name = len(name)
+        return (
+            f"{name}"
+            f"path={self.path},\n"
+            f"{' ':>{len_name}}{self.pixel_size},\n"
+            f"{' ':>{len_name}}{self.dimensions},\n"
+            ")"
+        )
+
     @property
     def metadata(self) -> ImageMeta:
         """Return the metadata of the image."""

@@ -46,6 +46,7 @@ class MaskingROITableV1:
     def __init__(
         self,
         group: zarr.Group,
+        name: str,
         validate_metadata: bool = True,
         validate_table: bool = True,
         index_key: str | None = None,
@@ -55,6 +56,7 @@ class MaskingROITableV1:
         Args:
             group (zarr.Group): The group containing the
                 ROI table.
+            name (str): The name of the ROI table.
             validate_metadata (bool): If True, the metadata is validated.
             validate_table (bool): If True, the table is validated.
             index_key (str): The column name to use as the index of the DataFrame.
@@ -74,6 +76,17 @@ class MaskingROITableV1:
             index_key=index_key,
             index_type="int",
             validators=validators,
+        )
+        self._name = name
+
+    def __repr__(self) -> str:
+        """Return the string representation of the class."""
+        region_path = self.meta.region["path"]
+        label_name = region_path.split("/")[-1]
+        return (
+            f"MaskingROITable(name={self.name}, "
+            f"source_label={label_name}, "
+            f"num_labels={len(self.table.index)})"
         )
 
     @classmethod
@@ -115,7 +128,22 @@ class MaskingROITableV1:
             index_type="int",
             meta=meta,
         )
-        return cls(group=group)
+        return cls(group=group, name=name)
+
+    @property
+    def name(self) -> str:
+        """Return the name of the ROI table."""
+        return self._name
+
+    @property
+    def root_path(self) -> str:
+        """Return the path of the root group."""
+        return self._table_handler.root_path
+
+    @property
+    def group_path(self) -> str:
+        """Return the path of the group."""
+        return self._table_handler.group_path
 
     @property
     def meta(self) -> MaskingROITableV1Meta:

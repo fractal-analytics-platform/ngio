@@ -1,5 +1,7 @@
 """Abstract class for handling OME-NGFF images."""
 
+from typing import Any
+
 import dask.array as da
 import numpy as np
 
@@ -36,6 +38,19 @@ class NgffImage:
 
         ngio_logger.info(f"Opened image located in store: {store}")
         ngio_logger.info(f"- Image number of levels: {self.num_levels}")
+
+    def __repr__(self) -> str:
+        """Get the string representation of the image."""
+        name = "NGFFImage("
+        len_name = len(name)
+        return (
+            f"{name}"
+            f"store={self.store}, \n"
+            f"{' ':>{len_name}}paths={self.levels_paths}, \n"
+            f"{' ':>{len_name}}labels={self.label.list()}, \n"
+            f"{' ':>{len_name}}tables={self.table.list()}, \n"
+            ")"
+        )
 
     @property
     def image_meta(self) -> ImageMeta:
@@ -138,48 +153,63 @@ class NgffImage:
 
         return starts, ends
 
-    def set_omero(
+    def lazy_init_omero(
         self,
-        labels: list[str],
-        wavelengths: list[str] | None = None,
+        labels: list[str] | int | None = None,
+        wavelength_ids: list[str] | None = None,
         colors: list[str] | None = None,
-        adjust_window: bool = True,
-        start_percentile: int = 5,
-        end_percentile: int = 95,
         active: list[bool] | None = None,
-        write: bool = True,
+        start_percentile: float | None = 1,
+        end_percentile: float | None = 99,
+        data_type: Any = np.uint16,
+        consolidate: bool = True,
     ) -> None:
         """Set the OMERO metadata for the image.
 
         Args:
-            labels (list[str]): The labels of the channels.
-            wavelengths (list[str], optional): The wavelengths of the channels.
-            colors (list[str], optional): The colors of the channels.
-            adjust_window (bool, optional): Whether to adjust the window.
-            start_percentile (int, optional): The start percentile.
-            end_percentile (int, optional): The end percentile.
-            active (list[bool], optional): Whether the channel is active.
-            write (bool, optional): Whether to write the metadata to the image.
+            labels (list[str] | int | None): The labels of the channels.
+            wavelength_ids (list[str] | None): The wavelengths of the channels.
+            colors (list[str] | None): The colors of the channels.
+            active (list[bool] | None): Whether the channels are active.
+            start_percentile (float | None): The start percentile for computing the data
+                range. If None, the start is the same as the min value of the data type.
+            end_percentile (float | None): The end percentile for for computing the data
+                range. If None, the start is the same as the max value of the data type.
+            data_type (Any): The data type of the image.
+            consolidate (bool): Whether to consolidate the metadata.
         """
-        image_ref = self.get_image()
+        if labels is None:
+            ref = self.get_image()
+            labels = ref.num_channels
 
-        if adjust_window:
+        if start_percentile is not None and end_percentile is not None:
             start, end = self._compute_percentiles(
                 start_percentile=start_percentile, end_percentile=end_percentile
             )
+        elif start_percentile is None and end_percentile is None:
+            raise ValueError("Both start and end percentiles cannot be None.")
+        elif end_percentile is None and start_percentile is not None:
+            raise ValueError(
+                "End percentile cannot be None if start percentile is not."
+            )
+        else:
+            start, end = None, None
 
-        self.image_meta.omero_lazy_init(
+        self.image_meta.lazy_init_omero(
             labels=labels,
-            wavelength_ids=wavelengths,
+            wavelength_ids=wavelength_ids,
             colors=colors,
-            active=active,
             start=start,
             end=end,
-            data_type=image_ref.on_disk_array.dtype,
+            active=active,
+            data_type=data_type,
         )
 
+        if consolidate:
+            self._image_meta.write_meta(self.image_meta)
+
     def update_omero_window(
-        self, start_percentile: int = 5, end_percentile: int = 95
+        self, start_percentile: int = 1, end_percentile: int = 99
     ) -> None:
         """Update the OMERO window.
 

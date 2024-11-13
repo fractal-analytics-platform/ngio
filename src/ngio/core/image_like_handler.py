@@ -133,6 +133,27 @@ class ImageLike:
         return self._group
 
     @property
+    def root_path(self) -> str:
+        """Return the path to the root group."""
+        return str(self._group.store.path)
+
+    @property
+    def group_path(self) -> str:
+        """Return the path to the group."""
+        root = self.root_path
+        if root.endswith("/"):
+            root = root[:-1]
+        return f"{root}/{self._group.path}"
+
+    @property
+    def array_path(self) -> str:
+        """Return the path to the array."""
+        group = self.group_path
+        if group.endswith("/"):
+            group = group[:-1]
+        return f"{group}/{self.path}"
+
+    @property
     def metadata(self) -> ImageLabelMeta:
         """Return the metadata of the image."""
         return self._metadata_handler.load_meta()
