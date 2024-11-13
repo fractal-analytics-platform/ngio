@@ -88,6 +88,26 @@ class BaseTable:
         self.state = State.CONSOLIDATED
 
     @property
+    def root_path(self) -> str:
+        """Return the path of the root group.
+
+        This is in general the path of the NGFFImage.
+        """
+        return str(self._table_group.store.path)
+
+    @property
+    def group_path(self) -> str:
+        """Return the path of the group.
+
+        This is the path of the group containing the table.
+        """
+        root = self.root_path
+        if root.endswith("/"):
+            root = root[:-1]
+
+        return f"{root}/{self._table_group.path}"
+
+    @property
     def table(self) -> pd.DataFrame:
         """Return the ROI table as a DataFrame."""
         return self._table
@@ -134,11 +154,6 @@ class BaseTable:
     def group(self) -> zarr.Group:
         """Return the group of the table."""
         return self._table_group
-
-    @property
-    def group_path(self) -> Path:
-        """Return the path of the group."""
-        return Path(self._table_group.store.path) / self._table_group.path
 
     @property
     def index_key(self) -> str:

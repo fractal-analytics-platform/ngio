@@ -13,7 +13,7 @@ from ngio.core.dimensions import Dimensions
 from ngio.ngff_meta.fractal_image_meta import PixelSize, SpaceUnits
 
 
-def _to_raster(value: float, pixel_size: PixelSize, max_shape: int) -> int:
+def _to_raster(value: float, pixel_size: float, max_shape: int) -> int:
     """Convert to raster coordinates."""
     round_value = int(np.round(value / pixel_size))
     return min(round_value, max_shape)
@@ -40,13 +40,17 @@ class WorldCooROI(BaseModel):
         self, pixel_size: PixelSize, dimensions: Dimensions
     ) -> "RasterCooROI":
         """Convert to raster coordinates."""
+        dim_x = dimensions.get("x")
+        dim_y = dimensions.get("y")
+        dim_z = dimensions.get("z", 1)
+
         return RasterCooROI(
-            x=_to_raster(self.x, pixel_size.x, dimensions.x),
-            y=_to_raster(self.y, pixel_size.y, dimensions.y),
-            z=_to_raster(self.z, pixel_size.z, dimensions.z),
-            x_length=_to_raster(self.x_length, pixel_size.x, dimensions.x),
-            y_length=_to_raster(self.y_length, pixel_size.y, dimensions.y),
-            z_length=_to_raster(self.z_length, pixel_size.z, dimensions.z),
+            x=_to_raster(self.x, pixel_size.x, dim_x),
+            y=_to_raster(self.y, pixel_size.y, dim_y),
+            z=_to_raster(self.z, pixel_size.z, dim_z),
+            x_length=_to_raster(self.x_length, pixel_size.x, dim_x),
+            y_length=_to_raster(self.y_length, pixel_size.y, dim_y),
+            z_length=_to_raster(self.z_length, pixel_size.z, dim_z),
             original_roi=self,
         )
 
@@ -64,10 +68,6 @@ class RasterCooROI(BaseModel):
 
     def to_world_coo_roi(self, pixel_size: PixelSize) -> WorldCooROI:
         """Convert to world coordinates."""
-        if self.field_index is None:
-            raise ValueError(
-                "Field index must be provided to convert to world coordinates roi."
-            )
         return WorldCooROI(
             x=_to_world(self.x, pixel_size.x),
             y=_to_world(self.y, pixel_size.y),

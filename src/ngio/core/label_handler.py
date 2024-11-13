@@ -25,6 +25,7 @@ class Label(ImageLike):
         self,
         store: StoreOrGroup,
         *,
+        name: str,
         path: str | None = None,
         idx: int | None = None,
         pixel_size: PixelSize | None = None,
@@ -41,6 +42,7 @@ class Label(ImageLike):
 
         Args:
         store (StoreOrGroup): The Zarr store or group containing the image data.
+        name (str): The name of the label.
         path (str | None): The path to the level.
         idx (int | None): The index of the level.
         pixel_size (PixelSize | None): The pixel size of the level.
@@ -63,6 +65,26 @@ class Label(ImageLike):
             mode=mode,
             _label_group=label_group,
         )
+
+        self._name = name
+
+    def __repr__(self) -> str:
+        """Return the string representation of the label."""
+        name = "Label("
+        len_name = len(name)
+        return (
+            f"{name}"
+            f"path={self.path},\n"
+            f"{' ':>{len_name}}name={self.name},\n"
+            f"{' ':>{len_name}}{self.pixel_size},\n"
+            f"{' ':>{len_name}}{self.dimensions},\n"
+            ")"
+        )
+
+    @property
+    def name(self) -> str:
+        """Return the name of the label."""
+        return self._name
 
     @property
     def metadata(self) -> LabelMeta:
@@ -277,6 +299,7 @@ class LabelGroup:
 
         return Label(
             store=self._label_group[name],
+            name=name,
             path=path,
             pixel_size=pixel_size,
             highest_resolution=highest_resolution,

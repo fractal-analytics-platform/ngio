@@ -62,6 +62,7 @@ class ROITableV1:
     def __init__(
         self,
         group: zarr.Group,
+        name: str,
         validate_metadata: bool = True,
         validate_table: bool = True,
         index_key: str | None = None,
@@ -71,6 +72,7 @@ class ROITableV1:
         Args:
             group (zarr.Group): The group containing the
                 ROI table.
+            name (str): The name of the ROI table.
             validate_metadata (bool): If True, the metadata is validated.
             validate_table (bool): If True, the table is validated.
             index_key (str): The column name to use as the index of the DataFrame.
@@ -95,6 +97,7 @@ class ROITableV1:
         self._table_handler = BaseTable(
             group=group, index_key=index_key, index_type="str", validators=validators
         )
+        self._name = name
 
     @classmethod
     def _new(
@@ -134,7 +137,26 @@ class ROITableV1:
             index_type="str",
             meta=meta,
         )
-        return cls(group=group)
+        return cls(group=group, name=name)
+
+    def __repr__(self) -> str:
+        """Return the string representation of the ROI table."""
+        return f"ROITable(name={self.name}, num_rois={len(self.table.index)})"
+
+    @property
+    def name(self) -> str:
+        """Return the name of the ROI table."""
+        return self._name
+
+    @property
+    def root_path(self) -> str:
+        """Return the path of the root group."""
+        return self._table_handler.root_path
+
+    @property
+    def group_path(self) -> str:
+        """Return the path of the group."""
+        return self._table_handler.group_path
 
     @property
     def meta(self) -> ROITableV1Meta:

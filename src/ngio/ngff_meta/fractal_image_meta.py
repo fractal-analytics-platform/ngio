@@ -175,12 +175,22 @@ class ChannelVisualisation(BaseWithExtraFields):
             data_type(Any): The data type of the channel.
             active(bool): Whether the channel should be shown by default.
         """
-        start = start if start is not None else np.iinfo(data_type).min
-        end = end if end is not None else np.iinfo(data_type).max
+        for func in [np.iinfo, np.finfo]:
+            try:
+                min_value = func(data_type).min
+                max_value = func(data_type).max
+                break
+            except ValueError:
+                continue
+        else:
+            raise ValueError(f"Invalid data type {data_type}.")
+
+        start = start if start is not None else min_value
+        end = end if end is not None else max_value
         return ChannelVisualisation(
             color=color,
-            min=np.iinfo(data_type).min,
-            max=np.iinfo(data_type).max,
+            min=min_value,
+            max=max_value,
             start=start,
             end=end,
             active=active,
@@ -246,7 +256,9 @@ def _check_elements(elements: Collection[T], expected_type: Any) -> Collection[T
 
     for element in elements:
         if not isinstance(element, expected_type):
-            raise ValueError(f"All elements must be of the same type {expected_type}.")
+            raise ValueError(
+                f"All elements must be of the same type {expected_type}. Got {element}."
+            )
 
     return elements
 
