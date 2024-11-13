@@ -1,5 +1,8 @@
+from pathlib import Path
+
+
 class TestLabel:
-    def test_label_image(self, ome_zarr_image_v04_path):
+    def test_label_image(self, ome_zarr_image_v04_path: Path) -> None:
         import dask.array as da
         import numpy as np
 
@@ -9,6 +12,7 @@ class TestLabel:
         image_handler = ngff_image.get_image(path="0")
         label_handler = ngff_image.label.derive(name="label")
 
+        assert label_handler.array_path == f"{ome_zarr_image_v04_path}/labels/label/0"
         assert ngff_image.label.list() == ["label"]
         assert "c" not in label_handler.axes_names
         assert label_handler.shape == image_handler.shape[1:]

@@ -12,6 +12,7 @@ class TestImageLikeHandler:
         store = ome_zarr_image_v04_path
         image_handler = ImageLike(store=store, path="0")
 
+        assert image_handler.array_path == f"{ome_zarr_image_v04_path}/0"
         assert image_handler.path == "0"
         assert image_handler.pixel_size.zyx == (1.0, 0.1625, 0.1625)
         assert image_handler.axes_names == ["c", "z", "y", "x"]
