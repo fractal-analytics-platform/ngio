@@ -1,9 +1,13 @@
+from pathlib import Path
+
+
 class TestNgffImage:
-    def test_ngff_image(self, ome_zarr_image_v04_path):
+    def test_ngff_image(self, ome_zarr_image_v04_path: Path) -> None:
         from ngio.core.ngff_image import NgffImage
 
         ngff_image = NgffImage(ome_zarr_image_v04_path)
         image_handler = ngff_image.get_image(path="0")
+        ngff_image.__repr__()
 
         assert ngff_image.num_levels == 5
         assert ngff_image.levels_paths == ["0", "1", "2", "3", "4"]
@@ -27,3 +31,10 @@ class TestNgffImage:
         assert (
             new_image_handler.on_disk_array.chunks == image_handler.on_disk_array.chunks
         )
+        new_ngff_image.lazy_init_omero(
+            labels=3,
+            wavelength_ids=["A01_C01", "A02_C02", "A03_C03"],
+            consolidate=True,
+        )
+
+        new_ngff_image.update_omero_window(start_percentile=1.1, end_percentile=98.9)

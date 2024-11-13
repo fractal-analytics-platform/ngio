@@ -141,11 +141,8 @@ class NgffImage:
         starts, ends = [], []
         for c in range(num_c):
             data = lowest_res_image.get_array(c=c, mode="dask").ravel()
-            _start_percentile = da.percentile(
-                data, start_percentile, method="nearest"
-            ).compute()
-            _end_percentile = da.percentile(
-                data, end_percentile, method="nearest"
+            _start_percentile, _end_percentile = da.percentile(
+                data, [start_percentile, end_percentile], method="nearest"
             ).compute()
 
             starts.append(_start_percentile)
@@ -209,7 +206,11 @@ class NgffImage:
             self._image_meta.write_meta(self.image_meta)
 
     def update_omero_window(
-        self, start_percentile: int = 1, end_percentile: int = 99
+        self,
+        start_percentile: int = 1,
+        end_percentile: int = 99,
+        min_value: int | float | None = None,
+        max_value: int | float | None = None,
     ) -> None:
         """Update the OMERO window.
 
@@ -218,6 +219,8 @@ class NgffImage:
         Args:
             start_percentile (int): The start percentile.
             end_percentile (int): The end percentile
+            min_value (int | float | None): The minimum value of the window.
+            max_value (int | float | None): The maximum value of the window.
 
         """
         start, ends = self._compute_percentiles(
@@ -226,7 +229,21 @@ class NgffImage:
         meta = self.image_meta
         ref_image = self.get_image()
 
-        max_dtype = np.iinfo(ref_image.on_disk_array.dtype).max
+        for func in [np.iinfo, np.finfo]:
+            try:
+                type_max = func(ref_image.on_disk_array.dtype).max
+                type_min = func(ref_image.on_disk_array.dtype).min
+                break
+            except ValueError:
+                continue
+        else:
+            raise ValueError("Data type not recognized.")
+
+        if min_value is None:
+            min_value = type_min
+        if max_value is None:
+            max_value = type_max
+
         num_c = ref_image.dimensions.get("c", 1)
 
         if meta.omero is None:
@@ -246,8 +263,8 @@ class NgffImage:
         ):
             channel.channel_visualisation.start = s
             channel.channel_visualisation.end = e
-            channel.channel_visualisation.min = 0
-            channel.channel_visualisation.max = max_dtype
+            channel.channel_visualisation.min = min_value
+            channel.channel_visualisation.max = max_value
 
             ngio_logger.info(
                 f"Updated window for channel {channel.label}. "
