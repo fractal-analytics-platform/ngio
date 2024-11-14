@@ -35,20 +35,20 @@ def custom_read_zarr(store: StoreOrGroup) -> AnnData:
         if iospec.encoding_type == "anndata" or elem_name.endswith("/"):
             ad_kwargs = {}
             base_elem = [
-                "obs",
-                "var",
-                "obsm",
-                "varm",
-                "obsp",
-                "varp",
-                "uns",
-                "layers",
                 "X",
+                "layers",
+                "obs",
+                "obsm",
+                "obsp",
+                "uns",
+                "var",
+                "varm",
+                "varp",
             ]
             # This should make sure that the function behaves the same as the original
             # implementation.
             base_elem += list(elem.keys())
-            for k in base_elem:
+            for k in set(base_elem):
                 v = elem.get(k)
                 if v is not None and not k.startswith("raw."):
                     ad_kwargs[k] = read_dispatched(v, callback)
