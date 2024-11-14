@@ -1191,12 +1191,18 @@ print(nuclei)
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>NGFFImage(store=&lt;fsspec.mapping.FSMap object at 0x7fd46b96f020&gt;, 
+<pre>NGFFImage(store=&lt;fsspec.mapping.FSMap object at 0x7f3477b5e180&gt;, 
           paths=['0', '1', '2', '3'], 
           labels=['nuclei'], 
           tables=['FOV_ROI_table', 'nuclei_ROI_table', 'well_ROI_table', 'regionprops_DAPI'], 
 )
-Image(path=0,
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Image(path=0,
       PixelSize(x=0.325, y=0.325, z=1.0, unit=micrometer),
       Dimensions(c=3, z=1, y=2160, x=2560),
 )
@@ -1447,13 +1453,7 @@ print(" - Masking Roi tables: ", ngff_image.table.list(table_type='masking_roi_t
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
 <pre> - Roi tables:  ['FOV_ROI_table', 'well_ROI_table']
-</pre>
-</div>
-</div>
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre> - Masking Roi tables:  ['nuclei_ROI_table']
+ - Masking Roi tables:  ['nuclei_ROI_table']
 </pre>
 </div>
 </div>
