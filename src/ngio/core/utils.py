@@ -20,11 +20,6 @@ from ngio.ngff_meta.fractal_image_meta import (
     TimeUnits,
 )
 
-try:
-    from dask.distributed import Lock
-except ImportError:
-    Lock = None
-
 
 def get_fsspec_http_store(
     url: str, client_kwargs: dict | None = None
