@@ -74,7 +74,8 @@ class Label(ImageLike):
         len_name = len(name)
         return (
             f"{name}"
-            f"path={self.path},\n"
+            f"group_path={self.group_path}, \n"
+            f"{' ':>{len_name}}path={self.path},\n"
             f"{' ':>{len_name}}name={self.name},\n"
             f"{' ':>{len_name}}{self.pixel_size},\n"
             f"{' ':>{len_name}}{self.dimensions},\n"

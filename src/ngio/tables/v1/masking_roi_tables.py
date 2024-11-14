@@ -12,7 +12,7 @@ import zarr
 from pydantic import BaseModel
 
 from ngio.core.label_handler import Label
-from ngio.core.roi import WorldCooROI
+from ngio.core.roi import SpaceUnits, WorldCooROI
 from ngio.tables._utils import validate_columns
 from ngio.tables.v1._generic_table import REQUIRED_COLUMNS, BaseTable, write_table_ad
 
@@ -81,12 +81,15 @@ class MaskingROITableV1:
 
     def __repr__(self) -> str:
         """Return the string representation of the class."""
-        region_path = self.meta.region["path"]
-        label_name = region_path.split("/")[-1]
+        name = "MaskingROITableV1("
+        len_name = len(name)
         return (
-            f"MaskingROITable(name={self.name}, "
-            f"source_label={label_name}, "
-            f"num_labels={len(self.table.index)})"
+            f"{name}"
+            f"group_path={self.group_path}, \n"
+            f"{' ':>{len_name}}name={self.name},\n"
+            f"{' ':>{len_name}}source_label={self.source_label()}, \n"
+            f"{' ':>{len_name}}num_labels={len(self.table.index)}), \n"
+            ")"
         )
 
     @classmethod
@@ -167,6 +170,24 @@ class MaskingROITableV1:
             "Setting the table is not implemented. Please use the 'set_table' method."
         )
 
+    def source_label(self, get_full_path: bool = False) -> str | None:
+        """Return the name of the label image.
+
+        The name is assumed to be after the last '/' in the path.
+        Since this might fails, get_full_path is True, the full path is returned.
+
+        Args:
+            get_full_path (bool): If True, the full path is returned.
+        """
+        region = self.meta.region
+        if region is None:
+            return None
+        path = region["path"]
+
+        if get_full_path:
+            return path
+        return path.split("/")[-1]
+
     def set_table(self, table: pd.DataFrame) -> None:
         """Set the feature table."""
         self._table_handler.set_table(table)
@@ -196,9 +217,6 @@ class MaskingROITableV1:
 
         table_df = self.table.loc[label]
 
-        region_path = self.meta.region["path"]
-        label_name = region_path.split("/")[-1]
-
         roi = WorldCooROI(
             x=table_df.loc["x_micrometer"],
             y=table_df.loc["y_micrometer"],
@@ -206,11 +224,11 @@ class MaskingROITableV1:
             x_length=table_df.loc["len_x_micrometer"],
             y_length=table_df.loc["len_y_micrometer"],
             z_length=table_df.loc["len_z_micrometer"],
-            unit="micrometer",
+            unit=SpaceUnits.micrometer,
             infos={
                 "label": label,
-                "label_image": region_path,
-                "label_name": label_name,
+                "source_label_path": self.source_label(get_full_path=True),
+                "source_label": self.source_label(),
             },
         )
         return roi

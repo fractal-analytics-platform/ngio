@@ -68,13 +68,16 @@ class FeatureTableV1:
 
     def __repr__(self) -> str:
         """Return the string representation of the class."""
-        region_path = self.meta.region["path"]
-        label_name = region_path.split("/")[-1]
+        name = "FeatureTableV1("
+        len_name = len(name)
         return (
-            f"FeatureTable(name={self.name}, "
-            f"source_label={label_name}, "
-            f"features={self.table.columns.to_list()}, "
-            f"num_labels={len(self.table.index)})"
+            f"{name}"
+            f"group_path={self.group_path}, \n"
+            f"{' ':>{len_name}}name={self.name},\n"
+            f"{' ':>{len_name}}features={self.table.columns.to_list()}, \n"
+            f"{' ':>{len_name}}source_label={self.source_label()}, \n"
+            f"{' ':>{len_name}}num_labels={len(self.table.index)}), \n"
+            ")"
         )
 
     @classmethod
@@ -156,7 +159,7 @@ class FeatureTableV1:
         """Set the feature table."""
         self._table_handler.set_table(table)
 
-    def label_image_name(self, get_full_path: bool = False) -> str:
+    def source_label(self, get_full_path: bool = False) -> str | None:
         """Return the name of the label image.
 
         The name is assumed to be after the last '/' in the path.
@@ -165,10 +168,13 @@ class FeatureTableV1:
         Args:
             get_full_path (bool): If True, the full path is returned.
         """
-        path = self.meta.region["path"]
+        region = self.meta.region
+        if region is None:
+            return None
+        path = region["path"]
+
         if get_full_path:
             return path
-
         return path.split("/")[-1]
 
     def consolidate(self) -> None:

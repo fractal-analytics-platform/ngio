@@ -4,6 +4,7 @@ from typing import Any
 
 import dask.array as da
 import numpy as np
+import zarr
 
 from ngio.core.image_handler import Image
 from ngio.core.label_handler import LabelGroup
@@ -24,17 +25,19 @@ class NgffImage:
         """Initialize the NGFFImage in read mode."""
         self.store = store
         self._mode = mode
-        self.group = open_group_wrapper(store=store, mode=self._mode)
+        self._group = open_group_wrapper(store=store, mode=self._mode)
 
-        if self.group.read_only:
+        if self._group.read_only:
             self._mode = "r"
 
         self._image_meta = get_ngff_image_meta_handler(
-            self.group, meta_mode="image", cache=cache
+            self._group, meta_mode="image", cache=cache
         )
         self._metadata_cache = cache
-        self.table = TableGroup(self.group, mode=self._mode)
-        self.label = LabelGroup(self.group, image_ref=self.get_image(), mode=self._mode)
+        self.tables = TableGroup(self._group, mode=self._mode)
+        self.labels = LabelGroup(
+            self._group, image_ref=self.get_image(), mode=self._mode
+        )
 
         ngio_logger.info(f"Opened image located in store: {store}")
         ngio_logger.info(f"- Image number of levels: {self.num_levels}")
@@ -45,12 +48,30 @@ class NgffImage:
         len_name = len(name)
         return (
             f"{name}"
-            f"store={self.store}, \n"
+            f"group_path={self.group_path}, \n"
             f"{' ':>{len_name}}paths={self.levels_paths}, \n"
-            f"{' ':>{len_name}}labels={self.label.list()}, \n"
-            f"{' ':>{len_name}}tables={self.table.list()}, \n"
+            f"{' ':>{len_name}}labels={self.labels.list()}, \n"
+            f"{' ':>{len_name}}tables={self.tables.list()}, \n"
             ")"
         )
+
+    @property
+    def group(self) -> zarr.Group:
+        """Get the group of the image."""
+        return self._group
+
+    @property
+    def root_path(self) -> str:
+        """Get the root path of the image."""
+        return str(self._group.store.path)
+
+    @property
+    def group_path(self) -> str:
+        """Get the path of the group."""
+        root = self.root_path
+        if root.endswith("/"):
+            root = root[:-1]
+        return f"{root}/{self._group.path}"
 
     @property
     def image_meta(self) -> ImageMeta:
@@ -92,11 +113,11 @@ class NgffImage:
             highest_resolution = False
 
         image = Image(
-            store=self.group,
+            store=self._group,
             path=path,
             pixel_size=pixel_size,
             highest_resolution=highest_resolution,
-            label_group=LabelGroup(self.group, image_ref=None, mode=self._mode),
+            label_group=LabelGroup(self._group, image_ref=None, mode=self._mode),
             cache=self._metadata_cache,
             mode=self._mode,
         )

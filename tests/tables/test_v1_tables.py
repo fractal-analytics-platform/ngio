@@ -8,7 +8,7 @@ class TestTables:
 
         ngff_image = NgffImage(ome_zarr_image_v04_path)
 
-        roi_table = ngff_image.table.new(
+        roi_table = ngff_image.tables.new(
             name="roi_table",
             table_type="roi_table",
             overwrite=False,
@@ -33,7 +33,7 @@ class TestTables:
 
         ngff_image = NgffImage(ome_zarr_image_v04_path)
 
-        masking_roi_table = ngff_image.table.new(
+        masking_roi_table = ngff_image.tables.new(
             name="masking_roi_table",
             table_type="masking_roi_table",
             label_image="region",
@@ -46,7 +46,7 @@ class TestTables:
 
         ngff_image = NgffImage(ome_zarr_image_v04_path)
 
-        feature_table = ngff_image.table.new(
+        feature_table = ngff_image.tables.new(
             name="feat_table",
             table_type="feature_table",
             label_image="region",

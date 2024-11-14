@@ -12,7 +12,7 @@ import pandas as pd
 import zarr
 from pydantic import BaseModel
 
-from ngio.core.roi import WorldCooROI
+from ngio.core.roi import SpaceUnits, WorldCooROI
 from ngio.tables._utils import validate_columns
 from ngio.tables.v1._generic_table import REQUIRED_COLUMNS, BaseTable, write_table_ad
 
@@ -141,7 +141,15 @@ class ROITableV1:
 
     def __repr__(self) -> str:
         """Return the string representation of the ROI table."""
-        return f"ROITable(name={self.name}, num_rois={len(self.table.index)})"
+        name = "ROITableV1("
+        len_name = len(name)
+        return (
+            f"{name}"
+            f"group_path={self.group_path}, \n"
+            f"{' ':>{len_name}}name={self.name},\n"
+            f"{' ':>{len_name}}num_rois={self.num_rois}, \n"
+            ")"
+        )
 
     @property
     def name(self) -> str:
@@ -188,6 +196,11 @@ class ROITableV1:
     def field_indexes(self) -> list[str]:
         """Return a list of all field indexes in the table."""
         return self.table.index.tolist()
+
+    @property
+    def num_rois(self) -> int:
+        """Return the number of ROIs in the table."""
+        return len(self.field_indexes)
 
     def set_rois(
         self,
@@ -257,7 +270,7 @@ class ROITableV1:
             x_length=table_df.loc["len_x_micrometer"],
             y_length=table_df.loc["len_y_micrometer"],
             z_length=table_df.loc["len_z_micrometer"],
-            unit="micrometer",
+            unit=SpaceUnits.micrometer,
             infos={"FieldIndex": field_index, **self._gater_optional_columns(table_df)},
         )
         return roi
