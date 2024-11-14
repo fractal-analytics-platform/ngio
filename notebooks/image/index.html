@@ -1924,12 +1924,12 @@ For a simple feature table the only reuiremnt is to have a integer column named 
 <span class="n">feat_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_records</span><span class="p">(</span><span class="n">list_of_records</span><span class="p">)</span>
 
 <span class="c1"># Create a new feature table</span>
-<span class="n">feat_table</span> <span class="o">=</span> <span class="n">ngff_image</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">'new_feature_table'</span><span class="p">,</span>
+<span class="n">feat_table</span> <span class="o">=</span> <span class="n">ngff_image</span><span class="o">.</span><span class="n">tables</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">'new_feature_table'</span><span class="p">,</span>
                      <span class="n">label_image</span><span class="o">=</span><span class="s1">'../nuclei'</span><span class="p">,</span>
                      <span class="n">table_type</span><span class="o">=</span><span class="s1">'feature_table'</span><span class="p">,</span>
                      <span class="n">overwrite</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"New list of feature table: </span><span class="si">{</span><span class="n">ngff_image</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">list</span><span class="p">(</span><span class="n">table_type</span><span class="o">=</span><span class="s1">'feature_table'</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"New list of feature table: </span><span class="si">{</span><span class="n">ngff_image</span><span class="o">.</span><span class="n">tables</span><span class="o">.</span><span class="n">list</span><span class="p">(</span><span class="n">table_type</span><span class="o">=</span><span class="s1">'feature_table'</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 <span class="n">feat_table</span><span class="o">.</span><span class="n">set_table</span><span class="p">(</span><span class="n">feat_df</span><span class="p">)</span>
 <span class="n">feat_table</span><span class="o">.</span><span class="n">consolidate</span><span class="p">()</span>
 
@@ -1958,12 +1958,12 @@ for roi in roi_table.rois:
 feat_df = pd.DataFrame.from_records(list_of_records)
 
 # Create a new feature table
-feat_table = ngff_image.table.new(name='new_feature_table',
+feat_table = ngff_image.tables.new(name='new_feature_table',
                      label_image='../nuclei',
                      table_type='feature_table',
                      overwrite=True)
 
-print(f"New list of feature table: {ngff_image.table.list(table_type='feature_table')}")
+print(f"New list of feature table: {ngff_image.tables.list(table_type='feature_table')}")
 feat_table.set_table(feat_df)
 feat_table.consolidate()
 
@@ -1980,26 +1980,148 @@ feat_table.table</div>
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
 <pre>List of feature table: ['regionprops_DAPI', 'nuclei_measurements_wf3', 'nuclei_measurements_wf4', 'nuclei_lamin_measurements_wf4']
+New list of feature table: ['regionprops_DAPI', 'nuclei_measurements_wf3', 'nuclei_measurements_wf4', 'nuclei_lamin_measurements_wf4', 'new_feature_table']
 </pre>
 </div>
 </div>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr" tabindex="0">
-<pre>
-<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
-<span class="ansi-red-fg">AttributeError</span>                            Traceback (most recent call last)
-Cell <span class="ansi-green-fg">In[10], line 24</span>
-<span class="ansi-green-intense-fg ansi-bold">     21</span> feat_df <span style="color: rgb(98,98,98)">=</span> pd<span style="color: rgb(98,98,98)">.</span>DataFrame<span style="color: rgb(98,98,98)">.</span>from_records(list_of_records)
-<span class="ansi-green-intense-fg ansi-bold">     23</span> <span style="color: rgb(95,135,135)"># Create a new feature table</span>
-<span class="ansi-green-fg">---&gt; 24</span> feat_table <span style="color: rgb(98,98,98)">=</span> <span class="ansi-yellow-bg">ngff_image</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">.</span><span class="ansi-yellow-bg">table</span><span style="color: rgb(98,98,98)">.</span>new(name<span style="color: rgb(98,98,98)">=</span><span style="color: rgb(175,0,0)">'</span><span style="color: rgb(175,0,0)">new_feature_table</span><span style="color: rgb(175,0,0)">'</span>,
-<span class="ansi-green-intense-fg ansi-bold">     25</span>                      label_image<span style="color: rgb(98,98,98)">=</span><span style="color: rgb(175,0,0)">'</span><span style="color: rgb(175,0,0)">../nuclei</span><span style="color: rgb(175,0,0)">'</span>,
-<span class="ansi-green-intense-fg ansi-bold">     26</span>                      table_type<span style="color: rgb(98,98,98)">=</span><span style="color: rgb(175,0,0)">'</span><span style="color: rgb(175,0,0)">feature_table</span><span style="color: rgb(175,0,0)">'</span>,
-<span class="ansi-green-intense-fg ansi-bold">     27</span>                      overwrite<span style="color: rgb(98,98,98)">=</span><span class="ansi-bold" style="color: rgb(0,135,0)">True</span>)
-<span class="ansi-green-intense-fg ansi-bold">     29</span> <span style="color: rgb(0,135,0)">print</span>(<span style="color: rgb(175,0,0)">f</span><span style="color: rgb(175,0,0)">"</span><span style="color: rgb(175,0,0)">New list of feature table: </span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>ngff_image<span style="color: rgb(98,98,98)">.</span>table<span style="color: rgb(98,98,98)">.</span>list(table_type<span style="color: rgb(98,98,98)">=</span><span style="color: rgb(175,0,0)">'</span><span style="color: rgb(175,0,0)">feature_table</span><span style="color: rgb(175,0,0)">'</span>)<span class="ansi-bold" style="color: rgb(175,95,135)">}</span><span style="color: rgb(175,0,0)">"</span>)
-<span class="ansi-green-intense-fg ansi-bold">     30</span> feat_table<span style="color: rgb(98,98,98)">.</span>set_table(feat_df)
+<pre>/opt/hostedtoolcache/Python/3.12.7/x64/lib/python3.12/site-packages/anndata/_core/anndata.py:1756: UserWarning: Observation names are not unique. To make them unique, call `.obs_names_make_unique`.
+  utils.warn_names_duplicates("obs")
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child jp-OutputArea-executeResult">
+<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[10]:</div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/html" tabindex="0">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
 
-<span class="ansi-red-fg">AttributeError</span>: 'NgffImage' object has no attribute 'table'</pre>
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+<thead>
+<tr style="text-align: right;">
+<th></th>
+<th>feat1</th>
+<th>feat2</th>
+<th>ROI</th>
+</tr>
+<tr>
+<th>label</th>
+<th></th>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>1</th>
+<td>0.760514</td>
+<td>0.580771</td>
+<td>FOV_1</td>
+</tr>
+<tr>
+<th>2</th>
+<td>0.195968</td>
+<td>0.930843</td>
+<td>FOV_1</td>
+</tr>
+<tr>
+<th>3</th>
+<td>0.697688</td>
+<td>0.674719</td>
+<td>FOV_1</td>
+</tr>
+<tr>
+<th>4</th>
+<td>0.676788</td>
+<td>0.987962</td>
+<td>FOV_1</td>
+</tr>
+<tr>
+<th>5</th>
+<td>0.802168</td>
+<td>0.681532</td>
+<td>FOV_1</td>
+</tr>
+<tr>
+<th>...</th>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+</tr>
+<tr>
+<th>2987</th>
+<td>0.226195</td>
+<td>0.407428</td>
+<td>FOV_4</td>
+</tr>
+<tr>
+<th>2991</th>
+<td>0.689934</td>
+<td>0.714556</td>
+<td>FOV_4</td>
+</tr>
+<tr>
+<th>2993</th>
+<td>0.101632</td>
+<td>0.748755</td>
+<td>FOV_4</td>
+</tr>
+<tr>
+<th>2995</th>
+<td>0.459296</td>
+<td>0.684514</td>
+<td>FOV_4</td>
+</tr>
+<tr>
+<th>2996</th>
+<td>0.494981</td>
+<td>0.586732</td>
+<td>FOV_4</td>
+</tr>
+</tbody>
+</table>
+<p>3091 rows × 3 columns</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="zeroclipboard-container">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-11">
+<div>
+<span class="notice" hidden="">Copied!</span>
+<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
+<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+</div>
+</clipboard-copy>
+</div>
+<div class="highlight-ipynb hl-python"><pre><span></span>
+</pre></div>
+<div class="clipboard-copy-txt" id="cell-11"></div>
 </div>
 </div>
 </div>

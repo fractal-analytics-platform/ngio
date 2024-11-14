@@ -1170,14 +1170,14 @@ ngff_image = NgffImage(store, "r")</div>
 <span class="nb">print</span><span class="p">(</span><span class="n">ngff_image</span><span class="p">)</span>
 <span class="n">image</span> <span class="o">=</span> <span class="n">ngff_image</span><span class="o">.</span><span class="n">get_image</span><span class="p">()</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
-<span class="n">nuclei</span> <span class="o">=</span> <span class="n">ngff_image</span><span class="o">.</span><span class="n">label</span><span class="o">.</span><span class="n">get_label</span><span class="p">(</span><span class="s2">"nuclei"</span><span class="p">)</span>
+<span class="n">nuclei</span> <span class="o">=</span> <span class="n">ngff_image</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">get_label</span><span class="p">(</span><span class="s2">"nuclei"</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">nuclei</span><span class="p">)</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-2"># Explore object metadata
 print(ngff_image)
 image = ngff_image.get_image()
 print(image)
-nuclei = ngff_image.label.get_label("nuclei")
+nuclei = ngff_image.labels.get_label("nuclei")
 print(nuclei)
 </div>
 </div>
@@ -1206,17 +1206,14 @@ Image(group_path=https://raw.githubusercontent.com/fractal-analytics-platform/fr
 </div>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr" tabindex="0">
-<pre>
-<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
-<span class="ansi-red-fg">AttributeError</span>                            Traceback (most recent call last)
-Cell <span class="ansi-green-fg">In[2], line 5</span>
-<span class="ansi-green-intense-fg ansi-bold">      3</span> image <span style="color: rgb(98,98,98)">=</span> ngff_image<span style="color: rgb(98,98,98)">.</span>get_image()
-<span class="ansi-green-intense-fg ansi-bold">      4</span> <span style="color: rgb(0,135,0)">print</span>(image)
-<span class="ansi-green-fg">----&gt; 5</span> nuclei <span style="color: rgb(98,98,98)">=</span> <span class="ansi-yellow-bg">ngff_image</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">.</span><span class="ansi-yellow-bg">label</span><span style="color: rgb(98,98,98)">.</span>get_label(<span style="color: rgb(175,0,0)">"</span><span style="color: rgb(175,0,0)">nuclei</span><span style="color: rgb(175,0,0)">"</span>)
-<span class="ansi-green-intense-fg ansi-bold">      6</span> <span style="color: rgb(0,135,0)">print</span>(nuclei)
-
-<span class="ansi-red-fg">AttributeError</span>: 'NgffImage' object has no attribute 'label'</pre>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Label(group_path=https://raw.githubusercontent.com/fractal-analytics-platform/fractal-ome-zarr-examples/refs/heads/main/v04/20200812-CardiomyocyteDifferentiation14-Cycle1_B_03_mip.zarr/labels/nuclei, 
+      path=0,
+      name=nuclei,
+      PixelSize(x=0.325, y=0.325, z=1.0, unit=micrometer),
+      Dimensions(z=1, y=2160, x=2560),
+)
+</pre>
 </div>
 </div>
 </div>
@@ -1344,15 +1341,15 @@ image.pixel_size=PixelSize(x=0.65, y=0.65, z=1.0, unit=&lt;SpaceUnits.micrometer
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">"List of Labels: "</span><span class="p">,</span> <span class="n">ngff_image</span><span class="o">.</span><span class="n">label</span><span class="o">.</span><span class="n">list</span><span class="p">())</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">"List of Labels: "</span><span class="p">,</span> <span class="n">ngff_image</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">list</span><span class="p">())</span>
 
-<span class="n">label_nuclei</span> <span class="o">=</span> <span class="n">ngff_image</span><span class="o">.</span><span class="n">label</span><span class="o">.</span><span class="n">get_label</span><span class="p">(</span><span class="s2">"nuclei"</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s2">"0"</span><span class="p">)</span>
+<span class="n">label_nuclei</span> <span class="o">=</span> <span class="n">ngff_image</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">get_label</span><span class="p">(</span><span class="s2">"nuclei"</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s2">"0"</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">label_nuclei</span><span class="o">.</span><span class="n">shape</span><span class="si">=}</span><span class="s2">"</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">label_nuclei</span><span class="o">.</span><span class="n">pixel_size</span><span class="si">=}</span><span class="s2">"</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-4">print("List of Labels: ", ngff_image.label.list())
+<div class="clipboard-copy-txt" id="cell-4">print("List of Labels: ", ngff_image.labels.list())
 
-label_nuclei = ngff_image.label.get_label("nuclei", path="0")
+label_nuclei = ngff_image.labels.get_label("nuclei", path="0")
 print(f"{label_nuclei.shape=}")
 print(f"{label_nuclei.pixel_size=}")</div>
 </div>
@@ -1365,16 +1362,11 @@ print(f"{label_nuclei.pixel_size=}")</div>
 <div class="jp-OutputArea jp-Cell-outputArea">
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr" tabindex="0">
-<pre>
-<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
-<span class="ansi-red-fg">AttributeError</span>                            Traceback (most recent call last)
-Cell <span class="ansi-green-fg">In[4], line 1</span>
-<span class="ansi-green-fg">----&gt; 1</span> <span style="color: rgb(0,135,0)">print</span>(<span style="color: rgb(175,0,0)">"</span><span style="color: rgb(175,0,0)">List of Labels: </span><span style="color: rgb(175,0,0)">"</span>, <span class="ansi-yellow-bg">ngff_image</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">.</span><span class="ansi-yellow-bg">label</span><span style="color: rgb(98,98,98)">.</span>list())
-<span class="ansi-green-intense-fg ansi-bold">      3</span> label_nuclei <span style="color: rgb(98,98,98)">=</span> ngff_image<span style="color: rgb(98,98,98)">.</span>label<span style="color: rgb(98,98,98)">.</span>get_label(<span style="color: rgb(175,0,0)">"</span><span style="color: rgb(175,0,0)">nuclei</span><span style="color: rgb(175,0,0)">"</span>, path<span style="color: rgb(98,98,98)">=</span><span style="color: rgb(175,0,0)">"</span><span style="color: rgb(175,0,0)">0</span><span style="color: rgb(175,0,0)">"</span>)
-<span class="ansi-green-intense-fg ansi-bold">      4</span> <span style="color: rgb(0,135,0)">print</span>(<span style="color: rgb(175,0,0)">f</span><span style="color: rgb(175,0,0)">"</span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>label_nuclei<span style="color: rgb(98,98,98)">.</span>shape<span class="ansi-bold" style="color: rgb(175,95,135)">=}</span><span style="color: rgb(175,0,0)">"</span>)
-
-<span class="ansi-red-fg">AttributeError</span>: 'NgffImage' object has no attribute 'label'</pre>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>List of Labels:  ['nuclei']
+label_nuclei.shape=(1, 2160, 2560)
+label_nuclei.pixel_size=PixelSize(x=0.325, y=0.325, z=1.0, unit=&lt;SpaceUnits.micrometer: 'micrometer'&gt;, virtual=False)
+</pre>
 </div>
 </div>
 </div>
@@ -1416,15 +1408,15 @@ Cell <span class="ansi-green-fg">In[4], line 1</span>
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">"List of Tables: "</span><span class="p">,</span> <span class="n">ngff_image</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">list</span><span class="p">())</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">" - Feature tables: "</span><span class="p">,</span> <span class="n">ngff_image</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">list</span><span class="p">(</span><span class="n">table_type</span><span class="o">=</span><span class="s1">'feature_table'</span><span class="p">))</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">" - Roi tables: "</span><span class="p">,</span> <span class="n">ngff_image</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">list</span><span class="p">(</span><span class="n">table_type</span><span class="o">=</span><span class="s1">'roi_table'</span><span class="p">))</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">" - Masking Roi tables: "</span><span class="p">,</span> <span class="n">ngff_image</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">list</span><span class="p">(</span><span class="n">table_type</span><span class="o">=</span><span class="s1">'masking_roi_table'</span><span class="p">))</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">"List of Tables: "</span><span class="p">,</span> <span class="n">ngff_image</span><span class="o">.</span><span class="n">tables</span><span class="o">.</span><span class="n">list</span><span class="p">())</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">" - Feature tables: "</span><span class="p">,</span> <span class="n">ngff_image</span><span class="o">.</span><span class="n">tables</span><span class="o">.</span><span class="n">list</span><span class="p">(</span><span class="n">table_type</span><span class="o">=</span><span class="s1">'feature_table'</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">" - Roi tables: "</span><span class="p">,</span> <span class="n">ngff_image</span><span class="o">.</span><span class="n">tables</span><span class="o">.</span><span class="n">list</span><span class="p">(</span><span class="n">table_type</span><span class="o">=</span><span class="s1">'roi_table'</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">" - Masking Roi tables: "</span><span class="p">,</span> <span class="n">ngff_image</span><span class="o">.</span><span class="n">tables</span><span class="o">.</span><span class="n">list</span><span class="p">(</span><span class="n">table_type</span><span class="o">=</span><span class="s1">'masking_roi_table'</span><span class="p">))</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-5">print("List of Tables: ", ngff_image.table.list())
-print(" - Feature tables: ", ngff_image.table.list(table_type='feature_table'))
-print(" - Roi tables: ", ngff_image.table.list(table_type='roi_table'))
-print(" - Masking Roi tables: ", ngff_image.table.list(table_type='masking_roi_table'))</div>
+<div class="clipboard-copy-txt" id="cell-5">print("List of Tables: ", ngff_image.tables.list())
+print(" - Feature tables: ", ngff_image.tables.list(table_type='feature_table'))
+print(" - Roi tables: ", ngff_image.tables.list(table_type='roi_table'))
+print(" - Masking Roi tables: ", ngff_image.tables.list(table_type='masking_roi_table'))</div>
 </div>
 </div>
 </div>
@@ -1435,16 +1427,18 @@ print(" - Masking Roi tables: ", ngff_image.table.list(table_type='masking_roi_t
 <div class="jp-OutputArea jp-Cell-outputArea">
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr" tabindex="0">
-<pre>
-<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
-<span class="ansi-red-fg">AttributeError</span>                            Traceback (most recent call last)
-Cell <span class="ansi-green-fg">In[5], line 1</span>
-<span class="ansi-green-fg">----&gt; 1</span> <span style="color: rgb(0,135,0)">print</span>(<span style="color: rgb(175,0,0)">"</span><span style="color: rgb(175,0,0)">List of Tables: </span><span style="color: rgb(175,0,0)">"</span>, <span class="ansi-yellow-bg">ngff_image</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">.</span><span class="ansi-yellow-bg">table</span><span style="color: rgb(98,98,98)">.</span>list())
-<span class="ansi-green-intense-fg ansi-bold">      2</span> <span style="color: rgb(0,135,0)">print</span>(<span style="color: rgb(175,0,0)">"</span><span style="color: rgb(175,0,0)"> - Feature tables: </span><span style="color: rgb(175,0,0)">"</span>, ngff_image<span style="color: rgb(98,98,98)">.</span>table<span style="color: rgb(98,98,98)">.</span>list(table_type<span style="color: rgb(98,98,98)">=</span><span style="color: rgb(175,0,0)">'</span><span style="color: rgb(175,0,0)">feature_table</span><span style="color: rgb(175,0,0)">'</span>))
-<span class="ansi-green-intense-fg ansi-bold">      3</span> <span style="color: rgb(0,135,0)">print</span>(<span style="color: rgb(175,0,0)">"</span><span style="color: rgb(175,0,0)"> - Roi tables: </span><span style="color: rgb(175,0,0)">"</span>, ngff_image<span style="color: rgb(98,98,98)">.</span>table<span style="color: rgb(98,98,98)">.</span>list(table_type<span style="color: rgb(98,98,98)">=</span><span style="color: rgb(175,0,0)">'</span><span style="color: rgb(175,0,0)">roi_table</span><span style="color: rgb(175,0,0)">'</span>))
-
-<span class="ansi-red-fg">AttributeError</span>: 'NgffImage' object has no attribute 'table'</pre>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>List of Tables:  ['FOV_ROI_table', 'nuclei_ROI_table', 'well_ROI_table', 'regionprops_DAPI']
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre> - Feature tables:  ['regionprops_DAPI']
+ - Roi tables:  ['FOV_ROI_table', 'well_ROI_table']
+ - Masking Roi tables:  ['nuclei_ROI_table']
+</pre>
 </div>
 </div>
 </div>
@@ -1470,11 +1464,11 @@ Cell <span class="ansi-green-fg">In[5], line 1</span>
 </clipboard-copy>
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Loading a table</span>
-<span class="n">feature_table</span> <span class="o">=</span> <span class="n">ngff_image</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">get_table</span><span class="p">(</span><span class="s2">"regionprops_DAPI"</span><span class="p">)</span>
+<span class="n">feature_table</span> <span class="o">=</span> <span class="n">ngff_image</span><span class="o">.</span><span class="n">tables</span><span class="o">.</span><span class="n">get_table</span><span class="p">(</span><span class="s2">"regionprops_DAPI"</span><span class="p">)</span>
 <span class="n">feature_table</span><span class="o">.</span><span class="n">table</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-6"># Loading a table
-feature_table = ngff_image.table.get_table("regionprops_DAPI")
+feature_table = ngff_image.tables.get_table("regionprops_DAPI")
 feature_table.table</div>
 </div>
 </div>
@@ -1484,18 +1478,161 @@ feature_table.table</div>
 <div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
 </div>
 <div class="jp-OutputArea jp-Cell-outputArea">
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr" tabindex="0">
-<pre>
-<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
-<span class="ansi-red-fg">AttributeError</span>                            Traceback (most recent call last)
-Cell <span class="ansi-green-fg">In[6], line 2</span>
-<span class="ansi-green-intense-fg ansi-bold">      1</span> <span style="color: rgb(95,135,135)"># Loading a table</span>
-<span class="ansi-green-fg">----&gt; 2</span> feature_table <span style="color: rgb(98,98,98)">=</span> <span class="ansi-yellow-bg">ngff_image</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">.</span><span class="ansi-yellow-bg">table</span><span style="color: rgb(98,98,98)">.</span>get_table(<span style="color: rgb(175,0,0)">"</span><span style="color: rgb(175,0,0)">regionprops_DAPI</span><span style="color: rgb(175,0,0)">"</span>)
-<span class="ansi-green-intense-fg ansi-bold">      3</span> feature_table<span style="color: rgb(98,98,98)">.</span>table
+<div class="jp-OutputArea-child jp-OutputArea-executeResult">
+<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[6]:</div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/html" tabindex="0">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
 
-<span class="ansi-red-fg">AttributeError</span>: 'NgffImage' object has no attribute 'table'</pre>
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+<thead>
+<tr style="text-align: right;">
+<th></th>
+<th>area</th>
+<th>bbox_area</th>
+<th>equivalent_diameter</th>
+<th>max_intensity</th>
+<th>mean_intensity</th>
+<th>min_intensity</th>
+<th>standard_deviation_intensity</th>
+</tr>
+<tr>
+<th>label</th>
+<th></th>
+<th></th>
+<th></th>
+<th></th>
+<th></th>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>1</th>
+<td>2120.0</td>
+<td>2655.0</td>
+<td>15.938437</td>
+<td>476.0</td>
+<td>278.635864</td>
+<td>86.0</td>
+<td>54.343792</td>
+</tr>
+<tr>
+<th>2</th>
+<td>327.0</td>
+<td>456.0</td>
+<td>8.547709</td>
+<td>604.0</td>
+<td>324.162079</td>
+<td>118.0</td>
+<td>90.847092</td>
+</tr>
+<tr>
+<th>3</th>
+<td>1381.0</td>
+<td>1749.0</td>
+<td>13.816510</td>
+<td>386.0</td>
+<td>212.682114</td>
+<td>60.0</td>
+<td>50.169601</td>
+</tr>
+<tr>
+<th>4</th>
+<td>2566.0</td>
+<td>3588.0</td>
+<td>16.985800</td>
+<td>497.0</td>
+<td>251.731491</td>
+<td>61.0</td>
+<td>53.307186</td>
+</tr>
+<tr>
+<th>5</th>
+<td>4201.0</td>
+<td>5472.0</td>
+<td>20.019413</td>
+<td>466.0</td>
+<td>223.862885</td>
+<td>51.0</td>
+<td>56.719025</td>
+</tr>
+<tr>
+<th>...</th>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+</tr>
+<tr>
+<th>3002</th>
+<td>1026.0</td>
+<td>1288.0</td>
+<td>12.513618</td>
+<td>589.0</td>
+<td>308.404480</td>
+<td>132.0</td>
+<td>64.681778</td>
+</tr>
+<tr>
+<th>3003</th>
+<td>859.0</td>
+<td>1080.0</td>
+<td>11.794101</td>
+<td>400.0</td>
+<td>270.349243</td>
+<td>107.0</td>
+<td>49.040470</td>
+</tr>
+<tr>
+<th>3004</th>
+<td>508.0</td>
+<td>660.0</td>
+<td>9.899693</td>
+<td>314.0</td>
+<td>205.043304</td>
+<td>82.0</td>
+<td>33.249981</td>
+</tr>
+<tr>
+<th>3005</th>
+<td>369.0</td>
+<td>440.0</td>
+<td>8.899028</td>
+<td>376.0</td>
+<td>217.970184</td>
+<td>82.0</td>
+<td>50.978519</td>
+</tr>
+<tr>
+<th>3006</th>
+<td>278.0</td>
+<td>330.0</td>
+<td>8.097459</td>
+<td>339.0</td>
+<td>217.996399</td>
+<td>100.0</td>
+<td>38.510067</td>
+</tr>
+</tbody>
+</table>
+<p>3006 rows × 7 columns</p>
+</div>
 </div>
 </div>
 </div>
@@ -1521,7 +1658,7 @@ Cell <span class="ansi-green-fg">In[6], line 2</span>
 </clipboard-copy>
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Loading a roi table</span>
-<span class="n">roi_table</span> <span class="o">=</span> <span class="n">ngff_image</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">get_table</span><span class="p">(</span><span class="s2">"FOV_ROI_table"</span><span class="p">)</span>
+<span class="n">roi_table</span> <span class="o">=</span> <span class="n">ngff_image</span><span class="o">.</span><span class="n">tables</span><span class="o">.</span><span class="n">get_table</span><span class="p">(</span><span class="s2">"FOV_ROI_table"</span><span class="p">)</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">roi_table</span><span class="o">.</span><span class="n">field_indexes</span><span class="si">=}</span><span class="s2">"</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">roi_table</span><span class="o">.</span><span class="n">get_roi</span><span class="p">(</span><span class="s1">'FOV_1'</span><span class="p">)</span><span class="si">=}</span><span class="s2">"</span><span class="p">)</span>
@@ -1529,7 +1666,7 @@ Cell <span class="ansi-green-fg">In[6], line 2</span>
 <span class="n">roi_table</span><span class="o">.</span><span class="n">table</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-7"># Loading a roi table
-roi_table = ngff_image.table.get_table("FOV_ROI_table")
+roi_table = ngff_image.tables.get_table("FOV_ROI_table")
 
 print(f"{roi_table.field_indexes=}")
 print(f"{roi_table.get_roi('FOV_1')=}")
@@ -1545,17 +1682,102 @@ roi_table.table</div>
 <div class="jp-OutputArea jp-Cell-outputArea">
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr" tabindex="0">
-<pre>
-<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
-<span class="ansi-red-fg">AttributeError</span>                            Traceback (most recent call last)
-Cell <span class="ansi-green-fg">In[7], line 2</span>
-<span class="ansi-green-intense-fg ansi-bold">      1</span> <span style="color: rgb(95,135,135)"># Loading a roi table</span>
-<span class="ansi-green-fg">----&gt; 2</span> roi_table <span style="color: rgb(98,98,98)">=</span> <span class="ansi-yellow-bg">ngff_image</span><span class="ansi-yellow-bg" style="color: rgb(98,98,98)">.</span><span class="ansi-yellow-bg">table</span><span style="color: rgb(98,98,98)">.</span>get_table(<span style="color: rgb(175,0,0)">"</span><span style="color: rgb(175,0,0)">FOV_ROI_table</span><span style="color: rgb(175,0,0)">"</span>)
-<span class="ansi-green-intense-fg ansi-bold">      4</span> <span style="color: rgb(0,135,0)">print</span>(<span style="color: rgb(175,0,0)">f</span><span style="color: rgb(175,0,0)">"</span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>roi_table<span style="color: rgb(98,98,98)">.</span>field_indexes<span class="ansi-bold" style="color: rgb(175,95,135)">=}</span><span style="color: rgb(175,0,0)">"</span>)
-<span class="ansi-green-intense-fg ansi-bold">      5</span> <span style="color: rgb(0,135,0)">print</span>(<span style="color: rgb(175,0,0)">f</span><span style="color: rgb(175,0,0)">"</span><span class="ansi-bold" style="color: rgb(175,95,135)">{</span>roi_table<span style="color: rgb(98,98,98)">.</span>get_roi(<span style="color: rgb(175,0,0)">'</span><span style="color: rgb(175,0,0)">FOV_1</span><span style="color: rgb(175,0,0)">'</span>)<span class="ansi-bold" style="color: rgb(175,95,135)">=}</span><span style="color: rgb(175,0,0)">"</span>)
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>roi_table.field_indexes=['FOV_1', 'FOV_2', 'FOV_3', 'FOV_4']
+roi_table.get_roi('FOV_1')=WorldCooROI(x_length=416.0, y_length=351.0, z_length=1.0, x=0.0, y=0.0, z=0.0)
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child jp-OutputArea-executeResult">
+<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[7]:</div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/html" tabindex="0">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
 
-<span class="ansi-red-fg">AttributeError</span>: 'NgffImage' object has no attribute 'table'</pre>
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+<thead>
+<tr style="text-align: right;">
+<th></th>
+<th>x_micrometer</th>
+<th>y_micrometer</th>
+<th>z_micrometer</th>
+<th>len_x_micrometer</th>
+<th>len_y_micrometer</th>
+<th>len_z_micrometer</th>
+<th>x_micrometer_original</th>
+<th>y_micrometer_original</th>
+</tr>
+<tr>
+<th>FieldIndex</th>
+<th></th>
+<th></th>
+<th></th>
+<th></th>
+<th></th>
+<th></th>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>FOV_1</th>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>416.0</td>
+<td>351.0</td>
+<td>1.0</td>
+<td>-1448.300049</td>
+<td>-1517.699951</td>
+</tr>
+<tr>
+<th>FOV_2</th>
+<td>416.0</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>416.0</td>
+<td>351.0</td>
+<td>1.0</td>
+<td>-1032.300049</td>
+<td>-1517.699951</td>
+</tr>
+<tr>
+<th>FOV_3</th>
+<td>0.0</td>
+<td>351.0</td>
+<td>0.0</td>
+<td>416.0</td>
+<td>351.0</td>
+<td>1.0</td>
+<td>-1448.300049</td>
+<td>-1166.699951</td>
+</tr>
+<tr>
+<th>FOV_4</th>
+<td>416.0</td>
+<td>351.0</td>
+<td>0.0</td>
+<td>416.0</td>
+<td>351.0</td>
+<td>1.0</td>
+<td>-1032.300049</td>
+<td>-1166.699951</td>
+</tr>
+</tbody>
+</table>
+</div>
 </div>
 </div>
 </div>
