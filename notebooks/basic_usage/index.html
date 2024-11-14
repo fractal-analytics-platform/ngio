@@ -1117,10 +1117,20 @@ A <code>NgffImage</code> can be created from a storelike object (e.g. a path to 
 </clipboard-copy>
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">from</span> <span class="nn">ngio.core</span> <span class="kn">import</span> <span class="n">NgffImage</span>
-<span class="n">ngff_image</span> <span class="o">=</span> <span class="n">NgffImage</span><span class="p">(</span><span class="s2">"../../data/20200812-CardiomyocyteDifferentiation14-Cycle1_mip.zarr/B/03/0"</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">ngio.core.utils</span> <span class="kn">import</span> <span class="n">get_fsspec_http_store</span>
+
+<span class="c1"># Ngio can stream data from any fsspec-compatible store</span>
+<span class="n">url</span> <span class="o">=</span> <span class="s2">"https://raw.githubusercontent.com/fractal-analytics-platform/fractal-ome-zarr-examples/refs/heads/main/v04/20200812-CardiomyocyteDifferentiation14-Cycle1_B_03_mip.zarr/"</span>
+<span class="n">store</span> <span class="o">=</span> <span class="n">get_fsspec_http_store</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+<span class="n">ngff_image</span> <span class="o">=</span> <span class="n">NgffImage</span><span class="p">(</span><span class="n">store</span><span class="p">,</span> <span class="s2">"r"</span><span class="p">)</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-1">from ngio.core import NgffImage
-ngff_image = NgffImage("../../data/20200812-CardiomyocyteDifferentiation14-Cycle1_mip.zarr/B/03/0")</div>
+from ngio.core.utils import get_fsspec_http_store
+
+# Ngio can stream data from any fsspec-compatible store
+url = "https://raw.githubusercontent.com/fractal-analytics-platform/fractal-ome-zarr-examples/refs/heads/main/v04/20200812-CardiomyocyteDifferentiation14-Cycle1_B_03_mip.zarr/"
+store = get_fsspec_http_store(url)
+ngff_image = NgffImage(store, "r")</div>
 </div>
 </div>
 </div>
@@ -1157,12 +1167,19 @@ ngff_image = NgffImage("../../data/20200812-CardiomyocyteDifferentiation14-Cycle
 </clipboard-copy>
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Explore object metadata</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">"Levels: "</span><span class="p">,</span> <span class="n">ngff_image</span><span class="o">.</span><span class="n">levels_paths</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">"Num Levels: "</span><span class="p">,</span> <span class="n">ngff_image</span><span class="o">.</span><span class="n">num_levels</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">ngff_image</span><span class="p">)</span>
+<span class="n">image</span> <span class="o">=</span> <span class="n">ngff_image</span><span class="o">.</span><span class="n">get_image</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+<span class="n">nuclei</span> <span class="o">=</span> <span class="n">ngff_image</span><span class="o">.</span><span class="n">label</span><span class="o">.</span><span class="n">get_label</span><span class="p">(</span><span class="s2">"nuclei"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">nuclei</span><span class="p">)</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-2"># Explore object metadata
-print("Levels: ", ngff_image.levels_paths)
-print("Num Levels: ", ngff_image.num_levels)</div>
+print(ngff_image)
+image = ngff_image.get_image()
+print(image)
+nuclei = ngff_image.label.get_label("nuclei")
+print(nuclei)
+</div>
 </div>
 </div>
 </div>
@@ -1174,8 +1191,26 @@ print("Num Levels: ", ngff_image.num_levels)</div>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Levels:  ['0', '1', '2', '3', '4']
-Num Levels:  5
+<pre>NGFFImage(store=&lt;fsspec.mapping.FSMap object at 0x7fd46b96f020&gt;, 
+          paths=['0', '1', '2', '3'], 
+          labels=['nuclei'], 
+          tables=['FOV_ROI_table', 'nuclei_ROI_table', 'well_ROI_table', 'regionprops_DAPI'], 
+)
+Image(path=0,
+      PixelSize(x=0.325, y=0.325, z=1.0, unit=micrometer),
+      Dimensions(c=3, z=1, y=2160, x=2560),
+)
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Label(path=0,
+      name=nuclei,
+      PixelSize(x=0.325, y=0.325, z=1.0, unit=micrometer),
+      Dimensions(z=1, y=2160, x=2560),
+)
 </pre>
 </div>
 </div>
@@ -1256,11 +1291,17 @@ print(f"{image.pixel_size=}")</div>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>image.shape=(3, 1, 4320, 5120)
-image.pixel_size=PixelSize(x=0.1625, y=0.1625, z=1.0, unit=&lt;SpaceUnits.micrometer: 'micrometer'&gt;, virtual=False)
-image.shape=(3, 1, 4320, 5120)
-image.pixel_size=PixelSize(x=0.1625, y=0.1625, z=1.0, unit=&lt;SpaceUnits.micrometer: 'micrometer'&gt;, virtual=False)
-image.shape=(3, 1, 1080, 1280)
+<pre>image.shape=(3, 1, 2160, 2560)
+image.pixel_size=PixelSize(x=0.325, y=0.325, z=1.0, unit=&lt;SpaceUnits.micrometer: 'micrometer'&gt;, virtual=False)
+image.shape=(3, 1, 2160, 2560)
+image.pixel_size=PixelSize(x=0.325, y=0.325, z=1.0, unit=&lt;SpaceUnits.micrometer: 'micrometer'&gt;, virtual=False)
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>image.shape=(3, 1, 1080, 1280)
 image.pixel_size=PixelSize(x=0.65, y=0.65, z=1.0, unit=&lt;SpaceUnits.micrometer: 'micrometer'&gt;, virtual=True)
 </pre>
 </div>
@@ -1320,9 +1361,15 @@ print(f"{label_nuclei.pixel_size=}")</div>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>List of Labels:  ['nuclei', 'wf_2_labels', 'wf_3_labels', 'wf_4_labels']
-label_nuclei.shape=(1, 4320, 5120)
-label_nuclei.pixel_size=PixelSize(x=0.1625, y=0.1625, z=1.0, unit=&lt;SpaceUnits.micrometer: 'micrometer'&gt;, virtual=False)
+<pre>List of Labels:  ['nuclei']
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>label_nuclei.shape=(1, 2160, 2560)
+label_nuclei.pixel_size=PixelSize(x=0.325, y=0.325, z=1.0, unit=&lt;SpaceUnits.micrometer: 'micrometer'&gt;, virtual=False)
 </pre>
 </div>
 </div>
@@ -1385,10 +1432,28 @@ print(" - Masking Roi tables: ", ngff_image.table.list(table_type='masking_roi_t
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>List of Tables:  ['FOV_ROI_table', 'nuclei_ROI_table', 'well_ROI_table', 'regionprops_DAPI', 'nuclei_measurements_wf3', 'nuclei_measurements_wf4', 'nuclei_lamin_measurements_wf4']
- - Feature tables:  ['regionprops_DAPI', 'nuclei_measurements_wf3', 'nuclei_measurements_wf4', 'nuclei_lamin_measurements_wf4']
- - Roi tables:  ['FOV_ROI_table', 'well_ROI_table']
- - Masking Roi tables:  ['nuclei_ROI_table']
+<pre>List of Tables:  ['FOV_ROI_table', 'nuclei_ROI_table', 'well_ROI_table', 'regionprops_DAPI']
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre> - Feature tables:  ['regionprops_DAPI']
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre> - Roi tables:  ['FOV_ROI_table', 'well_ROI_table']
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre> - Masking Roi tables:  ['nuclei_ROI_table']
 </pre>
 </div>
 </div>
@@ -1429,14 +1494,6 @@ feature_table.table</div>
 <div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
 </div>
 <div class="jp-OutputArea jp-Cell-outputArea">
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr" tabindex="0">
-<pre>/opt/hostedtoolcache/Python/3.12.7/x64/lib/python3.12/site-packages/anndata/_core/aligned_df.py:68: ImplicitModificationWarning: Transforming to str index.
-  warnings.warn("Transforming to str index.", ImplicitModificationWarning)
-</pre>
-</div>
-</div>
 <div class="jp-OutputArea-child jp-OutputArea-executeResult">
 <div class="jp-OutputPrompt jp-OutputArea-prompt">Out[6]:</div>
 <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/html" tabindex="0">
@@ -1798,8 +1855,8 @@ print(f"{new_ngff_image.num_levels=}")</div>
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
 <pre>new_ngff_image.store='../../data/new_ome.zarr'
-new_ngff_image.levels_paths=['0', '1', '2', '3', '4']
-new_ngff_image.num_levels=5
+new_ngff_image.levels_paths=['0', '1', '2', '3']
+new_ngff_image.num_levels=4
 </pre>
 </div>
 </div>
@@ -1863,7 +1920,7 @@ new_ngff_image.num_levels=5
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">November 13, 2024</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">November 14, 2024</span>
   </span>
 
     
@@ -1873,7 +1930,7 @@ new_ngff_image.num_levels=5
     <span class="md-icon" title="Created">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">November 13, 2024</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">November 14, 2024</span>
   </span>
 
     
