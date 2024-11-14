@@ -149,15 +149,11 @@ skip-magic-trailing-comma = false # default is false
 [tool.mypy]
 files = "src/**/"
 strict = true
+ignore_missing_imports = true
 disallow_any_generics = false
 disallow_subclassing_any = false
 show_error_codes = true
 pretty = true
-
-# # module specific overrides
-[[tool.mypy.overrides]]
-module = ["numpy.*", "dask.*", "zarr.*"]
-ignore_errors = true
 
 # https://docs.pytest.org/
 [tool.pytest.ini_options]

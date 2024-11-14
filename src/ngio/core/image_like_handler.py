@@ -10,7 +10,6 @@ from dask.delayed import Delayed
 
 from ngio.core.dimensions import Dimensions
 from ngio.core.roi import WorldCooROI
-from ngio.core.utils import Lock
 from ngio.io import AccessModeLiteral, StoreOrGroup, open_group_wrapper
 from ngio.ngff_meta import (
     Dataset,
@@ -22,6 +21,11 @@ from ngio.ngff_meta import (
 from ngio.pipes import DataTransformPipe, NaiveSlicer, RoiSlicer, on_disk_zoom
 from ngio.utils import ngio_logger
 from ngio.utils._common_types import ArrayLike
+
+try:
+    from dask.distributed import Lock
+except ImportError:
+    Lock = None  # type: ignore
 
 
 class ImageLike:
