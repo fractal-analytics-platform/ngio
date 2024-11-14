@@ -9,6 +9,7 @@ import zarr
 from pydantic import BaseModel
 
 from ngio.core.utils import State
+from ngio.tables._ad_reader import custom_read_zarr
 from ngio.tables._utils import Validator, table_ad_to_df, table_df_to_ad, validate_table
 
 REQUIRED_COLUMNS = [
@@ -77,7 +78,7 @@ class BaseTable:
         self._index_type = index_type
         self._validators = validators
 
-        table_ad = ad.read_zarr(self._table_group)
+        table_ad = custom_read_zarr(store=group)
 
         self._table = table_ad_to_df(
             table_ad=table_ad,

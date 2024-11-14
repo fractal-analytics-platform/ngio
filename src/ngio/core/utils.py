@@ -5,6 +5,8 @@ from collections.abc import Collection
 from enum import Enum
 from typing import Any
 
+import fsspec.implementations.http
+
 from ngio.io import Group, StoreLike
 from ngio.ngff_meta import (
     ImageLabelMeta,
@@ -22,6 +24,16 @@ try:
     from dask.distributed import Lock
 except ImportError:
     Lock = None
+
+
+def get_fsspec_http_store(
+    url: str, client_kwargs: dict | None = None
+) -> fsspec.mapping.FSMap:
+    """Simple function to get an http fsspec store from a url."""
+    client_kwargs = {} if client_kwargs is None else client_kwargs
+    fs = fsspec.implementations.http.HTTPFileSystem(client_kwargs=client_kwargs)
+    store = fs.get_mapper(url)
+    return store
 
 
 class State(Enum):

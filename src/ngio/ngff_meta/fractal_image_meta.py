@@ -242,6 +242,11 @@ class Channel(BaseModel):
         channel_visualization = ChannelVisualisation.lazy_init(
             color=color, start=start, end=end, active=active, data_type=data_type
         )
+
+        if wavelength_id is None:
+            # TODO Evaluate if a better default value can be used
+            wavelength_id = label
+
         return cls(
             label=label,
             wavelength_id=wavelength_id,
