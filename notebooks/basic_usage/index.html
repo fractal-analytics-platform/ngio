@@ -1230,50 +1230,6 @@ ngff_image = NgffImage(path, "r")</div>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [3]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
-<div class="CodeMirror cm-s-jupyter">
-<div class="zeroclipboard-container">
-<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-3">
-<div>
-<span class="notice" hidden="">Copied!</span>
-<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
-<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
-<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
-</svg>
-</div>
-</clipboard-copy>
-</div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">From</span> <span class="n">the</span> <span class="n">NgffImage</span> <span class="nb">object</span><span class="p">,</span> <span class="n">you</span> <span class="n">can</span> <span class="n">access</span> <span class="n">the</span> <span class="n">image</span> <span class="n">data</span> <span class="k">as</span> <span class="n">a</span> <span class="n">numpy</span> <span class="n">ar</span>
-</pre></div>
-<div class="clipboard-copy-txt" id="cell-3">From the NgffImage object, you can access the image data as a numpy ar</div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell-outputWrapper">
-<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
-</div>
-<div class="jp-OutputArea jp-Cell-outputArea">
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr" tabindex="0">
-<pre>
-<span class="ansi-cyan-fg">  Cell </span><span class="ansi-green-fg">In[3], line 1</span>
-<span class="ansi-red-fg">    From the NgffImage object, you can access the image data as a numpy ar</span>
-         ^
-<span class="ansi-red-fg">SyntaxError</span><span class="ansi-red-fg">:</span> invalid syntax
-</pre>
-</div>
-</div>
-</div>
-</div>
-</div>
 </div>
 <div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
 <div class="jp-Cell-inputWrapper" tabindex="0">
@@ -1304,10 +1260,10 @@ It contains methods to interact with the image data and metadata.</p>
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [4]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [3]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
-<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-4">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-3">
 <div>
 <span class="notice" hidden="">Copied!</span>
 <svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
@@ -1331,7 +1287,7 @@ It contains methods to interact with the image data and metadata.</p>
 <span class="n">image</span> <span class="o">=</span> <span class="n">ngff_image</span><span class="o">.</span><span class="n">get_image</span><span class="p">(</span><span class="n">pixel_size</span><span class="o">=</span><span class="n">PixelSize</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mf">0.65</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mf">0.65</span><span class="p">,</span> <span class="n">z</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-4">from ngio.ngff_meta import PixelSize
+<div class="clipboard-copy-txt" id="cell-3">from ngio.ngff_meta import PixelSize
 
 # 1. Get image from highest resolution (default)
 image = ngff_image.get_image()
@@ -1393,10 +1349,10 @@ Image(group_path=/home/runner/work/ngio/ngio/data/20200812-CardiomyocyteDifferen
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [5]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [4]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
-<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-5">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-4">
 <div>
 <span class="notice" hidden="">Copied!</span>
 <svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
@@ -1412,7 +1368,7 @@ Image(group_path=/home/runner/work/ngio/ngio/data/20200812-CardiomyocyteDifferen
 <span class="nb">print</span><span class="p">(</span><span class="s2">"Dimensions"</span><span class="p">,</span> <span class="n">image</span><span class="o">.</span><span class="n">dimensions</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">"Channel Names"</span><span class="p">,</span> <span class="n">image</span><span class="o">.</span><span class="n">channel_labels</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-5">print("Shape", image.shape)
+<div class="clipboard-copy-txt" id="cell-4">print("Shape", image.shape)
 print("Axes", image.axes_names)
 print("PixelSize", image.pixel_size)
 print("Dimensions", image.dimensions)
@@ -1445,10 +1401,10 @@ Channel Names ['DAPI', 'nanog', 'Lamin B1']
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [6]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [5]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
-<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-6">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-5">
 <div>
 <span class="notice" hidden="">Copied!</span>
 <svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
@@ -1465,7 +1421,7 @@ Channel Names ['DAPI', 'nanog', 'Lamin B1']
 <span class="n">dask_data</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">get_array</span><span class="p">(</span><span class="n">c</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"dask"</span><span class="p">)</span>
 <span class="n">dask_data</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-6"># Get data as a numpy array or a dask array
+<div class="clipboard-copy-txt" id="cell-5"># Get data as a numpy array or a dask array
 data = image.get_array(c=0, mode="numpy")
 print(data)
 
@@ -1493,7 +1449,7 @@ dask_data</div>
 </div>
 </div>
 <div class="jp-OutputArea-child jp-OutputArea-executeResult">
-<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[6]:</div>
+<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[5]:</div>
 <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/html" tabindex="0">
 <table>
 <tr>
@@ -1586,10 +1542,10 @@ If you want to access data or metadata in the on-disk order, you can by using <c
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [7]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [6]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
-<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-7">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-6">
 <div>
 <span class="notice" hidden="">Copied!</span>
 <svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
@@ -1603,7 +1559,7 @@ If you want to access data or metadata in the on-disk order, you can by using <c
 <span class="nb">print</span><span class="p">(</span><span class="s2">"On-disk array"</span><span class="p">,</span> <span class="n">image</span><span class="o">.</span><span class="n">on_disk_array</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">"On-disk dask array"</span><span class="p">,</span> <span class="n">image</span><span class="o">.</span><span class="n">on_disk_dask_array</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-7">print("On-disk shape", image.on_disk_shape)
+<div class="clipboard-copy-txt" id="cell-6">print("On-disk shape", image.on_disk_shape)
 print("On-disk array", image.on_disk_array)
 print("On-disk dask array", image.on_disk_dask_array)</div>
 </div>
@@ -1643,10 +1599,10 @@ On-disk dask array dask.array&lt;from-zarr, shape=(3, 1, 1080, 1280), dtype=uint
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [8]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [7]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
-<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-8">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-7">
 <div>
 <span class="notice" hidden="">Copied!</span>
 <svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
@@ -1661,7 +1617,7 @@ On-disk dask array dask.array&lt;from-zarr, shape=(3, 1, 1080, 1280), dtype=uint
 <span class="n">label_nuclei</span> <span class="o">=</span> <span class="n">ngff_image</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">get_label</span><span class="p">(</span><span class="s2">"nuclei"</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s2">"0"</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">label_nuclei</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-8">print("List of Labels: ", ngff_image.labels.list())
+<div class="clipboard-copy-txt" id="cell-7">print("List of Labels: ", ngff_image.labels.list())
 
 label_nuclei = ngff_image.labels.get_label("nuclei", path="0")
 print(label_nuclei)</div>
@@ -1712,10 +1668,10 @@ Label(group_path=/home/runner/work/ngio/ngio/data/20200812-CardiomyocyteDifferen
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [9]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [8]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
-<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-9">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-8">
 <div>
 <span class="notice" hidden="">Copied!</span>
 <svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
@@ -1730,7 +1686,7 @@ Label(group_path=/home/runner/work/ngio/ngio/data/20200812-CardiomyocyteDifferen
 <span class="nb">print</span><span class="p">(</span><span class="s2">" - Roi tables: "</span><span class="p">,</span> <span class="n">ngff_image</span><span class="o">.</span><span class="n">tables</span><span class="o">.</span><span class="n">list</span><span class="p">(</span><span class="n">table_type</span><span class="o">=</span><span class="s1">'roi_table'</span><span class="p">))</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">" - Masking Roi tables: "</span><span class="p">,</span> <span class="n">ngff_image</span><span class="o">.</span><span class="n">tables</span><span class="o">.</span><span class="n">list</span><span class="p">(</span><span class="n">table_type</span><span class="o">=</span><span class="s1">'masking_roi_table'</span><span class="p">))</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-9">print("List of Tables: ", ngff_image.tables.list())
+<div class="clipboard-copy-txt" id="cell-8">print("List of Tables: ", ngff_image.tables.list())
 print(" - Feature tables: ", ngff_image.tables.list(table_type='feature_table'))
 print(" - Roi tables: ", ngff_image.tables.list(table_type='roi_table'))
 print(" - Masking Roi tables: ", ngff_image.tables.list(table_type='masking_roi_table'))</div>
@@ -1761,10 +1717,10 @@ print(" - Masking Roi tables: ", ngff_image.tables.list(table_type='masking_roi_
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [10]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [9]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
-<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-10">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-9">
 <div>
 <span class="notice" hidden="">Copied!</span>
 <svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
@@ -1778,7 +1734,7 @@ print(" - Masking Roi tables: ", ngff_image.tables.list(table_type='masking_roi_
 <span class="n">feature_table</span> <span class="o">=</span> <span class="n">ngff_image</span><span class="o">.</span><span class="n">tables</span><span class="o">.</span><span class="n">get_table</span><span class="p">(</span><span class="s2">"regionprops_DAPI"</span><span class="p">)</span>
 <span class="n">feature_table</span><span class="o">.</span><span class="n">table</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-10"># Loading a table
+<div class="clipboard-copy-txt" id="cell-9"># Loading a table
 feature_table = ngff_image.tables.get_table("regionprops_DAPI")
 feature_table.table</div>
 </div>
@@ -1798,7 +1754,7 @@ feature_table.table</div>
 </div>
 </div>
 <div class="jp-OutputArea-child jp-OutputArea-executeResult">
-<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[10]:</div>
+<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[9]:</div>
 <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/html" tabindex="0">
 <div>
 <style scoped="">
@@ -1963,10 +1919,10 @@ feature_table.table</div>
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [11]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [10]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
-<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-11">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-10">
 <div>
 <span class="notice" hidden="">Copied!</span>
 <svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
@@ -1984,7 +1940,7 @@ feature_table.table</div>
 
 <span class="n">roi_table</span><span class="o">.</span><span class="n">table</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-11"># Loading a roi table
+<div class="clipboard-copy-txt" id="cell-10"># Loading a roi table
 roi_table = ngff_image.tables.get_table("FOV_ROI_table")
 
 print(f"{roi_table.field_indexes=}")
@@ -2008,7 +1964,7 @@ roi_table.get_roi('FOV_1')=WorldCooROI(x_length=416.0, y_length=351.0, z_length=
 </div>
 </div>
 <div class="jp-OutputArea-child jp-OutputArea-executeResult">
-<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[11]:</div>
+<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[10]:</div>
 <div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/html" tabindex="0">
 <div>
 <style scoped="">
@@ -2119,10 +2075,10 @@ roi_table.get_roi('FOV_1')=WorldCooROI(x_length=416.0, y_length=351.0, z_length=
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [12]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [11]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
-<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-12">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-11">
 <div>
 <span class="notice" hidden="">Copied!</span>
 <svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
@@ -2142,7 +2098,7 @@ roi_table.get_roi('FOV_1')=WorldCooROI(x_length=416.0, y_length=351.0, z_length=
 <span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s2">"off"</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-12">import matplotlib.pyplot as plt
+<div class="clipboard-copy-txt" id="cell-11">import matplotlib.pyplot as plt
 
 # Plotting a single ROI
 roi = roi_table.get_roi("FOV_1")
@@ -2188,10 +2144,10 @@ user can specify different metadata for the new image(.e.g. different channels n
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [13]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [12]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
-<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-13">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-12">
 <div>
 <span class="notice" hidden="">Copied!</span>
 <svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
@@ -2204,7 +2160,7 @@ user can specify different metadata for the new image(.e.g. different channels n
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="n">new_ngff_image</span> <span class="o">=</span> <span class="n">ngff_image</span><span class="o">.</span><span class="n">derive_new_image</span><span class="p">(</span><span class="s2">"../../data/new_ome.zarr"</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"new_image"</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">new_ngff_image</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-13">new_ngff_image = ngff_image.derive_new_image("../../data/new_ome.zarr", name="new_image")
+<div class="clipboard-copy-txt" id="cell-12">new_ngff_image = ngff_image.derive_new_image("../../data/new_ome.zarr", name="new_image")
 print(new_ngff_image)</div>
 </div>
 </div>
@@ -2245,10 +2201,10 @@ print(new_ngff_image)</div>
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [14]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [13]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
-<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-14">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-13">
 <div>
 <span class="notice" hidden="">Copied!</span>
 <svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
@@ -2267,7 +2223,7 @@ print(new_ngff_image)</div>
 
 <span class="nb">print</span><span class="p">(</span><span class="n">ngff_image</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-14">from ngio.core.utils import get_fsspec_http_store
+<div class="clipboard-copy-txt" id="cell-13">from ngio.core.utils import get_fsspec_http_store
 
 # Ngio can stream data from any fsspec-compatible store
 url = "https://raw.githubusercontent.com/fractal-analytics-platform/fractal-ome-zarr-examples/refs/heads/main/v04/20200812-CardiomyocyteDifferentiation14-Cycle1_B_03_mip.zarr/"
@@ -2327,7 +2283,7 @@ print(ngff_image)</div>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">November 14, 2024</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">November 15, 2024</span>
   </span>
 
     
@@ -2337,7 +2293,7 @@ print(ngff_image)</div>
     <span class="md-icon" title="Created">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">November 14, 2024</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">November 15, 2024</span>
   </span>
 
     
