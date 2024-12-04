@@ -1068,7 +1068,7 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h1 id="imageslabelstables">Images/Labels/Tables<a class="anchor-link" href="#imageslabelstables">¶</a></h1><p>In this notebook we will show how to use the <code>Image</code>, <code>Label</code> and <code>Table</code> objects.</p>
+<h1 id="imageslabelstables">Images/Labels/Tables<a class="anchor-link" href="#imageslabelstables">¶</a></h1><p>In this notebook we will show how to use the <code>Image</code>, <code>Label</code> and <code>Table</code> objects to do image processing.</p>
 </div>
 </div>
 </div>
@@ -1987,7 +1987,7 @@ New list of feature table: ['regionprops_DAPI', 'nuclei_measurements_wf3', 'nucl
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr" tabindex="0">
-<pre>/opt/hostedtoolcache/Python/3.12.7/x64/lib/python3.12/site-packages/anndata/_core/anndata.py:1756: UserWarning: Observation names are not unique. To make them unique, call `.obs_names_make_unique`.
+<pre>/opt/hostedtoolcache/Python/3.12.7/x64/lib/python3.12/site-packages/anndata/_core/anndata.py:1754: UserWarning: Observation names are not unique. To make them unique, call `.obs_names_make_unique`.
   utils.warn_names_duplicates("obs")
 </pre>
 </div>
@@ -2027,32 +2027,32 @@ New list of feature table: ['regionprops_DAPI', 'nuclei_measurements_wf3', 'nucl
 <tbody>
 <tr>
 <th>1</th>
-<td>0.368288</td>
-<td>0.688558</td>
+<td>0.594384</td>
+<td>0.075957</td>
 <td>FOV_1</td>
 </tr>
 <tr>
 <th>2</th>
-<td>0.497446</td>
-<td>0.191019</td>
+<td>0.498476</td>
+<td>0.372709</td>
 <td>FOV_1</td>
 </tr>
 <tr>
 <th>3</th>
-<td>0.202167</td>
-<td>0.654706</td>
+<td>0.469159</td>
+<td>0.203546</td>
 <td>FOV_1</td>
 </tr>
 <tr>
 <th>4</th>
-<td>0.290300</td>
-<td>0.332909</td>
+<td>0.087192</td>
+<td>0.458499</td>
 <td>FOV_1</td>
 </tr>
 <tr>
 <th>5</th>
-<td>0.081955</td>
-<td>0.006951</td>
+<td>0.768503</td>
+<td>0.729454</td>
 <td>FOV_1</td>
 </tr>
 <tr>
@@ -2063,65 +2063,38 @@ New list of feature table: ['regionprops_DAPI', 'nuclei_measurements_wf3', 'nucl
 </tr>
 <tr>
 <th>2987</th>
-<td>0.517186</td>
-<td>0.112553</td>
+<td>0.689012</td>
+<td>0.732178</td>
 <td>FOV_4</td>
 </tr>
 <tr>
 <th>2991</th>
-<td>0.152718</td>
-<td>0.119371</td>
+<td>0.360491</td>
+<td>0.116559</td>
 <td>FOV_4</td>
 </tr>
 <tr>
 <th>2993</th>
-<td>0.777126</td>
-<td>0.627275</td>
+<td>0.264360</td>
+<td>0.233126</td>
 <td>FOV_4</td>
 </tr>
 <tr>
 <th>2995</th>
-<td>0.400694</td>
-<td>0.777562</td>
+<td>0.591531</td>
+<td>0.128540</td>
 <td>FOV_4</td>
 </tr>
 <tr>
 <th>2996</th>
-<td>0.811340</td>
-<td>0.569860</td>
+<td>0.194133</td>
+<td>0.681111</td>
 <td>FOV_4</td>
 </tr>
 </tbody>
 </table>
 <p>3091 rows × 3 columns</p>
 </div>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
-<div class="CodeMirror cm-s-jupyter">
-<div class="zeroclipboard-container">
-<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-11">
-<div>
-<span class="notice" hidden="">Copied!</span>
-<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
-<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
-<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
-</svg>
-</div>
-</clipboard-copy>
-</div>
-<div class="highlight-ipynb hl-python"><pre><span></span>
-</pre></div>
-<div class="clipboard-copy-txt" id="cell-11"></div>
 </div>
 </div>
 </div>
