@@ -34,20 +34,22 @@ def custom_read_zarr(store: StoreOrGroup) -> AnnData:
     def callback(func: Callable, elem_name: str, elem: Any, iospec: Any) -> Any:
         if iospec.encoding_type == "anndata" or elem_name.endswith("/"):
             ad_kwargs = {}
+            # Some of these elem fail on https
+            # So we only include the ones that are strictly necessary
+            # for fractal tables
             base_elem = [
                 "X",
-                "layers",
+                # "layers",
                 "obs",
-                "obsm",
-                "obsp",
-                "uns",
+                # "obsm",
+                # "obsp",
+                # "uns",
                 "var",
-                "varm",
-                "varp",
+                # "varm",
+                # "varp",
             ]
-            # This should make sure that the function behaves the same as the original
-            # implementation.
-            base_elem += list(elem.keys())
+            # This fails on some https
+            # base_elem += list(elem.keys())
             for k in set(base_elem):
                 v = elem.get(k)
                 if v is not None and not k.startswith("raw."):

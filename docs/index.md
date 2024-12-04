@@ -27,7 +27,7 @@ To get started, check out the [Getting Started](getting-started.md) guide.
 | Basic Iterators | Ongoing | End-September | Read and Write Iterators for common access patterns |
 | Base Documentation | ✅ | End-September | API Documentation and Examples |
 | Beta Ready Testing | ✅ | End-September | Beta Testing; Library is ready for testing, but the API is not stable |
-| Streaming from Fractal | ONGOING | December | Ngio can stream ome-zarr from fractal |
+| Streaming from Fractal | Ongoing | December | Ngio can stream ome-zarr from fractal |
 | Mask Iterators | Ongoing | Early 2025 | Iterators over Masked Tables |
 | Advanced Iterators | Not started | mid-2025 | Iterators for advanced access patterns |
 | Parallel Iterators | Not started | mid-2025 | Concurrent Iterators for parallel read and write |
