@@ -34,7 +34,7 @@ classifiers = [
 # add your package dependencies here
 dependencies = [
     "numpy",
-    "anndata",
+    "anndata>=0.8.0,<0.11.0",
     "pydantic",
     "pandas>=1.2.0",
     "requests",
@@ -52,6 +52,7 @@ test = ["zarr<3", "pytest", "pytest-cov"]
 
 dev2 = [
     "zarr<3",
+    "plotly",
     "dask[distributed]",
     "dask-image",
     "napari",
