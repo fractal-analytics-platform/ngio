@@ -18,7 +18,7 @@ name = "ngio"
 dynamic = ["version"]
 description = "Next Generation file format IO"
 readme = "README.md"
-requires-python = ">=3.10,<3.13"
+requires-python = ">=3.10"
 license = { text = "BSD-3-Clause" }
 authors = [{ name = "Lorenzo Cerrone", email = "lorenzo.cerrone@uzh.ch" }]
 # https://pypi.org/classifiers/
@@ -34,7 +34,7 @@ classifiers = [
 # add your package dependencies here
 dependencies = [
     "numpy",
-    "anndata>=0.8.0,<0.11.0",
+    "anndata>=0.8.0",
     "pydantic",
     "pandas>=1.2.0",
     "requests",
@@ -209,6 +209,9 @@ python = ">=3.11,<3.12"
 [tool.pixi.feature.py312.dependencies]
 python = ">=3.12,<3.13"
 
+[tool.pixi.feature.py313.dependencies]
+python = ">=3.13"
+
 
 [tool.pixi.environments]
 default = { solve-group = "default" }
@@ -216,6 +219,7 @@ core = { features = ["core"], solve-group = "core" }
 dev10 = { features = ["py310", "dev2"], solve-group = "v2_10" }
 dev11 = { features = ["py311", "dev2"], solve-group = "v2_11" }
 dev12 = { features = ["py312", "dev2"], solve-group = "v2_12" }
+dev13 = { features = ["py313", "dev2"], solve-group = "v2_13" }
 dev3 = { features = ["dev3"], solve-group = "v3" }
 test = { features = ["test"], solve-group = "v2_10" }
 docs = { features = ["dev2", "docs"], solve-group = "v2_10" }
