@@ -300,6 +300,8 @@ class NgffImage:
         store: StoreLike,
         name: str,
         overwrite: bool = True,
+        copy_labels: bool = False,
+        copy_tables: bool = False,
         **kwargs: dict,
     ) -> "NgffImage":
         """Derive a new image from the current image.
@@ -308,6 +310,10 @@ class NgffImage:
             store (StoreLike): The store to create the new image in.
             name (str): The name of the new image.
             overwrite (bool): Whether to overwrite the image if it exists
+            copy_labels (bool): Whether to copy the labels from the current image
+                to the new image.
+            copy_tables (bool): Whether to copy the tables from the current image
+                to the new image.
             **kwargs: Additional keyword arguments.
                 Follow the same signature as `create_empty_ome_zarr_image`.
 
@@ -351,4 +357,31 @@ class NgffImage:
         create_empty_ome_zarr_image(
             **default_kwargs,
         )
-        return NgffImage(store=store)
+
+        new_image = NgffImage(store=store)
+
+        if copy_tables:
+            # TODO: to be refactored when the table location is changed in the spec
+            source_tables_group = self.tables._table_group
+
+            if source_tables_group is None:
+                raise ValueError("No tables group found in the source image.")
+
+            zarr.copy(source=source_tables_group, dest=new_image.group)
+
+            # Reopen the image to get the new tables
+            new_image = NgffImage(store=store)
+
+        if copy_labels:
+            # TODO: to be refactored when the label location is changed in the spec
+            source_labels_group = self.labels._label_group
+
+            if source_labels_group is None:
+                raise ValueError("No labels group found in the source image.")
+
+            zarr.copy(source=source_labels_group, dest=new_image.group)
+
+            # Reopen the image to get the new labels
+            new_image = NgffImage(store=store)
+
+        return new_image

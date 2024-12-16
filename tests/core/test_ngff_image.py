@@ -38,3 +38,22 @@ class TestNgffImage:
         )
 
         new_ngff_image.update_omero_window(start_percentile=1.1, end_percentile=98.9)
+
+    def test_ngff_image_derive(self, ome_zarr_image_v04_path: Path) -> None:
+        from ngio.core.ngff_image import NgffImage
+
+        ngff_image = NgffImage(ome_zarr_image_v04_path)
+
+        for name, table_type in [("test_roi", "roi_table")]:
+            table = ngff_image.tables.new(name=name, table_type=table_type)
+            table.consolidate()
+
+        ngff_image.labels.derive("test_label")
+
+        new_path = ome_zarr_image_v04_path.parent / "new_ngff_image.zarr"
+        new_ngff_image = ngff_image.derive_new_image(
+            new_path, "new_image", overwrite=True, copy_labels=True, copy_tables=True
+        )
+
+        assert ngff_image.tables.list() == new_ngff_image.tables.list()
+        assert ngff_image.labels.list() == new_ngff_image.labels.list()
