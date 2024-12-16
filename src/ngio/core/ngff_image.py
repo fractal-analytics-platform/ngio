@@ -361,7 +361,7 @@ class NgffImage:
         new_image = NgffImage(store=store)
 
         if copy_tables:
-            # TODO: to be refactored when the label location is changed in the spec
+            # TODO: to be refactored when the table location is changed in the spec
             source_tables_group = self.tables._table_group
 
             if source_tables_group is None:
