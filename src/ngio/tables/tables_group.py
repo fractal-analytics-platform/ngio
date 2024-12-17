@@ -156,14 +156,17 @@ class TableGroup:
 
         list_of_tables = self._get_list_of_tables()
         self._validate_list_of_tables(list_of_tables=list_of_tables)
+
+        all_table_types = ["roi_table", "feature_table", "masking_roi_table"]
+
         if table_type is None:
             return list_of_tables
 
         else:
-            if table_type not in ["roi_table", "feature_table", "masking_roi_table"]:
+            if table_type not in all_table_types:
                 raise ValueError(
                     f"Table type {table_type} not recognized. "
-                    " Allowed values are: 'roi', 'feature', 'masking_roi'."
+                    f" Allowed values are: {all_table_types}"
                 )
             list_of_typed_tables = []
             for table_name in list_of_tables:
