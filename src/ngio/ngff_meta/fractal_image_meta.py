@@ -823,9 +823,7 @@ class Dataset:
             raise ValueError("Spatial axes must have a unit.")
         if return_type not in SpaceUnits.allowed_names():
             raise ValueError(f"Invalid space unit {return_type}.")
-        if isinstance(return_type, str):
-            return_type = SpaceUnits(return_type)
-        return return_type
+        return SpaceUnits(return_type)
 
     @property
     def pixel_size(self) -> PixelSize:
@@ -850,8 +848,7 @@ class Dataset:
         if len(types) == 0:
             return None
         elif len(types) == 1:
-            assert isinstance(types[0], TimeUnits)
-            return types[0]
+            return TimeUnits(types[0])
         else:
             raise ValueError("Multiple time axes found. Only one time axis is allowed.")
 
