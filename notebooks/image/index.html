@@ -865,6 +865,7 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
                     processEnvironments: true
                 },
                 displayAlign: 'center',
+                messageStyle: 'none',
                 CommonHTML: {
                     linebreaks: {
                     automatic: true
@@ -1091,9 +1092,9 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
 
-<span class="kn">from</span> <span class="nn">ngio.core.ngff_image</span> <span class="kn">import</span> <span class="n">NgffImage</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ngio.core.ngff_image</span><span class="w"> </span><span class="kn">import</span> <span class="n">NgffImage</span>
 
 <span class="n">ngff_image</span> <span class="o">=</span> <span class="n">NgffImage</span><span class="p">(</span><span class="s2">"../../data/20200812-CardiomyocyteDifferentiation14-Cycle1_mip.zarr/B/03/0"</span><span class="p">)</span>
 </pre></div>
@@ -1644,7 +1645,7 @@ image_2.pixel_size=PixelSize(x=0.65, y=0.65, z=1.0, unit=&lt;SpaceUnits.micromet
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
 <span class="c1"># Get a small slice of the image</span>
 <span class="n">small_slice</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">get_array</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="nb">slice</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">2000</span><span class="p">),</span> <span class="n">y</span><span class="o">=</span><span class="nb">slice</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">2000</span><span class="p">))</span>
@@ -1901,8 +1902,8 @@ For a simple feature table the only reuiremnt is to have a integer column named 
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"List of feature table: </span><span class="si">{</span><span class="n">ngff_image</span><span class="o">.</span><span class="n">tables</span><span class="o">.</span><span class="n">list</span><span class="p">(</span><span class="n">table_type</span><span class="o">=</span><span class="s1">'feature_table'</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
@@ -2027,32 +2028,32 @@ New list of feature table: ['regionprops_DAPI', 'nuclei_measurements_wf3', 'nucl
 <tbody>
 <tr>
 <th>1</th>
-<td>0.331763</td>
-<td>0.828369</td>
+<td>0.884116</td>
+<td>0.481709</td>
 <td>FOV_1</td>
 </tr>
 <tr>
 <th>2</th>
-<td>0.383828</td>
-<td>0.803842</td>
+<td>0.292946</td>
+<td>0.278078</td>
 <td>FOV_1</td>
 </tr>
 <tr>
 <th>3</th>
-<td>0.051203</td>
-<td>0.545570</td>
+<td>0.775507</td>
+<td>0.282839</td>
 <td>FOV_1</td>
 </tr>
 <tr>
 <th>4</th>
-<td>0.049017</td>
-<td>0.633649</td>
+<td>0.521006</td>
+<td>0.697857</td>
 <td>FOV_1</td>
 </tr>
 <tr>
 <th>5</th>
-<td>0.960582</td>
-<td>0.241663</td>
+<td>0.556635</td>
+<td>0.967518</td>
 <td>FOV_1</td>
 </tr>
 <tr>
@@ -2063,32 +2064,32 @@ New list of feature table: ['regionprops_DAPI', 'nuclei_measurements_wf3', 'nucl
 </tr>
 <tr>
 <th>2987</th>
-<td>0.161796</td>
-<td>0.682795</td>
+<td>0.212627</td>
+<td>0.303812</td>
 <td>FOV_4</td>
 </tr>
 <tr>
 <th>2991</th>
-<td>0.967702</td>
-<td>0.347997</td>
+<td>0.368913</td>
+<td>0.109226</td>
 <td>FOV_4</td>
 </tr>
 <tr>
 <th>2993</th>
-<td>0.025032</td>
-<td>0.210568</td>
+<td>0.182162</td>
+<td>0.632298</td>
 <td>FOV_4</td>
 </tr>
 <tr>
 <th>2995</th>
-<td>0.814387</td>
-<td>0.076944</td>
+<td>0.685296</td>
+<td>0.390947</td>
 <td>FOV_4</td>
 </tr>
 <tr>
 <th>2996</th>
-<td>0.592485</td>
-<td>0.757603</td>
+<td>0.065194</td>
+<td>0.990929</td>
 <td>FOV_4</td>
 </tr>
 </tbody>
@@ -2130,7 +2131,7 @@ New list of feature table: ['regionprops_DAPI', 'nuclei_measurements_wf3', 'nucl
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">December 17, 2024</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">January 16, 2025</span>
   </span>
 
     
@@ -2140,7 +2141,7 @@ New list of feature table: ['regionprops_DAPI', 'nuclei_measurements_wf3', 'nucl
     <span class="md-icon" title="Created">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">December 17, 2024</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">January 16, 2025</span>
   </span>
 
     
