@@ -22,6 +22,7 @@ class TestUtils:
         )
 
         assert meta.channel_labels == ["DAPI", "nanog", "Lamin B1"]
+        assert meta.channel_wavelength_ids == ["A01_C01", "A02_C02", "A03_C03"]
         np.testing.assert_array_equal(meta.pixel_size(idx=0).zyx, [1.0, 1.0, 1.0])
         np.testing.assert_array_equal(meta.scale(idx=0), [1.0, 1.0, 1.0, 1.0, 1.0])
         np.testing.assert_array_equal(meta.pixel_size(path="2").zyx, [1.0, 4.0, 4.0])

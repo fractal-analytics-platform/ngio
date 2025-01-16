@@ -161,6 +161,7 @@ def fractal_omero_to_vanilla_v04(omero: Omero) -> Omero04:
             color=channel.channel_visualisation.color,
             active=channel.channel_visualisation.active,
             window=window04,
+            wavelength_id=channel.wavelength_id,
             **channel.channel_visualisation.extra_fields,
         )
         list_channels04.append(channel04)
