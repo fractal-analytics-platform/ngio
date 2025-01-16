@@ -110,7 +110,13 @@ def vanilla_omero_v04_to_fractal(omero04: Omero04) -> Omero:
     for channel04 in omero04.channels:
         # Convert the window to a dictionary
         label = channel04.label
-        wavelength_id = channel04.extra_fields.get("wavelength_id", label)
+
+        if "wavelength_id" in channel04.extra_fields:
+            # If the wavelength_id is present, pop it from the extra fields
+            # so that it is not added to the channel_visualisation
+            wavelength_id = channel04.extra_fields.pop("wavelength_id")
+        else:
+            wavelength_id = label
 
         if channel04.window is None:
             window04 = Window04(
@@ -161,6 +167,7 @@ def fractal_omero_to_vanilla_v04(omero: Omero) -> Omero04:
             color=channel.channel_visualisation.color,
             active=channel.channel_visualisation.active,
             window=window04,
+            wavelength_id=channel.wavelength_id,
             **channel.channel_visualisation.extra_fields,
         )
         list_channels04.append(channel04)
