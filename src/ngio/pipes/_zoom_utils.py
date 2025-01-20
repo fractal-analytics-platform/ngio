@@ -149,6 +149,7 @@ def on_disk_zoom(
     target_array = _dask_zoom(source_array, target_shape=target.shape, order=order)
 
     target_array = target_array.rechunk(target.chunks)
+    target_array.compute_chunk_sizes()
     target_array.to_zarr(target)
 
 
