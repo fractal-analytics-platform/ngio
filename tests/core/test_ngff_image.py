@@ -1,5 +1,7 @@
 from pathlib import Path
 
+import pytest
+
 
 class TestNgffImage:
     def test_ngff_image(self, ome_zarr_image_v04_path: Path) -> None:
@@ -57,3 +59,29 @@ class TestNgffImage:
 
         assert ngff_image.tables.list() == new_ngff_image.tables.list()
         assert ngff_image.labels.list() == new_ngff_image.labels.list()
+
+    @pytest.mark.parametrize(
+        "shape, axis, chunks",
+        [
+            ((1, 4, 1, 1945, 1945), ("t", "c", "z", "y", "x"), (1, 1, 1, 1000, 1000)),
+            ((1, 4, 1, 1945, 1945), ("t", "c", "z", "y", "x"), None),
+            ((1, 4, 1, 1945, 2000), ("t", "c", "z", "y", "x"), None),
+            ((1, 1, 1000, 1000), ("c", "z", "y", "x"), (1, 1, 1000, 1000)),
+            ((1, 1, 1000, 1000), ("c", "z", "y", "x"), None),
+            ((739, 1033), ("y", "x"), (53, 173)),
+        ],
+    )
+    def test_ngff_image_consolidate(self, tmp_path, shape, axis, chunks) -> None:
+        from ngio import NgffImage
+        from ngio.core.utils import create_empty_ome_zarr_image
+
+        ome_zarr = tmp_path / "test_consolidate.zarr"
+        create_empty_ome_zarr_image(
+            ome_zarr,
+            on_disk_shape=shape,
+            on_disk_axis=axis,
+            chunks=chunks,
+        )
+
+        image = NgffImage(ome_zarr).get_image()
+        image.consolidate()

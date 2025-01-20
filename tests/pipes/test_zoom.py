@@ -75,3 +75,28 @@ class TestZoom:
         source, target = zarr_zoom_2d_array_not_int
         with pytest.raises(ValueError):
             self._test_coarsen(source, target)
+
+    @pytest.mark.parametrize(
+        "shape, zoom_factor",
+        [
+            ((10, 1, 1, 30, 30), (1, 1, 1, 0.5, 0.5)),  # with time
+            ((1, 1, 1, 300, 300), (1, 1, 1, 0.5, 0.5)),  # with singletons
+            ((1, 4, 10, 30, 30), (1, 1, 1, 0.5, 0.5)),  # with channels and z
+            ((1, 4, 10, 30, 30), (1, 1, 0.3234, 0.5, 0.5)),  # with channels and z
+            ((5, 4, 10, 30, 30), (0.5, 1, 0.3234, 0.5, 0.5)),  # with channels and z
+            ((1, 4, 10, 30, 30), (1, 1, 1, 0.5323, 0.5231)),  # with channels and z
+            ((4, 300, 300), (1, 0.5, 0.5)),  # without time and channels
+            ((3000, 3000), (0.5, 0.5)),  # without time and channels
+        ],
+    )
+    def test_fast_zoom(self, shape, zoom_factor) -> None:
+        from scipy.ndimage import zoom
+
+        from ngio.pipes._zoom_utils import fast_zoom
+
+        x = np.random.rand(*shape)
+        out1 = fast_zoom(
+            x, zoom=zoom_factor, order=1, mode="grid-constant", grid_mode=True
+        )
+        out2 = zoom(x, zoom=zoom_factor, order=1, mode="grid-constant", grid_mode=True)
+        np.testing.assert_allclose(out1, out2)

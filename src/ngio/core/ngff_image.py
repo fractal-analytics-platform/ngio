@@ -152,7 +152,7 @@ class NgffImage:
 
         if meta.omero is None:
             raise NotImplementedError(
-                "OMERO metadata not found. " " Please add OMERO metadata to the image."
+                "OMERO metadata not found.  Please add OMERO metadata to the image."
             )
 
         channel_list = meta.omero.channels
@@ -269,7 +269,7 @@ class NgffImage:
 
         if meta.omero is None:
             raise NotImplementedError(
-                "OMERO metadata not found. " " Please add OMERO metadata to the image."
+                "OMERO metadata not found.  Please add OMERO metadata to the image."
             )
 
         channel_list = meta.omero.channels

@@ -67,17 +67,17 @@ def _build_empty_pyramid(
 
     if chunks is not None and len(on_disk_shape) != len(chunks):
         raise ValueError(
-            "The shape and chunks must have the same number " "of dimensions."
+            "The shape and chunks must have the same number of dimensions."
         )
 
     if len(on_disk_shape) != len(scaling_factor):
         raise ValueError(
-            "The shape and scaling factor must have the same number " "of dimensions."
+            "The shape and scaling factor must have the same number of dimensions."
         )
 
     if len(on_disk_shape) != len(on_disk_axis):
         raise ValueError(
-            "The shape and on-disk axis must have the same number " "of dimensions."
+            "The shape and on-disk axis must have the same number of dimensions."
         )
 
     for dataset in image_meta.datasets:
