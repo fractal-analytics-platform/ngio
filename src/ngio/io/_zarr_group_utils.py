@@ -50,8 +50,7 @@ def open_group_wrapper(
     if isinstance(store, zarr.Group):
         _group = _pass_through_group(store, mode=mode, zarr_format=zarr_format)
         ngio_logger.debug(
-            f"Passing through group: {_group}, "
-            f"located in store: {_group.store.path}"
+            f"Passing through group: {_group}, located in store: {_group.store.path}"
         )
         return _group
 

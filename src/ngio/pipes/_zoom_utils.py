@@ -4,7 +4,48 @@ from typing import Literal
 import dask.array as da
 import numpy as np
 import zarr
-from scipy.ndimage import zoom
+from scipy.ndimage import zoom as scipy_zoom
+
+
+def _stacked_zoom(x, zoom_y, zoom_x, order=1, mode="grid-constant", grid_mode=True):
+    *rest, yshape, xshape = x.shape
+    x = x.reshape(-1, yshape, xshape)
+    scale_xy = (zoom_y, zoom_x)
+    x_out = np.stack(
+        [
+            scipy_zoom(x[i], scale_xy, order=order, mode=mode, grid_mode=True)
+            for i in range(x.shape[0])
+        ]
+    )
+    return x_out.reshape(*rest, *x_out.shape[1:])
+
+
+def fast_zoom(x, zoom, order=1, mode="grid-constant", grid_mode=True, auto_stack=True):
+    """Fast zoom function.
+
+    Scipy zoom function that can handle singleton dimensions
+    but the performance degrades with the number of dimensions.
+
+    This function has two small optimizations:
+     - it removes singleton dimensions before calling zoom
+     - if it detects that the zoom is only on the last two dimensions
+         it stacks the first dimensions to call zoom only on the last two.
+    """
+    mask = np.isclose(x.shape, 1)
+    zoom = np.array(zoom)
+    singletons = tuple(np.where(mask)[0])
+    xs = np.squeeze(x, axis=singletons)
+    new_zoom = zoom[~mask]
+
+    *zoom_rest, zoom_y, zoom_x = new_zoom
+    if auto_stack and np.allclose(zoom_rest, 1):
+        xs = _stacked_zoom(
+            xs, zoom_y, zoom_x, order=order, mode=mode, grid_mode=grid_mode
+        )
+    else:
+        xs = scipy_zoom(xs, new_zoom, order=order, mode=mode, grid_mode=grid_mode)
+    x = np.expand_dims(xs, axis=singletons)
+    return x
 
 
 def _zoom_inputs_check(
@@ -73,7 +114,7 @@ def _dask_zoom(
     block_output_shape = tuple(np.ceil(better_source_chunks * _scale).astype(int))
 
     zoom_wrapper = partial(
-        zoom, zoom=_scale, order=order, mode="grid-constant", grid_mode=True
+        fast_zoom, zoom=_scale, order=order, mode="grid-constant", grid_mode=True
     )
 
     out_array = da.map_blocks(
@@ -109,7 +150,7 @@ def _numpy_zoom(
         source_array=source_array, scale=scale, target_shape=target_shape
     )
 
-    out_array = zoom(
+    out_array = fast_zoom(
         source_array, zoom=_scale, order=order, mode="grid-constant", grid_mode=True
     )
     assert isinstance(out_array, np.ndarray)
@@ -181,7 +222,7 @@ def on_disk_coarsen(
             coarsening_setup[i] = int(factor)
         else:
             raise ValueError(
-                "Coarsening factor must be an integer, got " f"{factor} on axis {i}"
+                f"Coarsening factor must be an integer, got {factor} on axis {i}"
             )
 
     out_target = da.coarsen(
