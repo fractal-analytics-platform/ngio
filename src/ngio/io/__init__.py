@@ -11,9 +11,9 @@ from ngio.io._zarr_group_utils import (
 # from zarr.store.common import StoreLike
 
 __all__ = [
+    "AccessModeLiteral",
     "Group",
     "StoreLike",
-    "AccessModeLiteral",
     "StoreOrGroup",
     "open_group_wrapper",
 ]
