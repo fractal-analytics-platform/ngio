@@ -30,7 +30,7 @@ jobs:
       - name: Install Dependencies
         run: |
           python -m pip install -U pip
-          python -m pip install .[dev2]
+          python -m pip install .[dev]
           python -m pip install .[docs]
 
       - name: 📚 Build Docs
