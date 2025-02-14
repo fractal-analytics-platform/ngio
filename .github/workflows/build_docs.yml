@@ -22,16 +22,16 @@ jobs:
           python-version: "3.13"
           cache-dependency-path: "pyproject.toml"
           cache: "pip"
-      
-      - name: Download Dataset from Zenodo
-        run: |
-            bash setup_data.sh
 
       - name: Install Dependencies
         run: |
           python -m pip install -U pip
           python -m pip install .[dev]
           python -m pip install .[docs]
+
+      - name: Download Dataset from Zenodo
+        run: |
+          python src/ngio/utils/_datasets.py
 
       - name: 📚 Build Docs
         run: mkdocs build --clean

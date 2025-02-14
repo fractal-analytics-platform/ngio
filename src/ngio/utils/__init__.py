@@ -3,6 +3,7 @@
 import os
 
 from ngio.utils._common_types import ArrayLike
+from ngio.utils._datasets import download_ome_zarr_dataset, list_ome_zarr_datasets
 from ngio.utils._errors import (
     NgioFileExistsError,
     NgioFileNotFoundError,
@@ -23,6 +24,9 @@ __all__ = [
     "NgioFileNotFoundError",
     "NgioNGFFValidationError",
     "NgioTableValidationError",
+    # Datasets
+    "download_ome_zarr_dataset",
+    "list_ome_zarr_datasets",
     # Logger
     "ngio_logger",
     "set_logger_level",
