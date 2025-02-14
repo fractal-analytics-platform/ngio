@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - v0.2.0-pixi_chores
     tags:
       - "v*"
 
