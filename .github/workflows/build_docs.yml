@@ -25,7 +25,7 @@ jobs:
       
       - name: Download Dataset from Zenodo
         run: |
-            bash scripts/download_data.sh
+            bash setup_data.sh
 
       - name: Install Dependencies
         run: |
