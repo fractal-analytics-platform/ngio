@@ -18,7 +18,7 @@ name = "ngio"
 dynamic = ["version"]
 description = "Next Generation file format IO"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11,<3.14"
 license = { text = "BSD-3-Clause" }
 authors = [{ name = "Lorenzo Cerrone", email = "lorenzo.cerrone@uzh.ch" }]
 # https://pypi.org/classifiers/
@@ -26,7 +26,6 @@ classifiers = [
     "Development Status :: 3 - Alpha",
     "License :: OSI Approved :: BSD License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
@@ -35,56 +34,35 @@ classifiers = [
 # add your package dependencies here
 dependencies = [
     "numpy",
+    "zarr<3",
     "anndata>=0.8.0",
     "pydantic",
     "pandas>=1.2.0",
     "requests",
     "aiohttp",
     "dask[array]",
+    "dask[distributed]",
+    "xarray",
+    "ome-zarr-models",
 ]
 
 # https://peps.python.org/pep-0621/#dependencies-optional-dependencies
 # "extras" (e.g. for `pip install .[test]`)
 [project.optional-dependencies]
-# add dependencies used for testing here
-core = ["zarr<3", "dask[distributed]", "dask-image"]
+test = ["pytest", "pytest-cov"]
 
-test = ["zarr<3", "pytest", "pytest-cov"]
-
-dev2 = [
-    "zarr<3",
-    "plotly",
-    "dask[distributed]",
-    "dask-image",
+dev = [
+    "pooch",
     "napari",
     "pyqt5",
-    "scikit-image",
     "matplotlib",
-    "ipython",
-    "pytest",
-    "pytest-cov",
     "notebook",
     "mypy",
-    "pdbpp",             # https://github.com/pdbpp/pdbpp
+    "pdbpp",      # https://github.com/pdbpp/pdbpp
     "pre-commit",
-    "rich",              # https://github.com/Textualize/rich
+    "rich",       # https://github.com/Textualize/rich
     "ruff",
 ] # add anything else you like to have in your dev environment here
-
-dev3 = [
-    "zarr==v3.0.0-alpha.4",
-    "dask[distributed]",
-    "dask-image",
-    "ipython",
-    "pytest",
-    "pytest-cov",
-    "notebook",
-    "mypy",
-    "pdbpp",                # https://github.com/pdbpp/pdbpp
-    "pre-commit",
-    "rich",                 # https://github.com/Textualize/rich
-    "ruff",
-]
 
 docs = [
     "mkdocs",
@@ -114,7 +92,7 @@ repository = "https://github.com/lorenzocerrone/ngio"
 # https://docs.astral.sh/ruff
 [tool.ruff]
 line-length = 88
-target-version = "py310"
+target-version = "py311"
 src = ["src"]
 
 # https://docs.astral.sh/ruff/rules
@@ -202,33 +180,64 @@ platforms = ["osx-arm64", "linux-64", "win-64"]
 [tool.pixi.pypi-dependencies]
 ngio = { path = ".", editable = true }
 
-[tool.pixi.feature.py310.dependencies]
-python = ">=3.10,<3.11"
-
-[tool.pixi.feature.py311.dependencies]
+[tool.pixi.feature.task-feat.dependencies]
 python = ">=3.11,<3.12"
 
-[tool.pixi.feature.py312.dependencies]
+[tool.pixi.feature.dev.dependencies]
+python = ">=3.11,<3.12"
+
+[tool.pixi.feature.py11.dependencies]
+python = ">=3.11,<3.12"
+
+[tool.pixi.feature.py12.dependencies]
 python = ">=3.12,<3.13"
 
-[tool.pixi.feature.py313.dependencies]
-python = ">=3.13"
+[tool.pixi.feature.py13.dependencies]
+python = ">=3.13,<3.14"
 
 
 [tool.pixi.environments]
 default = { solve-group = "default" }
-core = { features = ["core"], solve-group = "core" }
-dev10 = { features = ["py310", "dev2"], solve-group = "v2_10" }
-dev11 = { features = ["py311", "dev2"], solve-group = "v2_11" }
-dev12 = { features = ["py312", "dev2"], solve-group = "v2_12" }
-dev13 = { features = ["py313", "dev2"], solve-group = "v2_13" }
-dev3 = { features = ["dev3"], solve-group = "v3" }
-test = { features = ["test"], solve-group = "v2_10" }
-docs = { features = ["dev2", "docs"], solve-group = "v2_10" }
+
+# utils envs
+task = { features = ["task-feat", "dev"], solve-group = "py11" }
+docs = { features = ["docs"], solve-group = "py11" }
+
+# test envs
+test11 = { features = ["py11", "dev", "test"], solve-group = "py11" }
+test12 = { features = ["py12", "test"], solve-group = "py12" }
+test13 = { features = ["py13", "test"], solve-group = "py13" }
+
+# dev env
+dev = { features = ["dev", "test"], solve-group = "py11" }
+
+
+[tool.pixi.feature.py11.tasks]
+pytest_test11 = "pytest"
+test_nb = { cmd = "jupyter-execute ./docs/notebooks/*.ipynb" }
+
+[tool.pixi.feature.py12.tasks]
+pytest_test12 = "pytest"
+
+[tool.pixi.feature.py13.tasks]
+pytest_test13 = "pytest"
+
+[tool.pixi.feature.task-feat.tasks]
+pre_commit_install = "pre-commit install"
+
+ruff-fix-imports = "ruff check --select I --fix"
+ruff-format = { cmd = "ruff format", depends-on = ["ruff-fix-imports"] }
+
+pre-commit = { cmd = "pre-commit run --all-files", depends-on = [
+    "pre_commit_install",
+    "ruff-format",
+] }
 
 [tool.pixi.tasks]
 serve_docs = "mkdocs serve"
-tests = "pytest"
-test_nb = { cmd = "jupyter-execute ./docs/notebooks/*.ipynb", depends-on = [
-    "tests",
+test = { depends-on = [
+    "pytest_test11",
+    "pytest_test12",
+    "pytest_test13",
+    # "test_nb",
 ] }
