@@ -44,6 +44,7 @@ dependencies = [
     "dask[distributed]",
     "xarray",
     "ome-zarr-models",
+    "pooch",
 ]
 
 # https://peps.python.org/pep-0621/#dependencies-optional-dependencies
@@ -52,7 +53,6 @@ dependencies = [
 test = ["pytest", "pytest-cov"]
 
 dev = [
-    "pooch",
     "napari",
     "pyqt5",
     "matplotlib",
