@@ -212,9 +212,9 @@ def on_disk_coarsen(
         source_array=source_array, scale=None, target_shape=target.shape
     )
 
-    assert (
-        _target_shape == target.shape
-    ), "Target shape must match the target array shape"
+    assert _target_shape == target.shape, (
+        "Target shape must match the target array shape"
+    )
     coarsening_setup = {}
     for i, s in enumerate(_scale):
         factor = 1 / s

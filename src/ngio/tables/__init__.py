@@ -8,4 +8,4 @@ from ngio.tables.tables_group import (
     TableGroup,
 )
 
-__all__ = ["Table", "ROITable", "FeatureTable", "MaskingROITable", "TableGroup"]
+__all__ = ["FeatureTable", "MaskingROITable", "ROITable", "Table", "TableGroup"]

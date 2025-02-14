@@ -16,12 +16,12 @@ from ngio.ngff_meta.utils import (
 
 __all__ = [
     "Dataset",
+    "ImageLabelMeta",
     "ImageMeta",
     "LabelMeta",
-    "ImageLabelMeta",
     "PixelSize",
     "SpaceUnits",
-    "get_ngff_image_meta_handler",
     "create_image_metadata",
     "create_label_metadata",
+    "get_ngff_image_meta_handler",
 ]

@@ -9,11 +9,10 @@ can be converted to the OME standard.
 from collections.abc import Collection
 from difflib import SequenceMatcher
 from enum import Enum
-from typing import Any, TypeVar
+from typing import Any, Self, TypeVar
 
 import numpy as np
 from pydantic import BaseModel, Field, field_validator
-from typing_extensions import Self
 
 from ngio.utils._pydantic_utils import BaseWithExtraFields
 
@@ -1065,9 +1064,9 @@ class BaseMeta:
             )
 
         for sf in scaling_factors:
-            assert (
-                sf == scaling_factors[0]
-            ), "Inconsistent scaling factors not well supported."
+            assert sf == scaling_factors[0], (
+                "Inconsistent scaling factors not well supported."
+            )
         return scaling_factors[0]
 
     @property

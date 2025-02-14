@@ -18,13 +18,13 @@ __all__ = [
     "ArrayLike",
     # Pydantic
     "BaseWithExtraFields",
-    "unique_items_validator",
-    # Logger
-    "ngio_logger",
-    "set_logger_level",
     # Errors
     "NgioFileExistsError",
     "NgioFileNotFoundError",
     "NgioNGFFValidationError",
     "NgioTableValidationError",
+    # Logger
+    "ngio_logger",
+    "set_logger_level",
+    "unique_items_validator",
 ]
