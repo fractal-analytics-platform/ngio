@@ -49,8 +49,3 @@ def download_ome_zarr_dataset(
     if isinstance(ome_zarr_url["processor"], pooch.Unzip):
         path = path.with_suffix("")
     return path
-
-
-if __name__ == "__main__":
-    for dataset_name in list_ome_zarr_datasets():
-        download_ome_zarr_dataset(dataset_name)
