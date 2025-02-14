@@ -1144,8 +1144,8 @@ A <code>NgffImage</code> can be created from a storelike object (e.g. a path to 
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -1164,16 +1164,38 @@ A <code>NgffImage</code> can be created from a storelike object (e.g. a path to 
 </clipboard-copy>
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">ngio.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">NgffImage</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ngio.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">download_ome_zarr_dataset</span>
 
-<span class="c1"># Ngio can stream data from any fsspec-compatible store</span>
-<span class="n">path</span> <span class="o">=</span> <span class="s2">"../../data/20200812-CardiomyocyteDifferentiation14-Cycle1_mip.zarr/B/03/0"</span>
-<span class="n">ngff_image</span> <span class="o">=</span> <span class="n">NgffImage</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">"r"</span><span class="p">)</span>
+<span class="n">hcs_path</span> <span class="o">=</span> <span class="n">download_ome_zarr_dataset</span><span class="p">(</span><span class="s2">"CardiomyocyteSmallMip"</span><span class="p">)</span>
+<span class="n">image_path</span> <span class="o">=</span> <span class="n">hcs_path</span> <span class="o">/</span> <span class="s2">"B"</span> <span class="o">/</span> <span class="s2">"03"</span> <span class="o">/</span> <span class="s2">"0"</span>
+<span class="n">ngff_image</span> <span class="o">=</span> <span class="n">NgffImage</span><span class="p">(</span><span class="n">image_path</span><span class="p">)</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-1">from ngio.core import NgffImage
+from ngio.utils import download_ome_zarr_dataset
 
-# Ngio can stream data from any fsspec-compatible store
-path = "../../data/20200812-CardiomyocyteDifferentiation14-Cycle1_mip.zarr/B/03/0"
-ngff_image = NgffImage(path, "r")</div>
+hcs_path = download_ome_zarr_dataset("CardiomyocyteSmallMip")
+image_path = hcs_path / "B" / "03" / "0"
+ngff_image = NgffImage(image_path)</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr" tabindex="0">
+<pre>Downloading data from 'https://zenodo.org/records/13305316/files/20200812-CardiomyocyteDifferentiation14-Cycle1_mip.zarr.zip' to file '/home/runner/work/ngio/ngio/docs/notebooks/data/20200812-CardiomyocyteDifferentiation14-Cycle1_mip.zarr.zip'.
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr" tabindex="0">
+<pre>Unzipping contents of '/home/runner/work/ngio/ngio/docs/notebooks/data/20200812-CardiomyocyteDifferentiation14-Cycle1_mip.zarr.zip' to '/home/runner/work/ngio/ngio/docs/notebooks/data/'
+</pre>
 </div>
 </div>
 </div>
@@ -1230,7 +1252,7 @@ ngff_image = NgffImage(path, "r")</div>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>NGFFImage(group_path=/home/runner/work/ngio/ngio/data/20200812-CardiomyocyteDifferentiation14-Cycle1_mip.zarr/B/03/0/, 
+<pre>NGFFImage(group_path=/home/runner/work/ngio/ngio/docs/notebooks/data/20200812-CardiomyocyteDifferentiation14-Cycle1_mip.zarr/B/03/0/, 
           paths=['0', '1', '2', '3', '4'], 
           labels=['nuclei', 'wf_2_labels', 'wf_3_labels', 'wf_4_labels'], 
           tables=['FOV_ROI_table', 'nuclei_ROI_table', 'well_ROI_table', 'regionprops_DAPI', 'nuclei_measurements_wf3', 'nuclei_measurements_wf4', 'nuclei_lamin_measurements_wf4'], 
@@ -1322,17 +1344,17 @@ print(image)</div>
 <div class="jp-OutputArea-child">
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Image(group_path=/home/runner/work/ngio/ngio/data/20200812-CardiomyocyteDifferentiation14-Cycle1_mip.zarr/B/03/0/, 
+<pre>Image(group_path=/home/runner/work/ngio/ngio/docs/notebooks/data/20200812-CardiomyocyteDifferentiation14-Cycle1_mip.zarr/B/03/0/, 
       path=0,
       PixelSize(x=0.1625, y=0.1625, z=1.0, unit=micrometer),
       Dimensions(c=3, z=1, y=4320, x=5120),
 )
-Image(group_path=/home/runner/work/ngio/ngio/data/20200812-CardiomyocyteDifferentiation14-Cycle1_mip.zarr/B/03/0/, 
+Image(group_path=/home/runner/work/ngio/ngio/docs/notebooks/data/20200812-CardiomyocyteDifferentiation14-Cycle1_mip.zarr/B/03/0/, 
       path=1,
       PixelSize(x=0.325, y=0.325, z=1.0, unit=micrometer),
       Dimensions(c=3, z=1, y=2160, x=2560),
 )
-Image(group_path=/home/runner/work/ngio/ngio/data/20200812-CardiomyocyteDifferentiation14-Cycle1_mip.zarr/B/03/0/, 
+Image(group_path=/home/runner/work/ngio/ngio/docs/notebooks/data/20200812-CardiomyocyteDifferentiation14-Cycle1_mip.zarr/B/03/0/, 
       path=2,
       PixelSize(x=0.65, y=0.65, z=1.0, unit=micrometer),
       Dimensions(c=3, z=1, y=1080, x=1280),
@@ -1644,7 +1666,7 @@ print(label_nuclei)</div>
 <div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
 <div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
 <pre>List of Labels:  ['nuclei', 'wf_2_labels', 'wf_3_labels', 'wf_4_labels']
-Label(group_path=/home/runner/work/ngio/ngio/data/20200812-CardiomyocyteDifferentiation14-Cycle1_mip.zarr/B/03/0/labels/nuclei, 
+Label(group_path=/home/runner/work/ngio/ngio/docs/notebooks/data/20200812-CardiomyocyteDifferentiation14-Cycle1_mip.zarr/B/03/0/labels/nuclei, 
       path=0,
       name=nuclei,
       PixelSize(x=0.1625, y=0.1625, z=1.0, unit=micrometer),

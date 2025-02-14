@@ -1105,18 +1105,20 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">ngio.core.ngff_image</span><span class="w"> </span><span class="kn">import</span> <span class="n">NgffImage</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ngio.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">download_ome_zarr_dataset</span>
 
-<span class="n">ngff_image</span> <span class="o">=</span> <span class="n">NgffImage</span><span class="p">(</span>
-    <span class="s2">"../../data/20200812-CardiomyocyteDifferentiation14-Cycle1_mip.zarr/B/03/0"</span>
-<span class="p">)</span>
+<span class="n">hcs_path</span> <span class="o">=</span> <span class="n">download_ome_zarr_dataset</span><span class="p">(</span><span class="s2">"CardiomyocyteSmallMip"</span><span class="p">)</span>
+<span class="n">image_path</span> <span class="o">=</span> <span class="n">hcs_path</span> <span class="o">/</span> <span class="s2">"B"</span> <span class="o">/</span> <span class="s2">"03"</span> <span class="o">/</span> <span class="s2">"0"</span>
+<span class="n">ngff_image</span> <span class="o">=</span> <span class="n">NgffImage</span><span class="p">(</span><span class="n">image_path</span><span class="p">)</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-1">import matplotlib.pyplot as plt
 
 from ngio.core.ngff_image import NgffImage
+from ngio.utils import download_ome_zarr_dataset
 
-ngff_image = NgffImage(
-    "../../data/20200812-CardiomyocyteDifferentiation14-Cycle1_mip.zarr/B/03/0"
-)</div>
+hcs_path = download_ome_zarr_dataset("CardiomyocyteSmallMip")
+image_path = hcs_path / "B" / "03" / "0"
+ngff_image = NgffImage(image_path)</div>
 </div>
 </div>
 </div>
@@ -2062,32 +2064,32 @@ New list of feature table: ['regionprops_DAPI', 'nuclei_measurements_wf3', 'nucl
 <tbody>
 <tr>
 <th>1</th>
-<td>0.382469</td>
-<td>0.584871</td>
+<td>0.318801</td>
+<td>0.089441</td>
 <td>FOV_1</td>
 </tr>
 <tr>
 <th>2</th>
-<td>0.050180</td>
-<td>0.745803</td>
+<td>0.223588</td>
+<td>0.550305</td>
 <td>FOV_1</td>
 </tr>
 <tr>
 <th>3</th>
-<td>0.120168</td>
-<td>0.641283</td>
+<td>0.250128</td>
+<td>0.845132</td>
 <td>FOV_1</td>
 </tr>
 <tr>
 <th>4</th>
-<td>0.160666</td>
-<td>0.938801</td>
+<td>0.009090</td>
+<td>0.492414</td>
 <td>FOV_1</td>
 </tr>
 <tr>
 <th>5</th>
-<td>0.666987</td>
-<td>0.065184</td>
+<td>0.837427</td>
+<td>0.649845</td>
 <td>FOV_1</td>
 </tr>
 <tr>
@@ -2098,32 +2100,32 @@ New list of feature table: ['regionprops_DAPI', 'nuclei_measurements_wf3', 'nucl
 </tr>
 <tr>
 <th>2987</th>
-<td>0.199433</td>
-<td>0.129451</td>
+<td>0.280388</td>
+<td>0.530664</td>
 <td>FOV_4</td>
 </tr>
 <tr>
 <th>2991</th>
-<td>0.770738</td>
-<td>0.689160</td>
+<td>0.692866</td>
+<td>0.640845</td>
 <td>FOV_4</td>
 </tr>
 <tr>
 <th>2993</th>
-<td>0.141135</td>
-<td>0.696289</td>
+<td>0.492267</td>
+<td>0.432885</td>
 <td>FOV_4</td>
 </tr>
 <tr>
 <th>2995</th>
-<td>0.973366</td>
-<td>0.180405</td>
+<td>0.437976</td>
+<td>0.662157</td>
 <td>FOV_4</td>
 </tr>
 <tr>
 <th>2996</th>
-<td>0.328315</td>
-<td>0.839918</td>
+<td>0.110503</td>
+<td>0.509709</td>
 <td>FOV_4</td>
 </tr>
 </tbody>
