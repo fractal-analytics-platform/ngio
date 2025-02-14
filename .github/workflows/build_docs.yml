@@ -29,10 +29,6 @@ jobs:
           python -m pip install .[dev]
           python -m pip install .[docs]
 
-      - name: Download Dataset from Zenodo
-        run: |
-          python src/ngio/utils/_datasets.py
-
       - name: 📚 Build Docs
         run: mkdocs build --clean
 
