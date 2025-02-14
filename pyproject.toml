@@ -239,5 +239,5 @@ test = { depends-on = [
     "pytest_test11",
     "pytest_test12",
     "pytest_test13",
-    # "test_nb",
+    "test_nb",
 ] }
