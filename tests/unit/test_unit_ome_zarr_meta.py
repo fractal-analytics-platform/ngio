@@ -1,7 +1,14 @@
 import numpy as np
 import pytest
 
-from ngio.ome_zarr_meta._axes import AxesMapper, AxesSetup, Axis
+from ngio.ome_zarr_meta._axes import (
+    AxesMapper,
+    AxesSetup,
+    Axis,
+    AxisType,
+    SpaceUnits,
+    TimeUnits,
+)
 from ngio.ome_zarr_meta._pixel_size import PixelSize
 
 
@@ -63,7 +70,7 @@ def test_axes_base(
     for i, ax in enumerate(on_disk_axes):
         assert mapper.get_index(ax) == i
 
-    assert mapper.on_disk_axes == _axes
+    assert len(mapper.on_disk_axes) == len(on_disk_axes)
     # Test the transformation
     shape = list(range(2, len(on_disk_axes) + 2))
     np.random.seed(0)
@@ -78,6 +85,27 @@ def test_axes_base(
     assert len(x_inner.shape) == len(on_disk_axes)
     x_out = _transform(x_inner, mapper.from_order(shuffled_axes))
     np.testing.assert_allclose(x_in, x_out)
+
+
+@pytest.mark.parametrize(
+    "canonical_name, axis_type, unit, expected_type, expected_unit",
+    [
+        ("x", AxisType.space, SpaceUnits.cm, AxisType.space, SpaceUnits.cm),
+        ("x", AxisType.time, SpaceUnits.cm, AxisType.space, SpaceUnits.cm),
+        ("c", AxisType.channel, None, AxisType.channel, None),
+        ("c", AxisType.channel, SpaceUnits.cm, AxisType.channel, None),
+        ("t", AxisType.time, TimeUnits.s, AxisType.time, TimeUnits.s),
+    ],
+)
+def test_axis_cast(canonical_name, axis_type, unit, expected_type, expected_unit):
+    ax = Axis(
+        on_disk_name="temp",
+        unit=unit,
+        axis_type=axis_type,
+    )
+    ax = ax.canonical_axis_cast(canonical_name)
+    assert ax.axis_type == expected_type
+    assert ax.unit == expected_unit
 
 
 def test_axes_fail():

@@ -1,4 +1,3 @@
-# %%
 """Fractal internal module for axes handling."""
 
 from collections.abc import Collection
@@ -82,18 +81,30 @@ class Axis(BaseModel):
                 f"Time axis {self.on_disk_name} has unit {self.unit}. "
                 f"Casting to {TimeUnits.default()}."
             )
-            new_axis.unit = TimeUnits.default()
+            new_axis = Axis(
+                on_disk_name=self.on_disk_name,
+                axis_type=AxisType.time,
+                unit=TimeUnits.default(),
+            )
         elif cast_type == AxisType.space and not isinstance(self.unit, SpaceUnits):
             logger.warning(
                 f"Space axis {self.on_disk_name} has unit {self.unit}. "
                 f"Casting to {SpaceUnits.default()}."
             )
-            new_axis.unit = SpaceUnits.default()
+            new_axis = Axis(
+                on_disk_name=self.on_disk_name,
+                axis_type=AxisType.space,
+                unit=SpaceUnits.default(),
+            )
         elif cast_type == AxisType.channel and self.unit is not None:
             logger.warning(
                 f"Channel axis {self.on_disk_name} has unit {self.unit}. Removing unit."
             )
-            new_axis.unit = None
+            new_axis = Axis(
+                on_disk_name=self.on_disk_name,
+                axis_type=AxisType.channel,
+                unit=None,
+            )
         return new_axis
 
     def canonical_axis_cast(self, canonical_name: str) -> "Axis":
@@ -107,7 +118,7 @@ class Axis(BaseModel):
             case "c":
                 if self.axis_type != AxisType.channel or self.unit is not None:
                     return self.implicit_type_cast(AxisType.channel)
-            case "z", "y", "x":
+            case "z" | "y" | "x":
                 if self.axis_type != AxisType.space or not isinstance(
                     self.unit, SpaceUnits
                 ):
@@ -305,12 +316,6 @@ class AxesMapper:
                 )
             else:
                 _index_mapping[canonical_key] = None
-
-        for on_disk_name in self.on_disk_axes_names:
-            if on_disk_name not in _index_mapping.keys():
-                _index_mapping[on_disk_name] = self.on_disk_axes_names.index(
-                    on_disk_name
-                )
         return _index_mapping
 
     @property
@@ -403,19 +408,3 @@ class AxesMapper:
     def from_canonical(self) -> dict[str, tuple[int]]:
         """Get the new order of the axes."""
         return self.from_order(self._extended_canonical_order)
-
-
-# %%
-axes = [
-    Axis(on_disk_name="t"),
-    Axis(on_disk_name="c", axis_type=AxisType.channel),
-    Axis(on_disk_name="z"),
-    Axis(on_disk_name="y"),
-    Axis(on_disk_name="XX"),
-]
-mapper = AxesMapper(
-    on_disk_axes=axes,
-    axes_setup=AxesSetup(x="XX"),
-    allow_non_canonical_axes=False,
-    strict_canonical_order=True,
-)
