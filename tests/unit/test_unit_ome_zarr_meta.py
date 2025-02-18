@@ -9,6 +9,13 @@ from ngio.ome_zarr_meta._axes import (
     SpaceUnits,
     TimeUnits,
 )
+from ngio.ome_zarr_meta._channels import (
+    Channel,
+    ChannelsMeta,
+    ChannelVisualisation,
+    NgioColors,
+    valid_hex_color,
+)
 from ngio.ome_zarr_meta._dataset import Dataset
 from ngio.ome_zarr_meta._pixel_size import PixelSize
 
@@ -252,3 +259,78 @@ def test_dataset_fail():
 
     with pytest.raises(ValueError):
         assert ds.space_unit == SpaceUnits.um
+
+
+def test_channels():
+    channels = ChannelsMeta.default_init(
+        labels=["DAPI", "GFP", "RFP"],
+    )
+    assert len(channels.channels) == 3
+    assert channels.channels[0].label == "DAPI"
+    assert channels.channels[0].wavelength_id == "DAPI"
+    assert channels.channels[0].channel_visualisation.color == "00FFFF"
+
+    channels = ChannelsMeta.default_init(labels=4)
+    assert len(channels.channels) == 4
+    assert channels.channels[0].label == "channel_0"
+    assert channels.channels[0].wavelength_id == "channel_0"
+    assert channels.channels[0].channel_visualisation.color == "00FFFF"
+
+    channels = ChannelsMeta.default_init(
+        labels=["DAPI", "GFP", "RFP"],
+        wavelength_id=["A01_C01", "A02_C02", "A03_C03"],
+        colors=["00FF00", "FF0000", "00FFFF"],
+        active=[True, False, True],
+        end=[100, 200, 300],
+        start=[0, 100, 200],
+        data_type="float",
+    )
+    assert len(channels.channels) == 3
+    assert channels.channels[0].label == "DAPI"
+    assert channels.channels[0].wavelength_id == "A01_C01"
+    assert channels.channels[0].channel_visualisation.color == "00FF00"
+
+    with pytest.raises(ValueError):
+        ChannelsMeta.default_init(labels=[])
+
+    class Mock:
+        pass
+
+    with pytest.raises(ValueError):
+        ChannelsMeta.default_init(labels=[Mock()])
+
+    channel = Channel.default_init(label="DAPI", wavelength_id="A01_C01")
+    ChannelsMeta(channels=[channel])
+
+    with pytest.raises(ValueError):
+        ChannelsMeta.default_init(labels=["DAPI", "DAPI"])
+
+    with pytest.raises(ValueError):
+        ChannelsMeta.default_init(labels=[channel, channel])
+
+    with pytest.raises(ValueError):
+        Channel.default_init(label="DAPI", data_type="color")
+
+
+def test_ngio_colors():
+    assert NgioColors.semi_random_pick(channel_name="DAPI") == NgioColors.dapi
+    assert NgioColors.semi_random_pick(channel_name="channel_dapi") == NgioColors.dapi
+    assert valid_hex_color(NgioColors.semi_random_pick(channel_name=None))
+
+    for channel, expected in zip(
+        ["channel_0", "channel_1", "channel_2", "channel_3"],
+        [NgioColors.cyan, NgioColors.magenta, NgioColors.yellow, NgioColors.green],
+        strict=True,
+    ):
+        assert NgioColors.semi_random_pick(channel_name=channel) == expected
+
+    for non_hex_color in ["00000000", "not a color"]:
+        assert not valid_hex_color(non_hex_color)
+
+    for color in [None, NgioColors.cyan]:
+        ChannelVisualisation.default_init(color=color)
+
+    ChannelVisualisation(color=NgioColors.cyan)
+
+    with pytest.raises(ValueError):
+        ChannelVisualisation.default_init(color=[])
