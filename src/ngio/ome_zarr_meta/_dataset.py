@@ -2,7 +2,8 @@
 
 from collections.abc import Collection
 
-from ngio.ome_zarr_meta._axes import AxesMapper, AxesSetup, Axis
+from ngio.ome_zarr_meta._axes import AxesMapper, AxesSetup, Axis, SpaceUnits, TimeUnits
+from ngio.ome_zarr_meta._pixel_size import PixelSize
 
 
 class Dataset:
@@ -21,7 +22,7 @@ class Dataset:
         on_disk_scale: Collection[float],
         on_disk_translation: Collection[float] | None = None,
         # user defined args
-        axes_setup: AxesSetup,
+        axes_setup: AxesSetup | None = None,
         allow_non_canonical_axes: bool = False,
         strict_canonical_order: bool = False,
     ):
@@ -39,8 +40,64 @@ class Dataset:
         """
         self._path = path
         self._axes_mapper = AxesMapper(
-            on_disk_axes=[ax.name for ax in on_disk_axes],
-            axis_setup=axes_setup,
+            on_disk_axes=on_disk_axes,
+            axes_setup=axes_setup,
             allow_non_canonical_axes=allow_non_canonical_axes,
             strict_canonical_order=strict_canonical_order,
         )
+
+        self._on_disk_scale = on_disk_scale
+        self._on_disk_translation = on_disk_translation
+
+    def get_scale(self, axis_name: str) -> float:
+        """Return the scale for a given axis."""
+        idx = self._axes_mapper.get_index(axis_name)
+        return self._on_disk_scale[idx]
+
+    def get_translation(self, axis_name: str) -> float:
+        """Return the translation for a given axis."""
+        idx = self._axes_mapper.get_index(axis_name)
+        return self._on_disk_translation[idx]
+
+    @property
+    def path(self) -> str:
+        """Return the path of the dataset."""
+        return self._path
+
+    @property
+    def space_unit(self) -> SpaceUnits:
+        """Return the space unit for a given axis."""
+        x_axis = self._axes_mapper.get_axis("x")
+        y_axis = self._axes_mapper.get_axis("y")
+        if x_axis.unit == y_axis.unit:
+            return x_axis.unit
+        else:
+            raise ValueError(
+                "Inconsistent space units. "
+                f"x={x_axis.unit} and y={y_axis.unit} should have the same unit."
+            )
+
+    @property
+    def time_unit(self) -> TimeUnits | None:
+        """Return the time unit for a given axis."""
+        t_axis = self._axes_mapper.get_axis("t")
+        if t_axis is None:
+            return None
+        return t_axis.unit
+
+    @property
+    def pixel_size(self) -> PixelSize:
+        """Return the pixel size for the dataset."""
+        return PixelSize(
+            x=self.get_scale("x"),
+            y=self.get_scale("y"),
+            z=self.get_scale("z"),
+            t=self.get_scale("t"),
+            space_unit=self.space_unit,
+            time_unit=self.time_unit,
+        )
+
+    @property
+    def axes_mapper(self) -> AxesMapper:
+        """Return the axes mapper object."""
+        return self._axes_mapper

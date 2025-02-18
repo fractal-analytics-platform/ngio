@@ -9,6 +9,7 @@ from ngio.ome_zarr_meta._axes import (
     SpaceUnits,
     TimeUnits,
 )
+from ngio.ome_zarr_meta._dataset import Dataset
 from ngio.ome_zarr_meta._pixel_size import PixelSize
 
 
@@ -196,3 +197,58 @@ def test_pixel_size():
 
     with pytest.raises(NotImplementedError):
         ps_1.distance(PixelSize(x=0.5, y=0.5, z=1.0, t=2.0))
+
+
+def test_dataset():
+    on_disk_axes = [
+        Axis(on_disk_name="t", axis_type=AxisType.time, unit=TimeUnits.s),
+        Axis(on_disk_name="c", axis_type=AxisType.channel),
+        Axis(on_disk_name="z"),
+        Axis(on_disk_name="y"),
+        Axis(on_disk_name="x"),
+    ]
+
+    on_disk_scale = [1.0, 1.0, 1.0, 0.5, 0.5]
+    on_disk_translation = [0.0, 0.0, 0.0, 0.0, 0.0]
+    ds = Dataset(
+        path="0",
+        on_disk_axes=on_disk_axes,
+        on_disk_scale=on_disk_scale,
+        on_disk_translation=on_disk_translation,
+        axes_setup=AxesSetup(),
+        allow_non_canonical_axes=False,
+        strict_canonical_order=True,
+    )
+
+    assert ds.path == "0"
+    assert ds.get_scale("x") == 0.5
+    assert ds.axes_mapper.get_index("x") == 4
+    assert ds.get_translation("x") == 0.0
+    assert ds.space_unit == SpaceUnits.um
+    assert ds.time_unit == TimeUnits.s
+
+    ps = ds.pixel_size
+    assert ps.x == 0.5
+    assert ps.y == 0.5
+    assert ps.z == 1.0
+    assert ps.t == 1.0
+
+
+def test_dataset_fail():
+    on_disk_axes = [
+        Axis(on_disk_name="y", unit=SpaceUnits.cm),
+        Axis(on_disk_name="x", unit=SpaceUnits.um),
+    ]
+    ds = Dataset(
+        path="0",
+        on_disk_axes=on_disk_axes,
+        on_disk_scale=[0.5, 0.5],
+        on_disk_translation=[0.0, 0.0],
+        allow_non_canonical_axes=False,
+        strict_canonical_order=True,
+    )
+
+    assert ds.time_unit is None
+
+    with pytest.raises(ValueError):
+        assert ds.space_unit == SpaceUnits.um
