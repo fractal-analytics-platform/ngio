@@ -2,6 +2,7 @@ import numpy as np
 import pytest
 
 from ngio.ome_zarr_meta._axes import AxesMapper, AxesSetup, Axis
+from ngio.ome_zarr_meta._pixel_size import PixelSize
 
 
 @pytest.mark.parametrize(
@@ -148,3 +149,22 @@ def test_axes_fail():
 
     with pytest.raises(ValueError):
         mapper.get_index("XX")
+
+
+def test_pixel_size():
+    ps_dict = {"x": 0.5, "y": 0.5, "z": 1.0, "t": 1.0}
+    ps_1 = PixelSize(**ps_dict)
+    assert ps_1.as_dict() == ps_dict
+    assert ps_1.zyx == (1.0, 0.5, 0.5)
+    assert ps_1.yx == (0.5, 0.5)
+    assert ps_1.voxel_volume == 0.25
+    assert ps_1.xy_plane_area == 0.25
+    assert ps_1.time_spacing == 1.0
+
+    ps_2 = PixelSize(x=0.5, y=0.5, z=1.0, t=1.0)
+    np.testing.assert_allclose(ps_1.distance(ps_2), 0.0)
+    ps_3 = PixelSize(x=1.0, y=1.0, z=1.0, t=1.0)
+    np.testing.assert_allclose(ps_1.distance(ps_3), np.sqrt(2.0) / 2)
+
+    with pytest.raises(NotImplementedError):
+        ps_1.distance(PixelSize(x=0.5, y=0.5, z=1.0, t=2.0))
