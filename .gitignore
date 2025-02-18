@@ -121,3 +121,6 @@ pixi.lock
 # ignore data directory
 data/
 *.zip
+
+src/ngio/_v01
+tests/_v01
