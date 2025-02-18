@@ -1,11 +1,15 @@
+# %%
 """Fractal internal module for axes handling."""
 
 from collections.abc import Collection
 from enum import Enum
+from logging import Logger
 from typing import TypeVar
 
 import numpy as np
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
+
+logger = Logger(__name__)
 
 T = TypeVar("T")
 
@@ -39,12 +43,20 @@ class SpaceUnits(str, Enum):
     centimeter = "centimeter"
     cm = "cm"
 
+    @classmethod
+    def default(cls) -> "SpaceUnits":
+        return SpaceUnits.um
+
 
 class TimeUnits(str, Enum):
     """Allowed time units."""
 
     seconds = "seconds"
     s = "s"
+
+    @classmethod
+    def default(cls) -> "TimeUnits":
+        return TimeUnits.s
 
 
 class Axis(BaseModel):
@@ -53,6 +65,54 @@ class Axis(BaseModel):
     on_disk_name: str
     unit: SpaceUnits | TimeUnits | None = None
     axis_type: AxisType = AxisType.space
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    def implicit_type_cast(self, cast_type: AxisType) -> "Axis":
+        if self.axis_type != cast_type:
+            logger.warning(
+                f"Axis {self.on_disk_name} has type {self.axis_type}. "
+                f"Casting to {cast_type}."
+            )
+        new_axis = Axis(
+            on_disk_name=self.on_disk_name, axis_type=cast_type, unit=self.unit
+        )
+        if cast_type == AxisType.time and not isinstance(self.unit, TimeUnits):
+            logger.warning(
+                f"Time axis {self.on_disk_name} has unit {self.unit}. "
+                f"Casting to {TimeUnits.default()}."
+            )
+            new_axis.unit = TimeUnits.default()
+        elif cast_type == AxisType.space and not isinstance(self.unit, SpaceUnits):
+            logger.warning(
+                f"Space axis {self.on_disk_name} has unit {self.unit}. "
+                f"Casting to {SpaceUnits.default()}."
+            )
+            new_axis.unit = SpaceUnits.default()
+        elif cast_type == AxisType.channel and self.unit is not None:
+            logger.warning(
+                f"Channel axis {self.on_disk_name} has unit {self.unit}. Removing unit."
+            )
+            new_axis.unit = None
+        return new_axis
+
+    def canonical_axis_cast(self, canonical_name: str) -> "Axis":
+        """Cast the implicit axis to the correct type."""
+        match canonical_name:
+            case "t":
+                if self.axis_type != AxisType.time or not isinstance(
+                    self.unit, TimeUnits
+                ):
+                    return self.implicit_type_cast(AxisType.time)
+            case "c":
+                if self.axis_type != AxisType.channel or self.unit is not None:
+                    return self.implicit_type_cast(AxisType.channel)
+            case "z", "y", "x":
+                if self.axis_type != AxisType.space or not isinstance(
+                    self.unit, SpaceUnits
+                ):
+                    return self.implicit_type_cast(AxisType.space)
+        return self
 
 
 ################################################################################################
@@ -82,6 +142,8 @@ class AxesSetup(BaseModel):
     c: str = "c"
     t: str = "t"
     others: list[str] = Field(default_factory=list)
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
 
 
 def _check_unique_names(axes: list[Axis]):
@@ -193,6 +255,9 @@ class AxesMapper:
             strict_canonical_order=strict_canonical_order,
         )
 
+        self._allow_non_canonical_axes = allow_non_canonical_axes
+        self._strict_canonical_order = strict_canonical_order
+
         self._canonical_order = canonical_axes_order()
         self._extended_canonical_order = [*axes_setup.others, *self._canonical_order]
 
@@ -201,6 +266,10 @@ class AxesMapper:
 
         self._name_mapping = self._compute_name_mapping()
         self._index_mapping = self._compute_index_mapping()
+
+        # Validate the axes type and cast them if necessary
+        # This needs to be done after the name mapping is computed
+        self.validate_axex_type()
 
     def _compute_name_mapping(self):
         """Compute the name mapping.
@@ -253,12 +322,36 @@ class AxesMapper:
         return [ax.on_disk_name for ax in self._on_disk_axes]
 
     def get_index(self, name: str) -> int:
+        """Get the index of the axis by name."""
         if name not in self._index_mapping.keys():
             raise ValueError(
                 f"Invalid axis name '{name}'. "
                 f"Possible values are {self._index_mapping.keys()}"
             )
         return self._index_mapping[name]
+
+    def get_axis(self, name: str) -> Axis | None:
+        """Get the axis object by name."""
+        index = self.get_index(name)
+        if index is None:
+            return None
+        return self._on_disk_axes[index]
+
+    def validate_axex_type(self):
+        """Validate the axes type.
+
+        If the axes type is not correct, a warning is issued.
+        and the axis is implicitly cast to the correct type.
+        """
+        new_axes = []
+        for axes in self.on_disk_axes:
+            for name in self._canonical_order:
+                if axes == self.get_axis(name):
+                    new_axes.append(axes.canonical_axis_cast(name))
+                    break
+            else:
+                new_axes.append(axes)
+        self._on_disk_axes = new_axes
 
     def _change_order(self, names: list[str]) -> list[int]:
         unique_names = set()
@@ -310,3 +403,19 @@ class AxesMapper:
     def from_canonical(self) -> dict[str, tuple[int]]:
         """Get the new order of the axes."""
         return self.from_order(self._extended_canonical_order)
+
+
+# %%
+axes = [
+    Axis(on_disk_name="t"),
+    Axis(on_disk_name="c", axis_type=AxisType.channel),
+    Axis(on_disk_name="z"),
+    Axis(on_disk_name="y"),
+    Axis(on_disk_name="XX"),
+]
+mapper = AxesMapper(
+    on_disk_axes=axes,
+    axes_setup=AxesSetup(x="XX"),
+    allow_non_canonical_axes=False,
+    strict_canonical_order=True,
+)
