@@ -17,6 +17,7 @@ from ngio.ome_zarr_meta._channels import (
     valid_hex_color,
 )
 from ngio.ome_zarr_meta._dataset import Dataset
+from ngio.ome_zarr_meta._ngio_image_meta import ImageMeta, LabelMeta
 from ngio.ome_zarr_meta._pixel_size import PixelSize
 
 
@@ -334,3 +335,90 @@ def test_ngio_colors():
 
     with pytest.raises(ValueError):
         ChannelVisualisation.default_init(color=[])
+
+
+def test_image_meta():
+    on_disk_axes = [
+        Axis(on_disk_name="t", axis_type=AxisType.time, unit=TimeUnits.s),
+        Axis(on_disk_name="c", axis_type=AxisType.channel),
+        Axis(on_disk_name="z"),
+        Axis(on_disk_name="y"),
+        Axis(on_disk_name="x"),
+    ]
+    on_disk_translation = [0.0, 0.0, 0.0, 0.0, 0.0]
+    on_disk_scale = [1.0, 1.0, 1.0, 0.5, 0.5]
+
+    datasets = []
+    for path in range(4):
+        ds = Dataset(
+            path=str(path),
+            on_disk_axes=on_disk_axes,
+            on_disk_scale=on_disk_scale,
+            on_disk_translation=on_disk_translation,
+            axes_setup=AxesSetup(),
+            allow_non_canonical_axes=False,
+            strict_canonical_order=True,
+        )
+        datasets.append(ds)
+        on_disk_scale = [
+            s * f for s, f in zip(on_disk_scale, [1, 1, 1, 2, 2], strict=True)
+        ]
+
+    image_meta = ImageMeta(version="0.4", name="test", datasets=datasets)
+
+    image_meta.init_channels(labels=["DAPI", "GFP", "RFP"])
+
+    assert image_meta.levels == 4
+    assert image_meta.name == "test"
+    assert image_meta.version == "0.4"
+    assert np.isclose(image_meta.xy_scaling_factor, 2.0)
+    assert np.isclose(image_meta.z_scaling_factor, 1.0)
+    assert image_meta.get_dataset(path="0").path == "0"
+    assert image_meta.get_dataset(path="1").path == "1"
+    assert image_meta.get_dataset(highest_resolution=True).path == "0"
+    assert image_meta.get_dataset(pixel_size=ds.pixel_size).path == "3"
+    assert image_meta.get_channel_idx(label="DAPI") == 0
+    assert image_meta.get_channel_idx(wavelength_id="DAPI") == 0
+    assert image_meta.channel_labels == ["DAPI", "GFP", "RFP"]
+
+
+def test_label_meta():
+    on_disk_axes = [
+        Axis(on_disk_name="t", axis_type=AxisType.time, unit=TimeUnits.s),
+        Axis(on_disk_name="z"),
+        Axis(on_disk_name="y"),
+        Axis(on_disk_name="x"),
+    ]
+    on_disk_translation = [0.0, 0.0, 0.0, 0.0]
+    on_disk_scale = [1.0, 1.0, 0.5, 0.5]
+
+    datasets = []
+    for path in range(4):
+        ds = Dataset(
+            path=str(path),
+            on_disk_axes=on_disk_axes,
+            on_disk_scale=on_disk_scale,
+            on_disk_translation=on_disk_translation,
+            axes_setup=AxesSetup(),
+            allow_non_canonical_axes=False,
+            strict_canonical_order=True,
+        )
+        datasets.append(ds)
+        on_disk_scale = [
+            s * f for s, f in zip(on_disk_scale, [1, 1, 2, 2], strict=True)
+        ]
+
+    image_meta = LabelMeta(
+        version="0.4",
+        name="test",
+        datasets=datasets,
+    )
+    assert image_meta.levels == 4
+    assert image_meta.name == "test"
+    assert image_meta.version == "0.4"
+    assert np.isclose(image_meta.xy_scaling_factor, 2.0)
+    assert np.isclose(image_meta.z_scaling_factor, 1.0)
+    assert image_meta.get_dataset(path="0").path == "0"
+    assert image_meta.get_dataset(path="1").path == "1"
+    assert image_meta.get_dataset(highest_resolution=True).path == "0"
+    assert image_meta.get_dataset(pixel_size=ds.pixel_size).path == "3"
