@@ -1,4 +1,10 @@
-{
+ {
+    "image-label": {
+        "source": {
+            "image": "../../"
+        },
+        "version": "0.4"
+    },
     "multiscales": [
         {
             "axes": [
