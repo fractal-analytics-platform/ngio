@@ -70,9 +70,7 @@ class OmeZarrV04BaseHandler:
         self._attrs = dict(self._group.attrs)
         return self._attrs
 
-    def load_meta(
-        self, return_error: bool = False
-    ) -> NgioImageLabelMeta | ValidationError:
+    def load(self, return_error: bool = False) -> NgioImageLabelMeta | ValidationError:
         attrs = self._load_attrs()
         meta = self._meta_importer(attrs)
         if isinstance(meta, NgioImageLabelMeta):
@@ -82,8 +80,8 @@ class OmeZarrV04BaseHandler:
             return meta
         raise meta
 
-    def write_meta(self, meta: NgioImageLabelMeta) -> None:
-        if self._group.store.is_writeable():
+    def write(self, meta: NgioImageLabelMeta) -> None:
+        if not self._group.store.is_writeable():
             raise NgioValueError("The store is not writeable. Cannot write metadata.")
 
         v04_meta = self._meta_exporter(meta)
@@ -117,7 +115,15 @@ class OmeZarrV04ImageHandler(OmeZarrV04BaseHandler):
 
     def load(self, return_error: bool = False) -> NgioImageMeta | ValidationError:
         """Load the metadata of the group."""
-        return super().load_meta(return_error=return_error)
+        return super().load(return_error=return_error)
+
+    def write(self, meta: NgioImageMeta) -> None:
+        """Write the metadata to the store."""
+        super().write(meta)
+
+    def clean_cache(self) -> None:
+        """Clear the cached metadata."""
+        super().clean_cache()
 
 
 class OmeZarrV04LabelHandler(OmeZarrV04BaseHandler):
@@ -143,4 +149,12 @@ class OmeZarrV04LabelHandler(OmeZarrV04BaseHandler):
 
     def load(self, return_error: bool = False) -> NgioLabelMeta | ValidationError:
         """Load the metadata of the group."""
-        return super().load_meta(return_error=return_error)
+        return super().load(return_error=return_error)
+
+    def write(self, meta: NgioLabelMeta) -> None:
+        """Write the metadata to the store."""
+        super().write(meta)
+
+    def clean_cache(self) -> None:
+        """Clear the cached metadata."""
+        super().clean_cache()

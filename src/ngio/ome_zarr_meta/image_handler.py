@@ -42,7 +42,7 @@ class OmeZarrLabelHandler(Protocol):
         """Write the metadata to the store."""
         ...
 
-    def cleat_cache(self) -> None:
+    def clean_cache(self) -> None:
         """Clear the cached metadata."""
         ...
 
