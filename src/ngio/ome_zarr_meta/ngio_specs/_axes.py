@@ -63,7 +63,7 @@ class Axis(BaseModel):
 
     on_disk_name: str
     unit: SpaceUnits | TimeUnits | None = None
-    axis_type: AxisType = AxisType.space
+    axis_type: AxisType | None = None
 
     model_config = ConfigDict(extra="forbid", frozen=True)
 

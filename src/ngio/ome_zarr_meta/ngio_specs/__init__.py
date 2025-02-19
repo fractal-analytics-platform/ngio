@@ -23,6 +23,7 @@ from ngio.ome_zarr_meta.ngio_specs._channels import (
     ChannelsMeta,
     ChannelVisualisation,
     NgioColors,
+    default_channel_name,
 )
 from ngio.ome_zarr_meta.ngio_specs._dataset import Dataset
 from ngio.ome_zarr_meta.ngio_specs._ngio_image_meta import (
@@ -52,4 +53,5 @@ __all__ = [
     "PixelSize",
     "SpaceUnits",
     "TimeUnits",
+    "default_channel_name",
 ]

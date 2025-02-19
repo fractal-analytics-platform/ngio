@@ -52,7 +52,17 @@ class Dataset:
             strict_canonical_order=strict_canonical_order,
         )
 
+        if len(on_disk_scale) != len(on_disk_axes):
+            raise ValueError(
+                "The length of the scale transformation must be the same as the axes."
+            )
         self._on_disk_scale = on_disk_scale
+
+        on_disk_translation = on_disk_translation or [0.0] * len(on_disk_axes)
+        if len(on_disk_translation) != len(on_disk_axes):
+            raise ValueError(
+                "The length of the translation must be the same as the axes."
+            )
         self._on_disk_translation = on_disk_translation
 
     def get_scale(self, axis_name: str) -> float:

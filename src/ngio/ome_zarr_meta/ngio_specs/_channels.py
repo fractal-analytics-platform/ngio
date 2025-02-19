@@ -9,7 +9,7 @@ from enum import Enum
 from typing import Any, TypeVar
 
 import numpy as np
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 ################################################################################################
 #
@@ -119,6 +119,7 @@ class ChannelVisualisation(BaseModel):
     start: int | float = 0
     end: int | float = 65535
     active: bool = True
+    model_config = ConfigDict(extra="allow", frozen=True)
 
     @field_validator("color", mode="after")
     @classmethod
@@ -172,7 +173,7 @@ class ChannelVisualisation(BaseModel):
 
         start = start if start is not None else min_value
         end = end if end is not None else max_value
-        return ChannelVisualisation(
+        return cls(
             color=color,
             min=min_value,
             max=max_value,
@@ -180,6 +181,11 @@ class ChannelVisualisation(BaseModel):
             end=end,
             active=active,
         )
+
+
+def default_channel_name(index: int) -> str:
+    """Return the default channel name."""
+    return f"channel_{index}"
 
 
 class Channel(BaseModel):
@@ -195,6 +201,7 @@ class Channel(BaseModel):
     label: str
     wavelength_id: str | None = None
     channel_visualisation: ChannelVisualisation
+    model_config = ConfigDict(extra="allow", frozen=True)
 
     @classmethod
     def default_init(
@@ -273,6 +280,7 @@ class ChannelsMeta(BaseModel):
     """
 
     channels: list[Channel] = Field(default_factory=list)
+    model_config = ConfigDict(extra="allow", frozen=True)
 
     @field_validator("channels", mode="after")
     def validate_channels(cls, value: list[Channel]) -> list[Channel]:
@@ -314,7 +322,7 @@ class ChannelsMeta(BaseModel):
             omero_kwargs(dict): Extra fields to store in the omero attributes.
         """
         if isinstance(labels, int):
-            labels = [f"channel_{i}" for i in range(labels)]
+            labels = [default_channel_name(i) for i in range(labels)]
 
         labels = _check_elements(labels, str)
         labels = _check_unique(labels)

@@ -51,6 +51,16 @@ class AbstractNgioImageMeta:
 
         self._datasets = datasets
 
+    def __repr__(self):
+        class_name = type(self).__name__
+        paths = [dataset.path for dataset in self.datasets]
+        on_disk_axes = self.datasets[0].axes_mapper.on_disk_axes_names
+        return (
+            f"{class_name}(name={self.name}, "
+            f"datasets={paths}, "
+            f"on_disk_axes={on_disk_axes})"
+        )
+
     @property
     def version(self) -> NgffVersion:
         """Version of the OME-NFF metadata used to build the object."""
@@ -202,7 +212,7 @@ class NgioLabelMeta(AbstractNgioImageMeta):
         version: str,
         name: str | None,
         datasets: list[Dataset],
-        label_image: ImageLabelSource | None = None,
+        image_label: ImageLabelSource | None = None,
     ) -> None:
         """Initialize the ImageMeta object."""
         super().__init__(version, name, datasets)
@@ -212,24 +222,29 @@ class NgioLabelMeta(AbstractNgioImageMeta):
         if channel_axis is not None:
             raise ValueError("Label metadata must not have channel axes.")
 
-        label_image = (
+        image_label = (
             ImageLabelSource.default_init(self.version)
-            if label_image is None
-            else label_image
+            if image_label is None
+            else image_label
         )
-
-        if label_image.version != version:
+        assert image_label is not None
+        if image_label.version != version:
             raise ValueError("Label image version must match the metadata version.")
-        self._label_image = label_image
+        self._image_label = image_label
 
     @property
     def source_image(self) -> str | None:
-        source = self._label_image.source
+        source = self._image_label.source
         if "image" not in source:
             return None
 
         image_path = source["image"]
         return image_path
+
+    @property
+    def image_label(self) -> ImageLabelSource:
+        """Get the image label metadata."""
+        return self._image_label
 
 
 class NgioImageMeta(AbstractNgioImageMeta):
@@ -347,4 +362,4 @@ class NgioImageMeta(AbstractNgioImageMeta):
             )
 
 
-ImageLabelMeta = NgioImageMeta | NgioLabelMeta
+NgioImageLabelMeta = NgioImageMeta | NgioLabelMeta
