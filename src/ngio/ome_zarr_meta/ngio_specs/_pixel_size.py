@@ -3,7 +3,7 @@
 import numpy as np
 from pydantic import BaseModel, Field
 
-from ngio.ome_zarr_meta._axes import SpaceUnits, TimeUnits
+from ngio.ome_zarr_meta.ngio_specs import SpaceUnits, TimeUnits
 
 ################################################################################################
 #

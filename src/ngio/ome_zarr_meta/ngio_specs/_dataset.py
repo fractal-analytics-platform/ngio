@@ -2,8 +2,14 @@
 
 from collections.abc import Collection
 
-from ngio.ome_zarr_meta._axes import AxesMapper, AxesSetup, Axis, SpaceUnits, TimeUnits
-from ngio.ome_zarr_meta._pixel_size import PixelSize
+from ngio.ome_zarr_meta.ngio_specs._axes import (
+    AxesMapper,
+    AxesSetup,
+    Axis,
+    SpaceUnits,
+    TimeUnits,
+)
+from ngio.ome_zarr_meta.ngio_specs._pixel_size import PixelSize
 
 
 class Dataset:

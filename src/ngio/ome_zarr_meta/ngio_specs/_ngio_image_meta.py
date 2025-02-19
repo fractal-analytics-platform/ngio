@@ -11,10 +11,10 @@ from typing import Any, TypeVar
 
 import numpy as np
 
-from ngio.ome_zarr_meta._axes import SpaceUnits
-from ngio.ome_zarr_meta._channels import Channel, ChannelsMeta
-from ngio.ome_zarr_meta._dataset import Dataset
-from ngio.ome_zarr_meta._pixel_size import PixelSize
+from ngio.ome_zarr_meta.ngio_specs._axes import SpaceUnits
+from ngio.ome_zarr_meta.ngio_specs._channels import Channel, ChannelsMeta
+from ngio.ome_zarr_meta.ngio_specs._dataset import Dataset
+from ngio.ome_zarr_meta.ngio_specs._pixel_size import PixelSize
 
 T = TypeVar("T")
 

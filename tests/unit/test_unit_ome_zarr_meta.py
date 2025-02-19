@@ -1,24 +1,27 @@
 import numpy as np
 import pytest
 
-from ngio.ome_zarr_meta._axes import (
+from ngio.ome_zarr_meta.ngio_specs import (
+    AxesExpand,
     AxesMapper,
     AxesSetup,
+    AxesSqueeze,
+    AxesTransformation,
+    AxesTranspose,
     Axis,
     AxisType,
-    SpaceUnits,
-    TimeUnits,
-)
-from ngio.ome_zarr_meta._channels import (
     Channel,
     ChannelsMeta,
     ChannelVisualisation,
+    Dataset,
+    ImageMeta,
+    LabelMeta,
     NgioColors,
-    valid_hex_color,
+    PixelSize,
+    SpaceUnits,
+    TimeUnits,
 )
-from ngio.ome_zarr_meta._dataset import Dataset
-from ngio.ome_zarr_meta._ngio_image_meta import ImageMeta, LabelMeta
-from ngio.ome_zarr_meta._pixel_size import PixelSize
+from ngio.ome_zarr_meta.ngio_specs._channels import valid_hex_color
 
 
 @pytest.mark.parametrize(
@@ -59,14 +62,16 @@ from ngio.ome_zarr_meta._pixel_size import PixelSize
 def test_axes_base(
     on_disk_axes, axes_setup, allow_non_canonical_axes, strict_canonical_order
 ):
-    def _transform(x: np.ndarray, operations: dict[str, tuple]):
-        for op_name, op_args in operations.items():
-            if op_name == "transpose":
-                x = np.transpose(x, op_args)
-            elif op_name == "squeeze":
-                x = np.squeeze(x, axis=op_args)
-            elif op_name == "expand":
-                x = np.expand_dims(x, axis=op_args)
+    def _transform(x: np.ndarray, operations: tuple[AxesTransformation]) -> np.ndarray:
+        for operation in operations:
+            if isinstance(operation, AxesTranspose):
+                x = np.transpose(x, operation.axes)
+            elif isinstance(operation, AxesExpand):
+                x = np.expand_dims(x, axis=operation.axes)
+            elif isinstance(operation, AxesSqueeze):
+                x = np.squeeze(x, axis=operation.axes)
+            else:
+                raise ValueError(f"Unknown operation {operation}")
         return x
 
     _axes = [Axis(on_disk_name=on_disk_name) for on_disk_name in on_disk_axes]

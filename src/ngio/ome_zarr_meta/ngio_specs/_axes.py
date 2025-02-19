@@ -232,6 +232,22 @@ def validate_axes(
     )
 
 
+class AxesTransformation(BaseModel):
+    pass
+
+
+class AxesTranspose(AxesTransformation):
+    axes: tuple[int, ...]
+
+
+class AxesExpand(AxesTransformation):
+    axes: tuple[int, ...]
+
+
+class AxesSqueeze(AxesTransformation):
+    axes: tuple[int, ...]
+
+
 class AxesMapper:
     """Map on disk axes to canonical axes.
 
@@ -391,20 +407,22 @@ class AxesMapper:
                 _indices.append(self._index_mapping[name])
         return tuple(_indices), tuple(_insert)
 
-    def to_order(self, names: list[str]) -> dict[str, tuple[int]]:
+    def to_order(self, names: list[str]) -> tuple[AxesTransformation]:
         """Get the new order of the axes."""
         _indices, _insert = self._change_order(names)
-        return {"transpose": _indices, "expand": _insert}
+        return AxesTranspose(axes=_indices), AxesExpand(axes=_insert)
 
-    def from_order(self, names: list[str]) -> dict[str, tuple[int]]:
+    def from_order(self, names: list[str]) -> tuple[AxesTransformation]:
         """Get the new order of the axes."""
         _indices, _insert = self._change_order(names)
-        return {"squeeze": _insert, "transpose": np.argsort(_indices)}
+        # Inverse transpose is just the transpose with the inverse indices
+        _reverse_indices = np.argsort(_indices)
+        return AxesSqueeze(axes=_insert), AxesTranspose(axes=_reverse_indices)
 
-    def to_canonical(self) -> dict[str, tuple[int]]:
+    def to_canonical(self) -> tuple[AxesTransformation]:
         """Get the new order of the axes."""
         return self.to_order(self._extended_canonical_order)
 
-    def from_canonical(self) -> dict[str, tuple[int]]:
+    def from_canonical(self) -> tuple[AxesTransformation]:
         """Get the new order of the axes."""
         return self.from_order(self._extended_canonical_order)
