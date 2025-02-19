@@ -10,6 +10,7 @@ from ngio.ome_zarr_meta.ngio_specs._axes import (
     TimeUnits,
 )
 from ngio.ome_zarr_meta.ngio_specs._pixel_size import PixelSize
+from ngio.utils import NgioValidationError
 
 
 class Dataset:
@@ -53,14 +54,14 @@ class Dataset:
         )
 
         if len(on_disk_scale) != len(on_disk_axes):
-            raise ValueError(
+            raise NgioValidationError(
                 "The length of the scale transformation must be the same as the axes."
             )
         self._on_disk_scale = on_disk_scale
 
         on_disk_translation = on_disk_translation or [0.0] * len(on_disk_axes)
         if len(on_disk_translation) != len(on_disk_axes):
-            raise ValueError(
+            raise NgioValidationError(
                 "The length of the translation must be the same as the axes."
             )
         self._on_disk_translation = on_disk_translation
@@ -88,7 +89,7 @@ class Dataset:
         if x_axis.unit == y_axis.unit:
             return x_axis.unit
         else:
-            raise ValueError(
+            raise NgioValidationError(
                 "Inconsistent space units. "
                 f"x={x_axis.unit} and y={y_axis.unit} should have the same unit."
             )

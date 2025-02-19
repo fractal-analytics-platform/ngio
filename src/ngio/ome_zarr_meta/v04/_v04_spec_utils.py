@@ -20,6 +20,7 @@ from ome_zarr_models.v04.multiscales import Dataset as DatasetV04
 from ome_zarr_models.v04.multiscales import Multiscale as MultiscaleV04
 from ome_zarr_models.v04.omero import Channel as ChannelV04
 from ome_zarr_models.v04.omero import Omero as OmeroV04
+from pydantic import ValidationError
 
 from ngio.ome_zarr_meta.ngio_specs import (
     AxesSetup,
@@ -36,7 +37,7 @@ from ngio.ome_zarr_meta.ngio_specs import (
 )
 
 
-def is_v04_image_meta(metadata: dict):
+def _is_v04_image_meta(metadata: dict) -> ImageAttrsV04 | ValidationError:
     """Check if the metadata is a valid OME-Zarr v04 metadata.
 
     Args:
@@ -46,13 +47,14 @@ def is_v04_image_meta(metadata: dict):
         bool: True if the metadata is a valid OME-Zarr v04 metadata, False otherwise.
     """
     try:
-        ImageAttrsV04(**metadata)
-    except Exception:
-        return False
-    return True
+        return ImageAttrsV04(**metadata)
+    except ValidationError as e:
+        return e
+    except Exception as e:
+        raise e
 
 
-def is_v04_label_meta(metadata: dict):
+def _is_v04_label_meta(metadata: dict) -> LabelAttrsV04 | ValidationError:
     """Check if the metadata is a valid OME-Zarr v04 metadata.
 
     Args:
@@ -62,10 +64,11 @@ def is_v04_label_meta(metadata: dict):
         bool: True if the metadata is a valid OME-Zarr v04 metadata, False otherwise.
     """
     try:
-        LabelAttrsV04(**metadata)
-    except Exception:
-        return False
-    return True
+        return LabelAttrsV04(**metadata)
+    except ValidationError as e:
+        return e
+    except Exception as e:
+        raise e
 
 
 def _v04_omero_to_channels(v04_omero: OmeroV04) -> ChannelsMeta | None:
@@ -177,7 +180,9 @@ def _v04_to_ngio_datasets(
     return datasets
 
 
-def v04_to_ngio_image_meta(metadata: dict) -> NgioImageMeta:
+def v04_to_ngio_image_meta(
+    metadata: dict,
+) -> NgioImageMeta | ValidationError:
     """Convert a v04 image metadata to a ngio image metadata.
 
     Args:
@@ -186,7 +191,10 @@ def v04_to_ngio_image_meta(metadata: dict) -> NgioImageMeta:
     Returns:
         NgioImageMeta: The ngio image metadata.
     """
-    v04_image = ImageAttrsV04(**metadata)
+    v04_image = _is_v04_image_meta(metadata)
+    if isinstance(v04_image, ValidationError):
+        return v04_image
+
     if len(v04_image.multiscales) > 1:
         raise NotImplementedError(
             "Multiple multiscales in a single image are not supported in ngio."
@@ -204,7 +212,9 @@ def v04_to_ngio_image_meta(metadata: dict) -> NgioImageMeta:
     )
 
 
-def v04_to_ngio_label_meta(metadata: dict) -> NgioImageMeta:
+def v04_to_ngio_label_meta(
+    metadata: dict,
+) -> NgioImageMeta | ValidationError:
     """Convert a v04 image metadata to a ngio image metadata.
 
     Args:
@@ -213,7 +223,10 @@ def v04_to_ngio_label_meta(metadata: dict) -> NgioImageMeta:
     Returns:
         NgioImageMeta: The ngio image metadata.
     """
-    v04_label = LabelAttrsV04(**metadata)
+    v04_label = _is_v04_label_meta(metadata)
+    if isinstance(v04_label, ValidationError):
+        return v04_label
+
     if len(v04_label.multiscales) > 1:
         raise NotImplementedError(
             "Multiple multiscales in a single image are not supported in ngio."
@@ -239,7 +252,7 @@ def v04_to_ngio_label_meta(metadata: dict) -> NgioImageMeta:
     )
 
 
-def ngio_to_v04_multiscale(datasets: list[Dataset]) -> MultiscaleV04:
+def _ngio_to_v04_multiscale(datasets: list[Dataset]) -> MultiscaleV04:
     """Convert a ngio multiscale to a v04 multiscale.
 
     Args:
@@ -308,7 +321,7 @@ def ngio_to_v04_image_meta(metadata: NgioImageMeta) -> dict:
     Returns:
         dict: The v04 image metadata.
     """
-    v04_muliscale = ngio_to_v04_multiscale(metadata.datasets)
+    v04_muliscale = _ngio_to_v04_multiscale(metadata.datasets)
     v04_omero = _ngio_to_v04_omero(metadata._channels_meta)
 
     v04_image = ImageAttrsV04(multiscales=[v04_muliscale], omero=v04_omero)
@@ -324,7 +337,7 @@ def ngio_to_v04_label_meta(metadata: NgioLabelMeta) -> dict:
     Returns:
         dict: The v04 image metadata.
     """
-    v04_muliscale = ngio_to_v04_multiscale(metadata.datasets)
+    v04_muliscale = _ngio_to_v04_multiscale(metadata.datasets)
     v04_label = LabelAttrsV04(
         multiscales=[v04_muliscale],
         image_label=metadata.image_label.model_dump(),

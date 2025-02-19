@@ -119,7 +119,7 @@ pixi.lock
 *.zarr
 
 # ignore data directory
-data/
+./data/
 *.zip
 
 src/ngio/_v01

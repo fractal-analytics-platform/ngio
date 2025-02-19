@@ -16,6 +16,7 @@ from ngio.ome_zarr_meta.ngio_specs._axes import SpaceUnits
 from ngio.ome_zarr_meta.ngio_specs._channels import Channel, ChannelsMeta
 from ngio.ome_zarr_meta.ngio_specs._dataset import Dataset
 from ngio.ome_zarr_meta.ngio_specs._pixel_size import PixelSize
+from ngio.utils import NgioValidationError, NgioValueError
 
 T = TypeVar("T")
 
@@ -47,7 +48,7 @@ class AbstractNgioImageMeta:
         self._name = name
 
         if len(datasets) == 0:
-            raise ValueError("At least one dataset must be provided.")
+            raise NgioValidationError("At least one dataset must be provided.")
 
         self._datasets = datasets
 
@@ -91,12 +92,12 @@ class AbstractNgioImageMeta:
         for dataset in self.datasets:
             if dataset.path == path:
                 return dataset
-        raise ValueError(f"Dataset with path {path} not found.")
+        raise NgioValueError(f"Dataset with path {path} not found.")
 
     def _get_dataset_by_index(self, idx: int) -> Dataset:
         """Get a dataset by its index."""
         if idx < 0 or idx >= len(self.datasets):
-            raise ValueError(f"Index {idx} out of range.")
+            raise NgioValueError(f"Index {idx} out of range.")
         return self.datasets[idx]
 
     def _get_dataset_by_pixel_size(
@@ -118,7 +119,7 @@ class AbstractNgioImageMeta:
                 closest_dataset = dataset
 
         if strict and min_dist > tol:
-            raise ValueError("No dataset with a pixel size close enough.")
+            raise NgioValueError("No dataset with a pixel size close enough.")
 
         return closest_dataset
 
@@ -153,7 +154,7 @@ class AbstractNgioImageMeta:
             )
             != 1
         ):
-            raise ValueError("get_dataset must receive only one argument.")
+            raise NgioValueError("get_dataset must receive only one argument.")
 
         if path is not None:
             return self._get_dataset_by_path(path)
@@ -164,7 +165,7 @@ class AbstractNgioImageMeta:
         elif highest_resolution:
             return self.get_highest_resolution_dataset()
         else:
-            raise ValueError("get_dataset has no valid arguments.")
+            raise NgioValueError("get_dataset has no valid arguments.")
 
     def get_highest_resolution_dataset(self) -> Dataset:
         """Get the dataset with the highest resolution."""
@@ -181,7 +182,7 @@ class AbstractNgioImageMeta:
             scaling_factors.append(scale_d1 / scale_d2)
 
         if not np.allclose(scaling_factors, scaling_factors[0]):
-            raise ValueError(
+            raise NgioValidationError(
                 f"Inconsistent scaling factors are not supported. {scaling_factors}"
             )
         return scaling_factors[0]
@@ -192,7 +193,7 @@ class AbstractNgioImageMeta:
         x_scaling_factors = self.get_scaling_factor("x")
         y_scaling_factors = self.get_scaling_factor("y")
         if not np.isclose(x_scaling_factors, y_scaling_factors):
-            raise ValueError(
+            raise NgioValidationError(
                 "Inconsistent scaling factors are not supported. "
                 f"{x_scaling_factors}, {y_scaling_factors}"
             )
@@ -220,7 +221,7 @@ class NgioLabelMeta(AbstractNgioImageMeta):
         # Make sure that there are no channel axes
         channel_axis = self.datasets[0].axes_mapper.get_axis("c")
         if channel_axis is not None:
-            raise ValueError("Label metadata must not have channel axes.")
+            raise NgioValidationError("Label metadata must not have channel axes.")
 
         image_label = (
             ImageLabelSource.default_init(self.version)
@@ -229,7 +230,9 @@ class NgioLabelMeta(AbstractNgioImageMeta):
         )
         assert image_label is not None
         if image_label.version != version:
-            raise ValueError("Label image version must match the metadata version.")
+            raise NgioValidationError(
+                "Label image version must match the metadata version."
+            )
         self._image_label = image_label
 
     @property
@@ -330,7 +333,7 @@ class NgioImageMeta(AbstractNgioImageMeta):
             return None
 
         if label not in self.channel_labels:
-            raise ValueError(f"Channel with label {label} not found.")
+            raise NgioValueError(f"Channel with label {label} not found.")
 
         return self.channel_labels.index(label)
 
@@ -340,7 +343,9 @@ class NgioImageMeta(AbstractNgioImageMeta):
             return None
 
         if wavelength_id not in self.channel_wavelength_ids:
-            raise ValueError(f"Channel with wavelength ID {wavelength_id} not found.")
+            raise NgioValueError(
+                f"Channel with wavelength ID {wavelength_id} not found."
+            )
 
         return self.channel_wavelength_ids.index(wavelength_id)
 
@@ -350,14 +355,14 @@ class NgioImageMeta(AbstractNgioImageMeta):
         """Get the index of a channel by its label or wavelength ID."""
         # Only one of the arguments must be provided
         if sum([label is not None, wavelength_id is not None]) != 1:
-            raise ValueError("get_channel_idx must receive only one argument.")
+            raise NgioValueError("get_channel_idx must receive only one argument.")
 
         if label is not None:
             return self._get_channel_idx_by_label(label)
         elif wavelength_id is not None:
             return self._get_channel_idx_by_wavelength_id(wavelength_id)
         else:
-            raise ValueError(
+            raise NgioValueError(
                 "get_channel_idx must receive either label or wavelength_id."
             )
 

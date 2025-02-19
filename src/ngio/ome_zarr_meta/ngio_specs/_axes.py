@@ -8,6 +8,8 @@ from typing import TypeVar
 import numpy as np
 from pydantic import BaseModel, ConfigDict, Field
 
+from ngio.utils import NgioValidationError, NgioValueError
+
 logger = Logger(__name__)
 
 T = TypeVar("T")
@@ -162,7 +164,7 @@ def _check_unique_names(axes: list[Axis]):
     names = [ax.on_disk_name for ax in axes]
     if len(set(names)) != len(names):
         duplicates = {item for item in names if names.count(item) > 1}
-        raise ValueError(
+        raise NgioValidationError(
             f"All axes must be unique. But found duplicates axes {duplicates}"
         )
 
@@ -170,7 +172,7 @@ def _check_unique_names(axes: list[Axis]):
 def _check_non_canonical_axes(axes_setup: AxesSetup, allow_non_canonical_axes: bool):
     """Check if all axes are known."""
     if not allow_non_canonical_axes and len(axes_setup.others) > 0:
-        raise ValueError(
+        raise NgioValidationError(
             f"Unknown axes {axes_setup.others}. Please set "
             "`allow_non_canonical_axes=True` to ignore them"
         )
@@ -182,7 +184,7 @@ def _check_axes_validity(axes: list[Axis], axes_setup: AxesSetup):
     _all_known_axes = [*_axes_setup.values(), *axes_setup.others]
     for ax in axes:
         if ax.on_disk_name not in _all_known_axes:
-            raise ValueError(
+            raise NgioValidationError(
                 f"Invalid axis name '{ax.on_disk_name}'. "
                 f"Please correct map `{ax.on_disk_name}` "
                 f"using the AxesSetup model {axes_setup}"
@@ -203,7 +205,7 @@ def _check_canonical_order(
             _canonical_order.append(mapped_name)
 
     if _on_disk_names != _canonical_order:
-        raise ValueError(
+        raise NgioValidationError(
             f"Invalid axes order. The axes must be in the canonical order. "
             f"Expected {_canonical_order}, but found {_on_disk_names}"
         )
@@ -217,7 +219,7 @@ def validate_axes(
 ) -> None:
     """Validate the axes."""
     if allow_non_canonical_axes and strict_canonical_order:
-        raise ValueError(
+        raise NgioValidationError(
             "`allow_non_canonical_axes` and"
             "`strict_canonical_order` cannot be true at the same time."
             "If non canonical axes are allowed, the order cannot be checked."
@@ -345,7 +347,7 @@ class AxesMapper:
     def get_index(self, name: str) -> int:
         """Get the index of the axis by name."""
         if name not in self._index_mapping.keys():
-            raise ValueError(
+            raise NgioValueError(
                 f"Invalid axis name '{name}'. "
                 f"Possible values are {self._index_mapping.keys()}"
             )
@@ -378,7 +380,7 @@ class AxesMapper:
         unique_names = set()
         for name in names:
             if name not in self._index_mapping.keys():
-                raise ValueError(
+                raise NgioValueError(
                     f"Invalid axis name '{name}'. "
                     f"Possible values are {self._index_mapping.keys()}"
                 )
@@ -386,7 +388,7 @@ class AxesMapper:
             if _unique_name is None:
                 continue
             if _unique_name in unique_names:
-                raise ValueError(
+                raise NgioValueError(
                     f"Duplicate axis name, two or more '{_unique_name}' were found. "
                     f"Please provide unique names."
                 )
@@ -394,7 +396,7 @@ class AxesMapper:
 
         if len(self.on_disk_axes_names) > len(unique_names):
             missing_names = set(self.on_disk_axes_names) - unique_names
-            raise ValueError(
+            raise NgioValueError(
                 f"Some axes where not queried. "
                 f"Please provide the following missing axes {missing_names}"
             )

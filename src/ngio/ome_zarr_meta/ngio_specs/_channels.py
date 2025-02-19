@@ -11,6 +11,8 @@ from typing import Any, TypeVar
 import numpy as np
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from ngio.utils import NgioValidationError, NgioValueError
+
 ################################################################################################
 #
 # Omero Section of the Metadata is used to store channel information and visualisation
@@ -83,7 +85,6 @@ def valid_hex_color(v: str) -> bool:
 
     Check that `color` is made of exactly six elements which are letters
     (a-f or A-F) or digits (0-9).
-    If fail, raise a ValueError.
 
     Implementation source:
     https://github.com/fractal-analytics-platform/fractal-tasks-core/fractal_tasks_core/channels.py#L87
@@ -141,7 +142,7 @@ class ChannelVisualisation(BaseModel):
             value_lower = value.lower()
             return NgioColors.semi_random_pick(value_lower).value
         else:
-            raise ValueError(f"Invalid color {value}.")
+            raise NgioValueError(f"Invalid color {value}.")
 
     @classmethod
     def default_init(
@@ -169,7 +170,7 @@ class ChannelVisualisation(BaseModel):
             except ValueError:
                 continue
         else:
-            raise ValueError(f"Invalid data type {data_type}.")
+            raise NgioValueError(f"Invalid data type {data_type}.")
 
         start = start if start is not None else min_value
         end = end if end is not None else max_value
@@ -252,11 +253,11 @@ T = TypeVar("T")
 def _check_elements(elements: Collection[T], expected_type: Any) -> Collection[T]:
     """Check that the elements are of the same type."""
     if len(elements) == 0:
-        raise ValueError("At least one element must be provided.")
+        raise NgioValidationError("At least one element must be provided.")
 
     for element in elements:
         if not isinstance(element, expected_type):
-            raise ValueError(
+            raise NgioValidationError(
                 f"All elements must be of the same type {expected_type}. Got {element}."
             )
 
@@ -266,7 +267,7 @@ def _check_elements(elements: Collection[T], expected_type: Any) -> Collection[T
 def _check_unique(elements: Collection[T]) -> Collection[T]:
     """Check that the elements are unique."""
     if len(set(elements)) != len(elements):
-        raise ValueError("All elements must be unique.")
+        raise NgioValidationError("All elements must be unique.")
     return elements
 
 
