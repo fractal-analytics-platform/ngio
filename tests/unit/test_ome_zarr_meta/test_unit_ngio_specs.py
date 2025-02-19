@@ -14,9 +14,9 @@ from ngio.ome_zarr_meta.ngio_specs import (
     ChannelsMeta,
     ChannelVisualisation,
     Dataset,
-    ImageMeta,
-    LabelMeta,
     NgioColors,
+    NgioImageMeta,
+    NgioLabelMeta,
     PixelSize,
     SpaceUnits,
     TimeUnits,
@@ -369,7 +369,7 @@ def test_image_meta():
             s * f for s, f in zip(on_disk_scale, [1, 1, 1, 2, 2], strict=True)
         ]
 
-    image_meta = ImageMeta(version="0.4", name="test", datasets=datasets)
+    image_meta = NgioImageMeta(version="0.4", name="test", datasets=datasets)
 
     image_meta.init_channels(labels=["DAPI", "GFP", "RFP"])
 
@@ -413,17 +413,53 @@ def test_label_meta():
             s * f for s, f in zip(on_disk_scale, [1, 1, 2, 2], strict=True)
         ]
 
-    image_meta = LabelMeta(
+    label_meta = NgioLabelMeta(
         version="0.4",
         name="test",
         datasets=datasets,
     )
-    assert image_meta.levels == 4
-    assert image_meta.name == "test"
-    assert image_meta.version == "0.4"
-    assert np.isclose(image_meta.xy_scaling_factor, 2.0)
-    assert np.isclose(image_meta.z_scaling_factor, 1.0)
-    assert image_meta.get_dataset(path="0").path == "0"
-    assert image_meta.get_dataset(path="1").path == "1"
-    assert image_meta.get_dataset(highest_resolution=True).path == "0"
-    assert image_meta.get_dataset(pixel_size=ds.pixel_size).path == "3"
+    assert label_meta.source_image == "../../"
+    assert label_meta.levels == 4
+    assert label_meta.name == "test"
+    assert label_meta.version == "0.4"
+    assert np.isclose(label_meta.xy_scaling_factor, 2.0)
+    assert np.isclose(label_meta.z_scaling_factor, 1.0)
+    assert label_meta.get_dataset(path="0").path == "0"
+    assert label_meta.get_dataset(path="1").path == "1"
+    assert label_meta.get_dataset(highest_resolution=True).path == "0"
+    assert label_meta.get_dataset(pixel_size=ds.pixel_size).path == "3"
+
+
+def test_fail_label_meta():
+    on_disk_axes = [
+        Axis(on_disk_name="t", axis_type=AxisType.time, unit=TimeUnits.s),
+        Axis(on_disk_name="c"),
+        Axis(on_disk_name="z"),
+        Axis(on_disk_name="y"),
+        Axis(on_disk_name="x"),
+    ]
+    on_disk_translation = [0.0, 0.0, 0.0, 0.0, 0.0]
+    on_disk_scale = [1.0, 1.0, 1.0, 0.5, 0.5]
+
+    datasets = []
+    for path in range(4):
+        ds = Dataset(
+            path=str(path),
+            on_disk_axes=on_disk_axes,
+            on_disk_scale=on_disk_scale,
+            on_disk_translation=on_disk_translation,
+            axes_setup=AxesSetup(),
+            allow_non_canonical_axes=False,
+            strict_canonical_order=True,
+        )
+        datasets.append(ds)
+        on_disk_scale = [
+            s * f for s, f in zip(on_disk_scale, [1, 1, 1, 2, 2], strict=True)
+        ]
+
+    with pytest.raises(ValueError):
+        NgioLabelMeta(
+            version="0.4",
+            name="test",
+            datasets=datasets,
+        )

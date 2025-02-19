@@ -10,6 +10,7 @@ from enum import Enum
 from typing import Any, TypeVar
 
 import numpy as np
+from pydantic import BaseModel
 
 from ngio.ome_zarr_meta.ngio_specs._axes import SpaceUnits
 from ngio.ome_zarr_meta.ngio_specs._channels import Channel, ChannelsMeta
@@ -25,7 +26,19 @@ class NgffVersion(str, Enum):
     v04 = "0.4"
 
 
-class BaseMeta:
+class ImageLabelSource(BaseModel):
+    """Image label source model."""
+
+    version: NgffVersion
+    source: dict[str, str | None]
+
+    @classmethod
+    def default_init(cls, version: NgffVersion) -> None:
+        """Initialize the ImageLabelSource object."""
+        return cls(version=version, source={"image": "../../"})
+
+
+class AbstractNgioImageMeta:
     """Base class for ImageMeta and LabelMeta."""
 
     def __init__(self, version: str, name: str | None, datasets: list[Dataset]) -> None:
@@ -181,10 +194,16 @@ class BaseMeta:
         return self.get_scaling_factor("z")
 
 
-class LabelMeta(BaseMeta):
+class NgioLabelMeta(AbstractNgioImageMeta):
     """Label metadata model."""
 
-    def __init__(self, version: str, name: str | None, datasets: list[Dataset]) -> None:
+    def __init__(
+        self,
+        version: str,
+        name: str | None,
+        datasets: list[Dataset],
+        label_image: ImageLabelSource | None = None,
+    ) -> None:
         """Initialize the ImageMeta object."""
         super().__init__(version, name, datasets)
 
@@ -193,8 +212,27 @@ class LabelMeta(BaseMeta):
         if channel_axis is not None:
             raise ValueError("Label metadata must not have channel axes.")
 
+        label_image = (
+            ImageLabelSource.default_init(self.version)
+            if label_image is None
+            else label_image
+        )
 
-class ImageMeta(BaseMeta):
+        if label_image.version != version:
+            raise ValueError("Label image version must match the metadata version.")
+        self._label_image = label_image
+
+    @property
+    def source_image(self) -> str | None:
+        source = self._label_image.source
+        if "image" not in source:
+            return None
+
+        image_path = source["image"]
+        return image_path
+
+
+class NgioImageMeta(AbstractNgioImageMeta):
     """Image metadata model."""
 
     def __init__(
@@ -309,4 +347,4 @@ class ImageMeta(BaseMeta):
             )
 
 
-ImageLabelMeta = ImageMeta | LabelMeta
+ImageLabelMeta = NgioImageMeta | NgioLabelMeta

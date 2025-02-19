@@ -25,7 +25,11 @@ from ngio.ome_zarr_meta.ngio_specs._channels import (
     NgioColors,
 )
 from ngio.ome_zarr_meta.ngio_specs._dataset import Dataset
-from ngio.ome_zarr_meta.ngio_specs._ngio_image_meta import ImageMeta, LabelMeta
+from ngio.ome_zarr_meta.ngio_specs._ngio_image_meta import (
+    ImageLabelSource,
+    NgioImageMeta,
+    NgioLabelMeta,
+)
 from ngio.ome_zarr_meta.ngio_specs._pixel_size import PixelSize
 
 __all__ = [
@@ -41,9 +45,10 @@ __all__ = [
     "ChannelVisualisation",
     "ChannelsMeta",
     "Dataset",
-    "ImageMeta",
-    "LabelMeta",
+    "ImageLabelSource",
     "NgioColors",
+    "NgioImageMeta",
+    "NgioLabelMeta",
     "PixelSize",
     "SpaceUnits",
     "TimeUnits",
