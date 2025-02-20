@@ -4,7 +4,7 @@ from typing import Generic, TypeVar
 
 from zarr import Group
 
-from ngio.ome_zarr_meta._converter_prototype import (
+from ngio.ome_zarr_meta._meta_converter_prototypes import (
     ConverterError,
     ImageMetaConverter,
     LabelMetaConverter,

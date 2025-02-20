@@ -4,7 +4,7 @@ from ngio.ome_zarr_meta._base_handlers import (
     BaseOmeZarrImageHandler,
     BaseOmeZarrLabelHandler,
 )
-from ngio.ome_zarr_meta._get_handlers import (
+from ngio.ome_zarr_meta._handlers import (
     ImageHandlerPluginManager,
     LabelHandlerPluginManager,
 )

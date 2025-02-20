@@ -4,7 +4,7 @@ from ngio.ome_zarr_meta._base_handlers import (
     BaseOmeZarrImageHandler,
     BaseOmeZarrLabelHandler,
 )
-from ngio.ome_zarr_meta._converter_prototype import (
+from ngio.ome_zarr_meta._meta_converter_prototypes import (
     ConverterError,
 )
 from ngio.ome_zarr_meta.ngio_specs import (
