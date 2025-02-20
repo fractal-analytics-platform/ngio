@@ -57,18 +57,19 @@ class Dataset:
             raise NgioValidationError(
                 "The length of the scale transformation must be the same as the axes."
             )
-        self._on_disk_scale = on_disk_scale
+        self._on_disk_scale = list(on_disk_scale)
 
         on_disk_translation = on_disk_translation or [0.0] * len(on_disk_axes)
         if len(on_disk_translation) != len(on_disk_axes):
             raise NgioValidationError(
                 "The length of the translation must be the same as the axes."
             )
-        self._on_disk_translation = on_disk_translation
+        self._on_disk_translation = list(on_disk_translation)
 
     def get_scale(self, axis_name: str) -> float:
         """Return the scale for a given axis."""
         idx = self._axes_mapper.get_index(axis_name)
+
         return self._on_disk_scale[idx]
 
     def get_translation(self, axis_name: str) -> float:
@@ -86,7 +87,15 @@ class Dataset:
         """Return the space unit for a given axis."""
         x_axis = self._axes_mapper.get_axis("x")
         y_axis = self._axes_mapper.get_axis("y")
+
+        if x_axis is None or y_axis is None:
+            raise NgioValidationError(
+                "The dataset must have x and y axes to determine the space unit."
+            )
+
         if x_axis.unit == y_axis.unit:
+            if not isinstance(x_axis.unit, SpaceUnits):
+                raise NgioValidationError("The space unit must be of type SpaceUnits.")
             return x_axis.unit
         else:
             raise NgioValidationError(
@@ -100,6 +109,8 @@ class Dataset:
         t_axis = self._axes_mapper.get_axis("t")
         if t_axis is None:
             return None
+        if not isinstance(t_axis.unit, TimeUnits):
+            raise NgioValidationError("The time unit must be of type TimeUnits.")
         return t_axis.unit
 
     @property

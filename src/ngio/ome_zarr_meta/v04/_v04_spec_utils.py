@@ -9,6 +9,7 @@ For Images and Labels implements the following functionalities:
 - A function to convert a ngio image metadata to a v04 image metadata.
 """
 
+from ome_zarr_models.common.multiscales import ValidTransform as ValidTransformV04
 from ome_zarr_models.v04.axes import Axis as AxisV04
 from ome_zarr_models.v04.coordinate_transformations import VectorScale as VectorScaleV04
 from ome_zarr_models.v04.coordinate_transformations import (
@@ -20,6 +21,7 @@ from ome_zarr_models.v04.multiscales import Dataset as DatasetV04
 from ome_zarr_models.v04.multiscales import Multiscale as MultiscaleV04
 from ome_zarr_models.v04.omero import Channel as ChannelV04
 from ome_zarr_models.v04.omero import Omero as OmeroV04
+from ome_zarr_models.v04.omero import Window as WindowV04
 from pydantic import ValidationError
 
 from ngio.ome_zarr_meta.ngio_specs import (
@@ -35,6 +37,7 @@ from ngio.ome_zarr_meta.ngio_specs import (
     NgioLabelMeta,
     default_channel_name,
 )
+from ngio.ome_zarr_meta.ngio_specs._ngio_image_meta import NgffVersion
 
 
 def _is_v04_image_meta(metadata: dict) -> ImageAttrsV04 | ValidationError:
@@ -50,8 +53,6 @@ def _is_v04_image_meta(metadata: dict) -> ImageAttrsV04 | ValidationError:
         return ImageAttrsV04(**metadata)
     except ValidationError as e:
         return e
-    except Exception as e:
-        raise e
 
 
 def _is_v04_label_meta(metadata: dict) -> LabelAttrsV04 | ValidationError:
@@ -67,17 +68,19 @@ def _is_v04_label_meta(metadata: dict) -> LabelAttrsV04 | ValidationError:
         return LabelAttrsV04(**metadata)
     except ValidationError as e:
         return e
-    except Exception as e:
-        raise e
+    raise RuntimeError("Unreachable code")
 
 
-def _v04_omero_to_channels(v04_omero: OmeroV04) -> ChannelsMeta | None:
+def _v04_omero_to_channels(v04_omero: OmeroV04 | None) -> ChannelsMeta | None:
     if v04_omero is None:
         return None
 
     ngio_channels = []
     for idx, v04_channel in enumerate(v04_omero.channels):
         channel_extra = v04_channel.model_extra
+
+        if channel_extra is None:
+            channel_extra = {}
 
         if "label" in channel_extra:
             label = channel_extra.pop("label")
@@ -111,11 +114,13 @@ def _v04_omero_to_channels(v04_omero: OmeroV04) -> ChannelsMeta | None:
                 channel_visualisation=channel_visualisation,
             )
         )
-    return ChannelsMeta(channels=ngio_channels, **v04_omero.model_extra)
+
+    v04_omero_extra = v04_omero.model_extra if v04_omero.model_extra is not None else {}
+    return ChannelsMeta(channels=ngio_channels, **v04_omero_extra)
 
 
 def _compute_scale_translation(
-    v04_transforms: list[VectorScaleV04 | VectorTranslationV04],
+    v04_transforms: ValidTransformV04,
     scale: list[float],
     translation: list[float],
 ) -> tuple[list[float], list[float]]:
@@ -155,11 +160,16 @@ def _v04_to_ngio_datasets(
     for v04_dataset in v04_multiscale.datasets:
         axes = []
         for v04_axis in v04_multiscale.axes:
+            unit = v04_axis.unit
+            if unit is not None and not isinstance(unit, str):
+                unit = str(unit)
             axes.append(
                 Axis(
                     on_disk_name=v04_axis.name,
                     axis_type=AxisType(v04_axis.type),
-                    unit=v04_axis.unit,
+                    # (for some reason the type is a generic JsonValue,
+                    # but it should be a string or None)
+                    unit=v04_axis.unit,  # type: ignore
                 )
             )
 
@@ -182,7 +192,7 @@ def _v04_to_ngio_datasets(
 
 def v04_to_ngio_image_meta(
     metadata: dict,
-) -> NgioImageMeta | ValidationError:
+) -> tuple[bool, NgioImageMeta | ValidationError]:
     """Convert a v04 image metadata to a ngio image metadata.
 
     Args:
@@ -193,7 +203,7 @@ def v04_to_ngio_image_meta(
     """
     v04_image = _is_v04_image_meta(metadata)
     if isinstance(v04_image, ValidationError):
-        return v04_image
+        return False, v04_image
 
     if len(v04_image.multiscales) > 1:
         raise NotImplementedError(
@@ -204,9 +214,13 @@ def v04_to_ngio_image_meta(
 
     channels_meta = _v04_omero_to_channels(v04_image.omero)
     datasets = _v04_to_ngio_datasets(v04_muliscale, axes_setup=AxesSetup())
-    return NgioImageMeta(
-        version=v04_muliscale.version,
-        name=v04_muliscale.name,
+
+    name = v04_muliscale.name
+    if name is not None and not isinstance(name, str):
+        name = str(name)
+    return True, NgioImageMeta(
+        version="0.4",
+        name=name,
         datasets=datasets,
         channels=channels_meta,
     )
@@ -214,7 +228,7 @@ def v04_to_ngio_image_meta(
 
 def v04_to_ngio_label_meta(
     metadata: dict,
-) -> NgioImageMeta | ValidationError:
+) -> tuple[bool, NgioLabelMeta | ValidationError]:
     """Convert a v04 image metadata to a ngio image metadata.
 
     Args:
@@ -225,7 +239,7 @@ def v04_to_ngio_label_meta(
     """
     v04_label = _is_v04_label_meta(metadata)
     if isinstance(v04_label, ValidationError):
-        return v04_label
+        return False, v04_label
 
     if len(v04_label.multiscales) > 1:
         raise NotImplementedError(
@@ -240,13 +254,22 @@ def v04_to_ngio_label_meta(
     if source is None:
         image_label_source = None
     else:
+        source = v04_label.image_label.source
+        if source is None:
+            image_label_source = None
+        else:
+            image_label_source = source.image
         image_label_source = ImageLabelSource(
-            version=v04_label.image_label.version,
-            source={"image": v04_label.image_label.source.image},
+            version=NgffVersion.v04,
+            source={"image": image_label_source},
         )
-    return NgioLabelMeta(
-        version=v04_muliscale.version,
-        name=v04_muliscale.name,
+    name = v04_muliscale.name
+    if name is not None and not isinstance(name, str):
+        name = str(name)
+
+    return True, NgioLabelMeta(
+        version="0.4",
+        name=name,
         datasets=datasets,
         image_label=image_label_source,
     )
@@ -274,42 +297,59 @@ def _ngio_to_v04_multiscale(datasets: list[Dataset]) -> MultiscaleV04:
 
     v04_datasets = []
     for dataset in datasets:
-        transform = [VectorScaleV04(type="scale", scale=dataset._on_disk_scale)]
+        transform = [VectorScaleV04(type="scale", scale=list(dataset._on_disk_scale))]
         if sum(dataset._on_disk_translation) > 0:
-            transform.append(
+            transform = (
+                VectorScaleV04(type="scale", scale=list(dataset._on_disk_scale)),
                 VectorTranslationV04(
-                    type="translation", translation=dataset._on_disk_translation
-                )
+                    type="translation", translation=list(dataset._on_disk_translation)
+                ),
             )
+        else:
+            transform = (
+                VectorScaleV04(type="scale", scale=list(dataset._on_disk_scale)),
+            )
+
         v04_datasets.append(
             DatasetV04(path=dataset.path, coordinateTransformations=transform)
         )
     return MultiscaleV04(
         axes=v04_axes,
-        datasets=v04_datasets,
+        datasets=tuple(v04_datasets),
         version="0.4",
     )
 
 
-def _ngio_to_v04_omero(channels: ChannelsMeta) -> OmeroV04:
+def _ngio_to_v04_omero(channels: ChannelsMeta | None) -> OmeroV04 | None:
+    """Convert a ngio channels to a v04 omero."""
+    if channels is None:
+        return None
+
     v04_channels = []
     for channel in channels.channels:
+        _model_extra = {
+            "label": channel.label,
+            "wavelength_id": channel.wavelength_id,
+            "active": channel.channel_visualisation.active,
+        }
+        if channel.channel_visualisation.model_extra is not None:
+            _model_extra.update(channel.channel_visualisation.model_extra)
+
         v04_channels.append(
             ChannelV04(
-                label=channel.label,
-                wavelength_id=channel.wavelength_id,
-                color=channel.channel_visualisation.color,
-                window={
-                    "start": channel.channel_visualisation.start,
-                    "end": channel.channel_visualisation.end,
-                    "min": channel.channel_visualisation.min,
-                    "max": channel.channel_visualisation.max,
-                },
-                active=channel.channel_visualisation.active,
-                **channel.channel_visualisation.model_extra,
+                color=channel.channel_visualisation.valid_color,
+                window=WindowV04(
+                    start=channel.channel_visualisation.start,
+                    end=channel.channel_visualisation.end,
+                    min=channel.channel_visualisation.min,
+                    max=channel.channel_visualisation.max,
+                ),
+                **_model_extra,
             )
         )
-    return OmeroV04(channels=v04_channels, **channels.model_extra)
+
+    _model_extra = channels.model_extra if channels.model_extra is not None else {}
+    return OmeroV04(channels=v04_channels, **_model_extra)
 
 
 def ngio_to_v04_image_meta(metadata: NgioImageMeta) -> dict:
@@ -340,6 +380,7 @@ def ngio_to_v04_label_meta(metadata: NgioLabelMeta) -> dict:
     v04_muliscale = _ngio_to_v04_multiscale(metadata.datasets)
     v04_label = LabelAttrsV04(
         multiscales=[v04_muliscale],
-        image_label=metadata.image_label.model_dump(),
+        # image_label is aliased as 'imae-label'
+        image_label=metadata.image_label.model_dump(),  # type: ignore
     )
     return v04_label.model_dump(exclude_none=True)

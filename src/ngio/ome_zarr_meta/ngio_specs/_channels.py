@@ -183,6 +183,16 @@ class ChannelVisualisation(BaseModel):
             active=active,
         )
 
+    @property
+    def valid_color(self) -> str:
+        """Return the valid color."""
+        if isinstance(self.color, NgioColors):
+            return self.color.value
+        elif isinstance(self.color, str):
+            return self.color
+        else:
+            raise NgioValueError(f"Invalid color {self.color}.")
+
 
 def default_channel_name(index: int) -> str:
     """Return the default channel name."""

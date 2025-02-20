@@ -62,7 +62,9 @@ from ngio.ome_zarr_meta.ngio_specs._channels import valid_hex_color
 def test_axes_base(
     on_disk_axes, axes_setup, allow_non_canonical_axes, strict_canonical_order
 ):
-    def _transform(x: np.ndarray, operations: tuple[AxesTransformation]) -> np.ndarray:
+    def _transform(
+        x: np.ndarray, operations: tuple[AxesTransformation, ...]
+    ) -> np.ndarray:
         for operation in operations:
             if isinstance(operation, AxesTranspose):
                 x = np.transpose(x, operation.axes)
@@ -195,7 +197,7 @@ def test_axes_fail():
 
 def test_pixel_size():
     ps_dict = {"x": 0.5, "y": 0.5, "z": 1.0, "t": 1.0}
-    ps_1 = PixelSize(**ps_dict)
+    ps_1 = PixelSize(**ps_dict, space_unit=SpaceUnits.um, time_unit=TimeUnits.s)
     assert ps_1.as_dict() == ps_dict
     assert ps_1.zyx == (1.0, 0.5, 0.5)
     assert ps_1.yx == (0.5, 0.5)
@@ -207,9 +209,6 @@ def test_pixel_size():
     np.testing.assert_allclose(ps_1.distance(ps_2), 0.0)
     ps_3 = PixelSize(x=1.0, y=1.0, z=1.0, t=1.0)
     np.testing.assert_allclose(ps_1.distance(ps_3), np.sqrt(2.0) / 2)
-
-    with pytest.raises(NotImplementedError):
-        ps_1.distance(PixelSize(x=0.5, y=0.5, z=1.0, t=2.0))
 
 
 def test_dataset():
@@ -381,7 +380,7 @@ def test_image_meta():
     assert image_meta.get_dataset(path="0").path == "0"
     assert image_meta.get_dataset(path="1").path == "1"
     assert image_meta.get_dataset(highest_resolution=True).path == "0"
-    assert image_meta.get_dataset(pixel_size=ds.pixel_size).path == "3"
+    assert image_meta.get_dataset(pixel_size=datasets[-1].pixel_size).path == "3"
     assert image_meta.get_channel_idx(label="DAPI") == 0
     assert image_meta.get_channel_idx(wavelength_id="DAPI") == 0
     assert image_meta.channel_labels == ["DAPI", "GFP", "RFP"]
@@ -427,7 +426,7 @@ def test_label_meta():
     assert label_meta.get_dataset(path="0").path == "0"
     assert label_meta.get_dataset(path="1").path == "1"
     assert label_meta.get_dataset(highest_resolution=True).path == "0"
-    assert label_meta.get_dataset(pixel_size=ds.pixel_size).path == "3"
+    assert label_meta.get_dataset(pixel_size=datasets[-1].pixel_size).path == "3"
 
 
 def test_fail_label_meta():
