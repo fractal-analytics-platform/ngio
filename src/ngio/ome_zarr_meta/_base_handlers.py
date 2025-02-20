@@ -1,8 +1,7 @@
 """Base class for handling OME-NGFF metadata in Zarr groups."""
 
-from typing import Generic, Protocol, TypeVar
+from typing import Generic, TypeVar
 
-from pydantic import ValidationError
 from zarr import Group
 
 from ngio.ome_zarr_meta._converter_prototype import (
@@ -25,56 +24,6 @@ _Image_or_Label = TypeVar("_Image_or_Label", NgioImageMeta, NgioLabelMeta)
 _Image_or_Label_Converter = TypeVar(
     "_Image_or_Label_Converter", ImageMetaConverter, LabelMetaConverter
 )
-
-
-class OmeZarrImageHandler(Protocol):
-    """Protocol for OME-Zarr image metadata handlers."""
-
-    def load(self, return_error: bool = False) -> NgioImageMeta | ValidationError:
-        """Load the metadata from the store.
-
-        Args:
-            return_error (bool): if return_error is True, return the error instead
-                of raising it else raise the error if the metadata is invalid.
-        """
-        ...
-
-    def write(self, meta: NgioImageMeta) -> None:
-        """Write the metadata to the store.
-
-        Args:
-            meta (NgioImageMeta): The metadata to write.
-        """
-        ...
-
-    def clean_cache(self) -> None:
-        """Clear the cached metadata."""
-        ...
-
-
-class OmeZarrLabelHandler(Protocol):
-    """Protocol for OME-Zarr label metadata handlers."""
-
-    def load(self, return_error: bool = False) -> NgioLabelMeta | ValidationError:
-        """Load the metadata from the store.
-
-        Args:
-            return_error (bool): if return_error is True, return the error instead
-                of raising it else raise the error if the metadata is invalid.
-        """
-        ...
-
-    def write(self, meta: NgioLabelMeta) -> None:
-        """Write the metadata to the store.
-
-        Args:
-            meta (NgioLabelMeta): The metadata to write.
-        """
-        ...
-
-    def clean_cache(self) -> None:
-        """Clear the cached metadata."""
-        ...
 
 
 class GenericOmeZarrHandler(Generic[_Image_or_Label, _Image_or_Label_Converter]):
