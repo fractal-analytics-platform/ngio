@@ -69,13 +69,13 @@ class GenericHandlerPluginManager(Generic[_Image_or_Label_Plugin]):
         self._implemented_handlers[key] = handler
 
 
-class ImageHandlerPluginManager(GenericHandlerPluginManager[BaseOmeZarrImageHandler]):
+class ImageHandlersManager(GenericHandlerPluginManager[BaseOmeZarrImageHandler]):
     def __init__(self):
         super().__init__()
         self.add_handler("0.4", OmeZarrV04ImageHandler)
 
 
-class LabelHandlerPluginManager(GenericHandlerPluginManager[BaseOmeZarrLabelHandler]):
+class LabelHandlersManager(GenericHandlerPluginManager[BaseOmeZarrLabelHandler]):
     def __init__(self):
         super().__init__()
         self.add_handler("0.4", OmeZarrV04LabelHandler)

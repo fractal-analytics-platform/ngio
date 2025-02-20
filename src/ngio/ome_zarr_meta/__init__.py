@@ -5,8 +5,8 @@ from ngio.ome_zarr_meta._base_handlers import (
     BaseOmeZarrLabelHandler,
 )
 from ngio.ome_zarr_meta._handlers import (
-    ImageHandlerPluginManager,
-    LabelHandlerPluginManager,
+    ImageHandlersManager,
+    LabelHandlersManager,
 )
 from ngio.ome_zarr_meta.ngio_specs import (
     AxesMapper,
@@ -21,8 +21,8 @@ __all__ = [
     "BaseOmeZarrImageHandler",
     "BaseOmeZarrLabelHandler",
     "Dataset",
-    "ImageHandlerPluginManager",
-    "LabelHandlerPluginManager",
+    "ImageHandlersManager",
+    "LabelHandlersManager",
     "NgioImageMeta",
     "NgioLabelMeta",
     "PixelSize",
