@@ -76,7 +76,8 @@ class NgioColors(str, Enum):
         for color in available_colors:
             # try to match the color to the channel name
             similarity[color] = SequenceMatcher(None, channel_name, color).ratio()
-        color_str = max(similarity, key=similarity.get)
+        # Get the color with the highest similarity
+        color_str = max(similarity, key=similarity.get)  # type: ignore
         return NgioColors.__members__[color_str]
 
 
