@@ -34,6 +34,7 @@ classifiers = [
 # add your package dependencies here
 dependencies = [
     "numpy",
+    "filelock",
     "zarr<3",
     "anndata>=0.8.0",
     "pydantic",
