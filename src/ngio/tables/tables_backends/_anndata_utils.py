@@ -26,7 +26,7 @@ if TYPE_CHECKING:
 
 
 def custom_read_zarr(
-    store: StoreOrGroup, elem_to_read: Collection[str] | None
+    store: StoreOrGroup, elem_to_read: Collection[str] | None = None
 ) -> AnnData:
     """Read from a hierarchical Zarr array store.
 
@@ -154,20 +154,20 @@ def dataframe_to_anndata(
             num_columns.append(c_name)
 
     # Converting all observations to string
-    obs_df = dataframe[str_columns + int_columns]
-    obs_df.index = dataframe.index
+    obs_dataframe = dataframe[str_columns + int_columns]
+    obs_dataframe.index = dataframe.index
 
-    x_df = dataframe[num_columns]
+    x_dataframe = dataframe[num_columns]
 
-    if x_df.dtypes.nunique() > 1:
-        x_df = x_df.astype("float64")
+    if x_dataframe.dtypes.nunique() > 1:
+        x_dataframe = x_dataframe.astype("float64")
 
-    if x_df.empty:
+    if x_dataframe.empty:
         # If there are no numeric columns, create an empty array
         # to avoid AnnData failing to create the object
-        x_df = np.zeros((0, 0), dtype="float64")
+        x_dataframe = np.zeros((0, 0), dtype="float64")
 
-    return ad.AnnData(X=x_df, obs=obs_df)
+    return ad.AnnData(X=x_dataframe, obs=obs_dataframe)
 
 
 def anndata_to_dataframe(
@@ -181,4 +181,6 @@ def anndata_to_dataframe(
         validators (Iterable[TableValidator] | None): A collection of functions
             used to validate the table. Default is None.
     """
-    raise NotImplementedError("This function is not implemented yet.")
+    dataframe = anndata.to_df()
+    dataframe[anndata.obs_keys()] = anndata.obs
+    return validate_table(dataframe, validators)
