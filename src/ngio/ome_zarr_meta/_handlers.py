@@ -19,7 +19,7 @@ _Image_or_Label_Plugin = TypeVar(
 )
 
 
-class GenericHandlerPluginManager(Generic[_Image_or_Label_Plugin]):
+class GenericHandlersManager(Generic[_Image_or_Label_Plugin]):
     """This class is a singleton that manages the available image handler plugins."""
 
     _instance = None
@@ -69,13 +69,13 @@ class GenericHandlerPluginManager(Generic[_Image_or_Label_Plugin]):
         self._implemented_handlers[key] = handler
 
 
-class ImageHandlersManager(GenericHandlerPluginManager[BaseOmeZarrImageHandler]):
+class ImageHandlersManager(GenericHandlersManager[BaseOmeZarrImageHandler]):
     def __init__(self):
         super().__init__()
         self.add_handler("0.4", OmeZarrV04ImageHandler)
 
 
-class LabelHandlersManager(GenericHandlerPluginManager[BaseOmeZarrLabelHandler]):
+class LabelHandlersManager(GenericHandlersManager[BaseOmeZarrLabelHandler]):
     def __init__(self):
         super().__init__()
         self.add_handler("0.4", OmeZarrV04LabelHandler)

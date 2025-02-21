@@ -12,9 +12,10 @@ from ngio.utils._errors import (
     NgioValueError,
 )
 from ngio.utils._logger import ngio_logger, set_logger_level
-from ngio.utils._zarr_group_utils import (
+from ngio.utils._zarr_utils import (
     AccessModeLiteral,
     StoreOrGroup,
+    ZarrGroupHandler,
     open_group_wrapper,
 )
 
@@ -31,6 +32,7 @@ __all__ = [
     "NgioValidationError",
     "NgioValueError",
     "StoreOrGroup",
+    "ZarrGroupHandler",
     # Datasets
     "download_ome_zarr_dataset",
     "list_ome_zarr_datasets",
@@ -38,5 +40,4 @@ __all__ = [
     "ngio_logger",
     "open_group_wrapper",
     "set_logger_level",
-    "unique_items_validator",
 ]

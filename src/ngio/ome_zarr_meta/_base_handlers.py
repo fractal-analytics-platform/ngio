@@ -2,8 +2,6 @@
 
 from typing import Generic, TypeVar
 
-from zarr import Group
-
 from ngio.ome_zarr_meta._meta_converter_prototypes import (
     ConverterError,
     ImageMetaConverter,
@@ -17,7 +15,7 @@ from ngio.utils import (
     AccessModeLiteral,
     NgioValueError,
     StoreOrGroup,
-    open_group_wrapper,
+    ZarrGroupHandler,
 )
 
 _Image_or_Label = TypeVar("_Image_or_Label", NgioImageMeta, NgioLabelMeta)
@@ -45,33 +43,12 @@ class GenericOmeZarrHandler(Generic[_Image_or_Label, _Image_or_Label_Converter])
             cache (bool): Whether to cache the metadata.
             mode (str): The mode of the store.
         """
-        if isinstance(store, Group):
-            if hasattr(store, "store_path"):
-                self._store = store.store_path
-            else:
-                self._store = store.store
-            self._group = store
-
-        else:
-            self._store = store
-            self._group = open_group_wrapper(store=store, mode=mode)
-
-        self.cache = cache
-        self._attrs: dict | None = None
-
+        self._group_handler = ZarrGroupHandler(store=store, cache=cache, mode=mode)
         self._meta_converter = meta_converter
-
-    def _load_attrs(self) -> dict:
-        """Load the attributes of the group."""
-        if self._attrs is not None:
-            return self._attrs
-
-        self._attrs = dict(self._group.attrs)
-        return self._attrs
 
     def _load_meta(self, return_error: bool = False):
         """Load the metadata from the store."""
-        attrs = self._load_attrs()
+        attrs = self._group_handler.load_attrs()
         is_valid, meta_or_error = self._meta_converter.from_dict(attrs)
         if is_valid:
             return meta_or_error
@@ -87,11 +64,8 @@ class GenericOmeZarrHandler(Generic[_Image_or_Label, _Image_or_Label_Converter])
 
     def _write_meta(self, meta) -> None:
         """Write the metadata to the store."""
-        if not self._group.store.is_writeable():
-            raise NgioValueError("The store is not writeable. Cannot write metadata.")
-
         v04_meta = self._meta_converter.to_dict(meta)
-        self._group.attrs.update(v04_meta)
+        self._group_handler.write_attrs(v04_meta)
 
     def write(self, meta: _Image_or_Label) -> None:
         """Write the metadata to the store."""
