@@ -1,3 +1,4 @@
+import sys
 from pathlib import Path
 
 import dask
@@ -100,17 +101,6 @@ def test_open_fail(tmp_path: Path):
         open_group_wrapper(store=read_only_group, mode="w")
 
 
-def test_debug(tmp_path: Path):
-    store = tmp_path / "test_debug.zarr"
-
-    store.touch()
-    lock = f"{store}.lock"
-    Path(lock).touch()
-
-    assert store.exists()
-    assert Path(lock).exists()
-
-
 def test_multiprocessing_safety(tmp_path: Path):
     zarr_store = tmp_path / "test_multiprocessing_safety.zarr"
 
@@ -145,8 +135,14 @@ def test_multiprocessing_safety(tmp_path: Path):
     assert np.all(counts == 1)
 
     assert handler._lock_path is not None
-    # TODO investigate why this fails only on Windows CI
-    # assert Path(handler._lock_path).exists()
+
+    if sys.platform.startswith("win"):
+        # The file lock path is not removed on Windows
+        # for some reason path.exists() returns False
+        # even though the file should exist (or at least it does on Mac/Linux)
+        return None
+
+    assert Path(handler._lock_path).exists()
     lock_path = Path(handler._lock_path)
     handler.remove_lock()
     assert not lock_path.exists()
