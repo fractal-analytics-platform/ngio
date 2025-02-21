@@ -1,6 +1,9 @@
 from pathlib import Path
 
+import dask
+import dask.delayed
 import fsspec.implementations.http
+import numpy as np
 import pytest
 import zarr
 
@@ -113,12 +116,6 @@ def test_remote_storage():
 
 
 def test_multiprocessing_safety(tmp_path: Path):
-    import dask
-    import dask.delayed
-    import numpy as np
-
-    from ngio.utils import ZarrGroupHandler
-
     zarr_store = tmp_path / "test_multiprocessing_safety.zarr"
 
     @dask.delayed
