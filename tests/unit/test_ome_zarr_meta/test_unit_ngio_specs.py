@@ -302,7 +302,7 @@ def test_channels():
         pass
 
     with pytest.raises(ValueError):
-        ChannelsMeta.default_init(labels=[Mock()])
+        ChannelsMeta.default_init(labels=[Mock()])  # type: ignore
 
     channel = Channel.default_init(label="DAPI", wavelength_id="A01_C01")
     ChannelsMeta(channels=[channel])
@@ -311,7 +311,7 @@ def test_channels():
         ChannelsMeta.default_init(labels=["DAPI", "DAPI"])
 
     with pytest.raises(ValueError):
-        ChannelsMeta.default_init(labels=[channel, channel])
+        ChannelsMeta.default_init(labels=[channel, channel])  # type: ignore
 
     with pytest.raises(ValueError):
         Channel.default_init(label="DAPI", data_type="color")
@@ -338,7 +338,7 @@ def test_ngio_colors():
     ChannelVisualisation(color=NgioColors.cyan)
 
     with pytest.raises(ValueError):
-        ChannelVisualisation.default_init(color=[])
+        ChannelVisualisation.default_init(color=[])  # type: ignore
 
 
 def test_image_meta():
