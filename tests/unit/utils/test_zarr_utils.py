@@ -100,6 +100,17 @@ def test_open_fail(tmp_path: Path):
         open_group_wrapper(store=read_only_group, mode="w")
 
 
+def test_debug(tmp_path: Path):
+    store = tmp_path / "test_debug.zarr"
+
+    store.touch()
+    lock = f"{store}.lock"
+    Path(lock).touch()
+
+    assert store.exists()
+    assert Path(lock).exists()
+
+
 def test_multiprocessing_safety(tmp_path: Path):
     zarr_store = tmp_path / "test_multiprocessing_safety.zarr"
 
