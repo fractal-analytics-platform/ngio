@@ -65,6 +65,7 @@ def test_group_handler_read(tmp_path: Path):
     assert handler.load_attrs() == input_attrs
     assert isinstance(handler.get_array("array1"), zarr.Array)
     assert isinstance(handler.get_group("group1"), zarr.Group)
+    assert handler.mode == "r"
 
     with pytest.raises(NgioFileNotFoundError):
         handler.get_array("array2")
@@ -99,6 +100,53 @@ def test_open_fail(tmp_path: Path):
         open_group_wrapper(store=read_only_group, mode="w")
 
 
+def test_multiprocessing_safety(tmp_path: Path):
+    zarr_store = tmp_path / "test_multiprocessing_safety.zarr"
+
+    @dask.delayed  # type: ignore
+    def add_item(i):
+        handler = ZarrGroupHandler(
+            zarr_store, cache=False, mode="a", parallel_safe=True
+        )
+        assert handler.lock is not None
+
+        with handler.lock:
+            attrs = handler.load_attrs()
+            attrs["test_list"].append(i)
+            handler.write_attrs(attrs, overwrite=False)
+
+        return i
+
+    handler = ZarrGroupHandler(zarr_store, cache=False, mode="w", parallel_safe=True)
+    attrs = handler.load_attrs()
+    attrs = {"test_list": []}
+    handler.write_attrs(attrs, overwrite=True)
+
+    results = []
+    num_items = 1000
+    for i in range(num_items):
+        results.append(add_item(i))
+
+    dask.compute(*results)  # type: ignore
+
+    _, counts = np.unique(handler.load_attrs()["test_list"], return_counts=True)
+    assert len(counts) == num_items
+    assert np.all(counts == 1)
+
+    assert handler._lock_path is not None
+    assert Path(handler._lock_path).exists()
+    lock_path = Path(handler._lock_path)
+    handler.remove_lock()
+    assert not lock_path.exists()
+    handler.remove_lock()
+
+    handler = ZarrGroupHandler(zarr_store, cache=False, mode="w", parallel_safe=True)
+    assert handler.lock is not None
+    with pytest.raises(NgioValueError):
+        with handler.lock:
+            handler.remove_lock()
+
+
 def test_remote_storage():
     url = (
         "https://raw.githubusercontent.com/"
@@ -114,34 +162,8 @@ def test_remote_storage():
     assert isinstance(handler.get_array("0"), zarr.Array)
     assert isinstance(handler.get_group("labels"), zarr.Group)
 
+    # Check if the fsspec store based group is handled correctly
+    open_group_wrapper(store=handler.group, mode="r")
 
-def test_multiprocessing_safety(tmp_path: Path):
-    zarr_store = tmp_path / "test_multiprocessing_safety.zarr"
-
-    @dask.delayed
-    def add_item(i):
-        handler = ZarrGroupHandler(zarr_store, cache=False, mode="a", thread_safe=True)
-        assert handler.lock is not None
-
-        with handler.lock:
-            attrs = handler.load_attrs()
-            attrs["test_list"].append(i)
-            handler.write_attrs(attrs, overwrite=False)
-
-        return i
-
-    handler = ZarrGroupHandler(zarr_store, cache=False, mode="w", thread_safe=True)
-    attrs = handler.load_attrs()
-    attrs = {"test_list": []}
-    handler.write_attrs(attrs, overwrite=True)
-
-    results = []
-    for i in range(1000):
-        results.append(add_item(i))
-
-    dask.compute(*results)
-
-    handler = ZarrGroupHandler(zarr_store, cache=False, mode="r", thread_safe=False)
-    _, counts = np.unique(handler.load_attrs()["test_list"], return_counts=True)
-    assert len(counts) == 1000
-    assert np.all(counts == 1)
+    with pytest.raises(NgioValueError):
+        ZarrGroupHandler(store=store, parallel_safe=True)

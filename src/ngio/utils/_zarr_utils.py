@@ -91,7 +91,7 @@ class ZarrGroupHandler:
         store: StoreOrGroup,
         cache: bool = False,
         mode: AccessModeLiteral = "a",
-        thread_safe: bool = False,
+        parallel_safe: bool = False,
     ):
         """Initialize the handler.
 
@@ -100,26 +100,29 @@ class ZarrGroupHandler:
             meta_mode (str): The mode of the metadata handler.
             cache (bool): Whether to cache the metadata.
             mode (str): The mode of the store.
-            thread_safe (bool): Whether to use a lock mechanism to make the store that
-                the access to the store is thread safe.
+            parallel_safe (bool): If True, the handler will create a lock file to make
+                that can be used to make the handler parallel safe.
+                Be aware that the lock needs to be used manually.
         """
         _group, _store = open_group_wrapper(store, mode)
 
-        if thread_safe:
+        # Make sure the cache is set in the attrs
+        # in the same way as the cache in the handler
+        _group.attrs.cache = cache
+
+        if parallel_safe:
             if not isinstance(_store, str | Path):
                 raise NgioValueError(
-                    "Thread safe mode only works with LocalStore, "
-                    "please provide a path as store."
+                    "The store needs to be a path to use the lock mechanism."
                 )
             self._lock_path = f"{_store}.lock"
             self._lock = FileLock(self._lock_path)
-            self._group = None  # will be better if the group is not loaded until needed
 
         else:
             self._lock_path = None
             self._lock = None
-            self._group = _group
 
+        self._group = _group
         self._mode = mode
         self._store = _store
         self.use_cache = cache
@@ -140,11 +143,23 @@ class ZarrGroupHandler:
         """Return the lock."""
         return self._lock
 
+    def remove_lock(self) -> None:
+        """Return the lock."""
+        if self._lock is None or self._lock_path is None:
+            return None
+
+        lock_path = Path(self._lock_path)
+        if lock_path.exists() and self._lock.lock_counter == 0:
+            lock_path.unlink()
+            self._lock = None
+            self._lock_path = None
+            return None
+
+        raise NgioValueError("The lock is still in use. Cannot remove it.")
+
     @property
     def group(self) -> zarr.Group:
         """Return the group."""
-        if self._group is None:
-            return open_group_wrapper(self.store, mode=self.mode)[0]
         return self._group
 
     def add_to_cache(self, key: str, value: object) -> None:
