@@ -124,3 +124,6 @@ pixi.lock
 
 src/ngio/_v01
 tests/_v01
+
+# Ignore locks
+*.lock

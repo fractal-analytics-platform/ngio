@@ -5,6 +5,7 @@ from typing import Literal
 
 import fsspec
 import zarr
+from filelock import BaseFileLock, FileLock
 from zarr.errors import ContainsGroupError, GroupNotFoundError
 from zarr.storage import DirectoryStore, FSStore, Store
 
@@ -90,6 +91,7 @@ class ZarrGroupHandler:
         store: StoreOrGroup,
         cache: bool = False,
         mode: AccessModeLiteral = "a",
+        thread_safe: bool = False,
     ):
         """Initialize the handler.
 
@@ -98,11 +100,28 @@ class ZarrGroupHandler:
             meta_mode (str): The mode of the metadata handler.
             cache (bool): Whether to cache the metadata.
             mode (str): The mode of the store.
+            thread_safe (bool): Whether to use a lock mechanism to make the store that
+                the access to the store is thread safe.
         """
         _group, _store = open_group_wrapper(store, mode)
-        self._group = _group
-        self._store = _store
 
+        if thread_safe:
+            if not isinstance(_store, str | Path):
+                raise NgioValueError(
+                    "Thread safe mode only works with LocalStore, "
+                    "please provide a path as store."
+                )
+            self._lock_path = f"{_store}.lock"
+            self._lock = FileLock(self._lock_path)
+            self._group = None  # will be better if the group is not loaded until needed
+
+        else:
+            self._lock_path = None
+            self._lock = None
+            self._group = _group
+
+        self._mode = mode
+        self._store = _store
         self.use_cache = cache
         self._cache = {}
 
@@ -112,8 +131,20 @@ class ZarrGroupHandler:
         return self._store
 
     @property
+    def mode(self) -> AccessModeLiteral:
+        """Return the mode of the group."""
+        return self._mode  # type: ignore
+
+    @property
+    def lock(self) -> BaseFileLock | None:
+        """Return the lock."""
+        return self._lock
+
+    @property
     def group(self) -> zarr.Group:
         """Return the group."""
+        if self._group is None:
+            return open_group_wrapper(self.store, mode=self.mode)[0]
         return self._group
 
     def add_to_cache(self, key: str, value: object) -> None:
@@ -138,12 +169,12 @@ class ZarrGroupHandler:
         if attrs is not None and isinstance(attrs, dict):
             return attrs
 
-        attrs = dict(self._group.attrs)
+        attrs = dict(self.group.attrs)
 
         self.add_to_cache("attrs", attrs)
         return attrs
 
-    def write_attrs(self, attrs: dict, overwrite: bool = False) -> None:
+    def _write_attrs(self, attrs: dict, overwrite: bool = False) -> None:
         """Write the metadata to the store."""
         is_read_only = getattr(self._group, "_read_only", False)
         if is_read_only:
@@ -152,9 +183,14 @@ class ZarrGroupHandler:
         # we need to invalidate the current attrs cache
         self.add_to_cache("attrs", None)
         if overwrite:
-            self._group.attrs.clear()
+            self.group.attrs.clear()
 
-        self._group.attrs.update(attrs)
+        self.group.attrs.update(attrs)
+
+    def write_attrs(self, attrs: dict, overwrite: bool = False) -> None:
+        """Write the metadata to the store."""
+        # Maybe we should use the lock here
+        self._write_attrs(attrs, overwrite)
 
     def _group_get(self, path: str):
         """Get a group from the group."""
@@ -162,7 +198,7 @@ class ZarrGroupHandler:
         if group_or_array is not None:
             return group_or_array
 
-        group_or_array = self._group.get(path, None)
+        group_or_array = self.group.get(path, None)
         self.add_to_cache(path, group_or_array)
         return group_or_array
 

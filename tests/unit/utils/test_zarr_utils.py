@@ -110,3 +110,41 @@ def test_remote_storage():
     assert handler.load_attrs()
     assert isinstance(handler.get_array("0"), zarr.Array)
     assert isinstance(handler.get_group("labels"), zarr.Group)
+
+
+def test_multiprocessing_safety(tmp_path: Path):
+    import dask
+    import dask.delayed
+    import numpy as np
+
+    from ngio.utils import ZarrGroupHandler
+
+    zarr_store = tmp_path / "test_multiprocessing_safety.zarr"
+
+    @dask.delayed
+    def add_item(i):
+        handler = ZarrGroupHandler(zarr_store, cache=False, mode="a", thread_safe=True)
+        assert handler.lock is not None
+
+        with handler.lock:
+            attrs = handler.load_attrs()
+            attrs["test_list"].append(i)
+            handler.write_attrs(attrs, overwrite=False)
+
+        return i
+
+    handler = ZarrGroupHandler(zarr_store, cache=False, mode="w", thread_safe=True)
+    attrs = handler.load_attrs()
+    attrs = {"test_list": []}
+    handler.write_attrs(attrs, overwrite=True)
+
+    results = []
+    for i in range(1000):
+        results.append(add_item(i))
+
+    dask.compute(*results)
+
+    handler = ZarrGroupHandler(zarr_store, cache=False, mode="r", thread_safe=False)
+    _, counts = np.unique(handler.load_attrs()["test_list"], return_counts=True)
+    assert len(counts) == 1000
+    assert np.all(counts == 1)
