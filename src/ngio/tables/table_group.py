@@ -38,6 +38,6 @@ class TableGroup:
         """Get a label from the group."""
         ...
 
-    def add(self, table: Table, overwrite: bool = False) -> None:
+    def add(self, name: str, table: Table, overwrite: bool = False) -> None:
         """Add a table to the group."""
         ...
