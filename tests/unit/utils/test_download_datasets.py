@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from ngio.utils import download_ome_zarr_dataset, list_ome_zarr_datasets
+from ngio.common import download_ome_zarr_dataset, list_ome_zarr_datasets
 
 
 def test_list_datasets():

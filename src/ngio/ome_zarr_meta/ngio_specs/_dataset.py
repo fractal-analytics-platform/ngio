@@ -2,6 +2,8 @@
 
 from collections.abc import Collection
 
+from ngio.common import NgioValidationError
+from ngio.common._pixel_size import PixelSize
 from ngio.ome_zarr_meta.ngio_specs._axes import (
     AxesMapper,
     AxesSetup,
@@ -9,8 +11,6 @@ from ngio.ome_zarr_meta.ngio_specs._axes import (
     SpaceUnits,
     TimeUnits,
 )
-from ngio.ome_zarr_meta.ngio_specs._pixel_size import PixelSize
-from ngio.utils import NgioValidationError
 
 
 class Dataset:

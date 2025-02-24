@@ -7,8 +7,8 @@ https://fractal-analytics-platform.github.io/fractal-tasks-core/tables/
 import pandas as pd
 from pydantic import BaseModel
 
+from ngio.common import AccessModeLiteral, StoreOrGroup, ZarrGroupHandler
 from ngio.tables.backends import TableBackendsManager
-from ngio.utils import AccessModeLiteral, StoreOrGroup, ZarrGroupHandler
 
 
 class GenericTableMeta(BaseModel):

@@ -1,6 +1,6 @@
 """Module for handling the /tables group in an OME-NGFF file."""
 
-from ngio.utils import AccessModeLiteral, StoreOrGroup, ZarrGroupHandler
+from ngio.common import AccessModeLiteral, StoreOrGroup, ZarrGroupHandler
 
 
 class Table:

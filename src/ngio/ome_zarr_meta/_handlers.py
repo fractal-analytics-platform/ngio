@@ -2,17 +2,17 @@ from typing import Any, Generic, TypeVar
 
 from pydantic import ValidationError
 
-from ngio.ome_zarr_meta._base_handlers import (
-    BaseOmeZarrImageHandler,
-    BaseOmeZarrLabelHandler,
-)
-from ngio.ome_zarr_meta.v04 import OmeZarrV04ImageHandler, OmeZarrV04LabelHandler
-from ngio.utils import (
+from ngio.common import (
     AccessModeLiteral,
     NgioValidationError,
     NgioValueError,
     StoreOrGroup,
 )
+from ngio.ome_zarr_meta._base_handlers import (
+    BaseOmeZarrImageHandler,
+    BaseOmeZarrLabelHandler,
+)
+from ngio.ome_zarr_meta.v04 import OmeZarrV04ImageHandler, OmeZarrV04LabelHandler
 
 _Image_or_Label_Plugin = TypeVar(
     "_Image_or_Label_Plugin", BaseOmeZarrLabelHandler, BaseOmeZarrImageHandler

@@ -9,7 +9,7 @@ from filelock import BaseFileLock, FileLock
 from zarr.errors import ContainsGroupError, GroupNotFoundError
 from zarr.storage import DirectoryStore, FSStore, Store
 
-from ngio.utils import NgioFileExistsError, NgioFileNotFoundError, NgioValueError
+from ngio.common import NgioFileExistsError, NgioFileNotFoundError, NgioValueError
 
 AccessModeLiteral = Literal["r", "r+", "w", "w-", "a"]
 # StoreLike is more restrictive than it could be

@@ -2,17 +2,17 @@
 
 import os
 
-from ngio.utils._common_types import ArrayLike
-from ngio.utils._datasets import download_ome_zarr_dataset, list_ome_zarr_datasets
-from ngio.utils._errors import (
+from ngio.common._common_types import ArrayLike
+from ngio.common._datasets import download_ome_zarr_dataset, list_ome_zarr_datasets
+from ngio.common._errors import (
     NgioFileExistsError,
     NgioFileNotFoundError,
     NgioTableValidationError,
     NgioValidationError,
     NgioValueError,
 )
-from ngio.utils._logger import ngio_logger, set_logger_level
-from ngio.utils._zarr_utils import (
+from ngio.common._logger import ngio_logger, set_logger_level
+from ngio.common._zarr_utils import (
     AccessModeLiteral,
     StoreOrGroup,
     ZarrGroupHandler,

@@ -1,5 +1,9 @@
 """Concrete implementation of the OME-Zarr metadata handlers for version 0.4."""
 
+from ngio.common import (
+    AccessModeLiteral,
+    StoreOrGroup,
+)
 from ngio.ome_zarr_meta._base_handlers import (
     BaseOmeZarrImageHandler,
     BaseOmeZarrLabelHandler,
@@ -16,10 +20,6 @@ from ngio.ome_zarr_meta.v04._v04_spec_utils import (
     ngio_to_v04_label_meta,
     v04_to_ngio_image_meta,
     v04_to_ngio_label_meta,
-)
-from ngio.utils import (
-    AccessModeLiteral,
-    StoreOrGroup,
 )
 
 

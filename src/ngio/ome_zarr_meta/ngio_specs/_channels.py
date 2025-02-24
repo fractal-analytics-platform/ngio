@@ -11,7 +11,7 @@ from typing import Any, TypeVar
 import numpy as np
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from ngio.utils import NgioValidationError, NgioValueError
+from ngio.common import NgioValidationError, NgioValueError
 
 ################################################################################################
 #

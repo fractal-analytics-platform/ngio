@@ -2,6 +2,12 @@
 
 from typing import Generic, TypeVar
 
+from ngio.common import (
+    AccessModeLiteral,
+    NgioValueError,
+    StoreOrGroup,
+    ZarrGroupHandler,
+)
 from ngio.ome_zarr_meta._meta_converter_prototypes import (
     ConverterError,
     ImageMetaConverter,
@@ -10,12 +16,6 @@ from ngio.ome_zarr_meta._meta_converter_prototypes import (
 from ngio.ome_zarr_meta.ngio_specs import (
     NgioImageMeta,
     NgioLabelMeta,
-)
-from ngio.utils import (
-    AccessModeLiteral,
-    NgioValueError,
-    StoreOrGroup,
-    ZarrGroupHandler,
 )
 
 _Image_or_Label = TypeVar("_Image_or_Label", NgioImageMeta, NgioLabelMeta)

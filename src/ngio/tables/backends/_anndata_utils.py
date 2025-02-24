@@ -14,7 +14,7 @@ from anndata._io.zarr import read_dataframe
 from anndata.compat import _clean_uns
 from anndata.experimental import read_dispatched
 
-from ngio.utils import (
+from ngio.common import (
     NgioTableValidationError,
     StoreOrGroup,
     open_group_wrapper,

@@ -6,9 +6,9 @@ from typing import Literal, Protocol
 from anndata import AnnData
 from pandas import DataFrame
 
+from ngio.common import NgioValueError, ZarrGroupHandler
 from ngio.tables.backends._anndata import AnnDataBackend
 from ngio.tables.backends._json import JsonTableBackend
-from ngio.utils import NgioValueError, ZarrGroupHandler
 
 
 class TableBackendProtocol(Protocol):

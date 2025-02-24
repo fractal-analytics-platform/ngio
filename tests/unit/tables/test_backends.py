@@ -6,6 +6,7 @@ import pandas as pd
 import pandas.api.types as ptypes
 import pytest
 
+from ngio.common import NgioValueError, ZarrGroupHandler
 from ngio.tables.backends import TableBackendsManager
 from ngio.tables.backends._anndata import AnnDataBackend
 from ngio.tables.backends._anndata_utils import (
@@ -13,7 +14,6 @@ from ngio.tables.backends._anndata_utils import (
     dataframe_to_anndata,
 )
 from ngio.tables.backends._json import JsonTableBackend
-from ngio.utils import NgioValueError, ZarrGroupHandler
 
 
 def test_backend_manager(tmp_path: Path):
