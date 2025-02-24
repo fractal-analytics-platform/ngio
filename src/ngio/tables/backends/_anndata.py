@@ -37,6 +37,10 @@ class AnnDataBackend(AbstractTableBackend):
     def load_as_anndata(self, columns: Collection[str] | None = None) -> AnnData:
         """Load the metadata in the store."""
         anndata = custom_read_zarr(self._group_handler._group)
+        if columns is not None:
+            raise NotImplementedError(
+                "Selecting columns is not implemented for AnnData."
+            )
         return anndata
 
     def load_as_dataframe(self, columns: Collection[str] | None = None) -> DataFrame:
@@ -46,6 +50,8 @@ class AnnDataBackend(AbstractTableBackend):
             index_key=self._index_key,
             index_type=self._index_type,
         )
+        if columns is not None:
+            dataframe = dataframe[columns]
         return dataframe
 
     def write_from_dataframe(

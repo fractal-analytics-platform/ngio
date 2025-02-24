@@ -42,6 +42,14 @@ def test_group_handler_creation(tmp_path: Path, cache: bool):
     assert handler.load_attrs()["a"] == 3
     assert "b" not in handler.load_attrs()
 
+    new_group = handler.create_group("new_group")
+
+    assert isinstance(new_group, zarr.Group)
+    assert isinstance(handler.get_group("new_group"), zarr.Group)
+
+    with pytest.raises(NgioFileExistsError):
+        handler.create_group("new_group", overwrite=False)
+
 
 def test_group_handler_from_group(tmp_path: Path):
     store = tmp_path / "test_group_handler_from_group.zarr"

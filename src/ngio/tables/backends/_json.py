@@ -4,6 +4,7 @@ import pandas as pd
 from pandas import DataFrame
 
 from ngio.tables.backends._abstract_backend import AbstractTableBackend
+from ngio.utils import NgioFileNotFoundError
 
 
 class JsonTableBackend(AbstractTableBackend):
@@ -28,20 +29,28 @@ class JsonTableBackend(AbstractTableBackend):
         """List all labels in the group."""
         return list(self.load_as_dataframe().columns)
 
+    def _get_table_group(self):
+        try:
+            table_group = self._group_handler.get_group(path="table")
+        except NgioFileNotFoundError:
+            table_group = self._group_handler.group.create_group("table")
+        return table_group
+
     def load_as_dataframe(self, columns: Collection[str] | None = None) -> DataFrame:
         """List all labels in the group."""
-        attrs = self._group_handler.load_attrs()
-        table = attrs.get("table")
-        if table is None:
-            return pd.DataFrame()
-        return pd.DataFrame.from_dict(table)
+        table_group = self._get_table_group()
+        table_dict = dict(table_group.attrs)
+        data_frame = pd.DataFrame.from_dict(table_dict)
+        if columns is not None:
+            data_frame = data_frame[columns]
+        return data_frame
 
     def write_from_dataframe(
         self, table: DataFrame, metadata: dict | None = None
     ) -> None:
         """Consolidate the metadata in the store."""
-        attrs = self._group_handler.load_attrs()
-        attrs["table"] = table.to_dict()
+        table_group = self._get_table_group()
+        table_group.attrs.clear()
+        table_group.attrs.update(table.to_dict())
         if metadata is not None:
-            attrs.update(metadata)
-        self._group_handler.write_attrs(attrs)
+            self._group_handler.write_attrs(metadata)

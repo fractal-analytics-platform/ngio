@@ -8,7 +8,7 @@ from pandas import DataFrame
 
 from ngio.tables.backends._anndata import AnnDataBackend
 from ngio.tables.backends._json import JsonTableBackend
-from ngio.utils import ZarrGroupHandler
+from ngio.utils import NgioValueError, ZarrGroupHandler
 
 
 class TableBackendProtocol(Protocol):
@@ -77,7 +77,7 @@ class TableBackendsManager:
             backend_name = "anndata"
 
         if backend_name not in self._implemented_backends:
-            raise ValueError(f"Table backend {backend_name} not found.")
+            raise NgioValueError(f"Table backend {backend_name} not implemented.")
         handler = self._implemented_backends[backend_name](
             group_handler=group_handler, index_key=index_key, index_type=index_type
         )
@@ -91,7 +91,10 @@ class TableBackendsManager:
     ):
         """Register a new handler."""
         if backend_name in self._implemented_backends and not overwrite:
-            raise ValueError(f"Table backend {backend_name} already exists.")
+            raise NgioValueError(
+                f"Table backend {backend_name} already implemented. "
+                "Use the `overwrite=True` parameter to overwrite it."
+            )
         self._implemented_backends[backend_name] = table_beckend
 
 

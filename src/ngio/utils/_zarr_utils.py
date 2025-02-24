@@ -238,3 +238,15 @@ class ZarrGroupHandler:
                 f"The object at {path} is not a group, but a {type(group)}"
             )
         return group
+
+    def create_group(self, path: str, overwrite: bool = False) -> zarr.Group:
+        """Create a group in the group."""
+        try:
+            group = self.group.create_group(path, overwrite=overwrite)
+        except ContainsGroupError as e:
+            raise NgioFileExistsError(
+                f"A Zarr group already exists at {path}, "
+                "consider setting overwrite=True."
+            ) from e
+        self.add_to_cache(path, group)
+        return group
