@@ -16,7 +16,7 @@ class TableBackendProtocol(Protocol):
         self,
         group_handler: ZarrGroupHandler,
         index_key: str | None = None,
-        index_type: Literal["int", "str"] = "str",
+        index_type: Literal["int", "str"] = "int",
     ): ...
 
     @property
@@ -68,7 +68,7 @@ class TableBackendsManager:
         backend_name: str | None,
         group_handler: ZarrGroupHandler,
         index_key: str | None = None,
-        index_type: Literal["int", "str"] = "str",
+        index_type: Literal["int", "str"] = "int",
     ) -> TableBackendProtocol:
         """Try to get a handler for the given store based on the metadata version."""
         if backend_name is None:

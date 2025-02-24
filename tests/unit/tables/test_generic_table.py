@@ -20,4 +20,7 @@ def test_anndata_backend(tmp_path: Path, backend: str):
     table.consolidate()
 
     new_table = GenericTable.from_store(store)
-    assert new_table.dataframe.equals(test_df), new_table.dataframe
+
+    assert set(new_table.dataframe.columns) == {"a", "b"}
+    for column in new_table.dataframe.columns:
+        pd.testing.assert_series_equal(new_table.dataframe[column], test_df[column])

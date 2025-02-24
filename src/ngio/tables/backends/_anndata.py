@@ -58,9 +58,7 @@ class AnnDataBackend(AbstractTableBackend):
         self, table: DataFrame, metadata: dict | None = None
     ) -> None:
         """Consolidate the metadata in the store."""
-        anndata = dataframe_to_anndata(
-            table, index_key=self._index_key, index_type=self._index_type
-        )
+        anndata = dataframe_to_anndata(table, index_key=self._index_key)
         self.write_from_anndata(anndata, metadata)
 
     def write_from_anndata(self, table: AnnData, metadata: dict | None = None) -> None:

@@ -118,94 +118,102 @@ def _check_for_supported_types(series: pd.Series) -> Literal["str", "int", "nume
 
 
 def _check_index_key(
-    table_df: pd.DataFrame, index_key: str | None, index_type: str = "int"
+    dataframe: pd.DataFrame, index_key: str | None, overwrite: bool = False
 ) -> pd.DataFrame:
-    """Check if the index_key correctness.
+    """Correctly set the index of the DataFrame.
 
-    - Check if the index_key is present in the data frame.
-        (If the index_key is a column in the DataFrame, it is set as the index)
-    - Check if the index_key is of the correct type.
+    This function checks if the index_key is present in the DataFrame.
+    If not it tries to set sensible defaults.
 
-    Args:
-        table_df (pd.DataFrame): The DataFrame to validate.
-        index_key (str): The column name to use as the index of the DataFrame.
-        index_type (str): The type of the index column in the DataFrame.
-            Either 'str' or 'int'. Default is 'int'.
+    In order:
+        - If index_key is None, nothing can be done.
+        - If index_key is already the index of the DataFrame, nothing is done.
+        - If index_key is in the columns, we set the index to that column.
+        - If current index is None, we set the index to the index_key.
+        - If current index is not None and overwrite is True,
+            we set the index to the index_key.
 
-    Returns:
-        pd.DataFrame: The validated DataFrame.
     """
-    if index_type not in ["str", "int"]:
-        raise ValueError(f"index_type {index_type} not recognized")
-
     if index_key is None:
-        return table_df
+        # Nothing to do
+        return dataframe
 
-    columns = table_df.columns
-    if index_key in columns:
-        table_df = table_df.set_index(index_key)
+    if dataframe.index.name == index_key:
+        # Index is already set to index_key correctly
+        return dataframe
 
-    if table_df.index.name != index_key:
+    if index_key in dataframe.columns:
+        dataframe = dataframe.set_index(index_key)
+
+    if dataframe.index.name is None:
+        dataframe.index.name = index_key
+        return dataframe
+
+    elif overwrite:
+        dataframe.index.name = index_key
+        return dataframe
+    else:
         raise NgioTableValidationError(
-            f"index_key: {index_key} not found in data frame"
+            f"Index key {index_key} not found in DataFrame. "
+            f"Current index is {dataframe.index.name}. If you want to overwrite the "
+            "index set overwrite=True."
         )
 
-    if index_type == "str":
-        if ptypes.is_integer_dtype(table_df.index):
-            # Convert the int index to string is generally safe
-            table_df.index = table_df.index.astype(str)
 
-        if not ptypes.is_string_dtype(table_df.index):
-            raise NgioTableValidationError(
-                f"index_key {index_key} must be of string type"
-            )
+def _check_index_dtype(dataframe: pd.DataFrame, index_type: str) -> pd.DataFrame:
+    """Check if the index of the DataFrame has the correct dtype."""
+    match index_type:
+        case "str":
+            if ptypes.is_integer_dtype(dataframe.index):
+                # Convert the int index to string is generally safe
+                dataframe = dataframe.set_index(dataframe.index.astype(str))
 
-    elif index_type == "int":
-        if ptypes.is_string_dtype(table_df.index):
-            # Try to convert the string index to int
-            try:
-                table_df.index = table_df.index.astype(int)
-            except ValueError as e:
-                if "invalid literal for int() with base 10" in str(e):
-                    raise NgioTableValidationError(
-                        f"index_key {index_key} must be of "
-                        "integer type, but found string. We "
-                        "tried implicit conversion failed."
-                    ) from None
-                else:
-                    raise e from e
+            if not ptypes.is_string_dtype(dataframe.index):
+                raise NgioTableValidationError(
+                    f"Table index must be of string type, got {dataframe.index.dtype}"
+                )
 
-        if not ptypes.is_integer_dtype(table_df.index):
-            raise NgioTableValidationError(
-                f"index_key {index_key} must be of integer type"
-            )
+        case "int":
+            if ptypes.is_string_dtype(dataframe.index):
+                # Try to convert the string index to int
+                try:
+                    dataframe = dataframe.set_index(dataframe.index.astype(int))
+                except ValueError as e:
+                    if "invalid literal for int() with base 10" in str(e):
+                        raise NgioTableValidationError(
+                            "Table index must be of integer type, got str."
+                            f" We tried implicit conversion and failed: {e}"
+                        ) from None
+                    else:
+                        raise e from e
 
-    else:
-        raise NgioTableValidationError(f"index_type {index_type} not recognized")
+            if not ptypes.is_integer_dtype(dataframe.index):
+                raise NgioTableValidationError(
+                    f"Table index must be of integer type, got {dataframe.index.dtype}"
+                )
+        case _:
+            raise ValueError(f"index_type {index_type} not recognized")
 
-    return table_df
+    return dataframe
 
 
 def dataframe_to_anndata(
     dataframe: pd.DataFrame,
     index_key: str | None = None,
-    index_type: str = "int",
+    overwrite: bool = False,
 ) -> ad.AnnData:
     """Convert a table DataFrame to an AnnData object.
 
     Args:
         dataframe (pd.DataFrame): A pandas DataFrame representing a fractal table.
         index_key (str): The column name to use as the index of the DataFrame.
-        index_type (str): The type of the index column in the DataFrame.
-            Either 'str' or 'int'. Default is 'int'.
-        validators (list[Validator]): A list of functions to further validate the table.
+            Default is None.
+        overwrite (bool): Whether to overwrite the index if a different index is found.
+            Default is False.
     """
     # Check if the index_key is present in the data frame + optional validations
-    dataframe = _check_index_key(dataframe, index_key, index_type)
-
-    # DO NOT SKIP
-    # Convert the index to string ALWAYS to avoid casting issues in AnnData
-    dataframe.index = dataframe.index.astype(str)
+    dataframe = _check_index_key(dataframe, index_key, overwrite=overwrite)
+    dataframe = _check_index_dtype(dataframe, index_type="str")
 
     str_columns, int_columns, num_columns = [], [], []
     for c_name in dataframe.columns:
@@ -245,7 +253,7 @@ def anndata_to_dataframe(
     anndata: ad.AnnData,
     index_key: str | None = "label",
     index_type: str = "int",
-    validate_index_name: bool = False,
+    overwrite: bool = False,
 ) -> pd.DataFrame:
     """Convert a AnnData object representing a fractal table to a pandas DataFrame.
 
@@ -255,29 +263,12 @@ def anndata_to_dataframe(
             Default is 'label'.
         index_type (str): The type of the index column in the DataFrame.
             Either 'str' or 'int'. Default is 'int'.
-        validators (list[Validator]): A list of functions to further validate the table.
-        validate_index_name (bool): If True, the index name is validated.
+        overwrite (bool): Whether to overwrite the index if a different index is found.
+            Default is False.
     """
     dataframe = anndata.to_df()
     dataframe[anndata.obs_keys()] = anndata.obs
 
-    # Set the index of the DataFrame
-    if index_key in dataframe.columns:
-        dataframe = dataframe.set_index(index_key)
-    elif anndata.obs.index.name is not None:
-        if validate_index_name:
-            if anndata.obs.index.name != index_key:
-                raise NgioTableValidationError(
-                    f"Index key {index_key} not found in AnnData object."
-                )
-        dataframe.index = anndata.obs.index
-    elif anndata.obs.index.name is None:
-        dataframe.index = anndata.obs.index
-        dataframe.index.name = index_key
-    else:
-        raise NgioTableValidationError(
-            f"Index key {index_key} not found in AnnData object."
-        )
-
-    dataframe = _check_index_key(dataframe, index_key, index_type)
+    dataframe = _check_index_key(dataframe, index_key, overwrite=overwrite)
+    dataframe = _check_index_dtype(dataframe, index_type)
     return dataframe

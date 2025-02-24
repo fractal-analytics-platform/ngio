@@ -15,7 +15,7 @@ class AbstractTableBackend(ABC):
         self,
         group_handler: ZarrGroupHandler,
         index_key: str | None = None,
-        index_type: Literal["int", "str"] = "str",
+        index_type: Literal["int", "str"] = "int",
     ):
         """Initialize the handler.
 
