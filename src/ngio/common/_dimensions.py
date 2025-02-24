@@ -4,7 +4,11 @@ This is not related to the NGFF metadata,
 but it is based on the actual metadata of the image data.
 """
 
-from collections import OrderedDict
+from collections.abc import Collection
+
+from ngio.ome_zarr_meta import AxesMapper
+from ngio.ome_zarr_meta.ngio_specs import transform_list
+from ngio.utils import NgioValidationError
 
 
 class Dimensions:
@@ -12,82 +16,73 @@ class Dimensions:
 
     def __init__(
         self,
-        on_disk_shape: tuple[int, ...],
-        axes_names: list[str],
-        axes_order: list[int],
+        shape: tuple[int, ...],
+        axes_mapper: AxesMapper,
     ) -> None:
         """Create a Dimension object from a Zarr array.
 
         Args:
-            on_disk_shape (tuple[int, ...]): The shape of the array on disk.
-            axes_names (list[str]): The names of the axes in the canonical order.
-            axes_order (list[int]): The mapping between the canonical order and the on
-                disk order.
+            shape: The shape of the Zarr array.
+            axes_mapper: The axes mapper object.
         """
-        self._on_disk_shape = on_disk_shape
+        self._shape = shape
+        self._axes_mapper = axes_mapper
 
-        for s in on_disk_shape:
-            if s < 1:
-                raise ValueError("The shape must be greater equal to 1.")
-
-        if len(self._on_disk_shape) != len(axes_names):
-            raise ValueError(
-                "The number of axes names must match the number of dimensions."
+        if len(self._shape) != len(self._axes_mapper.on_disk_axes):
+            raise NgioValidationError(
+                "The number of dimensions must match the number of axes. "
+                f"Expected Axis {self._axes_mapper.on_disk_axes_names} but got shape "
+                f"{self._shape}."
             )
-
-        self._axes_names = axes_names
-        self._axes_order = axes_order
-
-        self._shape = [self._on_disk_shape[i] for i in axes_order]
-        self._shape_dict = OrderedDict(zip(axes_names, self._shape, strict=True))
 
     def __str__(self) -> str:
         """Return the string representation of the object."""
-        _dimensions = ", ".join(
-            [f"{name}={self._shape_dict[name]}" for name in self._axes_names]
-        )
-        return f"Dimensions({_dimensions})"
+        return "Dimensions()"
+
+    def get(self, axis_name: str, strict: bool = True) -> int:
+        """Return the dimension of the given axis name.
+
+        Args:
+            axis_name: The name of the axis (either canonical or non-canonical).
+            strict: If True, raise an error if the axis does not exist.
+        """
+        index = self._axes_mapper.get_index(axis_name)
+        if index is None and strict:
+            raise NgioValidationError(f"Axis {axis_name} does not exist.")
+        elif index is None:
+            return 1
+        return self._shape[index]
+
+    def get_shape(self, axes_order: Collection[str]) -> tuple[int, ...]:
+        """Return the shape in the given axes order."""
+        transforms = self._axes_mapper.to_order(axes_order)
+        return tuple(transform_list(list(self._shape), 1, transforms))
+
+    def get_canonical_shape(self) -> tuple[int, ...]:
+        """Return the shape in the canonical order."""
+        transforms = self._axes_mapper.to_canonical()
+        return tuple(transform_list(list(self._shape), 1, transforms))
 
     def __repr__(self) -> str:
         """Return the string representation of the object."""
         return str(self)
 
     @property
-    def shape(self) -> tuple[int, ...]:
-        """Return the shape as a tuple in the canonical order."""
-        return tuple(self._shape)
-
-    @property
     def on_disk_shape(self) -> tuple[int, ...]:
         """Return the shape as a tuple."""
-        return self._on_disk_shape
-
-    def ad_dict(self) -> dict[str, int]:
-        """Return the shape as a dictionary."""
-        return self._shape_dict
-
-    def get(self, ax_name: str, default: int = 1) -> int:
-        """Return the dimension of the given axis name."""
-        return self._shape_dict.get(ax_name, default)
-
-    @property
-    def on_disk_ndim(self) -> int:
-        """Return the number of dimensions on disk."""
-        return len(self._on_disk_shape)
+        return tuple(self._shape)
 
     @property
     def is_time_series(self) -> bool:
         """Return whether the data is a time series."""
-        t = self._shape_dict.get("t", 1)
-        if t == 1:
+        if self.get("t", strict=False) == 1:
             return False
         return True
 
     @property
     def is_2d(self) -> bool:
         """Return whether the data is 2D."""
-        z = self._shape_dict.get("z", 1)
-        if z != 1:
+        if self.get("z", strict=False) != 1:
             return False
         return True
 
@@ -109,14 +104,6 @@ class Dimensions:
     @property
     def is_multi_channels(self) -> bool:
         """Return whether the data has multiple channels."""
-        c = self._shape_dict.get("c", 1)
-        if c == 1:
+        if self.get("c", strict=False) == 1:
             return False
         return True
-
-    def find_axis(self, ax_name: str) -> int | None:
-        """Return the index of the axis name."""
-        for i, ax in enumerate(self._axes_names):
-            if ax == ax_name:
-                return i
-        return None

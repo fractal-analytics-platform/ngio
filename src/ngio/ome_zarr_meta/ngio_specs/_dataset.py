@@ -69,12 +69,15 @@ class Dataset:
     def get_scale(self, axis_name: str) -> float:
         """Return the scale for a given axis."""
         idx = self._axes_mapper.get_index(axis_name)
-
+        if idx is None:
+            return 1.0
         return self._on_disk_scale[idx]
 
     def get_translation(self, axis_name: str) -> float:
         """Return the translation for a given axis."""
         idx = self._axes_mapper.get_index(axis_name)
+        if idx is None:
+            return 0.0
         return self._on_disk_translation[idx]
 
     @property

@@ -63,7 +63,7 @@ class ROITableV1:
     def __init__(self):
         """Create a new ROI table."""
         self._meta = ROITableV1Meta()
-        self._rois = []
+        self._rois = {}
         self._table_backend = None
 
     @property
@@ -120,14 +120,13 @@ class ROITableV1:
 
     def rois(self) -> list[WorldCooROI]:
         """List all ROIs in the table."""
-        return self._rois
+        return list(self._rois.values())
 
     def get(self, roi_name: str) -> WorldCooROI:
         """Get an ROI from the table."""
-        for roi in self._rois:
-            if roi.infos["FieldIndex"] == roi_name:
-                return roi
-        raise ValueError(f"ROI {roi_name} not found.")
+        if roi_name not in self._rois:
+            raise ValueError(f"ROI {roi_name} not found in the table.")
+        return self._rois[roi_name]
 
     def add(self, roi: WorldCooROI | Iterable[WorldCooROI]) -> None:
         """Append ROIs to the current table."""
@@ -135,11 +134,9 @@ class ROITableV1:
             roi = [roi]
 
         for _roi in roi:
-            if not isinstance(_roi, WorldCooROI):
-                raise ValueError(
-                    f"ROI must be an instance of WorldCooROI. Got {type(_roi)} instead."
-                )
-            self._rois.append(_roi)
+            if _roi.name in self._rois:
+                raise ValueError(f"ROI {_roi.name} already exists in the table.")
+            self._rois[_roi.name] = _roi
 
     def consolidate(self) -> None:
         """Write the current state of the table to the Zarr file."""

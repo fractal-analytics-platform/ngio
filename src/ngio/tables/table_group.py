@@ -22,18 +22,6 @@ class TableGroup:
         """List all labels in the group."""
         ...
 
-    def list_roi_tables(self) -> list[str]:
-        """List all ROI tables in the group."""
-        ...
-
-    def list_feature_tables(self) -> list[str]:
-        """List all feature tables in the group."""
-        ...
-
-    def list_masking_roi_tables(self) -> list[str]:
-        """List all masking ROI tables in the group."""
-        ...
-
     def get(self, name: str) -> Table:
         """Get a label from the group."""
         ...

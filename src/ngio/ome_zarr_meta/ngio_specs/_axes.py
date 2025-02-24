@@ -344,7 +344,7 @@ class AxesMapper:
     def on_disk_axes_names(self) -> list[str]:
         return [ax.on_disk_name for ax in self._on_disk_axes]
 
-    def get_index(self, name: str) -> int:
+    def get_index(self, name: str) -> int | None:
         """Get the index of the axis by name."""
         if name not in self._index_mapping.keys():
             raise NgioValueError(
@@ -430,3 +430,38 @@ class AxesMapper:
     def from_canonical(self) -> tuple[AxesTransformation, ...]:
         """Get the new order of the axes."""
         return self.from_order(self._extended_canonical_order)
+
+
+def transform_array(
+    array: np.ndarray, operations: tuple[AxesTransformation, ...]
+) -> np.ndarray:
+    for operation in operations:
+        if isinstance(operation, AxesTranspose):
+            array = np.transpose(array, operation.axes)
+        elif isinstance(operation, AxesExpand):
+            array = np.expand_dims(array, axis=operation.axes)
+        elif isinstance(operation, AxesSqueeze):
+            array = np.squeeze(array, axis=operation.axes)
+        else:
+            raise ValueError(f"Unknown operation {operation}")
+    return array
+
+
+def transform_list(
+    input_list: list[T], default: T, operations: tuple[AxesTransformation, ...]
+) -> list[T]:
+    if isinstance(input_list, tuple):
+        input_list = list(input_list)
+
+    for operation in operations:
+        if isinstance(operation, AxesTranspose):
+            input_list = [input_list[i] for i in operation.axes]
+
+        if isinstance(operation, AxesExpand):
+            for ax in operation.axes:
+                input_list.insert(ax, default)
+        elif isinstance(operation, AxesSqueeze):
+            for offset, ax in enumerate(operation.axes):
+                input_list.pop(ax - offset)
+
+    return input_list

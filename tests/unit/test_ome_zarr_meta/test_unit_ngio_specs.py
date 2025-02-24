@@ -2,12 +2,8 @@ import numpy as np
 import pytest
 
 from ngio.ome_zarr_meta.ngio_specs import (
-    AxesExpand,
     AxesMapper,
     AxesSetup,
-    AxesSqueeze,
-    AxesTransformation,
-    AxesTranspose,
     Axis,
     AxisType,
     Channel,
@@ -21,6 +17,7 @@ from ngio.ome_zarr_meta.ngio_specs import (
     SpaceUnits,
     TimeUnits,
 )
+from ngio.ome_zarr_meta.ngio_specs._axes import transform_array, transform_list
 from ngio.ome_zarr_meta.ngio_specs._channels import valid_hex_color
 
 
@@ -62,20 +59,6 @@ from ngio.ome_zarr_meta.ngio_specs._channels import valid_hex_color
 def test_axes_base(
     on_disk_axes, axes_setup, allow_non_canonical_axes, strict_canonical_order
 ):
-    def _transform(
-        x: np.ndarray, operations: tuple[AxesTransformation, ...]
-    ) -> np.ndarray:
-        for operation in operations:
-            if isinstance(operation, AxesTranspose):
-                x = np.transpose(x, operation.axes)
-            elif isinstance(operation, AxesExpand):
-                x = np.expand_dims(x, axis=operation.axes)
-            elif isinstance(operation, AxesSqueeze):
-                x = np.squeeze(x, axis=operation.axes)
-            else:
-                raise ValueError(f"Unknown operation {operation}")
-        return x
-
     _axes = [Axis(on_disk_name=on_disk_name) for on_disk_name in on_disk_axes]
     mapper = AxesMapper(
         on_disk_axes=_axes,
@@ -91,15 +74,33 @@ def test_axes_base(
     shape = list(range(2, len(on_disk_axes) + 2))
     np.random.seed(0)
     x_in = np.random.rand(*shape)
-    x_inner = _transform(x_in, mapper.to_canonical())
+    x_inner = transform_array(x_in, mapper.to_canonical())
+    x_inner_shape = transform_list(
+        list(x_in.shape), default=1, operations=mapper.to_canonical()
+    )
     assert len(x_inner.shape) == 5 + len(mapper._axes_setup.others)
-    x_out = _transform(x_inner, mapper.from_canonical())
+    assert tuple(x_inner_shape) == tuple(x_inner.shape)
+
+    x_out = transform_array(x_inner, mapper.from_canonical())
+    x_out_shape = transform_list(
+        list(x_inner.shape), default=1, operations=mapper.from_canonical()
+    )
+    assert tuple(x_out_shape) == tuple(x_in.shape)
+
     np.testing.assert_allclose(x_in, x_out)
     # Test transformation with shuffle
     shuffled_axes = np.random.permutation(on_disk_axes)
-    x_inner = _transform(x_in, mapper.to_order(shuffled_axes))
+    x_inner = transform_array(x_in, mapper.to_order(shuffled_axes))
+    x_inner_shape = transform_list(
+        list(x_in.shape), default=1, operations=mapper.to_order(shuffled_axes)
+    )
     assert len(x_inner.shape) == len(on_disk_axes)
-    x_out = _transform(x_inner, mapper.from_order(shuffled_axes))
+    assert tuple(x_inner_shape) == tuple(x_inner.shape)
+    x_out = transform_array(x_inner, mapper.from_order(shuffled_axes))
+    x_out_shape = transform_list(
+        list(x_inner.shape), default=1, operations=mapper.from_order(shuffled_axes)
+    )
+    assert tuple(x_out_shape) == tuple(x_out.shape)
     np.testing.assert_allclose(x_in, x_out)
 
 
