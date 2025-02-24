@@ -41,8 +41,9 @@ class WorldCooROI(BaseModel):
         self, pixel_size: PixelSize, dimensions: Dimensions
     ) -> "RasterCooROI":
         """Convert to raster coordinates."""
-        dim_x = dimensions.get("x", strict=True)
-        dim_y = dimensions.get("y", strict=True)
+        dim_x = dimensions.get("x")
+        dim_y = dimensions.get("y")
+        # Will default to 1 if z does not exist
         dim_z = dimensions.get("z", strict=False)
 
         return RasterCooROI(

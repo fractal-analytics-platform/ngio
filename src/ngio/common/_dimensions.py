@@ -8,7 +8,7 @@ from collections.abc import Collection
 
 from ngio.ome_zarr_meta import AxesMapper
 from ngio.ome_zarr_meta.ngio_specs import transform_list
-from ngio.utils import NgioValidationError
+from ngio.utils import NgioValidationError, NgioValueError
 
 
 class Dimensions:
@@ -37,7 +37,11 @@ class Dimensions:
 
     def __str__(self) -> str:
         """Return the string representation of the object."""
-        return "Dimensions()"
+        dims = ", ".join(
+            f"{ax.on_disk_name}: {s}"
+            for ax, s in zip(self._axes_mapper.on_disk_axes, self._shape, strict=True)
+        )
+        return f"Dimensions({dims})"
 
     def get(self, axis_name: str, strict: bool = True) -> int:
         """Return the dimension of the given axis name.
@@ -48,7 +52,7 @@ class Dimensions:
         """
         index = self._axes_mapper.get_index(axis_name)
         if index is None and strict:
-            raise NgioValidationError(f"Axis {axis_name} does not exist.")
+            raise NgioValueError(f"Axis {axis_name} does not exist.")
         elif index is None:
             return 1
         return self._shape[index]
