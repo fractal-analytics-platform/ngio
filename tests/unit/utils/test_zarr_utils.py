@@ -8,7 +8,7 @@ import numpy as np
 import pytest
 import zarr
 
-from ngio.common import (
+from ngio.utils import (
     NgioFileExistsError,
     NgioFileNotFoundError,
     NgioValueError,

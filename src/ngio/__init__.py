@@ -9,6 +9,19 @@ except PackageNotFoundError:  # pragma: no cover
 __author__ = "Lorenzo Cerrone"
 __email__ = "lorenzo.cerrone@uzh.ch"
 
+from ngio.common import ArrayLike, Dimensions
+from ngio.hcs import OmeZarrPlate, OmeZarrWell
+from ngio.images import Image, Label, OmeZarrImage
 from ngio.ome_zarr_meta.ngio_specs import AxesSetup, PixelSize
 
-__all__ = ["AxesSetup", "PixelSize"]
+__all__ = [
+    "ArrayLike",
+    "AxesSetup",
+    "Dimensions",
+    "Image",
+    "Label",
+    "OmeZarrImage",
+    "OmeZarrPlate",
+    "OmeZarrWell",
+    "PixelSize",
+]

@@ -6,7 +6,6 @@ set of classes to internally handle the metadata.
 This models can be tr
 """
 
-from ngio.common._pixel_size import PixelSize
 from ngio.ome_zarr_meta.ngio_specs._axes import (
     AxesExpand,
     AxesMapper,
@@ -33,6 +32,7 @@ from ngio.ome_zarr_meta.ngio_specs._ngio_image_meta import (
     NgioImageMeta,
     NgioLabelMeta,
 )
+from ngio.ome_zarr_meta.ngio_specs._pixel_size import PixelSize
 
 __all__ = [
     "AxesExpand",

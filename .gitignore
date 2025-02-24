@@ -127,3 +127,5 @@ tests/_v01
 
 # Ignore locks
 *.lock
+
+benchmark/*

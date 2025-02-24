@@ -8,7 +8,7 @@ from typing import TypeVar
 import numpy as np
 from pydantic import BaseModel, ConfigDict, Field
 
-from ngio.common import NgioValidationError, NgioValueError
+from ngio.utils import NgioValidationError, NgioValueError
 
 logger = Logger(__name__)
 

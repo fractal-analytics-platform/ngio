@@ -5,7 +5,7 @@ from typing import Literal
 from anndata import AnnData
 from pandas import DataFrame
 
-from ngio.common import ZarrGroupHandler
+from ngio.utils import ZarrGroupHandler
 
 
 class AbstractTableBackend(ABC):

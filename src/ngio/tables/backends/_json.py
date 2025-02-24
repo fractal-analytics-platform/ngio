@@ -3,8 +3,8 @@ from collections.abc import Collection
 import pandas as pd
 from pandas import DataFrame
 
-from ngio.common import NgioFileNotFoundError
 from ngio.tables.backends._abstract_backend import AbstractTableBackend
+from ngio.utils import NgioFileNotFoundError
 
 
 class JsonTableBackend(AbstractTableBackend):

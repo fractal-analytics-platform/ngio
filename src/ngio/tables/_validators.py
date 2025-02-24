@@ -4,7 +4,7 @@ from typing import Literal, Protocol
 import pandas as pd
 import pandas.api.types as ptypes
 
-from ngio.common import NgioTableValidationError
+from ngio.utils import NgioTableValidationError
 
 
 class TableValidator(Protocol):

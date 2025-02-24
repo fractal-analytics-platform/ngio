@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from ngio.common import download_ome_zarr_dataset
+from ngio.utils import download_ome_zarr_dataset
 
 
 @pytest.fixture(scope="function")
