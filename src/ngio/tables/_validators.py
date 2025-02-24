@@ -1,8 +1,7 @@
 from collections.abc import Iterable
-from typing import Literal, Protocol
+from typing import Protocol
 
 import pandas as pd
-import pandas.api.types as ptypes
 
 from ngio.utils import NgioTableValidationError
 
@@ -56,71 +55,6 @@ def validate_table(
 # Common table validators
 #
 ####################################################################################################
-
-
-def validate_index(
-    table_df: pd.DataFrame, index_key: str, index_type: Literal["str", "int"]
-) -> pd.DataFrame:
-    """Check if the index_key correctness.
-
-    - Check if the index_key is present in the data frame.
-        (If the index_key is a column in the DataFrame, it is set as the index)
-    - Check if the index_key is of the correct type.
-
-    Args:
-        table_df (pd.DataFrame): The DataFrame to validate.
-        index_key (str): The column name to use as the index of the DataFrame.
-        index_type (str): The type of the index column in the DataFrame.
-            Either 'str' or 'int'. Default is 'int'.
-
-    Returns:
-        pd.DataFrame: The validated DataFrame.
-    """
-    columns = table_df.columns
-    if index_key in columns:
-        table_df = table_df.set_index(index_key)
-
-    if table_df.index.name != index_key:
-        raise NgioTableValidationError(
-            f"index_key: {index_key} not found in data frame"
-        )
-
-    if index_type == "str":
-        if ptypes.is_integer_dtype(table_df.index):
-            # Convert the int index to string is generally safe
-            table_df.index = table_df.index.astype(str)
-
-        if not ptypes.is_string_dtype(table_df.index):
-            raise NgioTableValidationError(
-                f"index_key {index_key} must be of string type"
-            )
-
-    elif index_type == "int":
-        if ptypes.is_string_dtype(table_df.index):
-            # Try to convert the string index to int
-            try:
-                table_df.index = table_df.index.astype(int)
-            except ValueError as e:
-                if "invalid literal for int() with base 10" in str(e):
-                    raise NgioTableValidationError(
-                        f"index_key {index_key} must be of "
-                        "integer type, but found string. We "
-                        "tried implicit conversion failed."
-                    ) from None
-                else:
-                    raise e from e
-
-        if not ptypes.is_integer_dtype(table_df.index):
-            raise NgioTableValidationError(
-                f"index_key {index_key} must be of integer type"
-            )
-
-    else:
-        raise NgioTableValidationError(f"index_type {index_type} not recognized")
-
-    return table_df
-
-
 def validate_columns(
     table_df: pd.DataFrame,
     required_columns: list[str],
