@@ -12,7 +12,7 @@ from typing import Any, TypeVar
 import numpy as np
 from pydantic import BaseModel
 
-from ngio.ome_zarr_meta.ngio_specs._axes import SpaceUnits
+from ngio.ome_zarr_meta.ngio_specs._axes import SpaceUnits, TimeUnits
 from ngio.ome_zarr_meta.ngio_specs._channels import Channel, ChannelsMeta
 from ngio.ome_zarr_meta.ngio_specs._dataset import Dataset
 from ngio.ome_zarr_meta.ngio_specs._pixel_size import PixelSize
@@ -34,7 +34,7 @@ class ImageLabelSource(BaseModel):
     source: dict[str, str | None]
 
     @classmethod
-    def default_init(cls, version: NgffVersion) -> None:
+    def default_init(cls, version: NgffVersion) -> "ImageLabelSource":
         """Initialize the ImageLabelSource object."""
         return cls(version=version, source={"image": "../../"})
 
@@ -112,11 +112,15 @@ class AbstractNgioImageMeta:
         """
         min_dist = np.inf
 
+        closest_dataset = None
         for dataset in self.datasets:
             dist = dataset.pixel_size.distance(pixel_size)
             if dist < min_dist:
                 min_dist = dist
                 closest_dataset = dataset
+
+        if closest_dataset is None:
+            raise NgioValueError("No dataset found.")
 
         if strict and min_dist > tol:
             raise NgioValueError("No dataset with a pixel size close enough.")
@@ -170,7 +174,15 @@ class AbstractNgioImageMeta:
     def get_highest_resolution_dataset(self) -> Dataset:
         """Get the dataset with the highest resolution."""
         return self._get_dataset_by_pixel_size(
-            pixel_size=PixelSize(x=0.0, y=0.0, z=0.0, unit=SpaceUnits.um), strict=False
+            pixel_size=PixelSize(
+                x=0.0,
+                y=0.0,
+                z=0.0,
+                t=0.0,
+                space_unit=SpaceUnits.micrometer,
+                time_unit=TimeUnits.s,
+            ),
+            strict=False,
         )
 
     def get_scaling_factor(self, axis_name: str) -> float:

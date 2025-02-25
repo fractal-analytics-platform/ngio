@@ -2,12 +2,8 @@ import numpy as np
 import pytest
 
 from ngio.ome_zarr_meta.ngio_specs import (
-    AxesExpand,
     AxesMapper,
     AxesSetup,
-    AxesSqueeze,
-    AxesTransformation,
-    AxesTranspose,
     Axis,
     AxisType,
     Channel,
@@ -21,6 +17,7 @@ from ngio.ome_zarr_meta.ngio_specs import (
     SpaceUnits,
     TimeUnits,
 )
+from ngio.ome_zarr_meta.ngio_specs._axes import transform_array, transform_list
 from ngio.ome_zarr_meta.ngio_specs._channels import valid_hex_color
 
 
@@ -62,18 +59,6 @@ from ngio.ome_zarr_meta.ngio_specs._channels import valid_hex_color
 def test_axes_base(
     on_disk_axes, axes_setup, allow_non_canonical_axes, strict_canonical_order
 ):
-    def _transform(x: np.ndarray, operations: tuple[AxesTransformation]) -> np.ndarray:
-        for operation in operations:
-            if isinstance(operation, AxesTranspose):
-                x = np.transpose(x, operation.axes)
-            elif isinstance(operation, AxesExpand):
-                x = np.expand_dims(x, axis=operation.axes)
-            elif isinstance(operation, AxesSqueeze):
-                x = np.squeeze(x, axis=operation.axes)
-            else:
-                raise ValueError(f"Unknown operation {operation}")
-        return x
-
     _axes = [Axis(on_disk_name=on_disk_name) for on_disk_name in on_disk_axes]
     mapper = AxesMapper(
         on_disk_axes=_axes,
@@ -89,15 +74,33 @@ def test_axes_base(
     shape = list(range(2, len(on_disk_axes) + 2))
     np.random.seed(0)
     x_in = np.random.rand(*shape)
-    x_inner = _transform(x_in, mapper.to_canonical())
+    x_inner = transform_array(x_in, mapper.to_canonical())
+    x_inner_shape = transform_list(
+        list(x_in.shape), default=1, operations=mapper.to_canonical()
+    )
     assert len(x_inner.shape) == 5 + len(mapper._axes_setup.others)
-    x_out = _transform(x_inner, mapper.from_canonical())
+    assert tuple(x_inner_shape) == tuple(x_inner.shape)
+
+    x_out = transform_array(x_inner, mapper.from_canonical())
+    x_out_shape = transform_list(
+        list(x_inner.shape), default=1, operations=mapper.from_canonical()
+    )
+    assert tuple(x_out_shape) == tuple(x_in.shape)
+
     np.testing.assert_allclose(x_in, x_out)
     # Test transformation with shuffle
     shuffled_axes = np.random.permutation(on_disk_axes)
-    x_inner = _transform(x_in, mapper.to_order(shuffled_axes))
+    x_inner = transform_array(x_in, mapper.to_order(shuffled_axes))
+    x_inner_shape = transform_list(
+        list(x_in.shape), default=1, operations=mapper.to_order(shuffled_axes)
+    )
     assert len(x_inner.shape) == len(on_disk_axes)
-    x_out = _transform(x_inner, mapper.from_order(shuffled_axes))
+    assert tuple(x_inner_shape) == tuple(x_inner.shape)
+    x_out = transform_array(x_inner, mapper.from_order(shuffled_axes))
+    x_out_shape = transform_list(
+        list(x_inner.shape), default=1, operations=mapper.from_order(shuffled_axes)
+    )
+    assert tuple(x_out_shape) == tuple(x_out.shape)
     np.testing.assert_allclose(x_in, x_out)
 
 
@@ -195,7 +198,7 @@ def test_axes_fail():
 
 def test_pixel_size():
     ps_dict = {"x": 0.5, "y": 0.5, "z": 1.0, "t": 1.0}
-    ps_1 = PixelSize(**ps_dict)
+    ps_1 = PixelSize(**ps_dict, space_unit=SpaceUnits.um, time_unit=TimeUnits.s)
     assert ps_1.as_dict() == ps_dict
     assert ps_1.zyx == (1.0, 0.5, 0.5)
     assert ps_1.yx == (0.5, 0.5)
@@ -207,9 +210,6 @@ def test_pixel_size():
     np.testing.assert_allclose(ps_1.distance(ps_2), 0.0)
     ps_3 = PixelSize(x=1.0, y=1.0, z=1.0, t=1.0)
     np.testing.assert_allclose(ps_1.distance(ps_3), np.sqrt(2.0) / 2)
-
-    with pytest.raises(NotImplementedError):
-        ps_1.distance(PixelSize(x=0.5, y=0.5, z=1.0, t=2.0))
 
 
 def test_dataset():
@@ -303,7 +303,7 @@ def test_channels():
         pass
 
     with pytest.raises(ValueError):
-        ChannelsMeta.default_init(labels=[Mock()])
+        ChannelsMeta.default_init(labels=[Mock()])  # type: ignore
 
     channel = Channel.default_init(label="DAPI", wavelength_id="A01_C01")
     ChannelsMeta(channels=[channel])
@@ -312,7 +312,7 @@ def test_channels():
         ChannelsMeta.default_init(labels=["DAPI", "DAPI"])
 
     with pytest.raises(ValueError):
-        ChannelsMeta.default_init(labels=[channel, channel])
+        ChannelsMeta.default_init(labels=[channel, channel])  # type: ignore
 
     with pytest.raises(ValueError):
         Channel.default_init(label="DAPI", data_type="color")
@@ -339,7 +339,7 @@ def test_ngio_colors():
     ChannelVisualisation(color=NgioColors.cyan)
 
     with pytest.raises(ValueError):
-        ChannelVisualisation.default_init(color=[])
+        ChannelVisualisation.default_init(color=[])  # type: ignore
 
 
 def test_image_meta():
@@ -381,7 +381,7 @@ def test_image_meta():
     assert image_meta.get_dataset(path="0").path == "0"
     assert image_meta.get_dataset(path="1").path == "1"
     assert image_meta.get_dataset(highest_resolution=True).path == "0"
-    assert image_meta.get_dataset(pixel_size=ds.pixel_size).path == "3"
+    assert image_meta.get_dataset(pixel_size=datasets[-1].pixel_size).path == "3"
     assert image_meta.get_channel_idx(label="DAPI") == 0
     assert image_meta.get_channel_idx(wavelength_id="DAPI") == 0
     assert image_meta.channel_labels == ["DAPI", "GFP", "RFP"]
@@ -427,7 +427,7 @@ def test_label_meta():
     assert label_meta.get_dataset(path="0").path == "0"
     assert label_meta.get_dataset(path="1").path == "1"
     assert label_meta.get_dataset(highest_resolution=True).path == "0"
-    assert label_meta.get_dataset(pixel_size=ds.pixel_size).path == "3"
+    assert label_meta.get_dataset(pixel_size=datasets[-1].pixel_size).path == "3"
 
 
 def test_fail_label_meta():

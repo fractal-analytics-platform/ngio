@@ -76,7 +76,8 @@ class NgioColors(str, Enum):
         for color in available_colors:
             # try to match the color to the channel name
             similarity[color] = SequenceMatcher(None, channel_name, color).ratio()
-        color_str = max(similarity, key=similarity.get)
+        # Get the color with the highest similarity
+        color_str = max(similarity, key=similarity.get)  # type: ignore
         return NgioColors.__members__[color_str]
 
 
@@ -182,6 +183,16 @@ class ChannelVisualisation(BaseModel):
             end=end,
             active=active,
         )
+
+    @property
+    def valid_color(self) -> str:
+        """Return the valid color."""
+        if isinstance(self.color, NgioColors):
+            return self.color.value
+        elif isinstance(self.color, str):
+            return self.color
+        else:
+            raise NgioValueError(f"Invalid color {self.color}.")
 
 
 def default_channel_name(index: int) -> str:

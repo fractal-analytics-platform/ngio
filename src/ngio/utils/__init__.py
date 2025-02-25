@@ -2,7 +2,7 @@
 
 import os
 
-from ngio.utils._common_types import ArrayLike
+from ngio.common._common_types import ArrayLike
 from ngio.utils._datasets import download_ome_zarr_dataset, list_ome_zarr_datasets
 from ngio.utils._errors import (
     NgioFileExistsError,
@@ -12,9 +12,10 @@ from ngio.utils._errors import (
     NgioValueError,
 )
 from ngio.utils._logger import ngio_logger, set_logger_level
-from ngio.utils._zarr_group_utils import (
+from ngio.utils._zarr_utils import (
     AccessModeLiteral,
     StoreOrGroup,
+    ZarrGroupHandler,
     open_group_wrapper,
 )
 
@@ -31,6 +32,7 @@ __all__ = [
     "NgioValidationError",
     "NgioValueError",
     "StoreOrGroup",
+    "ZarrGroupHandler",
     # Datasets
     "download_ome_zarr_dataset",
     "list_ome_zarr_datasets",
@@ -38,5 +40,4 @@ __all__ = [
     "ngio_logger",
     "open_group_wrapper",
     "set_logger_level",
-    "unique_items_validator",
 ]

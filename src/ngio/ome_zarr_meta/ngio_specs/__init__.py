@@ -17,6 +17,8 @@ from ngio.ome_zarr_meta.ngio_specs._axes import (
     AxisType,
     SpaceUnits,
     TimeUnits,
+    transform_array,
+    transform_list,
 )
 from ngio.ome_zarr_meta.ngio_specs._channels import (
     Channel,
@@ -56,4 +58,6 @@ __all__ = [
     "SpaceUnits",
     "TimeUnits",
     "default_channel_name",
+    "transform_array",
+    "transform_list",
 ]
