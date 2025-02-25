@@ -68,6 +68,8 @@ class AnnDataBackend(AbstractTableBackend):
             raise ValueError(
                 "To write an AnnData object the store must be a local path/str."
             )
-        table.write_zarr(Path(store))
+
+        store = Path(store) / self._group_handler.group.path
+        table.write_zarr(store)
         if metadata is not None:
             self._group_handler.write_attrs(metadata)

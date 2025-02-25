@@ -4,6 +4,8 @@ This class follows the roi_table specification at:
 https://fractal-analytics-platform.github.io/fractal-tasks-core/tables/
 """
 
+from typing import Literal
+
 import pandas as pd
 from pydantic import BaseModel
 
@@ -11,14 +13,15 @@ from ngio.tables.backends import TableBackendsManager
 from ngio.utils import AccessModeLiteral, StoreOrGroup, ZarrGroupHandler
 
 
-class GenericTableMeta(BaseModel):
+class FeaturesTableMeta(BaseModel):
     """Metadata for the ROI table."""
 
-    type: str | None = None
+    fractal_table_version: Literal["1"] = "1"
+    type: Literal["features_table"] = "features_table"
     backend: str | None = None
 
 
-class GenericTable:
+class FeaturesTableV1:
     """Class to a non-specific table.
 
     This can be used to load any table that does not have
@@ -27,9 +30,29 @@ class GenericTable:
 
     def __init__(self, dataframe: pd.DataFrame) -> None:
         """Initialize the GenericTable."""
-        self._meta = GenericTableMeta()
+        self._meta = FeaturesTableMeta()
         self._dataframe = dataframe
         self._table_backend = None
+
+    @staticmethod
+    def type() -> str:
+        """Return the type of the table."""
+        return "features_table"
+
+    @staticmethod
+    def version() -> str:
+        """The generic table does not have a version.
+
+        Since does not follow a specific schema.
+        """
+        return "1"
+
+    @property
+    def backend_name(self) -> str | None:
+        """Return the name of the backend."""
+        if self._table_backend is None:
+            return None
+        return self._table_backend.backend_name
 
     @property
     def dataframe(self) -> pd.DataFrame:
@@ -48,12 +71,12 @@ class GenericTable:
         cache: bool = False,
         mode: AccessModeLiteral = "a",
         parallel_safe: bool = False,
-    ) -> "GenericTable":
+    ) -> "FeaturesTableV1":
         """Create a new ROI table from a Zarr store."""
         handler = ZarrGroupHandler(
             store=store, cache=cache, mode=mode, parallel_safe=parallel_safe
         )
-        meta = GenericTableMeta(**handler.load_attrs())
+        meta = FeaturesTableMeta(**handler.load_attrs())
         backend = TableBackendsManager().get_backend(
             backend_name=meta.backend,
             group_handler=handler,
@@ -70,9 +93,18 @@ class GenericTable:
         table._table_backend = backend
         return table
 
-    def set_backend(self, backend_name: str, store: StoreOrGroup) -> None:
+    def set_backend(
+        self,
+        store: StoreOrGroup,
+        backend_name: str | None = None,
+        cache: bool = False,
+        mode: AccessModeLiteral = "a",
+        parallel_safe: bool = False,
+    ) -> None:
         """Set the backend of the table."""
-        handler = ZarrGroupHandler(store=store)
+        handler = ZarrGroupHandler(
+            store=store, cache=cache, mode=mode, parallel_safe=parallel_safe
+        )
         backend = TableBackendsManager().get_backend(
             backend_name=backend_name,
             group_handler=handler,

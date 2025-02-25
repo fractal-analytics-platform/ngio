@@ -114,15 +114,22 @@ class ROITableV1:
         if rois is not None:
             self.add(rois)
 
-    @property
-    def table_type(self) -> Literal["roi_table"]:
+    @staticmethod
+    def type() -> Literal["roi_table"]:
         """Return the type of the table."""
         return "roi_table"
 
-    @property
-    def fractal_table_version(self) -> Literal["1"]:
+    @staticmethod
+    def version() -> Literal["1"]:
         """Return the version of the fractal table."""
         return "1"
+
+    @property
+    def backend_name(self) -> str | None:
+        """Return the name of the backend."""
+        if self._table_backend is None:
+            return None
+        return self._table_backend.backend_name
 
     @classmethod
     def from_store(
@@ -162,9 +169,18 @@ class ROITableV1:
         table._rois = _dataframe_to_rois(dataframe)
         return table
 
-    def set_backend(self, backend_name: str, store: StoreOrGroup) -> None:
+    def set_backend(
+        self,
+        store: StoreOrGroup,
+        backend_name: str | None = None,
+        cache: bool = False,
+        mode: AccessModeLiteral = "a",
+        parallel_safe: bool = False,
+    ) -> None:
         """Set the backend of the table."""
-        handler = ZarrGroupHandler(store=store)
+        handler = ZarrGroupHandler(
+            store=store, cache=cache, mode=mode, parallel_safe=parallel_safe
+        )
         backend = TableBackendsManager().get_backend(
             backend_name=backend_name,
             group_handler=handler,

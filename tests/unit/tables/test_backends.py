@@ -28,7 +28,7 @@ def test_backend_manager(tmp_path: Path):
 
     store = tmp_path / "test_backend_manager.zarr"
     handler = ZarrGroupHandler(store=store, cache=True, mode="a")
-    backend = manager.get_backend("json", handler)
+    backend = manager.get_backend(backend_name="json", group_handler=handler)
     assert isinstance(backend, JsonTableBackend)
 
     backend = manager.get_backend(None, handler)

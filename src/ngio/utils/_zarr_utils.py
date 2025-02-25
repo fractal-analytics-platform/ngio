@@ -41,7 +41,7 @@ def _check_group(group: zarr.Group, mode: AccessModeLiteral) -> zarr.Group:
 
     if mode == "r" and not is_read_only:
         # let's make sure we don't accidentally write to the group
-        group._read_only = True
+        group = zarr.open_group(store=group.store, path=group.path, mode="r")
 
     return group
 
@@ -62,6 +62,8 @@ def open_group_wrapper(
         group = _check_group(store, mode)
         if hasattr(group, "store_path"):
             _store = group.store_path
+        if isinstance(group.store, DirectoryStore):
+            _store = group.store.path
         else:
             _store = group.store
 

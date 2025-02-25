@@ -2,8 +2,11 @@ from collections.abc import Iterable
 from typing import Protocol
 
 import pandas as pd
+import pandas.api.types as ptypes
 
-from ngio.utils import NgioTableValidationError
+from ngio.utils import (
+    NgioTableValidationError,
+)
 
 
 class TableValidator(Protocol):
@@ -55,6 +58,86 @@ def validate_table(
 # Common table validators
 #
 ####################################################################################################
+def validate_index_key(
+    dataframe: pd.DataFrame, index_key: str | None, overwrite: bool = False
+) -> pd.DataFrame:
+    """Correctly set the index of the DataFrame.
+
+    This function checks if the index_key is present in the DataFrame.
+    If not it tries to set sensible defaults.
+
+    In order:
+        - If index_key is None, nothing can be done.
+        - If index_key is already the index of the DataFrame, nothing is done.
+        - If index_key is in the columns, we set the index to that column.
+        - If current index is None, we set the index to the index_key.
+        - If current index is not None and overwrite is True,
+            we set the index to the index_key.
+
+    """
+    if index_key is None:
+        # Nothing to do
+        return dataframe
+
+    if dataframe.index.name == index_key:
+        # Index is already set to index_key correctly
+        return dataframe
+
+    if index_key in dataframe.columns:
+        dataframe = dataframe.set_index(index_key)
+
+    if dataframe.index.name is None:
+        dataframe.index.name = index_key
+        return dataframe
+
+    elif overwrite:
+        dataframe.index.name = index_key
+        return dataframe
+    else:
+        raise NgioTableValidationError(
+            f"Index key {index_key} not found in DataFrame. "
+            f"Current index is {dataframe.index.name}. If you want to overwrite the "
+            "index set overwrite=True."
+        )
+
+
+def validate_index_dtype(dataframe: pd.DataFrame, index_type: str) -> pd.DataFrame:
+    """Check if the index of the DataFrame has the correct dtype."""
+    match index_type:
+        case "str":
+            if ptypes.is_integer_dtype(dataframe.index):
+                # Convert the int index to string is generally safe
+                dataframe = dataframe.set_index(dataframe.index.astype(str))
+
+            if not ptypes.is_string_dtype(dataframe.index):
+                raise NgioTableValidationError(
+                    f"Table index must be of string type, got {dataframe.index.dtype}"
+                )
+
+        case "int":
+            if ptypes.is_string_dtype(dataframe.index):
+                # Try to convert the string index to int
+                try:
+                    dataframe = dataframe.set_index(dataframe.index.astype(int))
+                except ValueError as e:
+                    if "invalid literal for int() with base 10" in str(e):
+                        raise NgioTableValidationError(
+                            "Table index must be of integer type, got str."
+                            f" We tried implicit conversion and failed: {e}"
+                        ) from None
+                    else:
+                        raise e from e
+
+            if not ptypes.is_integer_dtype(dataframe.index):
+                raise NgioTableValidationError(
+                    f"Table index must be of integer type, got {dataframe.index.dtype}"
+                )
+        case _:
+            raise ValueError(f"index_type {index_type} not recognized")
+
+    return dataframe
+
+
 def validate_columns(
     table_df: pd.DataFrame,
     required_columns: list[str],
