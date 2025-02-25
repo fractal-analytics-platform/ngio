@@ -136,6 +136,11 @@ class ZarrGroupHandler:
         return self._store
 
     @property
+    def group_path(self) -> str:
+        """Return the store path."""
+        return f"{self._store}/{self._group.path}"
+
+    @property
     def mode(self) -> AccessModeLiteral:
         """Return the mode of the group."""
         return self._mode  # type: ignore

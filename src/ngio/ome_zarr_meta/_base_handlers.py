@@ -58,7 +58,11 @@ class GenericOmeZarrHandler(Generic[_Image_or_Label, _Image_or_Label_Converter])
 
         raise NgioValueError(f"Could not load metadata: {meta_or_error}")
 
-    def load(self, return_error: bool = False) -> _Image_or_Label | ConverterError:
+    def safe_load(self, return_error: bool = False) -> _Image_or_Label | ConverterError:
+        """Load the metadata from the store."""
+        raise NotImplementedError
+
+    def load(self) -> _Image_or_Label:
         """Load the metadata from the store."""
         raise NotImplementedError
 
@@ -97,9 +101,16 @@ class BaseOmeZarrImageHandler(GenericOmeZarrHandler[NgioImageMeta, ImageMetaConv
         """
         super().__init__(meta_converter, store, cache, mode)
 
-    def load(self, return_error: bool = False) -> NgioImageMeta | ConverterError:
+    def safe_load(self, return_error: bool = False) -> NgioImageMeta | ConverterError:
         """Load the metadata from the store."""
         return self._load_meta(return_error)
+
+    def load(self) -> NgioImageMeta:
+        """Load the metadata from the store."""
+        meta = self._load_meta()
+        if isinstance(meta, NgioImageMeta):
+            return meta
+        raise NgioValueError(f"Could not load metadata: {meta}")
 
     def write(self, meta: NgioImageMeta) -> None:
         self._write_meta(meta)
@@ -126,9 +137,16 @@ class BaseOmeZarrLabelHandler(GenericOmeZarrHandler[NgioLabelMeta, LabelMetaConv
         """
         super().__init__(meta_converter, store, cache, mode)
 
-    def load(self, return_error: bool = False) -> NgioLabelMeta | ConverterError:
+    def safe_load(self, return_error: bool = False) -> NgioLabelMeta | ConverterError:
         """Load the metadata from the store."""
         return self._load_meta(return_error)
+
+    def load(self) -> NgioLabelMeta:
+        """Load the metadata from the store."""
+        meta = self._load_meta()
+        if isinstance(meta, NgioLabelMeta):
+            return meta
+        raise NgioValueError(f"Could not load metadata: {meta}")
 
     def write(self, meta: NgioLabelMeta) -> None:
         self._write_meta(meta)

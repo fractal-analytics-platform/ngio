@@ -1,6 +1,6 @@
 """Module for handling the /tables group in an OME-NGFF file."""
 
-from typing import Literal, Protocol, overload
+from typing import Literal, Protocol
 
 from ngio.tables._generic_table import GenericTable
 from ngio.tables.v1 import FeaturesTableV1, MaskingROITableV1, ROITableV1
@@ -65,7 +65,7 @@ class Table(Protocol):
 TypedTable = Literal["roi_table", "masking_roi_table", "features_table"]
 
 
-class TablesManager:
+class ImplementedTablesManager:
     """A singleton class to manage the available table handler plugins."""
 
     _instance = None
@@ -144,10 +144,10 @@ class TablesManager:
         self._implemented_tables[table_unique_name] = handler
 
 
-TablesManager().add_implementation(ROITable)
+ImplementedTablesManager().add_implementation(ROITable)
 
 
-class TablesHandler:
+class TableGroupHandler:
     """A class to handle the /labels group in an OME-NGFF file."""
 
     def __init__(
@@ -155,6 +155,22 @@ class TablesHandler:
     ) -> None:
         """Initialize the LabelGroupHandler."""
         self._group_handler = ZarrGroupHandler(store, cache, mode)
+
+        # Validate the group
+        # Either contains a tables attribute or is empty
+        attrs = self._group_handler.load_attrs()
+        if len(attrs) == 0:
+            # It's an empty group
+            pass
+        elif "tables" in attrs and isinstance(attrs["tables"], list):
+            # It's a valid group
+            pass
+        else:
+            raise NgioValidationError(
+                f"Invalid /tables group. "
+                f"Expected a single tables attribute with a list of table names. "
+                f"Found: {attrs}"
+            )
 
     def _get_tables_list(self) -> list[str]:
         """Create the /tables group if it doesn't exist."""
@@ -180,7 +196,7 @@ class TablesHandler:
         table_group = self._group_handler.get_group(name)
         return table_group.attrs.get("fractal_table_version", "1")
 
-    def _get(self, name: str) -> Table:
+    def get(self, name: str) -> Table:
         """Get a label from the group."""
         if name not in self.list():
             raise KeyError(f"Table '{name}' not found in the group.")
@@ -189,7 +205,7 @@ class TablesHandler:
         table_type = self._get_table_type(name)
         version = self._get_table_version(name)
 
-        return TablesManager().get_table(
+        return ImplementedTablesManager().get_table(
             type=table_type,
             version=version,
             store=table_group,
@@ -197,64 +213,12 @@ class TablesHandler:
             mode=self._group_handler.mode,
         )
 
-    @overload
-    def get(self, name: str, check_type: Literal["roi_table"]) -> ROITable: ...
-
-    @overload
-    def get(
-        self, name: str, check_type: Literal["masking_roi_table"]
-    ) -> MaskingROITable: ...
-
-    @overload
-    def get(
-        self, name: str, check_type: Literal["features_table"]
-    ) -> FeaturesTable: ...
-
-    @overload
-    def get(self, name: str, check_type: None) -> Table: ...
-
-    @overload
-    def get(self, name: str) -> Table: ...
-
-    def get(
+    def add(
         self,
         name: str,
-        check_type: TypedTable | None = None,
-    ) -> Table:
-        """Get a table from the group."""
-        if name not in self.list():
-            raise NgioValueError(f"Table '{name}' not found in the group.")
-
-        match check_type:
-            case "roi_table":
-                table = self._get(name)
-                if not isinstance(table, ROITable):
-                    raise NgioValueError(
-                        f"Table '{name}' is not an ROI table. "
-                        f"Found type: {table.type()}"
-                    )
-                return table
-            case "masking_roi_table":
-                table = self._get(name)
-                if not isinstance(table, MaskingROITable):
-                    raise NgioValueError(
-                        f"Table '{name}' is not a masking ROI table. "
-                        f"Found type: {table.type()}"
-                    )
-                return table
-            case "features_table":
-                table = self._get(name)
-                if not isinstance(table, FeaturesTable):
-                    raise NgioValueError(
-                        f"Table '{name}' is not a features table. "
-                        f"Found type: {table.type()}"
-                    )
-                return table
-            case None:
-                return self._get(name)
-
-    def add(
-        self, name: str, table: Table, backend: str | None, overwrite: bool = False
+        table: Table,
+        backend: str | None = None,
+        overwrite: bool = False,
     ) -> None:
         """Add a table to the group."""
         existing_tables = self._get_tables_list()
@@ -275,3 +239,56 @@ class TablesHandler:
         if name not in existing_tables:
             existing_tables.append(name)
             self._group_handler.write_attrs({"tables": existing_tables})
+
+
+def open_table_group(
+    store: StoreOrGroup,
+    cache: bool = False,
+    mode: AccessModeLiteral = "a",
+) -> TableGroupHandler:
+    """Open a table handler from a Zarr store."""
+    return TableGroupHandler(store, cache, mode)
+
+
+def open_table(
+    store: StoreOrGroup,
+    table_name: str,
+    cache: bool = False,
+    mode: AccessModeLiteral = "a",
+) -> Table:
+    """Open a table from a Zarr store."""
+    handler = TableGroupHandler(store, cache, mode)
+    return handler.get(table_name)
+
+
+def open_roi_table(
+    store: StoreOrGroup,
+    table_name: str,
+    cache: bool = False,
+    mode: AccessModeLiteral = "a",
+) -> ROITable:
+    """Open an ROI table from a Zarr store."""
+    handler = TableGroupHandler(store, cache, mode)
+    return handler.get(table_name, check_type="roi_table")
+
+
+def open_masking_roi_table(
+    store: StoreOrGroup,
+    table_name: str,
+    cache: bool = False,
+    mode: AccessModeLiteral = "a",
+) -> MaskingROITable:
+    """Open a masking ROI table from a Zarr store."""
+    handler = TableGroupHandler(store, cache, mode)
+    return handler.get(table_name, check_type="masking_roi_table")
+
+
+def open_features_table(
+    store: StoreOrGroup,
+    table_name: str,
+    cache: bool = False,
+    mode: AccessModeLiteral = "a",
+) -> FeaturesTable:
+    """Open a features table from a Zarr store."""
+    handler = TableGroupHandler(store, cache, mode)
+    return handler.get(table_name, check_type="features_table")

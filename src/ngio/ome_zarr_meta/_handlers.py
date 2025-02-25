@@ -49,7 +49,7 @@ class GenericHandlersManager(Generic[_Image_or_Label_Plugin]):
 
         for version, handler in reversed(self._implemented_handlers.items()):
             handler = handler(store=store, cache=cache, mode=mode)
-            meta = handler.load(return_error=True)
+            meta = handler.safe_load(return_error=True)
             if isinstance(meta, ValidationError):
                 _errors[version] = meta
                 continue
@@ -72,10 +72,28 @@ class GenericHandlersManager(Generic[_Image_or_Label_Plugin]):
 class ImageHandlersManager(GenericHandlersManager[BaseOmeZarrImageHandler]):
     def __init__(self):
         super().__init__()
-        self.add_handler("0.4", OmeZarrV04ImageHandler)
+
+
+ImageHandlersManager().add_handler("0.4", OmeZarrV04ImageHandler)
 
 
 class LabelHandlersManager(GenericHandlersManager[BaseOmeZarrLabelHandler]):
     def __init__(self):
         super().__init__()
-        self.add_handler("0.4", OmeZarrV04LabelHandler)
+
+
+LabelHandlersManager().add_handler("0.4", OmeZarrV04LabelHandler)
+
+
+def open_image_meta(
+    store: StoreOrGroup, cache: bool = False, mode: AccessModeLiteral = "a"
+) -> BaseOmeZarrImageHandler:
+    """Open the metadata of an OME-Zarr image."""
+    return ImageHandlersManager().get_handler(store, cache, mode)
+
+
+def open_label_meta(
+    store: StoreOrGroup, cache: bool = False, mode: AccessModeLiteral = "a"
+) -> BaseOmeZarrLabelHandler:
+    """Open the metadata of an OME-Zarr label."""
+    return LabelHandlersManager().get_handler(store, cache, mode)

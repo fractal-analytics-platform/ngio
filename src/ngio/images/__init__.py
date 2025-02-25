@@ -1,5 +1,7 @@
 """OME-Zarr object models."""
 
+from ngio.images.omezarr_image import OmeZarrImage
+
 # from ngio.common import ArrayLike, Dimensions
 # from ngio.ome_zarr_meta.ngio_specs import (
 #    AxesSetup,
@@ -8,11 +10,7 @@
 #    PixelSize,
 # )
 
-
-class OmeZarrImage:
-    """Placeholder for the OME-Zarr image object."""
-
-    pass
+__all__ = ["OmeZarrImage"]
 
 
 class Image:

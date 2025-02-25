@@ -10,7 +10,7 @@ def test_get_image_handler(ome_zarr_image_v04_path: Path):
     handler = ImageHandlersManager().get_handler(
         ome_zarr_image_v04_path, cache=True, mode="a"
     )
-    meta = handler.load()
+    meta = handler.safe_load()
     assert isinstance(meta, NgioImageMeta)
     handler.write(meta)
     handler.clean_cache()
