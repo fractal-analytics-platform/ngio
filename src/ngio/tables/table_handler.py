@@ -1,6 +1,5 @@
 """Module for handling the /tables group in an OME-NGFF file."""
 
-# %%
 from typing import Literal, Protocol, overload
 
 from ngio.tables._generic_table import GenericTable
