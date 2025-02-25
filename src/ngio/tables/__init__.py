@@ -9,9 +9,6 @@ from ngio.tables.table_handler import (
     Table,
     TableGroupHandler,
     TypedTable,
-    open_features_table,
-    open_masking_roi_table,
-    open_roi_table,
     open_table,
     open_table_group,
 )
@@ -25,9 +22,6 @@ __all__ = [
     "TableBackendsManager",
     "TableGroupHandler",
     "TypedTable",
-    "open_features_table",
-    "open_masking_roi_table",
-    "open_roi_table",
     "open_table",
     "open_table_group",
 ]

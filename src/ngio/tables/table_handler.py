@@ -259,36 +259,3 @@ def open_table(
     """Open a table from a Zarr store."""
     handler = TableGroupHandler(store, cache, mode)
     return handler.get(table_name)
-
-
-def open_roi_table(
-    store: StoreOrGroup,
-    table_name: str,
-    cache: bool = False,
-    mode: AccessModeLiteral = "a",
-) -> ROITable:
-    """Open an ROI table from a Zarr store."""
-    handler = TableGroupHandler(store, cache, mode)
-    return handler.get(table_name, check_type="roi_table")
-
-
-def open_masking_roi_table(
-    store: StoreOrGroup,
-    table_name: str,
-    cache: bool = False,
-    mode: AccessModeLiteral = "a",
-) -> MaskingROITable:
-    """Open a masking ROI table from a Zarr store."""
-    handler = TableGroupHandler(store, cache, mode)
-    return handler.get(table_name, check_type="masking_roi_table")
-
-
-def open_features_table(
-    store: StoreOrGroup,
-    table_name: str,
-    cache: bool = False,
-    mode: AccessModeLiteral = "a",
-) -> FeaturesTable:
-    """Open a features table from a Zarr store."""
-    handler = TableGroupHandler(store, cache, mode)
-    return handler.get(table_name, check_type="features_table")
