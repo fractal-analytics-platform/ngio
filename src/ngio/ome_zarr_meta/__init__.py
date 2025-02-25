@@ -7,8 +7,7 @@ from ngio.ome_zarr_meta._base_handlers import (
 from ngio.ome_zarr_meta._handlers import (
     ImageHandlersManager,
     LabelHandlersManager,
-    open_image_meta,
-    open_label_meta,
+    open_omezarr_handler,
 )
 from ngio.ome_zarr_meta.ngio_specs import (
     AxesMapper,
@@ -28,6 +27,5 @@ __all__ = [
     "NgioImageMeta",
     "NgioLabelMeta",
     "PixelSize",
-    "open_image_meta",
-    "open_label_meta",
+    "open_omezarr_handler",
 ]

@@ -58,26 +58,32 @@ class GenericOmeZarrHandler(Generic[_Image_or_Label, _Image_or_Label_Converter])
 
         raise NgioValueError(f"Could not load metadata: {meta_or_error}")
 
-    def safe_load(self, return_error: bool = False) -> _Image_or_Label | ConverterError:
+    def safe_load_meta(self) -> _Image_or_Label | ConverterError:
         """Load the metadata from the store."""
-        raise NotImplementedError
-
-    def load(self) -> _Image_or_Label:
-        """Load the metadata from the store."""
-        raise NotImplementedError
+        return self._load_meta(return_error=True)
 
     def _write_meta(self, meta) -> None:
         """Write the metadata to the store."""
         v04_meta = self._meta_converter.to_dict(meta)
         self._group_handler.write_attrs(v04_meta)
 
-    def write(self, meta: _Image_or_Label) -> None:
+    def write_meta(self, meta: _Image_or_Label) -> None:
         """Write the metadata to the store."""
         raise NotImplementedError
 
     def clean_cache(self) -> None:
         """Clear the cached metadata."""
         self._attrs = None
+
+    @property
+    def meta(self) -> _Image_or_Label:
+        """Return the metadata."""
+        raise NotImplementedError
+
+    @property
+    def group_handler(self) -> ZarrGroupHandler:
+        """Return the group handler."""
+        return self._group_handler
 
 
 class BaseOmeZarrImageHandler(GenericOmeZarrHandler[NgioImageMeta, ImageMetaConverter]):
@@ -101,18 +107,20 @@ class BaseOmeZarrImageHandler(GenericOmeZarrHandler[NgioImageMeta, ImageMetaConv
         """
         super().__init__(meta_converter, store, cache, mode)
 
-    def safe_load(self, return_error: bool = False) -> NgioImageMeta | ConverterError:
+    def safe_load_meta(
+        self, return_error: bool = False
+    ) -> NgioImageMeta | ConverterError:
         """Load the metadata from the store."""
         return self._load_meta(return_error)
 
-    def load(self) -> NgioImageMeta:
+    def load_meta(self) -> NgioImageMeta:
         """Load the metadata from the store."""
         meta = self._load_meta()
         if isinstance(meta, NgioImageMeta):
             return meta
         raise NgioValueError(f"Could not load metadata: {meta}")
 
-    def write(self, meta: NgioImageMeta) -> None:
+    def write_meta(self, meta: NgioImageMeta) -> None:
         self._write_meta(meta)
 
 
@@ -137,16 +145,18 @@ class BaseOmeZarrLabelHandler(GenericOmeZarrHandler[NgioLabelMeta, LabelMetaConv
         """
         super().__init__(meta_converter, store, cache, mode)
 
-    def safe_load(self, return_error: bool = False) -> NgioLabelMeta | ConverterError:
+    def safe_load_meta(
+        self, return_error: bool = False
+    ) -> NgioLabelMeta | ConverterError:
         """Load the metadata from the store."""
         return self._load_meta(return_error)
 
-    def load(self) -> NgioLabelMeta:
+    def load_meta(self) -> NgioLabelMeta:
         """Load the metadata from the store."""
         meta = self._load_meta()
         if isinstance(meta, NgioLabelMeta):
             return meta
         raise NgioValueError(f"Could not load metadata: {meta}")
 
-    def write(self, meta: NgioLabelMeta) -> None:
+    def write_meta(self, meta: NgioLabelMeta) -> None:
         self._write_meta(meta)

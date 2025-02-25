@@ -46,6 +46,10 @@ class PixelSize:
             raise TypeError("time_unit must be of type TimeUnits.")
         self.time_unit = time_unit
 
+    def __repr__(self) -> str:
+        """Return a string representation of the pixel size."""
+        return f"PixelSize(x={self.x}, y={self.y}, z={self.z}, t={self.t})"
+
     def as_dict(self) -> dict:
         """Return the pixel size as a dictionary."""
         return {"t": self.t, "z": self.z, "y": self.y, "x": self.x}

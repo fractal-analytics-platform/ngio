@@ -3,7 +3,8 @@
 # %%
 from typing import Literal, overload
 
-from ngio.ome_zarr_meta import NgioImageMeta, open_image_meta
+from ngio.images.abstract_image import Image
+from ngio.ome_zarr_meta import NgioImageMeta, PixelSize, open_omezarr_handler
 from ngio.tables import (
     FeaturesTable,
     MaskingROITable,
@@ -18,7 +19,6 @@ from ngio.utils import (
     NgioValidationError,
     NgioValueError,
     StoreOrGroup,
-    ZarrGroupHandler,
 )
 
 
@@ -33,13 +33,19 @@ class OmeZarrImage:
         validate_arrays: bool = True,
     ) -> None:
         """Initialize the NGFFImage in read mode."""
-        self._group_handler = ZarrGroupHandler(store=store, cache=cache, mode=mode)
+        self._ome_zarr_handler = open_omezarr_handler(
+            store=store,
+            cache=cache,
+            mode=mode,
+        )
 
         try:
-            _table_group = self._group_handler.get_group("tables")
+            _table_group = self._ome_zarr_handler.group_handler.get_group("tables")
         except NgioFileNotFoundError:
             if mode != "r":
-                _table_group = self._group_handler.group.create_group("tables")
+                _table_group = self._ome_zarr_handler.group_handler.create_group(
+                    "tables"
+                )
             else:
                 _table_group = None
 
@@ -50,24 +56,20 @@ class OmeZarrImage:
 
         self._labels_handler = None
 
-        self._image_meta_handler = open_image_meta(
-            self._group_handler.group, cache=cache, mode=mode
-        )
-
     @property
     def image_meta(self) -> NgioImageMeta:
         """Return the image metadata."""
-        return self._image_meta_handler.load()
+        return self._ome_zarr_handler.meta
 
     @property
     def levels(self) -> int:
         """Return the number of levels in the image."""
-        return self.image_meta.levels
+        return self._ome_zarr_handler.meta.levels
 
     @property
     def levels_paths(self) -> list[str]:
         """Return the paths of the levels in the image."""
-        return self.image_meta.paths
+        return self._ome_zarr_handler.meta.paths
 
     def list_tables(self) -> list[str]:
         """List all tables in the image."""
@@ -126,3 +128,15 @@ class OmeZarrImage:
                 return table
             case None:
                 return table
+
+    def get_image(
+        self,
+        path: str | None = None,
+        pixel_size: PixelSize | None = None,
+        highest_resolution: bool = True,
+    ) -> Image:
+        """Get an image at a specific level."""
+        dataset = self.image_meta.get_dataset(
+            path=path, pixel_size=pixel_size, highest_resolution=highest_resolution
+        )
+        return Image(ome_zarr_handler=self._ome_zarr_handler, path=dataset.path)
