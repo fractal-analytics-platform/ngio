@@ -113,7 +113,8 @@ class BaseOmeZarrImageHandler(GenericOmeZarrHandler[NgioImageMeta, ImageMetaConv
         """Load the metadata from the store."""
         return self._load_meta(return_error)
 
-    def load_meta(self) -> NgioImageMeta:
+    @property
+    def meta(self) -> NgioImageMeta:
         """Load the metadata from the store."""
         meta = self._load_meta()
         if isinstance(meta, NgioImageMeta):
@@ -151,7 +152,8 @@ class BaseOmeZarrLabelHandler(GenericOmeZarrHandler[NgioLabelMeta, LabelMetaConv
         """Load the metadata from the store."""
         return self._load_meta(return_error)
 
-    def load_meta(self) -> NgioLabelMeta:
+    @property
+    def meta(self) -> NgioLabelMeta:
         """Load the metadata from the store."""
         meta = self._load_meta()
         if isinstance(meta, NgioLabelMeta):

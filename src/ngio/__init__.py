@@ -11,7 +11,13 @@ __email__ = "lorenzo.cerrone@uzh.ch"
 
 from ngio.common import ArrayLike, Dimensions
 from ngio.hcs import OmeZarrPlate, OmeZarrWell
-from ngio.images import Image, Label, OmeZarrImage
+from ngio.images import (
+    Image,
+    Label,
+    OmeZarrImage,
+    open_omezarr_image,
+    open_single_image,
+)
 from ngio.ome_zarr_meta.ngio_specs import AxesSetup, PixelSize
 
 __all__ = [
@@ -24,4 +30,6 @@ __all__ = [
     "OmeZarrPlate",
     "OmeZarrWell",
     "PixelSize",
+    "open_omezarr_image",
+    "open_single_image",
 ]

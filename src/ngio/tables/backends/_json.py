@@ -51,7 +51,6 @@ class JsonTableBackend(AbstractTableBackend):
         """Consolidate the metadata in the store."""
         table_group = self._get_table_group()
         table_group.attrs.clear()
-        print(table.to_dict())
         table_group.attrs.update(table.to_dict())
         if metadata is not None:
             self._group_handler.write_attrs(metadata)

@@ -3,7 +3,7 @@
 from typing import Literal, Protocol
 
 from ngio.tables._generic_table import GenericTable
-from ngio.tables.v1 import FeaturesTableV1, MaskingROITableV1, ROITableV1
+from ngio.tables.v1 import FeaturesTableV1, MaskingROITableV1, RoiTableV1
 from ngio.utils import (
     AccessModeLiteral,
     NgioValidationError,
@@ -12,7 +12,7 @@ from ngio.utils import (
     ZarrGroupHandler,
 )
 
-ROITable = ROITableV1
+RoiTable = RoiTableV1
 MaskingROITable = MaskingROITableV1
 FeaturesTable = FeaturesTableV1
 
@@ -144,7 +144,7 @@ class ImplementedTablesManager:
         self._implemented_tables[table_unique_name] = handler
 
 
-ImplementedTablesManager().add_implementation(ROITable)
+ImplementedTablesManager().add_implementation(RoiTable)
 
 
 class TableGroupHandler:

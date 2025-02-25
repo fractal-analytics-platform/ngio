@@ -8,7 +8,7 @@ from ngio.ome_zarr_meta import NgioImageMeta, PixelSize, open_omezarr_handler
 from ngio.tables import (
     FeaturesTable,
     MaskingROITable,
-    ROITable,
+    RoiTable,
     Table,
     TypedTable,
     open_table_group,
@@ -38,7 +38,6 @@ class OmeZarrImage:
             cache=cache,
             mode=mode,
         )
-
         try:
             _table_group = self._ome_zarr_handler.group_handler.get_group("tables")
         except NgioFileNotFoundError:
@@ -55,6 +54,19 @@ class OmeZarrImage:
             self._tables_handler = None
 
         self._labels_handler = None
+        if validate_arrays:
+            self.validate()
+
+    def __repr__(self) -> str:
+        """Return a string representation of the image."""
+        return f"OmeZarrImage(paths={self.levels_paths})"
+
+    def validate(self) -> None:
+        """Validate the image."""
+        for path in self.levels_paths:
+            self.get_image(
+                path=path
+            )  # this will raise an error if the image is invalid
 
     @property
     def image_meta(self) -> NgioImageMeta:
@@ -86,7 +98,7 @@ class OmeZarrImage:
     @overload
     def get_table(
         self, table_name: str, check_type: Literal["roi_table"]
-    ) -> ROITable: ...
+    ) -> RoiTable: ...
 
     @overload
     def get_table(
@@ -106,7 +118,7 @@ class OmeZarrImage:
         table = self._tables_handler.get(table_name)
         match check_type:
             case "roi_table":
-                if not isinstance(table, ROITable):
+                if not isinstance(table, RoiTable):
                     raise NgioValueError(
                         f"Table '{table_name}' is not a ROI table. "
                         f"Found type: {table.type()}"
@@ -128,6 +140,8 @@ class OmeZarrImage:
                 return table
             case None:
                 return table
+            case _:
+                raise NgioValueError(f"Unknown check_type: {check_type}")
 
     def get_image(
         self,
@@ -136,7 +150,60 @@ class OmeZarrImage:
         highest_resolution: bool = True,
     ) -> Image:
         """Get an image at a specific level."""
+        if path is not None or pixel_size is not None:
+            highest_resolution = False
         dataset = self.image_meta.get_dataset(
             path=path, pixel_size=pixel_size, highest_resolution=highest_resolution
         )
         return Image(ome_zarr_handler=self._ome_zarr_handler, path=dataset.path)
+
+    def add_table(
+        self,
+        name: str,
+        table: Table,
+        backend: str | None = None,
+        overwrite: bool = False,
+    ) -> None:
+        """Add a table to the image."""
+        if self._tables_handler is None:
+            raise NgioValidationError("No tables found in the image.")
+        self._tables_handler.add(
+            name=name, table=table, backend=backend, overwrite=overwrite
+        )
+
+
+def open_omezarr_image(
+    store: StoreOrGroup,
+    cache: bool = False,
+    mode: AccessModeLiteral = "r+",
+    validate_arrays: bool = True,
+) -> OmeZarrImage:
+    """Open an OME-Zarr image."""
+    return OmeZarrImage(
+        store=store,
+        cache=cache,
+        mode=mode,
+        validate_arrays=validate_arrays,
+    )
+
+
+def open_single_image(
+    store: StoreOrGroup,
+    path: str | None = None,
+    pixel_size: PixelSize | None = None,
+    highest_resolution: bool = False,
+    cache: bool = False,
+    mode: AccessModeLiteral = "r+",
+    validate_arrays: bool = True,
+) -> Image:
+    """Open a single level image from an OME-Zarr image."""
+    return open_omezarr_image(
+        store=store,
+        cache=cache,
+        mode=mode,
+        validate_arrays=validate_arrays,
+    ).get_image(
+        path=path,
+        pixel_size=pixel_size,
+        highest_resolution=highest_resolution,
+    )

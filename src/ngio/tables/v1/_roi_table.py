@@ -97,7 +97,7 @@ class ROITableV1Meta(BaseModel):
     backend: str | None = None
 
 
-class ROITableV1:
+class RoiTableV1:
     """Class to handle fractal ROI tables.
 
     To know more about the ROI table format, please refer to the
@@ -138,7 +138,7 @@ class ROITableV1:
         cache: bool = False,
         mode: AccessModeLiteral = "a",
         parallel_safe: bool = False,
-    ) -> "ROITableV1":
+    ) -> "RoiTableV1":
         """Create a new ROI table from a Zarr store."""
         handler = ZarrGroupHandler(
             store=store, cache=cache, mode=mode, parallel_safe=parallel_safe

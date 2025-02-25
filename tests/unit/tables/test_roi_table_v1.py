@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from ngio.tables.v1._roi_table import ROITableV1, WorldCooROI
+from ngio.tables.v1._roi_table import RoiTableV1, WorldCooROI
 from ngio.utils import NgioValueError
 
 
@@ -20,7 +20,7 @@ def test_roi_table_v1(tmp_path: Path):
         )
     }
 
-    table = ROITableV1(rois=rois.values())
+    table = RoiTableV1(rois=rois.values())
 
     table.add(
         roi=WorldCooROI(
@@ -52,7 +52,7 @@ def test_roi_table_v1(tmp_path: Path):
     table.set_backend(store=tmp_path / "roi_table.zarr", backend_name="anndata")
     table.consolidate()
 
-    table2 = ROITableV1.from_store(store=tmp_path / "roi_table.zarr")
+    table2 = RoiTableV1.from_store(store=tmp_path / "roi_table.zarr")
 
     assert len(table2._rois) == 2
     assert table2.get("roi1") == table.get("roi1")

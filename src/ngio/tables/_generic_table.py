@@ -85,7 +85,6 @@ class GenericTable:
             raise ValueError("The backend does not implement the dataframe protocol.")
 
         dataframe = backend.load_as_dataframe()
-        print(dataframe.index.dtype)
 
         table = cls(dataframe)
         table._meta = meta

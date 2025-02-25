@@ -1,6 +1,10 @@
 """OME-Zarr object models."""
 
-from ngio.images.omezarr_image import OmeZarrImage
+from ngio.images.omezarr_image import (
+    OmeZarrImage,
+    open_omezarr_image,
+    open_single_image,
+)
 
 # from ngio.common import ArrayLike, Dimensions
 # from ngio.ome_zarr_meta.ngio_specs import (
@@ -10,7 +14,7 @@ from ngio.images.omezarr_image import OmeZarrImage
 #    PixelSize,
 # )
 
-__all__ = ["OmeZarrImage"]
+__all__ = ["OmeZarrImage", "open_omezarr_image", "open_single_image"]
 
 
 class Image:

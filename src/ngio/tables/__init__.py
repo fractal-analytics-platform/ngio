@@ -5,7 +5,7 @@ from ngio.tables.backends import TableBackendsManager
 from ngio.tables.table_handler import (
     FeaturesTable,
     MaskingROITable,
-    ROITable,
+    RoiTable,
     Table,
     TableGroupHandler,
     TypedTable,
@@ -17,7 +17,7 @@ __all__ = [
     "FeaturesTable",
     "GenericTable",
     "MaskingROITable",
-    "ROITable",
+    "RoiTable",
     "Table",
     "TableBackendsManager",
     "TableGroupHandler",
