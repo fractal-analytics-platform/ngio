@@ -187,21 +187,20 @@ def open_omezarr_image(
     )
 
 
-def open_single_image(
+def open_image(
     store: StoreOrGroup,
     path: str | None = None,
     pixel_size: PixelSize | None = None,
     highest_resolution: bool = False,
     cache: bool = False,
     mode: AccessModeLiteral = "r+",
-    validate_arrays: bool = True,
 ) -> Image:
     """Open a single level image from an OME-Zarr image."""
     return open_omezarr_image(
         store=store,
         cache=cache,
         mode=mode,
-        validate_arrays=validate_arrays,
+        validate_arrays=False,
     ).get_image(
         path=path,
         pixel_size=pixel_size,

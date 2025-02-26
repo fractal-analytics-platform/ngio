@@ -15,8 +15,8 @@ from ngio.images import (
     Image,
     Label,
     OmeZarrImage,
+    open_image,
     open_omezarr_image,
-    open_single_image,
 )
 from ngio.ome_zarr_meta.ngio_specs import AxesSetup, PixelSize
 
@@ -30,8 +30,8 @@ __all__ = [
     "OmeZarrPlate",
     "OmeZarrWell",
     "PixelSize",
+    "open_image",
     "open_omezarr_image",
     "open_omezarr_plate",
     "open_omezarr_well",
-    "open_single_image",
 ]

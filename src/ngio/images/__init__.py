@@ -2,8 +2,8 @@
 
 from ngio.images.omezarr_image import (
     OmeZarrImage,
+    open_image,
     open_omezarr_image,
-    open_single_image,
 )
 
 # from ngio.common import ArrayLike, Dimensions
@@ -14,7 +14,7 @@ from ngio.images.omezarr_image import (
 #    PixelSize,
 # )
 
-__all__ = ["OmeZarrImage", "open_omezarr_image", "open_single_image"]
+__all__ = ["OmeZarrImage", "open_image", "open_omezarr_image"]
 
 
 class Image:
