@@ -1,6 +1,6 @@
 """Base class for handling OME-NGFF metadata in Zarr groups."""
 
-from typing import Generic, TypeVar
+from typing import Generic, Protocol, TypeVar
 
 from ngio.ome_zarr_meta._meta_converter_prototypes import (
     ConverterError,
@@ -22,6 +22,62 @@ _Image_or_Label = TypeVar("_Image_or_Label", NgioImageMeta, NgioLabelMeta)
 _Image_or_Label_Converter = TypeVar(
     "_Image_or_Label_Converter", ImageMetaConverter, LabelMetaConverter
 )
+
+
+class OmeZarrImageHandler(Protocol):
+    """Protocol for OME-Zarr image handlers."""
+
+    def __init__(
+        self, store: StoreOrGroup, cache: bool = False, mode: AccessModeLiteral = "a"
+    ):
+        """Initialize the handler."""
+        ...
+
+    def safe_load_meta(self) -> NgioImageMeta | ConverterError:
+        """Load the metadata from the store."""
+        ...
+
+    @property
+    def meta(self) -> NgioImageMeta:
+        """Return the metadata."""
+        ...
+
+    def write_meta(self, meta: NgioImageMeta) -> None:
+        """Write the metadata to the store."""
+        ...
+
+    @property
+    def group_handler(self) -> ZarrGroupHandler:
+        """Return the group handler."""
+        ...
+
+
+class OmeZarrLabelHandler(Protocol):
+    """Protocol for OME-Zarr label handlers."""
+
+    def __init__(
+        self, store: StoreOrGroup, cache: bool = False, mode: AccessModeLiteral = "a"
+    ):
+        """Initialize the handler."""
+        ...
+
+    def safe_load_meta(self) -> NgioLabelMeta | ConverterError:
+        """Load the metadata from the store."""
+        ...
+
+    @property
+    def meta(self) -> NgioLabelMeta:
+        """Return the metadata."""
+        ...
+
+    def write_meta(self, meta: NgioLabelMeta) -> None:
+        """Write the metadata to the store."""
+        ...
+
+    @property
+    def group_handler(self) -> ZarrGroupHandler:
+        """Return the group handler."""
+        ...
 
 
 class GenericOmeZarrHandler(Generic[_Image_or_Label, _Image_or_Label_Converter]):

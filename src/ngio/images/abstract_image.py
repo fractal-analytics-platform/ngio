@@ -5,8 +5,8 @@ import zarr
 
 from ngio.common import Dimensions
 from ngio.ome_zarr_meta import (
-    BaseOmeZarrImageHandler,
     Dataset,
+    OmeZarrImageHandler,
     PixelSize,
 )
 from ngio.utils import (
@@ -22,7 +22,7 @@ class Image:
 
     def __init__(
         self,
-        ome_zarr_handler: BaseOmeZarrImageHandler,
+        ome_zarr_handler: OmeZarrImageHandler,
         path: str,
     ) -> None:
         """Initialize the MultiscaleHandler in read mode.

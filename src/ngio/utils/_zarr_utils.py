@@ -106,6 +106,15 @@ class ZarrGroupHandler:
                 that can be used to make the handler parallel safe.
                 Be aware that the lock needs to be used manually.
         """
+        if mode not in ["r", "r+", "w", "w-", "a"]:
+            raise NgioValueError(f"Mode {mode} is not supported.")
+
+        if parallel_safe and cache:
+            raise NgioValueError(
+                "The cache and parallel_safe options are mutually exclusive."
+                "If you want to use the lock mechanism, you should not use the cache."
+            )
+
         _group, _store = open_group_wrapper(store, mode)
 
         # Make sure the cache is set in the attrs
@@ -128,6 +137,7 @@ class ZarrGroupHandler:
         self._mode = mode
         self._store = _store
         self.use_cache = cache
+        self._parallel_safe = parallel_safe
         self._cache = {}
 
     @property
@@ -257,3 +267,21 @@ class ZarrGroupHandler:
             ) from e
         self.add_to_cache(path, group)
         return group
+
+    def derive_handler(self, path: str, overwrite: bool = False) -> "ZarrGroupHandler":
+        """Derive a new handler from the current handler."""
+        try:
+            group = self.get_group(path)
+        except NgioFileNotFoundError as e:
+            if self.mode == "r":
+                raise NgioFileNotFoundError(
+                    f"No group found at {path}. GroupHandler is read only."
+                ) from e
+            group = self.create_group(path, overwrite=overwrite)
+
+        return ZarrGroupHandler(
+            store=group,
+            cache=self.use_cache,
+            mode=self.mode,
+            parallel_safe=self._parallel_safe,
+        )

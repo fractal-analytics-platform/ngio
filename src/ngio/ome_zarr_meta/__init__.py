@@ -3,6 +3,8 @@
 from ngio.ome_zarr_meta._base_handlers import (
     BaseOmeZarrImageHandler,
     BaseOmeZarrLabelHandler,
+    OmeZarrImageHandler,
+    OmeZarrLabelHandler,
 )
 from ngio.ome_zarr_meta._handlers import (
     ImageHandlersManager,
@@ -26,6 +28,8 @@ __all__ = [
     "LabelHandlersManager",
     "NgioImageMeta",
     "NgioLabelMeta",
+    "OmeZarrImageHandler",
+    "OmeZarrLabelHandler",
     "PixelSize",
     "open_omezarr_handler",
 ]

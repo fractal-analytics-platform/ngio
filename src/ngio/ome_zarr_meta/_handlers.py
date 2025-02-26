@@ -3,8 +3,8 @@ from typing import Any, Generic, TypeVar
 from pydantic import ValidationError
 
 from ngio.ome_zarr_meta._base_handlers import (
-    BaseOmeZarrImageHandler,
-    BaseOmeZarrLabelHandler,
+    OmeZarrImageHandler,
+    OmeZarrLabelHandler,
 )
 from ngio.ome_zarr_meta.v04 import OmeZarrV04ImageHandler, OmeZarrV04LabelHandler
 from ngio.utils import (
@@ -15,7 +15,7 @@ from ngio.utils import (
 )
 
 _Image_or_Label_Plugin = TypeVar(
-    "_Image_or_Label_Plugin", BaseOmeZarrLabelHandler, BaseOmeZarrImageHandler
+    "_Image_or_Label_Plugin", OmeZarrImageHandler, OmeZarrLabelHandler
 )
 
 
@@ -69,7 +69,7 @@ class GenericHandlersManager(Generic[_Image_or_Label_Plugin]):
         self._implemented_handlers[key] = handler
 
 
-class ImageHandlersManager(GenericHandlersManager[BaseOmeZarrImageHandler]):
+class ImageHandlersManager(GenericHandlersManager[OmeZarrImageHandler]):
     def __init__(self):
         super().__init__()
 
@@ -77,7 +77,7 @@ class ImageHandlersManager(GenericHandlersManager[BaseOmeZarrImageHandler]):
 ImageHandlersManager().add_handler("0.4", OmeZarrV04ImageHandler)
 
 
-class LabelHandlersManager(GenericHandlersManager[BaseOmeZarrLabelHandler]):
+class LabelHandlersManager(GenericHandlersManager[OmeZarrLabelHandler]):
     def __init__(self):
         super().__init__()
 
@@ -87,6 +87,6 @@ LabelHandlersManager().add_handler("0.4", OmeZarrV04LabelHandler)
 
 def open_omezarr_handler(
     store: StoreOrGroup, cache: bool = False, mode: AccessModeLiteral = "a"
-) -> BaseOmeZarrImageHandler:
+) -> OmeZarrImageHandler:
     """Open the metadata of an OME-Zarr image."""
     return ImageHandlersManager().get_handler(store, cache, mode)
