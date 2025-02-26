@@ -10,7 +10,7 @@ __author__ = "Lorenzo Cerrone"
 __email__ = "lorenzo.cerrone@uzh.ch"
 
 from ngio.common import ArrayLike, Dimensions
-from ngio.hcs import OmeZarrPlate, OmeZarrWell
+from ngio.hcs import OmeZarrPlate, OmeZarrWell, open_omezarr_plate, open_omezarr_well
 from ngio.images import (
     Image,
     Label,
@@ -31,5 +31,7 @@ __all__ = [
     "OmeZarrWell",
     "PixelSize",
     "open_omezarr_image",
+    "open_omezarr_plate",
+    "open_omezarr_well",
     "open_single_image",
 ]
