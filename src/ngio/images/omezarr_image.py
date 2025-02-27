@@ -1,15 +1,16 @@
 """Abstract class for handling OME-NGFF images."""
 
-# %%
 from typing import Literal, overload
 
 from ngio.images.abstract_image import Image
+from ngio.images.label_image import Label, LabelGroupHandler
 from ngio.ome_zarr_meta import NgioImageMeta, PixelSize, open_omezarr_handler
 from ngio.tables import (
     FeaturesTable,
     MaskingROITable,
     RoiTable,
     Table,
+    TableGroupHandler,
     TypedTable,
     open_table_group,
 )
@@ -30,19 +31,59 @@ class OmeZarrImage:
         store: StoreOrGroup,
         cache: bool = False,
         mode: AccessModeLiteral = "r+",
+        table_handler: TableGroupHandler | None = None,
+        label_handler: LabelGroupHandler | None = None,
         validate_arrays: bool = True,
     ) -> None:
         """Initialize the NGFFImage in read mode."""
-        self._ome_zarr_handler = open_omezarr_handler(
+        self._omezarr_handler = open_omezarr_handler(
             store=store,
             cache=cache,
             mode=mode,
         )
+        self.set_table_handler(table_handler)
+        self.set_label_handler(label_handler)
+        if validate_arrays:
+            self.validate()
+
+    def __repr__(self) -> str:
+        """Return a string representation of the image."""
+        return f"OmeZarrImage(paths={self.levels_paths})"
+
+    @property
+    def image_meta(self) -> NgioImageMeta:
+        """Return the image metadata."""
+        return self._omezarr_handler.meta
+
+    @property
+    def levels(self) -> int:
+        """Return the number of levels in the image."""
+        return self._omezarr_handler.meta.levels
+
+    @property
+    def levels_paths(self) -> list[str]:
+        """Return the paths of the levels in the image."""
+        return self._omezarr_handler.meta.paths
+
+    def validate(self) -> None:
+        """Validate the image."""
+        for path in self.levels_paths:
+            self.get_image(
+                path=path
+            )  # this will raise an error if the image is invalid
+
+    def set_table_handler(self, table_handler: TableGroupHandler | None = None) -> None:
+        """Set the table handler."""
+        if table_handler is not None:
+            self._tables_handler = table_handler
+            return None
+
+        # try to get the "default" table group
         try:
-            _table_group = self._ome_zarr_handler.group_handler.get_group("tables")
+            _table_group = self._omezarr_handler.group_handler.get_group("tables")
         except NgioFileNotFoundError:
-            if mode != "r":
-                _table_group = self._ome_zarr_handler.group_handler.create_group(
+            if self._omezarr_handler.group_handler.mode != "r":
+                _table_group = self._omezarr_handler.group_handler.create_group(
                     "tables"
                 )
             else:
@@ -52,36 +93,6 @@ class OmeZarrImage:
             self._tables_handler = open_table_group(_table_group)
         else:
             self._tables_handler = None
-
-        self._labels_handler = None
-        if validate_arrays:
-            self.validate()
-
-    def __repr__(self) -> str:
-        """Return a string representation of the image."""
-        return f"OmeZarrImage(paths={self.levels_paths})"
-
-    def validate(self) -> None:
-        """Validate the image."""
-        for path in self.levels_paths:
-            self.get_image(
-                path=path
-            )  # this will raise an error if the image is invalid
-
-    @property
-    def image_meta(self) -> NgioImageMeta:
-        """Return the image metadata."""
-        return self._ome_zarr_handler.meta
-
-    @property
-    def levels(self) -> int:
-        """Return the number of levels in the image."""
-        return self._ome_zarr_handler.meta.levels
-
-    @property
-    def levels_paths(self) -> list[str]:
-        """Return the paths of the levels in the image."""
-        return self._ome_zarr_handler.meta.paths
 
     def list_tables(self) -> list[str]:
         """List all tables in the image."""
@@ -143,20 +154,6 @@ class OmeZarrImage:
             case _:
                 raise NgioValueError(f"Unknown check_type: {check_type}")
 
-    def get_image(
-        self,
-        path: str | None = None,
-        pixel_size: PixelSize | None = None,
-        highest_resolution: bool = True,
-    ) -> Image:
-        """Get an image at a specific level."""
-        if path is not None or pixel_size is not None:
-            highest_resolution = False
-        dataset = self.image_meta.get_dataset(
-            path=path, pixel_size=pixel_size, highest_resolution=highest_resolution
-        )
-        return Image(ome_zarr_handler=self._ome_zarr_handler, path=dataset.path)
-
     def add_table(
         self,
         name: str,
@@ -170,6 +167,71 @@ class OmeZarrImage:
         self._tables_handler.add(
             name=name, table=table, backend=backend, overwrite=overwrite
         )
+
+    def set_label_handler(self, label_handler: LabelGroupHandler | None = None) -> None:
+        """Set the label handler."""
+        if label_handler is not None:
+            self._labels_handler = label_handler
+            return None
+
+        # try to get the "default" label group
+        try:
+            _label_group = self._omezarr_handler.group_handler.get_group("labels")
+        except NgioFileNotFoundError:
+            if self._omezarr_handler.group_handler.mode != "r":
+                _label_group = self._omezarr_handler.group_handler.create_group(
+                    "labels"
+                )
+            else:
+                _label_group = None
+
+        if _label_group is not None:
+            self._labels_handler = LabelGroupHandler(_label_group)
+        else:
+            self._labels_handler = None
+
+    def list_labels(self) -> list[str]:
+        """List all labels in the image."""
+        if self._labels_handler is None:
+            return []
+        return self._labels_handler.list()
+
+    def get_label(self, label_name: str, path: str) -> Label:
+        """Get a label from the image."""
+        if self._labels_handler is None:
+            raise NgioValidationError("No labels found in the image.")
+        return self._labels_handler.get(name=label_name, path=path)
+
+    def derive_label(self, label_name: str, **kwargs) -> Label:
+        """Derive a label from an image."""
+        if self._labels_handler is None:
+            raise NgioValidationError("No labels found in the image.")
+
+        ref_image = self.get_image()
+        return self._labels_handler.derive(
+            name=label_name, reference_image=ref_image, **kwargs
+        )
+
+    def get_image(
+        self,
+        path: str | None = None,
+        pixel_size: PixelSize | None = None,
+        highest_resolution: bool = True,
+    ) -> Image:
+        """Get an image at a specific level."""
+        if path is not None or pixel_size is not None:
+            highest_resolution = False
+        dataset = self.image_meta.get_dataset(
+            path=path, pixel_size=pixel_size, highest_resolution=highest_resolution
+        )
+        return Image(ome_zarr_handler=self._omezarr_handler, path=dataset.path)
+
+    def derive(
+        self,
+        **kwargs,
+    ) -> "OmeZarrImage":
+        """Derive a new image from the current image."""
+        raise NotImplementedError
 
 
 def open_omezarr_image(

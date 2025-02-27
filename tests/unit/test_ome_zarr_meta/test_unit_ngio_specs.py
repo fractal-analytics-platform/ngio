@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
 
+from ngio.common._axes_transforms import transform_list, transform_numpy_array
 from ngio.ome_zarr_meta.ngio_specs import (
     AxesMapper,
     AxesSetup,
@@ -17,7 +18,6 @@ from ngio.ome_zarr_meta.ngio_specs import (
     SpaceUnits,
     TimeUnits,
 )
-from ngio.ome_zarr_meta.ngio_specs._axes import transform_array, transform_list
 from ngio.ome_zarr_meta.ngio_specs._channels import valid_hex_color
 
 
@@ -74,14 +74,14 @@ def test_axes_base(
     shape = list(range(2, len(on_disk_axes) + 2))
     np.random.seed(0)
     x_in = np.random.rand(*shape)
-    x_inner = transform_array(x_in, mapper.to_canonical())
+    x_inner = transform_numpy_array(x_in, mapper.to_canonical())
     x_inner_shape = transform_list(
         list(x_in.shape), default=1, operations=mapper.to_canonical()
     )
     assert len(x_inner.shape) == 5 + len(mapper._axes_setup.others)
     assert tuple(x_inner_shape) == tuple(x_inner.shape)
 
-    x_out = transform_array(x_inner, mapper.from_canonical())
+    x_out = transform_numpy_array(x_inner, mapper.from_canonical())
     x_out_shape = transform_list(
         list(x_inner.shape), default=1, operations=mapper.from_canonical()
     )
@@ -90,13 +90,13 @@ def test_axes_base(
     np.testing.assert_allclose(x_in, x_out)
     # Test transformation with shuffle
     shuffled_axes = np.random.permutation(on_disk_axes)
-    x_inner = transform_array(x_in, mapper.to_order(shuffled_axes))
+    x_inner = transform_numpy_array(x_in, mapper.to_order(shuffled_axes))
     x_inner_shape = transform_list(
         list(x_in.shape), default=1, operations=mapper.to_order(shuffled_axes)
     )
     assert len(x_inner.shape) == len(on_disk_axes)
     assert tuple(x_inner_shape) == tuple(x_inner.shape)
-    x_out = transform_array(x_inner, mapper.from_order(shuffled_axes))
+    x_out = transform_numpy_array(x_inner, mapper.from_order(shuffled_axes))
     x_out_shape = transform_list(
         list(x_inner.shape), default=1, operations=mapper.from_order(shuffled_axes)
     )

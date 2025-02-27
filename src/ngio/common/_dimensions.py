@@ -6,8 +6,8 @@ but it is based on the actual metadata of the image data.
 
 from collections.abc import Collection
 
+from ngio.common._axes_transforms import transform_list
 from ngio.ome_zarr_meta import AxesMapper
-from ngio.ome_zarr_meta.ngio_specs import transform_list
 from ngio.utils import NgioValidationError, NgioValueError
 
 

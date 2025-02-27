@@ -235,7 +235,7 @@ def validate_axes(
 
 
 class AxesTransformation(BaseModel):
-    pass
+    model_config = ConfigDict(extra="forbid", frozen=True, arbitrary_types_allowed=True)
 
 
 class AxesTranspose(AxesTransformation):
@@ -318,6 +318,10 @@ class AxesMapper:
         for on_disk_name in _on_disk_names:
             if on_disk_name not in _name_mapping.keys():
                 _name_mapping[on_disk_name] = on_disk_name
+
+        for other in self._axes_setup.others:
+            if other not in _name_mapping.keys():
+                _name_mapping[other] = None
         return _name_mapping
 
     def _compute_index_mapping(self):
@@ -430,38 +434,3 @@ class AxesMapper:
     def from_canonical(self) -> tuple[AxesTransformation, ...]:
         """Get the new order of the axes."""
         return self.from_order(self._extended_canonical_order)
-
-
-def transform_array(
-    array: np.ndarray, operations: tuple[AxesTransformation, ...]
-) -> np.ndarray:
-    for operation in operations:
-        if isinstance(operation, AxesTranspose):
-            array = np.transpose(array, operation.axes)
-        elif isinstance(operation, AxesExpand):
-            array = np.expand_dims(array, axis=operation.axes)
-        elif isinstance(operation, AxesSqueeze):
-            array = np.squeeze(array, axis=operation.axes)
-        else:
-            raise ValueError(f"Unknown operation {operation}")
-    return array
-
-
-def transform_list(
-    input_list: list[T], default: T, operations: tuple[AxesTransformation, ...]
-) -> list[T]:
-    if isinstance(input_list, tuple):
-        input_list = list(input_list)
-
-    for operation in operations:
-        if isinstance(operation, AxesTranspose):
-            input_list = [input_list[i] for i in operation.axes]
-
-        if isinstance(operation, AxesExpand):
-            for ax in operation.axes:
-                input_list.insert(ax, default)
-        elif isinstance(operation, AxesSqueeze):
-            for offset, ax in enumerate(operation.axes):
-                input_list.pop(ax - offset)
-
-    return input_list
