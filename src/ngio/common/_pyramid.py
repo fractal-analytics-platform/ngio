@@ -117,3 +117,49 @@ def on_disk_zoom(
             )
         case _:
             raise ValueError("mode must be either 'dask', 'numpy' or 'coarsen'")
+
+
+def _find_closest_arrays(
+    processed: list[zarr.Array], to_be_processed: list[zarr.Array]
+) -> tuple[int, int]:
+    dist_matrix = np.zeros((len(processed), len(to_be_processed)))
+    for i, arr_to_proc in enumerate(to_be_processed):
+        for j, proc_arr in enumerate(processed):
+            dist_matrix[j, i] = np.sqrt(
+                np.sum(
+                    [
+                        (s1 - s2) ** 2
+                        for s1, s2 in zip(
+                            arr_to_proc.shape, proc_arr.shape, strict=False
+                        )
+                    ]
+                )
+            )
+
+    return np.unravel_index(dist_matrix.argmin(), dist_matrix.shape)
+
+
+def consolidate_pyramid(
+    source: zarr.Array,
+    targets: list[zarr.Array],
+    order: Literal[0, 1, 2] = 1,
+    mode: Literal["dask", "numpy", "coarsen"] = "dask",
+) -> None:
+    """Consolidate the Zarr array."""
+    processed = [source]
+    to_be_processed = targets
+
+    while to_be_processed:
+        source_id, target_id = _find_closest_arrays(processed, to_be_processed)
+
+        source_image = processed[source_id]
+        target_image = to_be_processed.pop(target_id)
+
+        on_disk_zoom(
+            source=source_image,
+            target=target_image,
+            mode=mode,
+            order=order,
+        )
+
+        processed.append(target_image)
