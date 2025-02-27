@@ -6,8 +6,8 @@ import dask.delayed
 import numpy as np
 import zarr
 
-from ngio.common import Dimensions
 from ngio.common._axes_transforms import transform_dask_array, transform_numpy_array
+from ngio.common._dimensions import Dimensions
 from ngio.common._slicer import (
     SliceTransform,
     compute_and_slices,

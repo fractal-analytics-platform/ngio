@@ -1,3 +1,5 @@
+import math
+from collections.abc import Collection
 from typing import Literal
 
 import dask.array as da
@@ -5,6 +7,7 @@ import numpy as np
 import zarr
 
 from ngio.common._zoom import _zoom_inputs_check, dask_zoom, numpy_zoom
+from ngio.utils import AccessModeLiteral, StoreOrGroup, open_group_wrapper
 
 
 def _on_disk_numpy_zoom(
@@ -163,3 +166,55 @@ def consolidate_pyramid(
         )
 
         processed.append(target_image)
+
+
+def init_empty_pyramid(
+    store: StoreOrGroup,
+    paths: list[str],
+    ref_shape: Collection[int],
+    scaling_factors: Collection[float],
+    chunks: Collection[int] | None = None,
+    dtype: str = "uint16",
+    mode: AccessModeLiteral = "a",
+) -> None:
+    # Return the an Image object
+    if chunks is not None and len(chunks) != len(ref_shape):
+        raise ValueError(
+            "The shape and chunks must have the same number of dimensions."
+        )
+
+    if len(ref_shape) != len(scaling_factors):
+        raise ValueError(
+            "The shape and scaling factor must have the same number of dimensions."
+        )
+
+    root_group, _ = open_group_wrapper(store, mode=mode)
+    for path in paths:
+        if any(s < 1 for s in ref_shape):
+            raise ValueError(
+                "Level shape must be at least 1 on all dimensions. "
+                f"Calculated shape: {ref_shape} at level {path}."
+            )
+        new_arr = root_group.zeros(
+            name=path,
+            shape=ref_shape,
+            dtype=dtype,
+            chunks=chunks,
+            dimension_separator="/",
+        )
+
+        # Todo redo this with when a proper build of pyramid is implemented
+        _shape = []
+        for s, sc in zip(ref_shape, scaling_factors, strict=True):
+            if math.floor(s / sc) % 2 == 0:
+                _shape.append(math.floor(s / sc))
+            else:
+                _shape.append(math.ceil(s / sc))
+        ref_shape = _shape
+
+        if chunks is None:
+            chunks = new_arr.chunks
+            if chunks is None:
+                raise ValueError("Something went wrong with the chunks")
+        chunks = [min(c, s) for c, s in zip(chunks, ref_shape, strict=True)]
+    return None

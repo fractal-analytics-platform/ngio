@@ -5,7 +5,7 @@ import dask.array as da
 import numpy as np
 import zarr
 
-from ngio.common import Dimensions
+from ngio.common._dimensions import Dimensions
 from ngio.ome_zarr_meta.ngio_specs import AxesTransformation
 from ngio.utils import NgioValueError
 
