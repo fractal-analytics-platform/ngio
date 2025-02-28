@@ -15,10 +15,7 @@ from ngio.ome_zarr_meta.v04._v04_spec_utils import (
     v04_to_ngio_image_meta,
     v04_to_ngio_label_meta,
 )
-from ngio.utils import (
-    AccessModeLiteral,
-    StoreOrGroup,
-)
+from ngio.utils import ZarrGroupHandler
 
 
 class V04ImageConverter:
@@ -46,16 +43,16 @@ class V04LabelConverter:
 class V04ImageMetaHandler(BaseImageMetaHandler):
     """Base class for handling OME-NGFF 0.4 metadata."""
 
-    def __init__(
-        self, store: StoreOrGroup, cache: bool = False, mode: AccessModeLiteral = "a"
-    ):
-        super().__init__(V04ImageConverter(), store, cache, mode)
+    def __init__(self, group_handler: ZarrGroupHandler):
+        super().__init__(
+            meta_converter=V04ImageConverter(), group_handler=group_handler
+        )
 
 
 class V04LabelMetaHandler(BaseLabelMetaHandler):
     """Base class for handling OME-NGFF 0.4 metadata."""
 
-    def __init__(
-        self, store: StoreOrGroup, cache: bool = False, mode: AccessModeLiteral = "a"
-    ):
-        super().__init__(V04LabelConverter(), store, cache, mode)
+    def __init__(self, group_handler: ZarrGroupHandler):
+        super().__init__(
+            meta_converter=V04LabelConverter(), group_handler=group_handler
+        )

@@ -1,7 +1,7 @@
 """OME-Zarr object models."""
 
 from ngio.images.abstract_image import Image
-from ngio.images.label import Label, LabelGroupHandler
+from ngio.images.label import Label, LabelsContainer
 from ngio.images.omezarr_container import (
     OmeZarrContainer,
     open_image,
@@ -11,7 +11,7 @@ from ngio.images.omezarr_container import (
 __all__ = [
     "Image",
     "Label",
-    "LabelGroupHandler",
+    "LabelsContainer",
     "OmeZarrContainer",
     "open_image",
     "open_omezarr_image",

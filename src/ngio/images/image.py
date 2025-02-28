@@ -1,97 +1,53 @@
 """Generic class to handle Image-like data in a OME-NGFF file."""
 
-import numpy as np
-import zarr
-
-from ngio.common import Dimensions
+from ngio.images.abstract_image import Image
 from ngio.ome_zarr_meta import (
-    Dataset,
-    ImageMetaHandler,
+    ImplementedImageMetaHandlers,
+    NgioImageMeta,
     PixelSize,
 )
-from ngio.utils import (
-    NgioFileExistsError,
-)
+from ngio.utils import ZarrGroupHandler
 
 
-class Image:
-    """A class to handle OME-NGFF images stored in Zarr format.
+class ImagesContainer:
+    """A class to handle the /labels group in an OME-NGFF file."""
 
-    This class provides methods to access image data and ROI tables.
-    """
-
-    def __init__(
-        self,
-        ome_zarr_handler: ImageMetaHandler,
-        path: str,
-    ) -> None:
-        """Initialize the MultiscaleHandler in read mode.
-
-        Args:
-            ome_zarr_handler (BaseOmeZarrImageHandler): The OME-Zarr image handler.
-            path (str): The path to the image in the Zarr group.
-        """
-        self._path = path
-        self._ome_zarr_handler = ome_zarr_handler
-
-        self._dataset = self._ome_zarr_handler.meta.get_dataset(path=path)
-        self._pixel_size = self._dataset.pixel_size
-
-        try:
-            self._zarr_array = self._ome_zarr_handler.group_handler.get_array(path)
-        except NgioFileExistsError as e:
-            raise NgioFileExistsError(f"Could not find the dataset at {path}.") from e
-
-        self._dimensions = Dimensions(
-            shape=self._zarr_array.shape, axes_mapper=self._dataset.axes_mapper
+    def __init__(self, group_handler: ZarrGroupHandler) -> None:
+        """Initialize the LabelGroupHandler."""
+        self._group_handler = group_handler
+        self._meta_handler = ImplementedImageMetaHandlers().find_meta_handler(
+            group_handler
         )
 
-        self._axer_mapper = self._dataset.axes_mapper
-
-    def __repr__(self) -> str:
-        """Return a string representation of the image."""
-        return f"Image(path={self.path}, {self.dimensions})"
+    def meta(self) -> NgioImageMeta:
+        """Return the metadata."""
+        return self._meta_handler.meta
 
     @property
-    def zarr_array(self) -> zarr.Array:
-        """Return the Zarr array."""
-        return self._zarr_array
+    def levels(self) -> int:
+        """Return the number of levels in the image."""
+        return self._meta_handler.meta.levels
 
     @property
-    def shape(self) -> tuple[int, ...]:
-        """Return the shape of the image."""
-        return self.zarr_array.shape
+    def levels_paths(self) -> list[str]:
+        """Return the paths of the levels in the image."""
+        return self._meta_handler.meta.paths
 
-    @property
-    def dtype(self) -> np.dtype:
-        """Return the dtype of the image."""
-        return self.zarr_array.dtype
+    def get(
+        self,
+        path: str | None = None,
+        pixel_size: PixelSize | None = None,
+        highest_resolution: bool = True,
+    ) -> Image:
+        """Get an image at a specific level."""
+        if path is not None or pixel_size is not None:
+            highest_resolution = False
 
-    @property
-    def chunks(self) -> tuple[int, ...]:
-        """Return the chunks of the image."""
-        return self.zarr_array.chunks
-
-    @property
-    def dimensions(self) -> Dimensions:
-        """Return the dimensions of the image."""
-        return self._dimensions
-
-    @property
-    def pixel_size(self) -> PixelSize:
-        """Return the pixel size of the image."""
-        return self._pixel_size
-
-    @property
-    def dataset(self) -> Dataset:
-        """Return the dataset of the image."""
-        return self._dataset
-
-    @property
-    def path(self) -> str:
-        """Return the path of the image."""
-        return self._dataset.path
-
-    def consolidate(self) -> None:
-        """Consolidate the Zarr array."""
-        raise NotImplementedError
+        dataset = self._meta_handler.meta.get_dataset(
+            path=path, pixel_size=pixel_size, highest_resolution=highest_resolution
+        )
+        return Image(
+            group_handler=self._group_handler,
+            meta_handler=self._meta_handler,
+            path=dataset.path,
+        )

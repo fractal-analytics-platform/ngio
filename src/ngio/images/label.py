@@ -9,13 +9,13 @@ from ngio.utils import (
 )
 
 
-class Label:
+class Label(Image):
     """Placeholder class for a label."""
 
-    ...
+    pass
 
 
-class LabelGroupHandler:
+class LabelsContainer:
     """A class to handle the /labels group in an OME-NGFF file."""
 
     def __init__(

@@ -234,17 +234,6 @@ class ZarrGroupHandler:
         self.add_to_cache(path, group_or_array)
         return group_or_array
 
-    def get_array(self, path: str) -> zarr.Array:
-        """Get an array from the group."""
-        array = self._group_get(path)
-        if array is None:
-            raise NgioFileNotFoundError(f"No array found at {path}")
-        if not isinstance(array, zarr.Array):
-            raise NgioValueError(
-                f"The object at {path} is not an array, but a {type(array)}"
-            )
-        return array
-
     def get_group(self, path: str) -> zarr.Group:
         """Get a group from the group."""
         group = self._group_get(path)
@@ -258,6 +247,9 @@ class ZarrGroupHandler:
 
     def create_group(self, path: str, overwrite: bool = False) -> zarr.Group:
         """Create a group in the group."""
+        if self.mode == "r":
+            raise NgioValueError("Cannot create a group in read only mode.")
+
         try:
             group = self.group.create_group(path, overwrite=overwrite)
         except ContainsGroupError as e:
@@ -268,20 +260,82 @@ class ZarrGroupHandler:
         self.add_to_cache(path, group)
         return group
 
-    def derive_handler(self, path: str, overwrite: bool = False) -> "ZarrGroupHandler":
-        """Derive a new handler from the current handler."""
+    def get_or_create_group(self, path: str, overwrite: bool = False) -> zarr.Group:
+        """Get a group from the group or create it if it does not exist."""
         try:
             group = self.get_group(path)
-        except NgioFileNotFoundError as e:
-            if self.mode == "r":
-                raise NgioFileNotFoundError(
-                    f"No group found at {path}. GroupHandler is read only."
-                ) from e
+        except NgioFileNotFoundError:
             group = self.create_group(path, overwrite=overwrite)
+        return group
 
-        return ZarrGroupHandler(
-            store=group,
-            cache=self.use_cache,
-            mode=self.mode,
-            parallel_safe=self._parallel_safe,
-        )
+    def get_array(self, path: str) -> zarr.Array:
+        """Get an array from the group."""
+        array = self._group_get(path)
+        if array is None:
+            raise NgioFileNotFoundError(f"No array found at {path}")
+        if not isinstance(array, zarr.Array):
+            raise NgioValueError(
+                f"The object at {path} is not an array, but a {type(array)}"
+            )
+        return array
+
+    def create_array(
+        self,
+        path: str,
+        shape: tuple[int, ...],
+        dtype: str,
+        chunks: tuple[int, ...] | None = None,
+        overwrite: bool = False,
+    ) -> zarr.Array:
+        if self.mode == "r":
+            raise NgioValueError("Cannot create an array in read only mode.")
+
+        try:
+            return self.group.zeros(
+                name=path,
+                shape=shape,
+                dtype=dtype,
+                chunks=chunks,
+                dimension_separator="/",
+                overwrite=overwrite,
+            )
+        except ContainsGroupError as e:
+            raise NgioFileExistsError(
+                f"A Zarr array already exists at {path}, "
+                "consider setting overwrite=True."
+            ) from e
+        except Exception as e:
+            raise NgioValueError(f"Error creating array at {path}") from e
+
+    def get_or_create_array(
+        self,
+        path: str,
+        shape: tuple[int, ...],
+        dtype: str,
+        chunks: tuple[int, ...] | None = None,
+        overwrite: bool = False,
+    ) -> zarr.Array:
+        """Get an array from the group or create it if it does not exist."""
+        try:
+            array = self.get_array(path)
+            if array.shape != shape:
+                raise NgioValueError(
+                    f"The shape of the array at {path} does not match the expected "
+                    f"shape. Expected: {shape}, got: {array.shape}."
+                )
+
+            if array.dtype != dtype:
+                raise NgioValueError(
+                    f"The dtype of the array at {path} does not match the expected "
+                    f"dtype. Expected: {dtype}, got: {array.dtype}."
+                )
+
+        except NgioFileNotFoundError:
+            array = self.create_array(
+                path=path,
+                shape=shape,
+                dtype=dtype,
+                chunks=chunks,
+                overwrite=overwrite,
+            )
+        return array

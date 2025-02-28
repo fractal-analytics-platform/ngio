@@ -3,8 +3,9 @@
 from typing import Literal, overload
 
 from ngio.images.abstract_image import Image
-from ngio.images.label import Label, LabelGroupHandler
-from ngio.ome_zarr_meta import NgioImageMeta, PixelSize, open_omezarr_handler
+from ngio.images.image import ImagesContainer
+from ngio.images.label import Label, LabelsContainer
+from ngio.ome_zarr_meta import NgioImageMeta, PixelSize
 from ngio.tables import (
     FeaturesTable,
     MaskingROITable,
@@ -12,97 +13,118 @@ from ngio.tables import (
     Table,
     TableContainer,
     TypedTable,
-    open_table_group,
 )
 from ngio.utils import (
     AccessModeLiteral,
-    NgioFileNotFoundError,
     NgioValidationError,
     NgioValueError,
     StoreOrGroup,
+    ZarrGroupHandler,
 )
+
+
+def _default_table_container(
+    store: StoreOrGroup, cache: bool = False, mode: AccessModeLiteral = "r+"
+) -> TableContainer:
+    """Return a default table container."""
+    raise NotImplementedError
+
+
+def _default_label_container(
+    store: StoreOrGroup, cache: bool = False, mode: AccessModeLiteral = "r+"
+) -> LabelsContainer:
+    """Return a default label container."""
+    raise NotImplementedError
 
 
 class OmeZarrContainer:
     """This class contains an OME-Zarr image and its associated tables and labels."""
+
+    _images_container: ImagesContainer
+    _labels_container: LabelsContainer | None
+    _tables_container: TableContainer | None
 
     def __init__(
         self,
         store: StoreOrGroup,
         cache: bool = False,
         mode: AccessModeLiteral = "r+",
-        table_handler: TableContainer | None = None,
-        label_handler: LabelGroupHandler | None = None,
+        table_container: TableContainer | None = None,
+        label_container: LabelsContainer | None = None,
         validate_arrays: bool = True,
     ) -> None:
         """Initialize the OmeZarrContainer."""
-        self._omezarr_handler = open_omezarr_handler(
-            store=store,
-            cache=cache,
-            mode=mode,
-        )
-        self.set_table_handler(table_handler)
-        self.set_label_handler(label_handler)
-        if validate_arrays:
-            self.validate()
+        self._group_handler = ZarrGroupHandler(store, cache, mode)
+        self._images_container = ImagesContainer(store=store, cache=cache, mode=mode)
+
+        if label_container is None:
+            label_container = _default_label_container(
+                store=store, cache=cache, mode=mode
+            )
+        self._labels_container = label_container
+
+        if table_container is None:
+            table_container = _default_table_container(
+                store=store, cache=cache, mode=mode
+            )
+        self._tables_container = table_container
 
     def __repr__(self) -> str:
         """Return a string representation of the image."""
         return f"OmeZarrContainer({self.image_meta})"
 
     @property
+    def images_container(self) -> ImagesContainer:
+        """Return the image container."""
+        return self._images_container
+
+    @property
+    def labels_container(self) -> LabelsContainer:
+        """Return the labels container."""
+        if self._labels_container is None:
+            raise NgioValidationError("No labels found in the image.")
+        return self._labels_container
+
+    @property
+    def tables_container(self) -> TableContainer:
+        """Return the tables container."""
+        if self._tables_container is None:
+            raise NgioValidationError("No tables found in the image.")
+        return self._tables_container
+
+    @property
     def image_meta(self) -> NgioImageMeta:
         """Return the image metadata."""
-        return self._omezarr_handler.meta
+        return self._images_container.meta
 
     @property
     def levels(self) -> int:
         """Return the number of levels in the image."""
-        return self._omezarr_handler.meta.levels
+        return self._images_container.levels
 
     @property
     def levels_paths(self) -> list[str]:
         """Return the paths of the levels in the image."""
-        return self._omezarr_handler.meta.paths
+        return self._images_container.levels_paths
 
-    def validate(self) -> None:
-        """Validate the image."""
-        for path in self.levels_paths:
-            self.get_image(
-                path=path
-            )  # this will raise an error if the image is invalid
-
-    def _set_image_handler(self, image_handler: Image | None = None) -> None:
-        """Set the image handler."""
-        raise NotImplementedError
-
-    def set_table_handler(self, table_handler: TableContainer | None = None) -> None:
-        """Set the table handler."""
-        if table_handler is not None:
-            self._tables_handler = table_handler
-            return None
-
-        # try to get the "default" table group
-        try:
-            _table_group = self._omezarr_handler.group_handler.get_group("tables")
-        except NgioFileNotFoundError:
-            if self._omezarr_handler.group_handler.mode != "r":
-                _table_group = self._omezarr_handler.group_handler.create_group(
-                    "tables"
-                )
-            else:
-                _table_group = None
-
-        if _table_group is not None:
-            self._tables_handler = open_table_group(_table_group)
-        else:
-            self._tables_handler = None
+    def get_image(
+        self,
+        path: str | None = None,
+        pixel_size: PixelSize | None = None,
+        highest_resolution: bool = True,
+    ) -> Image:
+        """Get an image at a specific level."""
+        return self._images_container.get(
+            path=path,
+            pixel_size=pixel_size,
+            highest_resolution=highest_resolution,
+        )
 
     def list_tables(self) -> list[str]:
         """List all tables in the image."""
-        if self._tables_handler is None:
+        if self._tables_container is None:
             return []
-        return self._tables_handler.list()
+        return self._tables_container.list()
 
     @overload
     def get_table(self, table_name: str) -> Table: ...
@@ -127,10 +149,10 @@ class OmeZarrContainer:
 
     def get_table(self, table_name: str, check_type: TypedTable | None = None) -> Table:
         """Get a table from the image."""
-        if self._tables_handler is None:
+        if self._tables_container is None:
             raise NgioValidationError("No tables found in the image.")
 
-        table = self._tables_handler.get(table_name)
+        table = self._tables_container.get(table_name)
         match check_type:
             case "roi_table":
                 if not isinstance(table, RoiTable):
@@ -166,69 +188,33 @@ class OmeZarrContainer:
         overwrite: bool = False,
     ) -> None:
         """Add a table to the image."""
-        if self._tables_handler is None:
+        if self._tables_container is None:
             raise NgioValidationError("No tables found in the image.")
-        self._tables_handler.add(
+        self._tables_container.add(
             name=name, table=table, backend=backend, overwrite=overwrite
         )
 
-    def set_label_handler(self, label_handler: LabelGroupHandler | None = None) -> None:
-        """Set the label handler."""
-        if label_handler is not None:
-            self._labels_handler = label_handler
-            return None
-
-        # try to get the "default" label group
-        try:
-            _label_group = self._omezarr_handler.group_handler.get_group("labels")
-        except NgioFileNotFoundError:
-            if self._omezarr_handler.group_handler.mode != "r":
-                _label_group = self._omezarr_handler.group_handler.create_group(
-                    "labels"
-                )
-            else:
-                _label_group = None
-
-        if _label_group is not None:
-            self._labels_handler = LabelGroupHandler(_label_group)
-        else:
-            self._labels_handler = None
-
     def list_labels(self) -> list[str]:
         """List all labels in the image."""
-        if self._labels_handler is None:
+        if self._labels_container is None:
             return []
-        return self._labels_handler.list()
+        return self._labels_container.list()
 
     def get_label(self, label_name: str, path: str) -> Label:
         """Get a label from the image."""
-        if self._labels_handler is None:
+        if self._labels_container is None:
             raise NgioValidationError("No labels found in the image.")
-        return self._labels_handler.get(name=label_name, path=path)
+        return self._labels_container.get(name=label_name, path=path)
 
     def derive_label(self, label_name: str, **kwargs) -> Label:
         """Derive a label from an image."""
-        if self._labels_handler is None:
+        if self._labels_container is None:
             raise NgioValidationError("No labels found in the image.")
 
         ref_image = self.get_image()
-        return self._labels_handler.derive(
+        return self._labels_container.derive(
             name=label_name, reference_image=ref_image, **kwargs
         )
-
-    def get_image(
-        self,
-        path: str | None = None,
-        pixel_size: PixelSize | None = None,
-        highest_resolution: bool = True,
-    ) -> Image:
-        """Get an image at a specific level."""
-        if path is not None or pixel_size is not None:
-            highest_resolution = False
-        dataset = self.image_meta.get_dataset(
-            path=path, pixel_size=pixel_size, highest_resolution=highest_resolution
-        )
-        return Image(ome_zarr_handler=self._omezarr_handler, path=dataset.path)
 
     def derive(
         self,

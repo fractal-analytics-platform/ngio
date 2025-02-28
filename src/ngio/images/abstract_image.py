@@ -11,6 +11,7 @@ from ngio.ome_zarr_meta import (
 )
 from ngio.utils import (
     NgioFileExistsError,
+    ZarrGroupHandler,
 )
 
 
@@ -22,23 +23,26 @@ class Image:
 
     def __init__(
         self,
-        ome_zarr_handler: ImageMetaHandler,
+        group_handler: ZarrGroupHandler,
+        meta_handler: ImageMetaHandler,
         path: str,
     ) -> None:
         """Initialize the MultiscaleHandler in read mode.
 
         Args:
-            ome_zarr_handler (BaseOmeZarrImageHandler): The OME-Zarr image handler.
-            path (str): The path to the image in the Zarr group.
+            group_handler: The Zarr group handler.
+            meta_handler: The image metadata handler.
+            path: The path to the image in the omezanr group.
         """
         self._path = path
-        self._ome_zarr_handler = ome_zarr_handler
+        self._group_handler = group_handler
+        self._meta_handler = meta_handler
 
-        self._dataset = self._ome_zarr_handler.meta.get_dataset(path=path)
+        self._dataset = self._meta_handler.meta.get_dataset(path=path)
         self._pixel_size = self._dataset.pixel_size
 
         try:
-            self._zarr_array = self._ome_zarr_handler.group_handler.get_array(path)
+            self._zarr_array = self._group_handler.get_array(self._dataset.path)
         except NgioFileExistsError as e:
             raise NgioFileExistsError(f"Could not find the dataset at {path}.") from e
 

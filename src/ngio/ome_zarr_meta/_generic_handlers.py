@@ -9,9 +9,7 @@ from ngio.ome_zarr_meta.ngio_specs import (
     NgioLabelMeta,
 )
 from ngio.utils import (
-    AccessModeLiteral,
     NgioValueError,
-    StoreOrGroup,
     ZarrGroupHandler,
 )
 
@@ -21,9 +19,7 @@ ConverterError = ValidationError | Exception | None
 class ImageMetaHandler(Protocol):
     """Protocol for OME-Zarr image handlers."""
 
-    def __init__(
-        self, store: StoreOrGroup, cache: bool = False, mode: AccessModeLiteral = "a"
-    ):
+    def __init__(self, group_handler: ZarrGroupHandler):
         """Initialize the handler."""
         ...
 
@@ -40,18 +36,11 @@ class ImageMetaHandler(Protocol):
         """Write the metadata to the store."""
         ...
 
-    @property
-    def group_handler(self) -> ZarrGroupHandler:
-        """Return the group handler."""
-        ...
-
 
 class LabelMetaHandler(Protocol):
     """Protocol for OME-Zarr label handlers."""
 
-    def __init__(
-        self, store: StoreOrGroup, cache: bool = False, mode: AccessModeLiteral = "a"
-    ):
+    def __init__(self, group_handler: ZarrGroupHandler):
         """Initialize the handler."""
         ...
 
@@ -66,11 +55,6 @@ class LabelMetaHandler(Protocol):
 
     def write_meta(self, meta: NgioLabelMeta) -> None:
         """Write the metadata to the store."""
-        ...
-
-    @property
-    def group_handler(self) -> ZarrGroupHandler:
-        """Return the group handler."""
         ...
 
 
@@ -150,20 +134,15 @@ class GenericMetaHandler(Generic[_Image_or_Label, _Image_or_Label_Converter]):
     def __init__(
         self,
         meta_converter: _Image_or_Label_Converter,
-        store: StoreOrGroup,
-        cache: bool = False,
-        mode: AccessModeLiteral = "a",
+        group_handler: ZarrGroupHandler,
     ):
         """Initialize the handler.
 
         Args:
             meta_converter (MetaConverter): The metadata converter.
-            store (StoreOrGroup): The Zarr store or group containing the image data.
-            meta_mode (str): The mode of the metadata handler.
-            cache (bool): Whether to cache the metadata.
-            mode (str): The mode of the store.
+            group_handler (ZarrGroupHandler): The Zarr group handler.
         """
-        self._group_handler = ZarrGroupHandler(store=store, cache=cache, mode=mode)
+        self._group_handler = group_handler
         self._meta_converter = meta_converter
 
     def _load_meta(self, return_error: bool = False):
@@ -191,19 +170,10 @@ class GenericMetaHandler(Generic[_Image_or_Label, _Image_or_Label_Converter]):
         """Write the metadata to the store."""
         raise NotImplementedError
 
-    def clean_cache(self) -> None:
-        """Clear the cached metadata."""
-        self._attrs = None
-
     @property
     def meta(self) -> _Image_or_Label:
         """Return the metadata."""
         raise NotImplementedError
-
-    @property
-    def group_handler(self) -> ZarrGroupHandler:
-        """Return the group handler."""
-        return self._group_handler
 
 
 class BaseImageMetaHandler(GenericMetaHandler[NgioImageMeta, ImageMetaConverter]):
@@ -212,20 +182,15 @@ class BaseImageMetaHandler(GenericMetaHandler[NgioImageMeta, ImageMetaConverter]
     def __init__(
         self,
         meta_converter: ImageMetaConverter,
-        store: StoreOrGroup,
-        cache: bool = False,
-        mode: AccessModeLiteral = "a",
+        group_handler: ZarrGroupHandler,
     ):
         """Initialize the handler.
 
         Args:
             meta_converter (MetaConverter): The metadata converter.
-            store (StoreOrGroup): The Zarr store or group containing the image data.
-            meta_mode (str): The mode of the metadata handler.
-            cache (bool): Whether to cache the metadata.
-            mode (str): The mode of the store.
+            group_handler (ZarrGroupHandler): The Zarr group handler.
         """
-        super().__init__(meta_converter, store, cache, mode)
+        super().__init__(meta_converter=meta_converter, group_handler=group_handler)
 
     def safe_load_meta(
         self, return_error: bool = False
@@ -251,20 +216,15 @@ class BaseLabelMetaHandler(GenericMetaHandler[NgioLabelMeta, LabelMetaConverter]
     def __init__(
         self,
         meta_converter: LabelMetaConverter,
-        store: StoreOrGroup,
-        cache: bool = False,
-        mode: AccessModeLiteral = "a",
+        group_handler: ZarrGroupHandler,
     ):
         """Initialize the handler.
 
         Args:
             meta_converter (MetaConverter): The metadata converter.
-            store (StoreOrGroup): The Zarr store or group containing the image data.
-            meta_mode (str): The mode of the metadata handler.
-            cache (bool): Whether to cache the metadata.
-            mode (str): The mode of the store.
+            group_handler (ZarrGroupHandler): The Zarr group handler.
         """
-        super().__init__(meta_converter, store, cache, mode)
+        super().__init__(meta_converter=meta_converter, group_handler=group_handler)
 
     def safe_load_meta(
         self, return_error: bool = False

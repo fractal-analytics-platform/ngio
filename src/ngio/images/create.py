@@ -21,7 +21,7 @@ from ngio.ome_zarr_meta.ngio_specs import (
     canonical_axes_order,
     canonical_label_axes_order,
 )
-from ngio.utils import StoreOrGroup
+from ngio.utils import StoreOrGroup, ZarrGroupHandler
 
 _image_or_label_meta = TypeVar("_image_or_label_meta", NgioImageMeta, NgioLabelMeta)
 
@@ -152,8 +152,9 @@ def _create_empty_label(
     )
 
     mode = "w" if overwrite else "w-"
-    image_handler = ImplementedLabelMetaHandlers().get_handler_by_version(
-        version=version, store=store, mode=mode
+    group_handler = ZarrGroupHandler(store=store, mode=mode, cache=False)
+    image_handler = ImplementedLabelMetaHandlers().get_handler(
+        version=version, group_handler=group_handler
     )
     image_handler.write_meta(meta)
 
@@ -288,8 +289,9 @@ def create_empty_image(
         version=version,
     )
     mode = "w" if overwrite else "w-"
-    image_handler = ImplementedImageMetaHandlers().get_handler_by_version(
-        version=version, store=store, mode=mode
+    group_handler = ZarrGroupHandler(store=store, mode=mode, cache=False)
+    image_handler = ImplementedImageMetaHandlers().get_handler(
+        version=version, group_handler=group_handler
     )
     image_handler.write_meta(meta)
 

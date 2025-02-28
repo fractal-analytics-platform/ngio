@@ -12,6 +12,7 @@ from ngio.utils import (
     NgioValidationError,
     NgioValueError,
     StoreOrGroup,
+    ZarrGroupHandler,
 )
 
 _Image_or_Label_Plugin = TypeVar(
@@ -41,14 +42,14 @@ class _ImplementedMetaHandlers(Generic[_Image_or_Label_Plugin]):
         """
         return list(reversed(self._implemented_handlers.keys()))
 
-    def get_handler(
-        self, store: StoreOrGroup, cache: bool = False, mode: AccessModeLiteral = "a"
+    def find_meta_handler(
+        self, group_handler: ZarrGroupHandler
     ) -> _Image_or_Label_Plugin:
         """Try to get a handler for the given store based on the metadata version."""
         _errors = {}
 
         for version, handler in reversed(self._implemented_handlers.items()):
-            handler = handler(store=store, cache=cache, mode=mode)
+            handler = handler(group_handler)
             meta = handler.safe_load_meta()
             if isinstance(meta, ValidationError):
                 _errors[version] = meta
@@ -60,17 +61,15 @@ class _ImplementedMetaHandlers(Generic[_Image_or_Label_Plugin]):
             f"Errors: {_errors}"
         )
 
-    def get_handler_by_version(
+    def get_handler(
         self,
         version: str,
-        store: StoreOrGroup,
-        cache: bool = False,
-        mode: AccessModeLiteral = "a",
+        group_handler: ZarrGroupHandler,
     ) -> _Image_or_Label_Plugin:
         """Get a handler for a specific version."""
         if version not in self._implemented_handlers:
             raise NgioValueError(f"Image handler for version {version} does not exist.")
-        return self._implemented_handlers[version](store=store, cache=cache, mode=mode)
+        return self._implemented_handlers[version](group_handler)
 
     def add_handler(
         self, key: str, handler: type[_Image_or_Label_Plugin], overwrite: bool = False
@@ -97,8 +96,9 @@ class ImplementedLabelMetaHandlers(_ImplementedMetaHandlers[LabelMetaHandler]):
 ImplementedLabelMetaHandlers().add_handler("0.4", V04LabelMetaHandler)
 
 
-def open_omezarr_handler(
+def open_image_meta_handler(
     store: StoreOrGroup, cache: bool = False, mode: AccessModeLiteral = "a"
 ) -> ImageMetaHandler:
     """Open the metadata of an OME-Zarr image."""
-    return ImplementedImageMetaHandlers().get_handler(store, cache, mode)
+    zarr_group_handler = ZarrGroupHandler(store, cache, mode)
+    return ImplementedImageMetaHandlers().find_meta_handler(zarr_group_handler)
