@@ -7,7 +7,7 @@ https://fractal-analytics-platform.github.io/fractal-tasks-core/tables/
 import pandas as pd
 from pydantic import BaseModel
 
-from ngio.tables.backends import TableBackendsManager
+from ngio.tables.backends import ImplementedTableBackends
 from ngio.utils import AccessModeLiteral, StoreOrGroup, ZarrGroupHandler
 
 
@@ -75,7 +75,7 @@ class GenericTable:
             store=store, cache=cache, mode=mode, parallel_safe=parallel_safe
         )
         meta = GenericTableMeta(**handler.load_attrs())
-        backend = TableBackendsManager().get_backend(
+        backend = ImplementedTableBackends().get_backend(
             backend_name=meta.backend,
             group_handler=handler,
             index_key=None,
@@ -103,7 +103,7 @@ class GenericTable:
         handler = ZarrGroupHandler(
             store=store, cache=cache, mode=mode, parallel_safe=parallel_safe
         )
-        backend = TableBackendsManager().get_backend(
+        backend = ImplementedTableBackends().get_backend(
             backend_name=backend_name,
             group_handler=handler,
             index_key=None,

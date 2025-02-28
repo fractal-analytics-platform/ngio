@@ -14,7 +14,7 @@ from ngio.hcs import OmeZarrPlate, OmeZarrWell, open_omezarr_plate, open_omezarr
 from ngio.images import (
     Image,
     Label,
-    OmeZarrImage,
+    OmeZarrContainer,
     open_image,
     open_omezarr_image,
 )
@@ -26,7 +26,7 @@ __all__ = [
     "Dimensions",
     "Image",
     "Label",
-    "OmeZarrImage",
+    "OmeZarrContainer",
     "OmeZarrPlate",
     "OmeZarrWell",
     "PixelSize",

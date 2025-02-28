@@ -45,7 +45,7 @@ class TableBackendProtocol(Protocol):
     ) -> None: ...
 
 
-class TableBackendsManager:
+class ImplementedTableBackends:
     """A class to manage the available table backends."""
 
     _instance = None
@@ -83,7 +83,7 @@ class TableBackendsManager:
         )
         return handler
 
-    def add_handler(
+    def add_backend(
         self,
         backend_name: str,
         table_beckend: type[TableBackendProtocol],
@@ -98,5 +98,5 @@ class TableBackendsManager:
         self._implemented_backends[backend_name] = table_beckend
 
 
-TableBackendsManager().add_handler("anndata", AnnDataBackend)
-TableBackendsManager().add_handler("json", JsonTableBackend)
+ImplementedTableBackends().add_backend("anndata", AnnDataBackend)
+ImplementedTableBackends().add_backend("json", JsonTableBackend)

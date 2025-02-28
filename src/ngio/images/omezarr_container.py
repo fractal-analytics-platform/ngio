@@ -3,14 +3,14 @@
 from typing import Literal, overload
 
 from ngio.images.abstract_image import Image
-from ngio.images.label_image import Label, LabelGroupHandler
+from ngio.images.label import Label, LabelGroupHandler
 from ngio.ome_zarr_meta import NgioImageMeta, PixelSize, open_omezarr_handler
 from ngio.tables import (
     FeaturesTable,
     MaskingROITable,
     RoiTable,
     Table,
-    TableGroupHandler,
+    TableContainer,
     TypedTable,
     open_table_group,
 )
@@ -23,19 +23,19 @@ from ngio.utils import (
 )
 
 
-class OmeZarrImage:
-    """A class to handle OME-NGFF images."""
+class OmeZarrContainer:
+    """This class contains an OME-Zarr image and its associated tables and labels."""
 
     def __init__(
         self,
         store: StoreOrGroup,
         cache: bool = False,
         mode: AccessModeLiteral = "r+",
-        table_handler: TableGroupHandler | None = None,
+        table_handler: TableContainer | None = None,
         label_handler: LabelGroupHandler | None = None,
         validate_arrays: bool = True,
     ) -> None:
-        """Initialize the NGFFImage in read mode."""
+        """Initialize the OmeZarrContainer."""
         self._omezarr_handler = open_omezarr_handler(
             store=store,
             cache=cache,
@@ -48,7 +48,7 @@ class OmeZarrImage:
 
     def __repr__(self) -> str:
         """Return a string representation of the image."""
-        return f"OmeZarrImage(paths={self.levels_paths})"
+        return f"OmeZarrContainer({self.image_meta})"
 
     @property
     def image_meta(self) -> NgioImageMeta:
@@ -72,7 +72,11 @@ class OmeZarrImage:
                 path=path
             )  # this will raise an error if the image is invalid
 
-    def set_table_handler(self, table_handler: TableGroupHandler | None = None) -> None:
+    def _set_image_handler(self, image_handler: Image | None = None) -> None:
+        """Set the image handler."""
+        raise NotImplementedError
+
+    def set_table_handler(self, table_handler: TableContainer | None = None) -> None:
         """Set the table handler."""
         if table_handler is not None:
             self._tables_handler = table_handler
@@ -229,7 +233,7 @@ class OmeZarrImage:
     def derive(
         self,
         **kwargs,
-    ) -> "OmeZarrImage":
+    ) -> "OmeZarrContainer":
         """Derive a new image from the current image."""
         raise NotImplementedError
 
@@ -239,9 +243,9 @@ def open_omezarr_image(
     cache: bool = False,
     mode: AccessModeLiteral = "r+",
     validate_arrays: bool = True,
-) -> OmeZarrImage:
+) -> OmeZarrContainer:
     """Open an OME-Zarr image."""
-    return OmeZarrImage(
+    return OmeZarrContainer(
         store=store,
         cache=cache,
         mode=mode,

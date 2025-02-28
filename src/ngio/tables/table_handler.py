@@ -65,7 +65,7 @@ class Table(Protocol):
 TypedTable = Literal["roi_table", "masking_roi_table", "features_table"]
 
 
-class ImplementedTablesManager:
+class ImplementedTables:
     """A singleton class to manage the available table handler plugins."""
 
     _instance = None
@@ -144,10 +144,10 @@ class ImplementedTablesManager:
         self._implemented_tables[table_unique_name] = handler
 
 
-ImplementedTablesManager().add_implementation(RoiTable)
+ImplementedTables().add_implementation(RoiTable)
 
 
-class TableGroupHandler:
+class TableContainer:
     """A class to handle the /labels group in an OME-NGFF file."""
 
     def __init__(
@@ -205,7 +205,7 @@ class TableGroupHandler:
         table_type = self._get_table_type(name)
         version = self._get_table_version(name)
 
-        return ImplementedTablesManager().get_table(
+        return ImplementedTables().get_table(
             type=table_type,
             version=version,
             store=table_group,
@@ -245,9 +245,9 @@ def open_table_group(
     store: StoreOrGroup,
     cache: bool = False,
     mode: AccessModeLiteral = "a",
-) -> TableGroupHandler:
+) -> TableContainer:
     """Open a table handler from a Zarr store."""
-    return TableGroupHandler(store, cache, mode)
+    return TableContainer(store, cache, mode)
 
 
 def open_table(
@@ -257,5 +257,5 @@ def open_table(
     mode: AccessModeLiteral = "a",
 ) -> Table:
     """Open a table from a Zarr store."""
-    handler = TableGroupHandler(store, cache, mode)
+    handler = TableContainer(store, cache, mode)
     return handler.get(table_name)

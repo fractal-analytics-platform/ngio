@@ -12,7 +12,7 @@ from pydantic import BaseModel
 
 from ngio.common import WorldCooROI
 from ngio.tables._validators import validate_columns
-from ngio.tables.backends import TableBackendsManager
+from ngio.tables.backends import ImplementedTableBackends
 from ngio.utils import AccessModeLiteral, NgioValueError, StoreOrGroup, ZarrGroupHandler
 
 REQUIRED_COLUMNS = [
@@ -144,7 +144,7 @@ class RoiTableV1:
             store=store, cache=cache, mode=mode, parallel_safe=parallel_safe
         )
         meta = ROITableV1Meta(**handler.load_attrs())
-        backend = TableBackendsManager().get_backend(
+        backend = ImplementedTableBackends().get_backend(
             backend_name=meta.backend,
             group_handler=handler,
             index_key="FieldIndex",
@@ -181,7 +181,7 @@ class RoiTableV1:
         handler = ZarrGroupHandler(
             store=store, cache=cache, mode=mode, parallel_safe=parallel_safe
         )
-        backend = TableBackendsManager().get_backend(
+        backend = ImplementedTableBackends().get_backend(
             backend_name=backend_name,
             group_handler=handler,
             index_key="FieldIndex",

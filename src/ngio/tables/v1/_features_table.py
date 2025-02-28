@@ -9,7 +9,7 @@ from typing import Literal
 import pandas as pd
 from pydantic import BaseModel
 
-from ngio.tables.backends import TableBackendsManager
+from ngio.tables.backends import ImplementedTableBackends
 from ngio.utils import AccessModeLiteral, StoreOrGroup, ZarrGroupHandler
 
 
@@ -77,7 +77,7 @@ class FeaturesTableV1:
             store=store, cache=cache, mode=mode, parallel_safe=parallel_safe
         )
         meta = FeaturesTableMeta(**handler.load_attrs())
-        backend = TableBackendsManager().get_backend(
+        backend = ImplementedTableBackends().get_backend(
             backend_name=meta.backend,
             group_handler=handler,
             index_key=None,
@@ -105,7 +105,7 @@ class FeaturesTableV1:
         handler = ZarrGroupHandler(
             store=store, cache=cache, mode=mode, parallel_safe=parallel_safe
         )
-        backend = TableBackendsManager().get_backend(
+        backend = ImplementedTableBackends().get_backend(
             backend_name=backend_name,
             group_handler=handler,
             index_key=None,

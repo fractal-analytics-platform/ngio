@@ -6,7 +6,7 @@ from typing import Any, TypeVar
 import numpy as np
 
 from ngio.common._pyramid import init_empty_pyramid
-from ngio.images import OmeZarrImage
+from ngio.images import OmeZarrContainer
 from ngio.ome_zarr_meta import (
     ImageHandlersManager,
     LabelHandlersManager,
@@ -230,7 +230,7 @@ def create_empty_image(
     omero_kwargs: dict[str, Any] | None = None,
     overwrite: bool = False,
     version: str = "0.4",
-) -> OmeZarrImage:
+) -> OmeZarrContainer:
     """Create an empty OME-Zarr image with the given shape and metadata.
 
     Args:
@@ -302,7 +302,7 @@ def create_empty_image(
         dtype=dtype,
         mode="a",
     )
-    return OmeZarrImage(store=store)
+    return OmeZarrContainer(store=store)
 
 
 def create_image_from_array(
@@ -325,7 +325,7 @@ def create_image_from_array(
     omero_kwargs: dict[str, Any] | None = None,
     overwrite: bool = False,
     version: str = "0.4",
-) -> OmeZarrImage:
+) -> OmeZarrContainer:
     """Create an OME-Zarr image from a numpy array.
 
     Args:
@@ -385,7 +385,7 @@ def create_image_from_array(
         overwrite=overwrite,
         version=version,
     )
-    omezarr = OmeZarrImage(store=store)
+    omezarr = OmeZarrContainer(store=store)
     image = omezarr.get_image()
     image.zarr_array[...] = array
     image.consolidate()

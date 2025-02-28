@@ -3,7 +3,7 @@
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from ngio.images import OmeZarrImage
+    from ngio.images import OmeZarrContainer
 
 
 class OmeZarrPlate:
@@ -29,7 +29,7 @@ class OmeZarrPlate:
         """Return the OME-Zarr well."""
         raise NotImplementedError
 
-    def get_omezarr_image(self, *args, **kwargs) -> "OmeZarrImage":
+    def get_omezarr_image(self, *args, **kwargs) -> "OmeZarrContainer":
         """Return the OME-Zarr image."""
         raise NotImplementedError
 
@@ -45,7 +45,7 @@ class OmeZarrWell:
         """Return the acquisition."""
         raise NotImplementedError
 
-    def get_ome_zarr_image(self, *args, **kwargs) -> "OmeZarrImage":
+    def get_ome_zarr_image(self, *args, **kwargs) -> "OmeZarrContainer":
         """Return the OME-Zarr image."""
         raise NotImplementedError
 

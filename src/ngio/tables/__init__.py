@@ -1,13 +1,13 @@
 """Ngio Tables implementations."""
 
 from ngio.tables._generic_table import GenericTable
-from ngio.tables.backends import TableBackendsManager
+from ngio.tables.backends import ImplementedTableBackends
 from ngio.tables.table_handler import (
     FeaturesTable,
     MaskingROITable,
     RoiTable,
     Table,
-    TableGroupHandler,
+    TableContainer,
     TypedTable,
     open_table,
     open_table_group,
@@ -16,11 +16,11 @@ from ngio.tables.table_handler import (
 __all__ = [
     "FeaturesTable",
     "GenericTable",
+    "ImplementedTableBackends",
     "MaskingROITable",
     "RoiTable",
     "Table",
-    "TableBackendsManager",
-    "TableGroupHandler",
+    "TableContainer",
     "TypedTable",
     "open_table",
     "open_table_group",

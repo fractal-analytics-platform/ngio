@@ -6,7 +6,7 @@ import pandas as pd
 import pandas.api.types as ptypes
 import pytest
 
-from ngio.tables.backends import TableBackendsManager
+from ngio.tables.backends import ImplementedTableBackends
 from ngio.tables.backends._anndata import AnnDataBackend
 from ngio.tables.backends._anndata_utils import (
     anndata_to_dataframe,
@@ -17,12 +17,12 @@ from ngio.utils import NgioValueError, ZarrGroupHandler
 
 
 def test_backend_manager(tmp_path: Path):
-    manager = TableBackendsManager()
+    manager = ImplementedTableBackends()
 
     assert set(manager.available_backends) == {"json", "anndata"}
-    manager.add_handler("json2", JsonTableBackend)
+    manager.add_backend("json2", JsonTableBackend)
 
-    manager2 = TableBackendsManager()
+    manager2 = ImplementedTableBackends()
     assert set(manager2.available_backends) == {"json", "anndata", "json2"}
     assert set(manager.available_backends) == {"json", "anndata", "json2"}
 
@@ -38,7 +38,7 @@ def test_backend_manager(tmp_path: Path):
         manager.get_backend("non_existent", handler)
 
     with pytest.raises(NgioValueError):
-        manager.add_handler("json", JsonTableBackend)
+        manager.add_backend("json", JsonTableBackend)
 
 
 def test_json_backend(tmp_path: Path):
