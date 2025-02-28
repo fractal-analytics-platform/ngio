@@ -37,7 +37,7 @@ from ngio.ome_zarr_meta.ngio_specs import (
     NgioLabelMeta,
     default_channel_name,
 )
-from ngio.ome_zarr_meta.ngio_specs._ngio_image_meta import NgffVersion
+from ngio.ome_zarr_meta.ngio_specs._ngio_image import NgffVersion
 
 
 def _is_v04_image_meta(metadata: dict) -> ImageAttrsV04 | ValidationError:

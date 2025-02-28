@@ -143,6 +143,11 @@ def canonical_axes_order() -> tuple[str, str, str, str, str]:
     return "t", "c", "z", "y", "x"
 
 
+def canonical_label_axes_order() -> tuple[str, str, str, str]:
+    """Get the canonical axes order."""
+    return "t", "z", "y", "x"
+
+
 class AxesSetup(BaseModel):
     """Axes setup model.
 
@@ -434,3 +439,43 @@ class AxesMapper:
     def from_canonical(self) -> tuple[AxesTransformation, ...]:
         """Get the new order of the axes."""
         return self.from_order(self._extended_canonical_order)
+
+
+def canonical_axes(
+    axes_names: Collection[str],
+    space_units: SpaceUnits | None = None,
+    time_units: TimeUnits | None = None,
+) -> list[Axis]:
+    """Create a new canonical axes mapper.
+
+    Args:
+        axes_names (Collection[str] | int): The axes names on disk.
+            - The axes should be in ['t', 'c', 'z', 'y', 'x']
+            - The axes should be in strict canonical order.
+            - If an integer is provided, the axes are created from the last axis
+              to the first
+                e.g. 3 -> ["z", "y", "x"]
+        space_units (SpaceUnits, optional): The space units. Defaults to None.
+        time_units (TimeUnits, optional): The time units. Defaults to None.
+
+    """
+    axes = []
+    for name in axes_names:
+        match name:
+            case "t":
+                axes.append(
+                    Axis(on_disk_name=name, axis_type=AxisType.time, unit=time_units)
+                )
+            case "c":
+                axes.append(Axis(on_disk_name=name, axis_type=AxisType.channel))
+            case "z" | "y" | "x":
+                axes.append(
+                    Axis(on_disk_name=name, axis_type=AxisType.space, unit=space_units)
+                )
+            case _:
+                raise NgioValueError(
+                    f"Invalid axis name '{name}'. "
+                    "Only 't', 'c', 'z', 'y', 'x' are allowed."
+                )
+
+    return axes

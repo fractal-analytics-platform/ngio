@@ -60,6 +60,18 @@ class GenericHandlersManager(Generic[_Image_or_Label_Plugin]):
             f"Errors: {_errors}"
         )
 
+    def get_handler_by_version(
+        self,
+        version: str,
+        store: StoreOrGroup,
+        cache: bool = False,
+        mode: AccessModeLiteral = "a",
+    ) -> _Image_or_Label_Plugin:
+        """Get a handler for a specific version."""
+        if version not in self._implemented_handlers:
+            raise NgioValueError(f"Image handler for version {version} does not exist.")
+        return self._implemented_handlers[version](store=store, cache=cache, mode=mode)
+
     def add_handler(
         self, key: str, handler: type[_Image_or_Label_Plugin], overwrite: bool = False
     ):

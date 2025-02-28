@@ -6,13 +6,18 @@ But they can be built from the OME standard metadata, and the
 can be converted to the OME standard.
 """
 
+from collections.abc import Collection
 from enum import Enum
 from typing import Any, TypeVar
 
 import numpy as np
 from pydantic import BaseModel
 
-from ngio.ome_zarr_meta.ngio_specs._axes import SpaceUnits, TimeUnits
+from ngio.ome_zarr_meta.ngio_specs._axes import (
+    SpaceUnits,
+    TimeUnits,
+    canonical_axes,
+)
 from ngio.ome_zarr_meta.ngio_specs._channels import Channel, ChannelsMeta
 from ngio.ome_zarr_meta.ngio_specs._dataset import Dataset
 from ngio.ome_zarr_meta.ngio_specs._pixel_size import PixelSize
@@ -170,6 +175,53 @@ class AbstractNgioImageMeta:
             return self.get_highest_resolution_dataset()
         else:
             raise NgioValueError("get_dataset has no valid arguments.")
+
+    @classmethod
+    def default_init(
+        cls,
+        levels: int | Collection[str],
+        axes_names: Collection[str],
+        pixel_size: PixelSize,
+        scaling_factors: Collection[float] | None = None,
+        name: str | None = None,
+        version: str = "0.4",
+    ):
+        """Initialize the ImageMeta object."""
+        axes = canonical_axes(
+            axes_names,
+            space_units=pixel_size.space_unit,
+            time_units=pixel_size.time_unit,
+        )
+
+        px_size_dict = pixel_size.as_dict()
+        scale = [px_size_dict.get(ax.on_disk_name, 1.0) for ax in axes]
+        translation = [0.0] * len(scale)
+
+        if scaling_factors is None:
+            _default = {"x": 2.0, "y": 2.0}
+            scaling_factors = [_default.get(ax.on_disk_name, 1.0) for ax in axes]
+
+        if isinstance(levels, int):
+            levels = [str(i) for i in range(levels)]
+
+        datasets = []
+        for level in levels:
+            dataset = Dataset(
+                path=level,
+                on_disk_axes=axes,
+                on_disk_scale=scale,
+                on_disk_translation=translation,
+                allow_non_canonical_axes=False,
+                strict_canonical_order=True,
+            )
+            datasets.append(dataset)
+            scale = [s * f for s, f in zip(scale, scaling_factors, strict=True)]
+
+        return cls(
+            version=version,
+            name=name,
+            datasets=datasets,
+        )
 
     def get_highest_resolution_dataset(self) -> Dataset:
         """Get the dataset with the highest resolution."""

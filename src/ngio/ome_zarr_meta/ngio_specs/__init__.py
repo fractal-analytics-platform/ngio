@@ -17,6 +17,8 @@ from ngio.ome_zarr_meta.ngio_specs._axes import (
     AxisType,
     SpaceUnits,
     TimeUnits,
+    canonical_axes_order,
+    canonical_label_axes_order,
 )
 from ngio.ome_zarr_meta.ngio_specs._channels import (
     Channel,
@@ -26,7 +28,7 @@ from ngio.ome_zarr_meta.ngio_specs._channels import (
     default_channel_name,
 )
 from ngio.ome_zarr_meta.ngio_specs._dataset import Dataset
-from ngio.ome_zarr_meta.ngio_specs._ngio_image_meta import (
+from ngio.ome_zarr_meta.ngio_specs._ngio_image import (
     ImageLabelSource,
     NgioImageLabelMeta,
     NgioImageMeta,
@@ -55,5 +57,7 @@ __all__ = [
     "PixelSize",
     "SpaceUnits",
     "TimeUnits",
+    "canonical_axes_order",
+    "canonical_label_axes_order",
     "default_channel_name",
 ]
