@@ -1,10 +1,8 @@
 """Concrete implementation of the OME-Zarr metadata handlers for version 0.4."""
 
-from ngio.ome_zarr_meta._base_handlers import (
-    BaseOmeZarrImageHandler,
-    BaseOmeZarrLabelHandler,
-)
-from ngio.ome_zarr_meta._meta_converter_prototypes import (
+from ngio.ome_zarr_meta._generic_handlers import (
+    BaseImageMetaHandler,
+    BaseLabelMetaHandler,
     ConverterError,
 )
 from ngio.ome_zarr_meta.ngio_specs import (
@@ -23,7 +21,7 @@ from ngio.utils import (
 )
 
 
-class OmeZarrV04ImageConverter:
+class V04ImageConverter:
     def __init__(self):
         pass
 
@@ -34,7 +32,7 @@ class OmeZarrV04ImageConverter:
         return ngio_to_v04_image_meta(meta)
 
 
-class OmeZarrV04LabelConverter:
+class V04LabelConverter:
     def __init__(self):
         pass
 
@@ -45,19 +43,19 @@ class OmeZarrV04LabelConverter:
         return ngio_to_v04_label_meta(meta)
 
 
-class OmeZarrV04ImageHandler(BaseOmeZarrImageHandler):
+class V04ImageMetaHandler(BaseImageMetaHandler):
     """Base class for handling OME-NGFF 0.4 metadata."""
 
     def __init__(
         self, store: StoreOrGroup, cache: bool = False, mode: AccessModeLiteral = "a"
     ):
-        super().__init__(OmeZarrV04ImageConverter(), store, cache, mode)
+        super().__init__(V04ImageConverter(), store, cache, mode)
 
 
-class OmeZarrV04LabelHandler(BaseOmeZarrLabelHandler):
+class V04LabelMetaHandler(BaseLabelMetaHandler):
     """Base class for handling OME-NGFF 0.4 metadata."""
 
     def __init__(
         self, store: StoreOrGroup, cache: bool = False, mode: AccessModeLiteral = "a"
     ):
-        super().__init__(OmeZarrV04LabelConverter(), store, cache, mode)
+        super().__init__(V04LabelConverter(), store, cache, mode)

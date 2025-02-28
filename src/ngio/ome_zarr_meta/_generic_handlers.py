@@ -2,11 +2,8 @@
 
 from typing import Generic, Protocol, TypeVar
 
-from ngio.ome_zarr_meta._meta_converter_prototypes import (
-    ConverterError,
-    ImageMetaConverter,
-    LabelMetaConverter,
-)
+from pydantic import ValidationError
+
 from ngio.ome_zarr_meta.ngio_specs import (
     NgioImageMeta,
     NgioLabelMeta,
@@ -18,13 +15,10 @@ from ngio.utils import (
     ZarrGroupHandler,
 )
 
-_Image_or_Label = TypeVar("_Image_or_Label", NgioImageMeta, NgioLabelMeta)
-_Image_or_Label_Converter = TypeVar(
-    "_Image_or_Label_Converter", ImageMetaConverter, LabelMetaConverter
-)
+ConverterError = ValidationError | Exception | None
 
 
-class OmeZarrImageHandler(Protocol):
+class ImageMetaHandler(Protocol):
     """Protocol for OME-Zarr image handlers."""
 
     def __init__(
@@ -52,7 +46,7 @@ class OmeZarrImageHandler(Protocol):
         ...
 
 
-class OmeZarrLabelHandler(Protocol):
+class LabelMetaHandler(Protocol):
     """Protocol for OME-Zarr label handlers."""
 
     def __init__(
@@ -80,7 +74,77 @@ class OmeZarrLabelHandler(Protocol):
         ...
 
 
-class GenericOmeZarrHandler(Generic[_Image_or_Label, _Image_or_Label_Converter]):
+###########################################################################
+#
+# The code below implements a generic class for handling OME-Zarr metadata
+# in Zarr groups.
+#
+###########################################################################
+
+
+class ImageMetaConverter(Protocol):
+    """Protocol for metadata converters."""
+
+    def from_dict(self, meta: dict) -> tuple[bool, NgioImageMeta | ConverterError]:
+        """Convert the metadata from a dictionary to the ngio image metadata.
+
+        This function should return a monadic style return:
+            * is_success = True -> converted_meta
+            * is_success = False -> error
+
+
+        Ideally if the metadata is valid but the conversion fails for other reasons,
+            the error should be raised.
+
+        Args:
+            meta (dict): The metadata in dictionary form
+                (usually the Zarr group attributes).
+
+        Returns:
+            tuple[bool, NgioImageLabelMeta | ConverterError]: Monadic style return.
+        """
+        ...
+
+    def to_dict(self, meta: NgioImageMeta) -> dict:
+        """Convert the ngio image metadata to a dictionary."""
+        ...
+
+
+class LabelMetaConverter(Protocol):
+    """Protocol for metadata converters."""
+
+    def from_dict(self, meta: dict) -> tuple[bool, NgioLabelMeta | ConverterError]:
+        """Convert the metadata from a dictionary to the ngio label metadata.
+
+        This function should return a monadic style return:
+            * is_success = True -> converted_meta
+            * is_success = False -> error
+
+
+        Ideally if the metadata is valid but the conversion fails for other reasons,
+            the error should be raised.
+
+        Args:
+            meta (dict): The metadata in dictionary form
+                (usually the Zarr group attributes).
+
+        Returns:
+            tuple[bool, NgioImageLabelMeta | ConverterError]: Monadic style return.
+        """
+        ...
+
+    def to_dict(self, meta: NgioLabelMeta) -> dict:
+        """Convert the ngio label metadata to a dictionary."""
+        ...
+
+
+_Image_or_Label = TypeVar("_Image_or_Label", NgioImageMeta, NgioLabelMeta)
+_Image_or_Label_Converter = TypeVar(
+    "_Image_or_Label_Converter", ImageMetaConverter, LabelMetaConverter
+)
+
+
+class GenericMetaHandler(Generic[_Image_or_Label, _Image_or_Label_Converter]):
     """Generic class for handling OME-Zarr metadata in Zarr groups."""
 
     def __init__(
@@ -142,7 +206,7 @@ class GenericOmeZarrHandler(Generic[_Image_or_Label, _Image_or_Label_Converter])
         return self._group_handler
 
 
-class BaseOmeZarrImageHandler(GenericOmeZarrHandler[NgioImageMeta, ImageMetaConverter]):
+class BaseImageMetaHandler(GenericMetaHandler[NgioImageMeta, ImageMetaConverter]):
     """Generic class for handling OME-Zarr metadata in Zarr groups."""
 
     def __init__(
@@ -181,7 +245,7 @@ class BaseOmeZarrImageHandler(GenericOmeZarrHandler[NgioImageMeta, ImageMetaConv
         self._write_meta(meta)
 
 
-class BaseOmeZarrLabelHandler(GenericOmeZarrHandler[NgioLabelMeta, LabelMetaConverter]):
+class BaseLabelMetaHandler(GenericMetaHandler[NgioLabelMeta, LabelMetaConverter]):
     """Generic class for handling OME-Zarr metadata in Zarr groups."""
 
     def __init__(

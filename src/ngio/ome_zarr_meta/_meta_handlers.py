@@ -2,11 +2,11 @@ from typing import Any, Generic, TypeVar
 
 from pydantic import ValidationError
 
-from ngio.ome_zarr_meta._base_handlers import (
-    OmeZarrImageHandler,
-    OmeZarrLabelHandler,
+from ngio.ome_zarr_meta._generic_handlers import (
+    ImageMetaHandler,
+    LabelMetaHandler,
 )
-from ngio.ome_zarr_meta.v04 import OmeZarrV04ImageHandler, OmeZarrV04LabelHandler
+from ngio.ome_zarr_meta.v04 import V04ImageMetaHandler, V04LabelMetaHandler
 from ngio.utils import (
     AccessModeLiteral,
     NgioValidationError,
@@ -15,11 +15,11 @@ from ngio.utils import (
 )
 
 _Image_or_Label_Plugin = TypeVar(
-    "_Image_or_Label_Plugin", OmeZarrImageHandler, OmeZarrLabelHandler
+    "_Image_or_Label_Plugin", ImageMetaHandler, LabelMetaHandler
 )
 
 
-class GenericHandlersManager(Generic[_Image_or_Label_Plugin]):
+class _ImplementedMetaHandlers(Generic[_Image_or_Label_Plugin]):
     """This class is a singleton that manages the available image handler plugins."""
 
     _instance = None
@@ -81,24 +81,24 @@ class GenericHandlersManager(Generic[_Image_or_Label_Plugin]):
         self._implemented_handlers[key] = handler
 
 
-class ImageHandlersManager(GenericHandlersManager[OmeZarrImageHandler]):
+class ImplementedImageMetaHandlers(_ImplementedMetaHandlers[ImageMetaHandler]):
     def __init__(self):
         super().__init__()
 
 
-ImageHandlersManager().add_handler("0.4", OmeZarrV04ImageHandler)
+ImplementedImageMetaHandlers().add_handler("0.4", V04ImageMetaHandler)
 
 
-class LabelHandlersManager(GenericHandlersManager[OmeZarrLabelHandler]):
+class ImplementedLabelMetaHandlers(_ImplementedMetaHandlers[LabelMetaHandler]):
     def __init__(self):
         super().__init__()
 
 
-LabelHandlersManager().add_handler("0.4", OmeZarrV04LabelHandler)
+ImplementedLabelMetaHandlers().add_handler("0.4", V04LabelMetaHandler)
 
 
 def open_omezarr_handler(
     store: StoreOrGroup, cache: bool = False, mode: AccessModeLiteral = "a"
-) -> OmeZarrImageHandler:
+) -> ImageMetaHandler:
     """Open the metadata of an OME-Zarr image."""
-    return ImageHandlersManager().get_handler(store, cache, mode)
+    return ImplementedImageMetaHandlers().get_handler(store, cache, mode)

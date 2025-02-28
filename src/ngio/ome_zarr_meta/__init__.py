@@ -1,14 +1,14 @@
 """Utilities for reading and writing OME-Zarr metadata."""
 
-from ngio.ome_zarr_meta._base_handlers import (
-    BaseOmeZarrImageHandler,
-    BaseOmeZarrLabelHandler,
-    OmeZarrImageHandler,
-    OmeZarrLabelHandler,
+from ngio.ome_zarr_meta._generic_handlers import (
+    BaseImageMetaHandler,
+    BaseLabelMetaHandler,
+    ImageMetaHandler,
+    LabelMetaHandler,
 )
-from ngio.ome_zarr_meta._handlers import (
-    ImageHandlersManager,
-    LabelHandlersManager,
+from ngio.ome_zarr_meta._meta_handlers import (
+    ImplementedImageMetaHandlers,
+    ImplementedLabelMetaHandlers,
     open_omezarr_handler,
 )
 from ngio.ome_zarr_meta.ngio_specs import (
@@ -21,15 +21,15 @@ from ngio.ome_zarr_meta.ngio_specs import (
 
 __all__ = [
     "AxesMapper",
-    "BaseOmeZarrImageHandler",
-    "BaseOmeZarrLabelHandler",
+    "BaseImageMetaHandler",
+    "BaseLabelMetaHandler",
     "Dataset",
-    "ImageHandlersManager",
-    "LabelHandlersManager",
+    "ImageMetaHandler",
+    "ImplementedImageMetaHandlers",
+    "ImplementedLabelMetaHandlers",
+    "LabelMetaHandler",
     "NgioImageMeta",
     "NgioLabelMeta",
-    "OmeZarrImageHandler",
-    "OmeZarrLabelHandler",
     "PixelSize",
     "open_omezarr_handler",
 ]

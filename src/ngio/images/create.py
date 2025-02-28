@@ -8,8 +8,8 @@ import numpy as np
 from ngio.common._pyramid import init_empty_pyramid
 from ngio.images import OmeZarrContainer
 from ngio.ome_zarr_meta import (
-    ImageHandlersManager,
-    LabelHandlersManager,
+    ImplementedImageMetaHandlers,
+    ImplementedLabelMetaHandlers,
     NgioImageMeta,
     NgioLabelMeta,
     PixelSize,
@@ -152,7 +152,7 @@ def _create_empty_label(
     )
 
     mode = "w" if overwrite else "w-"
-    image_handler = LabelHandlersManager().get_handler_by_version(
+    image_handler = ImplementedLabelMetaHandlers().get_handler_by_version(
         version=version, store=store, mode=mode
     )
     image_handler.write_meta(meta)
@@ -288,7 +288,7 @@ def create_empty_image(
         version=version,
     )
     mode = "w" if overwrite else "w-"
-    image_handler = ImageHandlersManager().get_handler_by_version(
+    image_handler = ImplementedImageMetaHandlers().get_handler_by_version(
         version=version, store=store, mode=mode
     )
     image_handler.write_meta(meta)
