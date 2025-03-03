@@ -53,4 +53,5 @@ class JsonTableBackend(AbstractTableBackend):
         table_group.attrs.clear()
         table_group.attrs.update(table.to_dict())
         if metadata is not None:
+            print("metadata", metadata)
             self._group_handler.write_attrs(metadata)

@@ -74,7 +74,7 @@ class ImplementedTableBackends:
         if backend_name is None:
             # Default to anndata since it is currently
             # the only backend in use.
-            backend_name = "anndata"
+            backend_name = "anndata_v1"
 
         if backend_name not in self._implemented_backends:
             raise NgioValueError(f"Table backend {backend_name} not implemented.")

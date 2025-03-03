@@ -19,16 +19,16 @@ from ngio.utils import NgioValueError, ZarrGroupHandler
 def test_backend_manager(tmp_path: Path):
     manager = ImplementedTableBackends()
 
-    assert set(manager.available_backends) == {"json", "anndata"}
-    manager.add_backend("json2", JsonTableBackend)
+    assert set(manager.available_backends) == {"json_v1", "anndata_v1"}
+    manager.add_backend(JsonTableBackend, overwrite=True)
 
     manager2 = ImplementedTableBackends()
-    assert set(manager2.available_backends) == {"json", "anndata", "json2"}
-    assert set(manager.available_backends) == {"json", "anndata", "json2"}
+    assert set(manager2.available_backends) == {"json_v1", "anndata_v1"}
+    assert set(manager.available_backends) == {"json_v1", "anndata_v1"}
 
     store = tmp_path / "test_backend_manager.zarr"
     handler = ZarrGroupHandler(store=store, cache=True, mode="a")
-    backend = manager.get_backend(backend_name="json", group_handler=handler)
+    backend = manager.get_backend(backend_name="json_v1", group_handler=handler)
     assert isinstance(backend, JsonTableBackend)
 
     backend = manager.get_backend(None, handler)
@@ -38,7 +38,7 @@ def test_backend_manager(tmp_path: Path):
         manager.get_backend("non_existent", handler)
 
     with pytest.raises(NgioValueError):
-        manager.add_backend("json", JsonTableBackend)
+        manager.add_backend(JsonTableBackend)
 
 
 def test_json_backend(tmp_path: Path):
@@ -46,9 +46,9 @@ def test_json_backend(tmp_path: Path):
     handler = ZarrGroupHandler(store=store, cache=True, mode="a")
     backend = JsonTableBackend(handler)
 
-    assert backend.backend_name == "json"
-    assert not backend.implements_anndata
-    assert backend.implements_dataframe
+    assert backend.backend_name() == "json_v1"
+    assert not backend.implements_anndata()
+    assert backend.implements_dataframe()
 
     test_table = pd.DataFrame(
         {"a": [1, 2, 3], "b": [4.0, 5.0, 6.0], "c": ["a", "b", "c"]}
@@ -69,9 +69,9 @@ def test_anndata_backend(tmp_path: Path):
     handler = ZarrGroupHandler(store=store, cache=True, mode="a")
     backend = AnnDataBackend(handler, index_type="int")
 
-    assert backend.backend_name == "anndata"
-    assert backend.implements_anndata
-    assert backend.implements_dataframe
+    assert backend.backend_name() == "anndata_v1"
+    assert backend.implements_anndata()
+    assert backend.implements_dataframe()
 
     test_table = pd.DataFrame(
         {"a": [1, 2, 3], "b": [4.0, 5.0, 6.0], "c": ["a", "b", "c"]}

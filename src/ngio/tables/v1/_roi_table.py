@@ -138,7 +138,7 @@ class RoiTableV1:
         """Create a new ROI table from a Zarr store."""
         meta = ROITableV1Meta(**handler.load_attrs())
 
-        if meta.backend is None:
+        if backend_name is None:
             backend = ImplementedTableBackends().get_backend(
                 backend_name=meta.backend,
                 group_handler=handler,

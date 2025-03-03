@@ -149,7 +149,7 @@ def _get_table_type(handler: ZarrGroupHandler) -> str:
 def _get_table_version(handler: ZarrGroupHandler) -> str:
     """Get the version of the table from the handler."""
     attrs = handler.load_attrs()
-    return attrs.get("version", "None")
+    return attrs.get("fractal_table_version", "None")
 
 
 class TablesContainer:

@@ -285,6 +285,11 @@ class ZarrGroupHandler:
         if isinstance(group, zarr.Group):
             return group
 
+        if group is not None:
+            raise NgioValueError(
+                f"The object at {path} is not a group, but a {type(group)}"
+            )
+
         if not create_mode:
             raise NgioFileNotFoundError(f"No group found at {path}")
         group = self.create_group(path)
