@@ -10,7 +10,7 @@ from typing import Literal
 from pydantic import BaseModel
 
 from ngio.common import WorldCooROI
-from ngio.utils import AccessModeLiteral, NgioValueError, StoreOrGroup
+from ngio.utils import NgioValueError, ZarrGroupHandler
 
 
 class MaskingROITableV1Meta(BaseModel):
@@ -56,23 +56,18 @@ class MaskingROITableV1:
         return self._table_backend.backend_name
 
     @classmethod
-    def from_store(
+    def _from_handler(
         cls,
-        store: StoreOrGroup,
-        cache: bool = False,
-        mode: AccessModeLiteral = "a",
-        parallel_safe: bool = False,
+        handler: ZarrGroupHandler,
+        backend_name: str | None = None,
     ) -> "MaskingROITableV1":
         """Create a new ROI table from a Zarr store."""
         raise NotImplementedError("Method not implemented.")
 
-    def set_backend(
+    def _set_backend(
         self,
-        store: StoreOrGroup,
+        handler: ZarrGroupHandler,
         backend_name: str | None = None,
-        cache: bool = False,
-        mode: AccessModeLiteral = "a",
-        parallel_safe: bool = False,
     ) -> None:
         """Set the backend of the table."""
         raise NotImplementedError("Method not implemented.")

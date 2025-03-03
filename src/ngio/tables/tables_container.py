@@ -55,7 +55,7 @@ class Table(Protocol):
         ...
 
 
-TypedTable = Literal["roi_table", "masking_roi_table", "features_table"]
+TypedTable = Literal["roi_table", "masking_roi_table", "feature_table"]
 
 
 def _unique_table_name(type_name, version) -> str:

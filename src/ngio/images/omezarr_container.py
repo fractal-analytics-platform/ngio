@@ -23,18 +23,16 @@ from ngio.utils import (
 )
 
 
-def _default_table_container(
-    store: StoreOrGroup, cache: bool = False, mode: AccessModeLiteral = "r+"
-) -> TablesContainer:
+def _default_table_container(handler: ZarrGroupHandler) -> TablesContainer | None:
     """Return a default table container."""
-    raise NotImplementedError
+    table_handler = handler.derive_handler("tables")
+    return TablesContainer(table_handler)
 
 
-def _default_label_container(
-    store: StoreOrGroup, cache: bool = False, mode: AccessModeLiteral = "r+"
-) -> LabelsContainer:
+def _default_label_container(handler: ZarrGroupHandler) -> LabelsContainer | None:
     """Return a default label container."""
-    raise NotImplementedError
+    label_handler = handler.derive_handler("labels")
+    return LabelsContainer(label_handler)
 
 
 class OmeZarrContainer:
@@ -55,18 +53,14 @@ class OmeZarrContainer:
     ) -> None:
         """Initialize the OmeZarrContainer."""
         self._group_handler = ZarrGroupHandler(store, cache, mode)
-        self._images_container = ImagesContainer(store=store, cache=cache, mode=mode)
+        self._images_container = ImagesContainer(self._group_handler)
 
         if label_container is None:
-            label_container = _default_label_container(
-                store=store, cache=cache, mode=mode
-            )
+            label_container = _default_label_container(self._group_handler)
         self._labels_container = label_container
 
         if table_container is None:
-            table_container = _default_table_container(
-                store=store, cache=cache, mode=mode
-            )
+            table_container = _default_table_container(self._group_handler)
         self._tables_container = table_container
 
     def __repr__(self) -> str:
@@ -95,7 +89,7 @@ class OmeZarrContainer:
     @property
     def image_meta(self) -> NgioImageMeta:
         """Return the image metadata."""
-        return self._images_container.meta
+        return self._images_container.meta()
 
     @property
     def levels(self) -> int:
@@ -144,7 +138,7 @@ class OmeZarrContainer:
 
     @overload
     def get_table(
-        self, table_name: str, check_type: Literal["features_table"]
+        self, table_name: str, check_type: Literal["feature_table"]
     ) -> FeaturesTable: ...
 
     def get_table(self, table_name: str, check_type: TypedTable | None = None) -> Table:
@@ -224,7 +218,7 @@ class OmeZarrContainer:
         raise NotImplementedError
 
 
-def open_omezarr_image(
+def open_omezarr_container(
     store: StoreOrGroup,
     cache: bool = False,
     mode: AccessModeLiteral = "r+",
@@ -248,7 +242,7 @@ def open_image(
     mode: AccessModeLiteral = "r+",
 ) -> Image:
     """Open a single level image from an OME-Zarr image."""
-    return open_omezarr_image(
+    return open_omezarr_container(
         store=store,
         cache=cache,
         mode=mode,
