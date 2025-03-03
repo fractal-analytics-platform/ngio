@@ -6,7 +6,6 @@ from typing import Any, TypeVar
 import numpy as np
 
 from ngio.common._pyramid import init_empty_pyramid
-from ngio.images import OmeZarrContainer
 from ngio.ome_zarr_meta import (
     ImplementedImageMetaHandlers,
     ImplementedLabelMetaHandlers,
@@ -101,7 +100,7 @@ def _create_empty_label(
     dtype: str = "uint16",
     overwrite: bool = False,
     version: str = "0.4",
-) -> None:
+) -> ZarrGroupHandler:
     """Create an empty label with the given shape and metadata.
 
     Args:
@@ -167,7 +166,7 @@ def _create_empty_label(
         dtype=dtype,
         mode="a",
     )
-    return None
+    return group_handler
 
 
 def _create_label_from_array(
@@ -186,7 +185,7 @@ def _create_label_from_array(
     chunks: Collection[int] | None = None,
     overwrite: bool = False,
     version: str = "0.4",
-) -> None:
+) -> ZarrGroupHandler:
     """Create a label from a numpy array."""
     _create_empty_label(
         store=store,
@@ -210,7 +209,7 @@ def _create_label_from_array(
     return None
 
 
-def create_empty_image(
+def _create_empty_image(
     store: StoreOrGroup,
     shape: Collection[int],
     xy_pixelsize: float,
@@ -231,7 +230,7 @@ def create_empty_image(
     omero_kwargs: dict[str, Any] | None = None,
     overwrite: bool = False,
     version: str = "0.4",
-) -> OmeZarrContainer:
+) -> ZarrGroupHandler:
     """Create an empty OME-Zarr image with the given shape and metadata.
 
     Args:
@@ -304,10 +303,10 @@ def create_empty_image(
         dtype=dtype,
         mode="a",
     )
-    return OmeZarrContainer(store=store)
+    return group_handler
 
 
-def create_image_from_array(
+def _create_image_from_array(
     store: StoreOrGroup,
     array: np.ndarray,
     xy_pixelsize: float,
@@ -327,7 +326,7 @@ def create_image_from_array(
     omero_kwargs: dict[str, Any] | None = None,
     overwrite: bool = False,
     version: str = "0.4",
-) -> OmeZarrContainer:
+) -> ZarrGroupHandler:
     """Create an OME-Zarr image from a numpy array.
 
     Args:
@@ -365,7 +364,7 @@ def create_image_from_array(
         version (str, optional): The version of the OME-Zarr specification.
             Defaults to "0.4".
     """
-    create_empty_image(
+    _create_empty_image(
         store=store,
         shape=array.shape,
         dtype=array.dtype,
@@ -387,8 +386,9 @@ def create_image_from_array(
         overwrite=overwrite,
         version=version,
     )
-    omezarr = OmeZarrContainer(store=store)
-    image = omezarr.get_image()
-    image.zarr_array[...] = array
-    image.consolidate()
-    return omezarr
+
+    # omezarr = OmeZarrContainer(store=store)
+    # image = omezarr.get_image()
+    # image.zarr_array[...] = array
+    # image.consolidate()
+    raise NotImplementedError("This function is not implemented yet.")

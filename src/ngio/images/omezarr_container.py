@@ -2,8 +2,7 @@
 
 from typing import Literal, overload
 
-from ngio.images.abstract_image import Image
-from ngio.images.image import ImagesContainer
+from ngio.images.image import Image, ImagesContainer
 from ngio.images.label import Label, LabelsContainer
 from ngio.ome_zarr_meta import NgioImageMeta, PixelSize
 from ngio.tables import (
@@ -242,12 +241,9 @@ def open_image(
     mode: AccessModeLiteral = "r+",
 ) -> Image:
     """Open a single level image from an OME-Zarr image."""
-    return open_omezarr_container(
-        store=store,
-        cache=cache,
-        mode=mode,
-        validate_arrays=False,
-    ).get_image(
+    group_handler = ZarrGroupHandler(store, cache, mode)
+    images_container = ImagesContainer(group_handler)
+    return images_container.get(
         path=path,
         pixel_size=pixel_size,
         highest_resolution=highest_resolution,

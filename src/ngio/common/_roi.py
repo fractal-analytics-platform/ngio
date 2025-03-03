@@ -82,14 +82,10 @@ class RasterCooROI(BaseModel):
             unit=pixel_size.space_unit,
         )
 
-    def x_slice(self) -> slice:
-        """Return the slice for the x-axis."""
-        return slice(self.x, self.x + self.x_length)
-
-    def y_slice(self) -> slice:
-        """Return the slice for the y-axis."""
-        return slice(self.y, self.y + self.y_length)
-
-    def z_slice(self) -> slice:
-        """Return the slice for the z-axis."""
-        return slice(self.z, self.z + self.z_length)
+    def to_slices(self) -> dict[str, slice]:
+        """Return the slices for the ROI."""
+        return {
+            "x": slice(self.x, self.x + self.x_length),
+            "y": slice(self.y, self.y + self.y_length),
+            "z": slice(self.z, self.z + self.z_length),
+        }

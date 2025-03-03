@@ -7,6 +7,7 @@ import numpy as np
 import zarr
 
 from ngio.common._axes_transforms import transform_dask_array, transform_numpy_array
+from ngio.common._common_types import ArrayLike
 from ngio.common._dimensions import Dimensions
 from ngio.common._slicer import (
     SliceTransform,
@@ -135,28 +136,26 @@ def get_pipe(
 
 def set_pipe(
     array: zarr.Array,
-    patch: np.ndarray,
+    patch: ArrayLike,
     *,
     dimensions: Dimensions,
     axes_order: Collection[str] | None = None,
-    mode: Literal["numpy", "dask", "delayed"] = "numpy",
     **slice_kwargs: slice | int | Iterable[int],
 ):
     slices, transformations = _compute_to_disk_transforms(
         dimensions=dimensions, axes_order=axes_order, **slice_kwargs
     )
-    print(slices, transformations)
-    match mode:
-        case "numpy":
-            _numpy_set_pipe(array, patch, slices, transformations)
-        case "dask":
-            _dask_set_pipe(array, patch, slices, transformations)
-        case "delayed_numpy":
-            # This is the only case where we return the delayed object
-            # because we want to allow the user to control when the computation
-            # is started.
-            return _delayed_numpy_set_pipe(array, patch, slices, transformations)
-        case _:
-            raise NgioValueError(
-                f"Unknown set pipe mode {mode}, expected 'numpy', 'dask' or 'delayed'."
-            )
+    if isinstance(patch, dask.array.Array):
+        _dask_set_pipe(
+            array=array, patch=patch, slices=slices, transformations=transformations
+        )
+    elif isinstance(patch, np.ndarray):
+        _numpy_set_pipe(
+            array=array, patch=patch, slices=slices, transformations=transformations
+        )
+    elif isinstance(patch, dask.delayed.Delayed):
+        _delayed_numpy_set_pipe(
+            array=array, patch=patch, slices=slices, transformations=transformations
+        )
+    else:
+        raise NgioValueError("Unknown patch type, expected numpy, dask or delayed.")

@@ -71,6 +71,9 @@ def _on_disk_coarsen(
     coarsening_setup = {}
     for i, s in enumerate(_scale):
         factor = 1 / s
+        # This check is very strict, but it is necessary to avoid
+        # a few pixels shift in the coarsening
+        # We could add a tolerance
         if factor.is_integer():
             coarsening_setup[i] = int(factor)
         else:
@@ -164,7 +167,6 @@ def consolidate_pyramid(
             mode=mode,
             order=order,
         )
-
         processed.append(target_image)
 
 

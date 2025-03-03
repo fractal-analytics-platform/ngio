@@ -1,16 +1,46 @@
 """A module for handling label images in OME-NGFF files."""
 
-from ngio.images.abstract_image import Image
+from typing import Literal
+
+from ngio.images.abstract_image import AbstractImage
+from ngio.ome_zarr_meta import ImplementedLabelMetaHandlers, LabelMetaHandler
 from ngio.utils import (
     NgioValidationError,
     ZarrGroupHandler,
 )
 
 
-class Label(Image):
+class Label(AbstractImage):
     """Placeholder class for a label."""
 
-    pass
+    def __init__(
+        self,
+        group_handler: ZarrGroupHandler,
+        path: str,
+        meta_handler: LabelMetaHandler | None,
+    ) -> None:
+        """Initialize the Image at a single level.
+
+        Args:
+            group_handler: The Zarr group handler.
+            path: The path to the image in the omezarr file.
+            meta_handler: The image metadata handler.
+
+        """
+        if meta_handler is None:
+            meta_handler = ImplementedLabelMetaHandlers().find_meta_handler(
+                group_handler
+            )
+        super().__init__(
+            group_handler=group_handler, path=path, meta_handler=meta_handler
+        )
+
+    def consolidate(
+        self,
+        mode: Literal["dask", "numpy", "coarsen"] = "dask",
+    ) -> None:
+        """Consolidate the label on disk."""
+        super()._consolidate(order=0, mode=mode)
 
 
 class LabelsContainer:
@@ -48,7 +78,7 @@ class LabelsContainer:
     def derive(
         self,
         name: str,
-        reference_image: Image,
+        reference_image: AbstractImage,
         overwrite: bool = False,
         **kwargs,
     ) -> Label:
