@@ -15,6 +15,8 @@ from ngio.images import (
     Image,
     Label,
     OmeZarrContainer,
+    create_empty_image,
+    create_image_from_array,
     open_image,
     open_omezarr_container,
 )
@@ -30,6 +32,8 @@ __all__ = [
     "OmeZarrPlate",
     "OmeZarrWell",
     "PixelSize",
+    "create_empty_image",
+    "create_image_from_array",
     "open_image",
     "open_omezarr_container",
     "open_omezarr_plate",

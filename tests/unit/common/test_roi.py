@@ -25,9 +25,11 @@ def test_rois():
     pixel_size = PixelSize(x=1.0, y=1.0, z=1.0)
     raster_roi = roi.to_raster_coo(pixel_size, dims)
 
-    assert raster_roi.x_slice() == slice(0, 1)
-    assert raster_roi.y_slice() == slice(0, 1)
-    assert raster_roi.z_slice() == slice(0, 1)
+    assert raster_roi.to_slices() == {
+        "x": slice(0, 1),
+        "y": slice(0, 1),
+        "z": slice(0, 1),
+    }
     assert roi.model_extra is not None
     assert roi.model_extra["other"] == "other"
 

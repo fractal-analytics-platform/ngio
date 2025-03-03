@@ -1,10 +1,22 @@
 """Abstract class for handling OME-NGFF images."""
 
-from typing import Literal, overload
+from collections.abc import Collection
+from typing import Any, Literal, overload
 
+import numpy as np
+
+from ngio.images.create import _create_empty_image
 from ngio.images.image import Image, ImagesContainer
 from ngio.images.label import Label, LabelsContainer
-from ngio.ome_zarr_meta import NgioImageMeta, PixelSize
+from ngio.ome_zarr_meta import (
+    NgioImageMeta,
+    PixelSize,
+)
+from ngio.ome_zarr_meta.ngio_specs import (
+    ChannelVisualisation,
+    SpaceUnits,
+    TimeUnits,
+)
 from ngio.tables import (
     FeaturesTable,
     MaskingROITable,
@@ -24,14 +36,16 @@ from ngio.utils import (
 
 def _default_table_container(handler: ZarrGroupHandler) -> TablesContainer | None:
     """Return a default table container."""
-    table_handler = handler.derive_handler("tables")
-    return TablesContainer(table_handler)
+    success, table_handler = handler.safe_derive_handler("tables")
+    if success and isinstance(table_handler, ZarrGroupHandler):
+        return TablesContainer(table_handler)
 
 
 def _default_label_container(handler: ZarrGroupHandler) -> LabelsContainer | None:
     """Return a default label container."""
-    label_handler = handler.derive_handler("labels")
-    return LabelsContainer(label_handler)
+    success, label_handler = handler.safe_derive_handler("labels")
+    if success and isinstance(label_handler, ZarrGroupHandler):
+        return LabelsContainer(label_handler)
 
 
 class OmeZarrContainer:
@@ -248,3 +262,176 @@ def open_image(
         pixel_size=pixel_size,
         highest_resolution=highest_resolution,
     )
+
+
+def create_empty_image(
+    store: StoreOrGroup,
+    shape: Collection[int],
+    xy_pixelsize: float,
+    z_spacing: float = 1.0,
+    time_spacing: float = 1.0,
+    levels: int | list[str] = 5,
+    xy_scaling_factor: float = 2,
+    z_scaling_factor: float = 1.0,
+    space_unit: SpaceUnits | str | None = None,
+    time_unit: TimeUnits | str | None = None,
+    axes_names: Collection[str] | None = None,
+    name: str | None = None,
+    chunks: Collection[int] | None = None,
+    dtype: str = "uint16",
+    channel_labels: list[str] | None = None,
+    channel_wavelengths: list[str] | None = None,
+    channel_visualization: list[ChannelVisualisation] | None = None,
+    omero_kwargs: dict[str, Any] | None = None,
+    overwrite: bool = False,
+    version: str = "0.4",
+) -> OmeZarrContainer:
+    """Create an empty OME-Zarr image with the given shape and metadata.
+
+    Args:
+        store (StoreOrGroup): The Zarr store or group to create the image in.
+        shape (Collection[int]): The shape of the image.
+        xy_pixelsize (float): The pixel size in x and y dimensions.
+        z_spacing (float, optional): The spacing between z slices. Defaults to 1.0.
+        time_spacing (float, optional): The spacing between time points.
+            Defaults to 1.0.
+        levels (int | list[str], optional): The number of levels in the pyramid or a
+            list of level names. Defaults to 5.
+        xy_scaling_factor (float, optional): The down-scaling factor in x and y
+            dimensions. Defaults to 2.0.
+        z_scaling_factor (float, optional): The down-scaling factor in z dimension.
+            Defaults to 1.0.
+        space_unit (SpaceUnits | str | None, optional): The unit of space. Defaults to
+            None.
+        time_unit (TimeUnits | str | None, optional): The unit of time. Defaults to
+            None.
+        axes_names (Collection[str] | None, optional): The names of the axes.
+            If None the canonical names are used. Defaults to None.
+        name (str | None, optional): The name of the image. Defaults to None.
+        chunks (Collection[int] | None, optional): The chunk shape. If None the shape
+            is used. Defaults to None.
+        dtype (str, optional): The data type of the image. Defaults to "uint16".
+        channel_labels (list[str] | None, optional): The labels of the channels.
+            Defaults to None.
+        channel_wavelengths (list[str] | None, optional): The wavelengths of the
+            channels. Defaults to None.
+        channel_visualization (list[ChannelVisualisation] | None, optional): The
+            visualisation of the channels. Defaults to None.
+        omero_kwargs (dict[str, Any] | None, optional): The OMERO metadata.
+            Defaults to None.
+        overwrite (bool, optional): Whether to overwrite an existing image.
+            Defaults to True.
+        version (str, optional): The version of the OME-Zarr specification.
+            Defaults to "0.4".
+    """
+    handler = _create_empty_image(
+        store=store,
+        shape=shape,
+        xy_pixelsize=xy_pixelsize,
+        z_spacing=z_spacing,
+        time_spacing=time_spacing,
+        levels=levels,
+        xy_scaling_factor=xy_scaling_factor,
+        z_scaling_factor=z_scaling_factor,
+        space_unit=space_unit,
+        time_unit=time_unit,
+        axes_names=axes_names,
+        name=name,
+        chunks=chunks,
+        dtype=dtype,
+        channel_labels=channel_labels,
+        channel_wavelengths=channel_wavelengths,
+        channel_visualization=channel_visualization,
+        omero_kwargs=omero_kwargs,
+        overwrite=overwrite,
+        version=version,
+    )
+
+    omezarr = OmeZarrContainer(store=handler.store, mode="r+")
+    return omezarr
+
+
+def create_image_from_array(
+    store: StoreOrGroup,
+    array: np.ndarray,
+    xy_pixelsize: float,
+    z_spacing: float = 1.0,
+    time_spacing: float = 1.0,
+    levels: int | list[str] = 5,
+    xy_scaling_factor: float = 2.0,
+    z_scaling_factor: float = 1.0,
+    space_unit: SpaceUnits | str | None = None,
+    time_unit: TimeUnits | str | None = None,
+    axes_names: Collection[str] | None = None,
+    name: str | None = None,
+    chunks: Collection[int] | None = None,
+    channel_labels: list[str] | None = None,
+    channel_wavelengths: list[str] | None = None,
+    channel_visualization: list[ChannelVisualisation] | None = None,
+    omero_kwargs: dict[str, Any] | None = None,
+    overwrite: bool = False,
+    version: str = "0.4",
+) -> OmeZarrContainer:
+    """Create an OME-Zarr image from a numpy array.
+
+    Args:
+        store (StoreOrGroup): The Zarr store or group to create the image in.
+        array (np.ndarray): The image data.
+        xy_pixelsize (float): The pixel size in x and y dimensions.
+        z_spacing (float, optional): The spacing between z slices. Defaults to 1.0.
+        time_spacing (float, optional): The spacing between time points.
+            Defaults to 1.0.
+        levels (int | list[str], optional): The number of levels in the pyramid or a
+            list of level names. Defaults to 5.
+        xy_scaling_factor (float, optional): The down-scaling factor in x and y
+            dimensions. Defaults to 2.0.
+        z_scaling_factor (float, optional): The down-scaling factor in z dimension.
+            Defaults to 1.0.
+        space_unit (SpaceUnits | str | None, optional): The unit of space. Defaults to
+            None.
+        time_unit (TimeUnits | str | None, optional): The unit of time. Defaults to
+            None.
+        axes_names (Collection[str] | None, optional): The names of the axes.
+            If None the canonical names are used. Defaults to None.
+        name (str | None, optional): The name of the image. Defaults to None.
+        chunks (Collection[int] | None, optional): The chunk shape. If None the shape
+            is used. Defaults to None.
+        channel_labels (list[str] | None, optional): The labels of the channels.
+            Defaults to None.
+        channel_wavelengths (list[str] | None, optional): The wavelengths of the
+            channels. Defaults to None.
+        channel_visualization (list[ChannelVisualisation] | None, optional): The
+            visualisation of the channels. Defaults to None.
+        omero_kwargs (dict[str, Any] | None, optional): The OMERO metadata.
+            Defaults to None.
+        overwrite (bool, optional): Whether to overwrite an existing image.
+            Defaults to True.
+        version (str, optional): The version of the OME-Zarr specification.
+            Defaults to "0.4".
+    """
+    omezarr = create_empty_image(
+        store,
+        array.shape,
+        xy_pixelsize,
+        z_spacing,
+        time_spacing,
+        levels,
+        xy_scaling_factor,
+        z_scaling_factor,
+        space_unit,
+        time_unit,
+        axes_names,
+        name,
+        chunks,
+        array.dtype,
+        channel_labels,
+        channel_wavelengths,
+        channel_visualization,
+        omero_kwargs,
+        overwrite,
+        version,
+    )
+    image = omezarr.get_image()
+    image.set_array(array)
+    image.consolidate()
+    return omezarr
