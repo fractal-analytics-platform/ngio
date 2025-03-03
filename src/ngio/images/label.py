@@ -2,9 +2,7 @@
 
 from ngio.images.abstract_image import Image
 from ngio.utils import (
-    AccessModeLiteral,
     NgioValidationError,
-    StoreOrGroup,
     ZarrGroupHandler,
 )
 
@@ -18,11 +16,9 @@ class Label(Image):
 class LabelsContainer:
     """A class to handle the /labels group in an OME-NGFF file."""
 
-    def __init__(
-        self, store: StoreOrGroup, cache: bool = False, mode: AccessModeLiteral = "a"
-    ) -> None:
+    def __init__(self, group_handler: ZarrGroupHandler) -> None:
         """Initialize the LabelGroupHandler."""
-        self._group_handler = ZarrGroupHandler(store, cache, mode)
+        self._group_handler = group_handler
 
         # Validate the group
         # Either contains a labels attribute or is empty

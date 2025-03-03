@@ -15,18 +15,18 @@ from ngio.tables.backends._anndata_utils import (
 class AnnDataBackend(AbstractTableBackend):
     """A class to load and write tables from/to an AnnData object."""
 
-    @property
-    def backend_name(self) -> str:
+    @staticmethod
+    def backend_name() -> str:
         """The name of the backend."""
-        return "anndata"
+        return "anndata_v1"
 
-    @property
-    def implements_anndata(self) -> bool:
+    @staticmethod
+    def implements_anndata() -> bool:
         """Whether the handler implements the anndata protocol."""
         return True
 
-    @property
-    def implements_dataframe(self) -> bool:
+    @staticmethod
+    def implements_dataframe() -> bool:
         """Whether the handler implements the dataframe protocol."""
         return True
 

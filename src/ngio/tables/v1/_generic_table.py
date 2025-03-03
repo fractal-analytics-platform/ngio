@@ -8,7 +8,7 @@ import pandas as pd
 from pydantic import BaseModel
 
 from ngio.tables.backends import ImplementedTableBackends
-from ngio.utils import AccessModeLiteral, StoreOrGroup, ZarrGroupHandler
+from ngio.utils import ZarrGroupHandler
 
 
 class GenericTableMeta(BaseModel):
@@ -43,14 +43,14 @@ class GenericTable:
 
         Since does not follow a specific schema.
         """
-        return "None"
+        return "1"
 
     @property
     def backend_name(self) -> str | None:
         """Return the name of the backend."""
         if self._table_backend is None:
             return None
-        return self._table_backend.backend_name
+        return self._table_backend.backend_name()
 
     @property
     def dataframe(self) -> pd.DataFrame:
@@ -63,23 +63,24 @@ class GenericTable:
         self._dataframe = dataframe
 
     @classmethod
-    def from_store(
-        cls,
-        store: StoreOrGroup,
-        cache: bool = False,
-        mode: AccessModeLiteral = "a",
-        parallel_safe: bool = False,
+    def _from_handler(
+        cls, handler: ZarrGroupHandler, backend_name: str | None = None
     ) -> "GenericTable":
-        """Create a new ROI table from a Zarr store."""
-        handler = ZarrGroupHandler(
-            store=store, cache=cache, mode=mode, parallel_safe=parallel_safe
-        )
+        """Create a new ROI table from a Zarr group handler."""
         meta = GenericTableMeta(**handler.load_attrs())
-        backend = ImplementedTableBackends().get_backend(
-            backend_name=meta.backend,
-            group_handler=handler,
-            index_key=None,
-        )
+        if backend_name is None:
+            backend = ImplementedTableBackends().get_backend(
+                backend_name=meta.backend,
+                group_handler=handler,
+                index_key=None,
+            )
+        else:
+            backend = ImplementedTableBackends().get_backend(
+                backend_name=backend_name,
+                group_handler=handler,
+                index_key=None,
+            )
+            meta.backend = backend_name
 
         if not backend.implements_dataframe:
             raise ValueError("The backend does not implement the dataframe protocol.")
@@ -91,18 +92,12 @@ class GenericTable:
         table._table_backend = backend
         return table
 
-    def set_backend(
+    def _set_backend(
         self,
-        store: StoreOrGroup,
+        handler: ZarrGroupHandler,
         backend_name: str | None = None,
-        cache: bool = False,
-        mode: AccessModeLiteral = "a",
-        parallel_safe: bool = False,
     ) -> None:
         """Set the backend of the table."""
-        handler = ZarrGroupHandler(
-            store=store, cache=cache, mode=mode, parallel_safe=parallel_safe
-        )
         backend = ImplementedTableBackends().get_backend(
             backend_name=backend_name,
             group_handler=handler,

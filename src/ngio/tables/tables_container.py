@@ -2,8 +2,8 @@
 
 from typing import Literal, Protocol
 
-from ngio.tables._generic_table import GenericTable
 from ngio.tables.v1 import FeaturesTableV1, MaskingROITableV1, RoiTableV1
+from ngio.tables.v1._generic_table import GenericTable
 from ngio.utils import (
     AccessModeLiteral,
     NgioValidationError,
@@ -36,23 +36,16 @@ class Table(Protocol):
         ...
 
     @classmethod
-    def from_store(
-        cls,
-        store: StoreOrGroup,
-        cache: bool = False,
-        mode: AccessModeLiteral = "a",
-        parallel_safe: bool = False,
+    def _from_handler(
+        cls, handler: ZarrGroupHandler, backend_name: str | None = None
     ) -> "Table":
-        """Create a new table from a Zarr store."""
+        """Create a new table from a Zarr group handler."""
         ...
 
-    def set_backend(
+    def _set_backend(
         self,
-        store: StoreOrGroup,
+        handler: ZarrGroupHandler,
         backend_name: str | None = None,
-        cache: bool = False,
-        mode: AccessModeLiteral = "a",
-        parallel_safe: bool = False,
     ) -> None:
         """Set the backend store and path for the table."""
         ...
@@ -63,6 +56,11 @@ class Table(Protocol):
 
 
 TypedTable = Literal["roi_table", "masking_roi_table", "features_table"]
+
+
+def _unique_table_name(type_name, version) -> str:
+    """Return the unique name for a table."""
+    return f"{type_name}_v{version}"
 
 
 class ImplementedTables:
@@ -80,11 +78,6 @@ class ImplementedTables:
             }
         return cls._instance
 
-    @staticmethod
-    def _unique_name(table_type: str, version: str) -> str:
-        """Return the unique name for a table."""
-        return f"{table_type}_v{version}"
-
     def available_implementations(self) -> list[str]:
         """Get the available table handler versions."""
         return list(self._implemented_tables.keys())
@@ -93,25 +86,28 @@ class ImplementedTables:
         self,
         type: str,
         version: str,
-        store: StoreOrGroup,
-        cache: bool = False,
-        mode: AccessModeLiteral = "a",
+        handler: ZarrGroupHandler,
+        backend_name: str | None = None,
     ) -> Table:
         """Try to get a handler for the given store based on the metadata version."""
         _errors = {}
         for name, table_cls in self._implemented_tables.items():
-            if name != self._unique_name(type, version):
+            if name != _unique_table_name(type, version):
                 continue
             try:
-                handler = table_cls.from_store(store=store, cache=cache, mode=mode)
-                return handler
+                table = table_cls._from_handler(
+                    handler=handler, backend_name=backend_name
+                )
+                return table
             except Exception as e:
                 _errors[name] = e
 
         # If no table was found, we can try to load the table from a generic table
         try:
-            handler = GenericTable.from_store(store=store, cache=cache, mode=mode)
-            return handler
+            table = GenericTable._from_handler(
+                handler=handler, backend_name=backend_name
+            )
+            return table
         except Exception as e:
             _errors["generic"] = e
 
@@ -135,7 +131,7 @@ class ImplementedTables:
         if version is None:
             raise NgioValueError("Table handler must have a version.")
 
-        table_unique_name = f"{table_type}_v{version}"
+        table_unique_name = _unique_table_name(table_type, version)
         if table_unique_name in self._implemented_tables and not overwrite:
             raise NgioValueError(
                 f"Table handler for {table_unique_name} already exists. "
@@ -144,17 +140,24 @@ class ImplementedTables:
         self._implemented_tables[table_unique_name] = handler
 
 
-ImplementedTables().add_implementation(RoiTable)
+def _get_table_type(handler: ZarrGroupHandler) -> str:
+    """Get the type of the table from the handler."""
+    attrs = handler.load_attrs()
+    return attrs.get("type", "None")
 
 
-class TableContainer:
+def _get_table_version(handler: ZarrGroupHandler) -> str:
+    """Get the version of the table from the handler."""
+    attrs = handler.load_attrs()
+    return attrs.get("version", "None")
+
+
+class TablesContainer:
     """A class to handle the /labels group in an OME-NGFF file."""
 
-    def __init__(
-        self, store: StoreOrGroup, cache: bool = False, mode: AccessModeLiteral = "a"
-    ) -> None:
+    def __init__(self, group_handler: ZarrGroupHandler) -> None:
         """Initialize the LabelGroupHandler."""
-        self._group_handler = ZarrGroupHandler(store, cache, mode)
+        self._group_handler = group_handler
 
         # Validate the group
         # Either contains a tables attribute or is empty
@@ -177,41 +180,34 @@ class TableContainer:
         attrs = self._group_handler.load_attrs()
         return attrs.get("tables", [])
 
+    def _get_table_group_handler(self, name: str) -> ZarrGroupHandler:
+        """Get the group handler for a table."""
+        handler = self._group_handler.derive_handler(path=name)
+        return handler
+
     def list(self, filter_types: str | None = None) -> list[str]:
         """List all labels in the group."""
         tables = self._get_tables_list()
         if filter_types is None:
             return tables
-        return [
-            table for table in tables if self._get_table_type(table) in filter_types
-        ]
 
-    def _get_table_type(self, name: str) -> str:
-        """Get the type of a table."""
-        table_group = self._group_handler.get_group(name)
-        return table_group.attrs.get("type", "None")
+        filtered_tables = []
+        for table_name in tables:
+            tb_handler = self._get_table_group_handler(table_name)
+            table_type = _get_table_type(tb_handler)
+            if table_type == filter_types:
+                filtered_tables.append(table_name)
+        return filtered_tables
 
-    def _get_table_version(self, name: str) -> str:
-        """Get the version of a table."""
-        table_group = self._group_handler.get_group(name)
-        return table_group.attrs.get("fractal_table_version", "1")
-
-    def get(self, name: str) -> Table:
+    def get(self, name: str, backend_name: str | None = None) -> Table:
         """Get a label from the group."""
         if name not in self.list():
             raise KeyError(f"Table '{name}' not found in the group.")
 
-        table_group = self._group_handler.get_group(name)
-        table_type = self._get_table_type(name)
-        version = self._get_table_version(name)
-
-        return ImplementedTables().get_table(
-            type=table_type,
-            version=version,
-            store=table_group,
-            cache=self._group_handler.use_cache,
-            mode=self._group_handler.mode,
-        )
+        table_handler = self._get_table_group_handler(name)
+        table_type = _get_table_type(table_handler)
+        table_version = _get_table_version(table_handler)
+        return ImplementedTables().get_table(table_type, table_version, table_handler)
 
     def add(
         self,
@@ -223,17 +219,19 @@ class TableContainer:
         """Add a table to the group."""
         existing_tables = self._get_tables_list()
         if name in existing_tables and not overwrite:
-            raise NgioValueError(f"Table '{name}' already exists in the group.")
+            raise NgioValueError(
+                f"Table '{name}' already exists in the group. "
+                "Use overwrite=True to replace it."
+            )
 
-        table_group = self._group_handler.create_group(name, overwrite=overwrite)
+        table_handler = self._group_handler.derive_handler(path=name)
 
         if backend is None:
             backend = table.backend_name
-        table.set_backend(
+
+        table._set_backend(
+            handler=table_handler,
             backend_name=backend,
-            store=table_group,
-            cache=self._group_handler.use_cache,
-            mode=self._group_handler.mode,
         )
         table.consolidate()
         if name not in existing_tables:
@@ -241,21 +239,57 @@ class TableContainer:
             self._group_handler.write_attrs({"tables": existing_tables})
 
 
-def open_table_group(
+ImplementedTables().add_implementation(RoiTable)
+
+###################################################################################
+#
+# Utility functions to open and write tables
+#
+###################################################################################
+
+
+def open_tables_container(
     store: StoreOrGroup,
     cache: bool = False,
     mode: AccessModeLiteral = "a",
-) -> TableContainer:
+    parallel_safe: bool = False,
+) -> TablesContainer:
     """Open a table handler from a Zarr store."""
-    return TableContainer(store, cache, mode)
+    handler = ZarrGroupHandler(
+        store=store, cache=cache, mode=mode, parallel_safe=parallel_safe
+    )
+    return TablesContainer(handler)
 
 
 def open_table(
     store: StoreOrGroup,
-    table_name: str,
     cache: bool = False,
     mode: AccessModeLiteral = "a",
+    parallel_safe: bool = False,
 ) -> Table:
     """Open a table from a Zarr store."""
-    handler = TableContainer(store, cache, mode)
-    return handler.get(table_name)
+    handler = ZarrGroupHandler(
+        store=store, cache=cache, mode=mode, parallel_safe=parallel_safe
+    )
+    return ImplementedTables().get_table(
+        _get_table_type(handler), _get_table_version(handler), handler
+    )
+
+
+def write_table(
+    store: StoreOrGroup,
+    table: Table,
+    backend: str | None = None,
+    cache: bool = False,
+    mode: AccessModeLiteral = "a",
+    parallel_safe: bool = False,
+) -> None:
+    """Write a table to a Zarr store."""
+    handler = ZarrGroupHandler(
+        store=store, cache=cache, mode=mode, parallel_safe=parallel_safe
+    )
+    table._set_backend(
+        handler=handler,
+        backend_name=backend,
+    )
+    table.consolidate()

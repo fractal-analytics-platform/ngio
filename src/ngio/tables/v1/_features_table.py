@@ -10,7 +10,7 @@ import pandas as pd
 from pydantic import BaseModel
 
 from ngio.tables.backends import ImplementedTableBackends
-from ngio.utils import AccessModeLiteral, StoreOrGroup, ZarrGroupHandler
+from ngio.utils import ZarrGroupHandler
 
 
 class FeaturesTableMeta(BaseModel):
@@ -52,7 +52,7 @@ class FeaturesTableV1:
         """Return the name of the backend."""
         if self._table_backend is None:
             return None
-        return self._table_backend.backend_name
+        return self._table_backend.backend_name()
 
     @property
     def dataframe(self) -> pd.DataFrame:
@@ -65,17 +65,11 @@ class FeaturesTableV1:
         self._dataframe = dataframe
 
     @classmethod
-    def from_store(
+    def _from_handler(
         cls,
-        store: StoreOrGroup,
-        cache: bool = False,
-        mode: AccessModeLiteral = "a",
-        parallel_safe: bool = False,
+        handler: ZarrGroupHandler,
     ) -> "FeaturesTableV1":
         """Create a new ROI table from a Zarr store."""
-        handler = ZarrGroupHandler(
-            store=store, cache=cache, mode=mode, parallel_safe=parallel_safe
-        )
         meta = FeaturesTableMeta(**handler.load_attrs())
         backend = ImplementedTableBackends().get_backend(
             backend_name=meta.backend,
@@ -93,18 +87,12 @@ class FeaturesTableV1:
         table._table_backend = backend
         return table
 
-    def set_backend(
+    def _set_backend(
         self,
-        store: StoreOrGroup,
+        handler: ZarrGroupHandler,
         backend_name: str | None = None,
-        cache: bool = False,
-        mode: AccessModeLiteral = "a",
-        parallel_safe: bool = False,
     ) -> None:
         """Set the backend of the table."""
-        handler = ZarrGroupHandler(
-            store=store, cache=cache, mode=mode, parallel_safe=parallel_safe
-        )
         backend = ImplementedTableBackends().get_backend(
             backend_name=backend_name,
             group_handler=handler,

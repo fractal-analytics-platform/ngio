@@ -10,18 +10,18 @@ from ngio.utils import NgioFileNotFoundError
 class JsonTableBackend(AbstractTableBackend):
     """A class to load and write small tables in the zarr group .attrs (json)."""
 
-    @property
-    def backend_name(self) -> str:
+    @staticmethod
+    def backend_name() -> str:
         """The name of the backend."""
-        return "json"
+        return "json_v1"
 
-    @property
-    def implements_anndata(self) -> bool:
+    @staticmethod
+    def implements_anndata() -> bool:
         """Whether the handler implements the anndata protocol."""
         return False
 
-    @property
-    def implements_dataframe(self) -> bool:
+    @staticmethod
+    def implements_dataframe() -> bool:
         """Whether the handler implements the dataframe protocol."""
         return True
 

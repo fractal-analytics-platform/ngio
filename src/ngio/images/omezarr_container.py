@@ -11,7 +11,7 @@ from ngio.tables import (
     MaskingROITable,
     RoiTable,
     Table,
-    TableContainer,
+    TablesContainer,
     TypedTable,
 )
 from ngio.utils import (
@@ -25,7 +25,7 @@ from ngio.utils import (
 
 def _default_table_container(
     store: StoreOrGroup, cache: bool = False, mode: AccessModeLiteral = "r+"
-) -> TableContainer:
+) -> TablesContainer:
     """Return a default table container."""
     raise NotImplementedError
 
@@ -42,14 +42,14 @@ class OmeZarrContainer:
 
     _images_container: ImagesContainer
     _labels_container: LabelsContainer | None
-    _tables_container: TableContainer | None
+    _tables_container: TablesContainer | None
 
     def __init__(
         self,
         store: StoreOrGroup,
         cache: bool = False,
         mode: AccessModeLiteral = "r+",
-        table_container: TableContainer | None = None,
+        table_container: TablesContainer | None = None,
         label_container: LabelsContainer | None = None,
         validate_arrays: bool = True,
     ) -> None:
@@ -86,7 +86,7 @@ class OmeZarrContainer:
         return self._labels_container
 
     @property
-    def tables_container(self) -> TableContainer:
+    def tables_container(self) -> TablesContainer:
         """Return the tables container."""
         if self._tables_container is None:
             raise NgioValidationError("No tables found in the image.")

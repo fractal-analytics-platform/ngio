@@ -6,8 +6,8 @@ from typing import Literal, Protocol
 from anndata import AnnData
 from pandas import DataFrame
 
-from ngio.tables.backends._anndata import AnnDataBackend
-from ngio.tables.backends._json import JsonTableBackend
+from ngio.tables.backends._anndata_v1 import AnnDataBackend
+from ngio.tables.backends._json_v1 import JsonTableBackend
 from ngio.utils import NgioValueError, ZarrGroupHandler
 
 
@@ -19,14 +19,14 @@ class TableBackendProtocol(Protocol):
         index_type: Literal["int", "str"] = "int",
     ): ...
 
-    @property
-    def backend_name(self) -> str: ...
+    @staticmethod
+    def backend_name() -> str: ...
 
-    @property
-    def implements_anndata(self) -> bool: ...
+    @staticmethod
+    def implements_anndata() -> bool: ...
 
-    @property
-    def implements_dataframe(self) -> bool: ...
+    @staticmethod
+    def implements_dataframe() -> bool: ...
 
     def load_columns(self) -> list[str]: ...
 
@@ -85,11 +85,11 @@ class ImplementedTableBackends:
 
     def add_backend(
         self,
-        backend_name: str,
         table_beckend: type[TableBackendProtocol],
         overwrite: bool = False,
     ):
         """Register a new handler."""
+        backend_name = table_beckend.backend_name()
         if backend_name in self._implemented_backends and not overwrite:
             raise NgioValueError(
                 f"Table backend {backend_name} already implemented. "
@@ -98,5 +98,5 @@ class ImplementedTableBackends:
         self._implemented_backends[backend_name] = table_beckend
 
 
-ImplementedTableBackends().add_backend("anndata", AnnDataBackend)
-ImplementedTableBackends().add_backend("json", JsonTableBackend)
+ImplementedTableBackends().add_backend(AnnDataBackend)
+ImplementedTableBackends().add_backend(JsonTableBackend)

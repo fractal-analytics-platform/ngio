@@ -3,7 +3,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from ngio.tables._generic_table import GenericTable
+from ngio.tables.v1._generic_table import GenericTable
 
 
 @pytest.mark.parametrize("backend", ["json", "anndata"])
@@ -12,7 +12,7 @@ def test_generic_table(tmp_path: Path, backend: str):
     test_df = pd.DataFrame({"a": [1, 2, 3], "b": [4, 5, 6]})
     table = GenericTable(test_df)
 
-    table.set_backend(store=store, backend_name=backend)
+    table._set_backend(store=store, backend_name=backend)
     table.consolidate()
 
     loaded_table = GenericTable.from_store(store)

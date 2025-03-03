@@ -29,21 +29,21 @@ class AbstractTableBackend(ABC):
         self._index_key = index_key
         self._index_type = index_type
 
-    @property
+    @staticmethod
     @abstractmethod
-    def backend_name(self) -> str:
+    def backend_name() -> str:
         """The name of the backend."""
         raise NotImplementedError
 
-    @property
+    @staticmethod
     @abstractmethod
-    def implements_anndata(self) -> bool:
+    def implements_anndata() -> bool:
         """Whether the handler implements the anndata protocol."""
         raise NotImplementedError
 
-    @property
+    @staticmethod
     @abstractmethod
-    def implements_dataframe(self) -> bool:
+    def implements_dataframe() -> bool:
         """Whether the handler implements the dataframe protocol."""
         raise NotImplementedError
 

@@ -7,12 +7,12 @@ import pandas.api.types as ptypes
 import pytest
 
 from ngio.tables.backends import ImplementedTableBackends
-from ngio.tables.backends._anndata import AnnDataBackend
 from ngio.tables.backends._anndata_utils import (
     anndata_to_dataframe,
     dataframe_to_anndata,
 )
-from ngio.tables.backends._json import JsonTableBackend
+from ngio.tables.backends._anndata_v1 import AnnDataBackend
+from ngio.tables.backends._json_v1 import JsonTableBackend
 from ngio.utils import NgioValueError, ZarrGroupHandler
 
 

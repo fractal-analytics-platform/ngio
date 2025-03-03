@@ -13,7 +13,7 @@ from pydantic import BaseModel
 from ngio.common import WorldCooROI
 from ngio.tables._validators import validate_columns
 from ngio.tables.backends import ImplementedTableBackends
-from ngio.utils import AccessModeLiteral, NgioValueError, StoreOrGroup, ZarrGroupHandler
+from ngio.utils import NgioValueError, ZarrGroupHandler
 
 REQUIRED_COLUMNS = [
     "x_micrometer",
@@ -129,27 +129,30 @@ class RoiTableV1:
         """Return the name of the backend."""
         if self._table_backend is None:
             return None
-        return self._table_backend.backend_name
+        return self._table_backend.backend_name()
 
     @classmethod
-    def from_store(
-        cls,
-        store: StoreOrGroup,
-        cache: bool = False,
-        mode: AccessModeLiteral = "a",
-        parallel_safe: bool = False,
+    def _from_handler(
+        cls, handler: ZarrGroupHandler, backend_name: str | None = None
     ) -> "RoiTableV1":
         """Create a new ROI table from a Zarr store."""
-        handler = ZarrGroupHandler(
-            store=store, cache=cache, mode=mode, parallel_safe=parallel_safe
-        )
         meta = ROITableV1Meta(**handler.load_attrs())
-        backend = ImplementedTableBackends().get_backend(
-            backend_name=meta.backend,
-            group_handler=handler,
-            index_key="FieldIndex",
-            index_type="str",
-        )
+
+        if meta.backend is None:
+            backend = ImplementedTableBackends().get_backend(
+                backend_name=meta.backend,
+                group_handler=handler,
+                index_key="FieldIndex",
+                index_type="str",
+            )
+        else:
+            backend = ImplementedTableBackends().get_backend(
+                backend_name=backend_name,
+                group_handler=handler,
+                index_key="FieldIndex",
+                index_type="str",
+            )
+            meta.backend = backend_name
 
         if not backend.implements_dataframe:
             raise NgioValueError(
@@ -169,18 +172,12 @@ class RoiTableV1:
         table._rois = _dataframe_to_rois(dataframe)
         return table
 
-    def set_backend(
+    def _set_backend(
         self,
-        store: StoreOrGroup,
+        handler: ZarrGroupHandler,
         backend_name: str | None = None,
-        cache: bool = False,
-        mode: AccessModeLiteral = "a",
-        parallel_safe: bool = False,
     ) -> None:
         """Set the backend of the table."""
-        handler = ZarrGroupHandler(
-            store=store, cache=cache, mode=mode, parallel_safe=parallel_safe
-        )
         backend = ImplementedTableBackends().get_backend(
             backend_name=backend_name,
             group_handler=handler,
