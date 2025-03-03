@@ -118,7 +118,6 @@ def get_pipe(
     slices, transformations = _compute_from_disk_transforms(
         dimensions=dimensions, axes_order=axes_order, **slice_kwargs
     )
-    print(slices, transformations)
     match mode:
         case "numpy":
             return _numpy_get_pipe(array, slices, transformations)

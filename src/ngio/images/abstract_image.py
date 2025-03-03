@@ -2,7 +2,7 @@
 
 # %%
 from collections.abc import Collection, Iterable
-from typing import Literal
+from typing import Generic, Literal, TypeVar
 
 import numpy as np
 import zarr
@@ -19,6 +19,8 @@ from ngio.ome_zarr_meta import (
     Dataset,
     ImageMetaHandler,
     LabelMetaHandler,
+    NgioImageMeta,
+    NgioLabelMeta,
     PixelSize,
 )
 from ngio.utils import (
@@ -26,8 +28,11 @@ from ngio.utils import (
     ZarrGroupHandler,
 )
 
+_image_handler = TypeVar("_image_handler", ImageMetaHandler, LabelMetaHandler)
+_image_meta = TypeVar("_image_meta", NgioImageMeta, NgioLabelMeta)
 
-class AbstractImage:
+
+class AbstractImage(Generic[_image_handler, _image_meta]):
     """A class to handle a single image (or level) in an OME-Zarr image.
 
     This class is meant to be subclassed by specific image types.
@@ -37,7 +42,7 @@ class AbstractImage:
         self,
         group_handler: ZarrGroupHandler,
         path: str,
-        meta_handler: ImageMetaHandler | LabelMetaHandler,
+        meta_handler: _image_handler,
     ) -> None:
         """Initialize the Image at a single level.
 
@@ -68,6 +73,16 @@ class AbstractImage:
     def __repr__(self) -> str:
         """Return a string representation of the image."""
         return f"Image(path={self.path}, {self.dimensions})"
+
+    @property
+    def meta_handler(self) -> _image_handler:
+        """Return the metadata."""
+        return self._meta_handler
+
+    @property
+    def meta(self) -> _image_meta:
+        """Return the metadata."""
+        return self._meta_handler.meta
 
     @property
     def zarr_array(self) -> zarr.Array:
@@ -217,18 +232,19 @@ class AbstractImage:
                 )
         self.set_array(patch=patch, axes_order=axes_order, **raster_roi, **slice_kwargs)
 
-    def _consolidate(
-        self,
-        order: Literal[0, 1, 2],
-        mode: Literal["dask", "numpy", "coarsen"],
-    ) -> None:
-        """Consolidate the Zarr array."""
-        target_paths = self._meta_handler.meta.paths
-        targets = [
-            self._group_handler.get_array(path)
-            for path in target_paths
-            if path != self.path
-        ]
-        consolidate_pyramid(
-            source=self.zarr_array, targets=targets, order=order, mode=mode
-        )
+
+def consolidate_image(
+    image: AbstractImage,
+    order: Literal[0, 1, 2] = 1,
+    mode: Literal["dask", "numpy", "coarsen"] = "dask",
+) -> None:
+    """Consolidate the image on disk."""
+    target_paths = image._meta_handler.meta.paths
+    targets = [
+        image._group_handler.get_array(path)
+        for path in target_paths
+        if path != image.path
+    ]
+    consolidate_pyramid(
+        source=image.zarr_array, targets=targets, order=order, mode=mode
+    )

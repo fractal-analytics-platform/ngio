@@ -2,15 +2,19 @@
 
 from typing import Literal
 
-from ngio.images.abstract_image import AbstractImage
-from ngio.ome_zarr_meta import ImplementedLabelMetaHandlers, LabelMetaHandler
+from ngio.images.abstract_image import AbstractImage, consolidate_image
+from ngio.ome_zarr_meta import (
+    ImplementedLabelMetaHandlers,
+    LabelMetaHandler,
+    NgioLabelMeta,
+)
 from ngio.utils import (
     NgioValidationError,
     ZarrGroupHandler,
 )
 
 
-class Label(AbstractImage):
+class Label(AbstractImage[LabelMetaHandler, NgioLabelMeta]):
     """Placeholder class for a label."""
 
     def __init__(
@@ -40,7 +44,7 @@ class Label(AbstractImage):
         mode: Literal["dask", "numpy", "coarsen"] = "dask",
     ) -> None:
         """Consolidate the label on disk."""
-        super()._consolidate(order=0, mode=mode)
+        consolidate_image(self, mode=mode, order=0)
 
 
 class LabelsContainer:

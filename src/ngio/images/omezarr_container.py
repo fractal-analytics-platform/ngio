@@ -102,7 +102,7 @@ class OmeZarrContainer:
     @property
     def image_meta(self) -> NgioImageMeta:
         """Return the image metadata."""
-        return self._images_container.meta()
+        return self._images_container.meta
 
     @property
     def levels(self) -> int:
@@ -113,6 +113,27 @@ class OmeZarrContainer:
     def levels_paths(self) -> list[str]:
         """Return the paths of the levels in the image."""
         return self._images_container.levels_paths
+
+    def initialize_channel_meta(
+        self,
+        labels: Collection[str] | int | None = None,
+        wavelength_id: Collection[str] | None = None,
+        start_percentile: float = 0.1,
+        end_percentile: float = 99.9,
+        colors: Collection[str] | None = None,
+        active: Collection[bool] | None = None,
+        **omero_kwargs: dict,
+    ) -> None:
+        """Create a ChannelsMeta object with the default unit."""
+        self._images_container.initialize_channel_meta(
+            labels=labels,
+            wavelength_id=wavelength_id,
+            start_percentile=start_percentile,
+            end_percentile=end_percentile,
+            colors=colors,
+            active=active,
+            **omero_kwargs,
+        )
 
     def get_image(
         self,
@@ -348,6 +369,12 @@ def create_empty_image(
     )
 
     omezarr = OmeZarrContainer(store=handler.store, mode="r+")
+    omezarr.initialize_channel_meta(
+        labels=channel_labels,
+        wavelength_id=channel_wavelengths,
+        colors=None,
+        active=None,
+    )
     return omezarr
 
 
@@ -435,3 +462,7 @@ def create_image_from_array(
     image.set_array(array)
     image.consolidate()
     return omezarr
+
+
+# create_image_from_array("random.zarr", array=np.random.randint(0,
+# 255, size=(3, 1, 100, 100)), xy_pixelsize=1.0, overwrite=True)
