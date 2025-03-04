@@ -1,7 +1,8 @@
 """Abstract class for handling OME-NGFF images."""
 
+# %%
 from collections.abc import Collection
-from typing import Any, Literal, overload
+from typing import Literal, overload
 
 import numpy as np
 
@@ -13,7 +14,6 @@ from ngio.ome_zarr_meta import (
     PixelSize,
 )
 from ngio.ome_zarr_meta.ngio_specs import (
-    ChannelVisualisation,
     SpaceUnits,
     TimeUnits,
 )
@@ -78,7 +78,20 @@ class OmeZarrContainer:
 
     def __repr__(self) -> str:
         """Return a string representation of the image."""
-        return f"OmeZarrContainer({self.image_meta})"
+        num_labels = len(self.list_labels())
+        num_tables = len(self.list_tables())
+
+        base_str = f"OmeZarrContainer(levels={self.levels}"
+        if num_labels > 0 and num_labels < 3:
+            base_str += f", labels={self.list_labels()}"
+        elif num_labels >= 3:
+            base_str += f", #labels={num_labels}"
+        if num_tables > 0 and num_tables < 3:
+            base_str += f", tables={self.list_tables()}"
+        elif num_tables >= 3:
+            base_str += f", #tables={num_tables}"
+        base_str += ")"
+        return base_str
 
     @property
     def images_container(self) -> ImagesContainer:
@@ -302,8 +315,10 @@ def create_empty_image(
     dtype: str = "uint16",
     channel_labels: list[str] | None = None,
     channel_wavelengths: list[str] | None = None,
-    channel_visualization: list[ChannelVisualisation] | None = None,
-    omero_kwargs: dict[str, Any] | None = None,
+    start_percentile: float = 0.1,
+    end_percentile: float = 99.9,
+    channel_colors: Collection[str] | None = None,
+    channel_active: Collection[bool] | None = None,
     overwrite: bool = False,
     version: str = "0.4",
 ) -> OmeZarrContainer:
@@ -336,10 +351,14 @@ def create_empty_image(
             Defaults to None.
         channel_wavelengths (list[str] | None, optional): The wavelengths of the
             channels. Defaults to None.
-        channel_visualization (list[ChannelVisualisation] | None, optional): The
-            visualisation of the channels. Defaults to None.
-        omero_kwargs (dict[str, Any] | None, optional): The OMERO metadata.
+        start_percentile (float, optional): The start percentile for the channels.
+            Defaults to 0.1.
+        end_percentile (float, optional): The end percentile for the channels.
+            Defaults to 99.9.
+        channel_colors (Collection[str] | None, optional): The colors of the channels.
             Defaults to None.
+        channel_active (Collection[bool] | None, optional): Whether the channels are
+            active. Defaults to None.
         overwrite (bool, optional): Whether to overwrite an existing image.
             Defaults to True.
         version (str, optional): The version of the OME-Zarr specification.
@@ -360,10 +379,6 @@ def create_empty_image(
         name=name,
         chunks=chunks,
         dtype=dtype,
-        channel_labels=channel_labels,
-        channel_wavelengths=channel_wavelengths,
-        channel_visualization=channel_visualization,
-        omero_kwargs=omero_kwargs,
         overwrite=overwrite,
         version=version,
     )
@@ -372,8 +387,10 @@ def create_empty_image(
     omezarr.initialize_channel_meta(
         labels=channel_labels,
         wavelength_id=channel_wavelengths,
-        colors=None,
-        active=None,
+        start_percentile=start_percentile,
+        end_percentile=end_percentile,
+        colors=channel_colors,
+        active=channel_active,
     )
     return omezarr
 
@@ -390,12 +407,14 @@ def create_image_from_array(
     space_unit: SpaceUnits | str | None = None,
     time_unit: TimeUnits | str | None = None,
     axes_names: Collection[str] | None = None,
-    name: str | None = None,
-    chunks: Collection[int] | None = None,
     channel_labels: list[str] | None = None,
     channel_wavelengths: list[str] | None = None,
-    channel_visualization: list[ChannelVisualisation] | None = None,
-    omero_kwargs: dict[str, Any] | None = None,
+    start_percentile: float = 0.1,
+    end_percentile: float = 99.9,
+    channel_colors: Collection[str] | None = None,
+    channel_active: Collection[bool] | None = None,
+    name: str | None = None,
+    chunks: Collection[int] | None = None,
     overwrite: bool = False,
     version: str = "0.4",
 ) -> OmeZarrContainer:
@@ -427,42 +446,48 @@ def create_image_from_array(
             Defaults to None.
         channel_wavelengths (list[str] | None, optional): The wavelengths of the
             channels. Defaults to None.
-        channel_visualization (list[ChannelVisualisation] | None, optional): The
-            visualisation of the channels. Defaults to None.
-        omero_kwargs (dict[str, Any] | None, optional): The OMERO metadata.
+        start_percentile (float, optional): The start percentile for the channels.
+            Defaults to 0.1.
+        end_percentile (float, optional): The end percentile for the channels.
+            Defaults to 99.9.
+        channel_colors (Collection[str] | None, optional): The colors of the channels.
             Defaults to None.
+        channel_active (Collection[bool] | None, optional): Whether the channels are
+            active. Defaults to None.
         overwrite (bool, optional): Whether to overwrite an existing image.
             Defaults to True.
         version (str, optional): The version of the OME-Zarr specification.
             Defaults to "0.4".
     """
-    omezarr = create_empty_image(
-        store,
-        array.shape,
-        xy_pixelsize,
-        z_spacing,
-        time_spacing,
-        levels,
-        xy_scaling_factor,
-        z_scaling_factor,
-        space_unit,
-        time_unit,
-        axes_names,
-        name,
-        chunks,
-        array.dtype,
-        channel_labels,
-        channel_wavelengths,
-        channel_visualization,
-        omero_kwargs,
-        overwrite,
-        version,
+    handler = _create_empty_image(
+        store=store,
+        shape=array.shape,
+        xy_pixelsize=xy_pixelsize,
+        z_spacing=z_spacing,
+        time_spacing=time_spacing,
+        levels=levels,
+        xy_scaling_factor=xy_scaling_factor,
+        z_scaling_factor=z_scaling_factor,
+        space_unit=space_unit,
+        time_unit=time_unit,
+        axes_names=axes_names,
+        name=name,
+        chunks=chunks,
+        dtype=array.dtype,
+        overwrite=overwrite,
+        version=version,
     )
+
+    omezarr = OmeZarrContainer(store=handler.store, mode="r+")
     image = omezarr.get_image()
     image.set_array(array)
     image.consolidate()
+    omezarr.initialize_channel_meta(
+        labels=channel_labels,
+        wavelength_id=channel_wavelengths,
+        start_percentile=start_percentile,
+        end_percentile=end_percentile,
+        colors=channel_colors,
+        active=channel_active,
+    )
     return omezarr
-
-
-# create_image_from_array("random.zarr", array=np.random.randint(0,
-# 255, size=(3, 1, 100, 100)), xy_pixelsize=1.0, overwrite=True)

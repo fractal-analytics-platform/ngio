@@ -14,8 +14,16 @@ from ngio.ome_zarr_meta import (
     NgioImageMeta,
     PixelSize,
 )
-from ngio.ome_zarr_meta.ngio_specs import ChannelsMeta
-from ngio.utils import NgioValidationError, ZarrGroupHandler
+from ngio.ome_zarr_meta.ngio_specs import (
+    ChannelsMeta,
+    SpaceUnits,
+    TimeUnits,
+)
+from ngio.utils import (
+    NgioValidationError,
+    StoreOrGroup,
+    ZarrGroupHandler,
+)
 
 
 def _check_channel_meta(meta: NgioImageMeta, dimension: Dimensions) -> ChannelsMeta:
@@ -238,9 +246,8 @@ def compute_image_percentile(
         # remove all the zeros
         mask = data > 1e-16
         data = data[mask]
-        print(data.shape)
-        print(data)
-        if data.shape == 0:
+        _data = data.compute()
+        if _data.size == 0:
             starts.append(0.0)
             ends.append(0.0)
             continue
@@ -254,3 +261,63 @@ def compute_image_percentile(
         ends.append(float(_e_perc))
 
     return starts, ends
+
+
+def derive_image_container(
+    store: StoreOrGroup,
+    shape: Collection[int] | None,
+    xy_pixelsize: float | None = None,
+    z_spacing: float | None = None,
+    time_spacing: float | None = None,
+    levels: int | list[str] | None = None,
+    xy_scaling_factor: float | None = None,
+    z_scaling_factor: float | None = None,
+    space_unit: SpaceUnits | str | None = None,
+    time_unit: TimeUnits | str | None = None,
+    axes_names: Collection[str] | None = None,
+    channel_labels: list[str] | None = None,
+    channel_wavelengths: list[str] | None = None,
+    start_percentile: float = 0.1,
+    end_percentile: float = 99.9,
+    channel_colors: Collection[str] | None = None,
+    channel_active: Collection[bool] | None = None,
+    name: str | None = None,
+    chunks: Collection[int] | None = None,
+    overwrite: bool = False,
+    version: str = "0.4",
+) -> ImagesContainer:
+    """Create an OME-Zarr image from a numpy array.
+
+    Args:
+        source (ImagesContainer): The source image to derive from.
+        store (StoreOrGroup): The Zarr store or group to create the image in.
+        shape (Collection[int], optional): The shape of the image.
+        xy_pixelsize (float, optional): The pixel size in x and y dimensions.
+        z_spacing (float, optional): The spacing between z slices.
+        time_spacing (float, optional): The spacing between time points.
+        levels (int | list[str], optional): The number of levels in the pyramid or a
+            list of paths to the levels.
+        xy_scaling_factor (float, optional): The scaling factor in x and y dimensions.
+        z_scaling_factor (float, optional): The scaling factor in z dimension.
+        space_unit (SpaceUnits | str | None, optional): The unit of the space.
+        time_unit (TimeUnits | str | None, optional): The unit of the time.
+        axes_names (Collection[str] | None, optional): The names of the axes.
+        channel_labels (list[str] | None, optional): The labels of the channels.
+        channel_wavelengths (list[str] | None, optional): The wavelength of the
+            channels.
+        start_percentile (float, optional): The percentile to compute the start value of
+            the channel.
+        end_percentile (float, optional): The percentile to compute the end value of the
+            channel.
+        channel_colors (Collection[str] | None, optional): The colors of the channels.
+        channel_active (Collection[bool] | None, optional): Whether the channels are
+            active.
+        name (str | None, optional): The name of the image.
+        chunks (Collection[int] | None, optional): The chunk shape.
+        overwrite (bool, optional): Whether to overwrite an existing image.
+        version (str, optional): The version of the OME-Zarr format.
+
+    Returns:
+        A new ImagesContainer object.
+    """
+    raise NotImplementedError

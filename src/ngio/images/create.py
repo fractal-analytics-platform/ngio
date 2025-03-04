@@ -1,7 +1,7 @@
 """Utility functions for working with OME-Zarr images."""
 
 from collections.abc import Collection
-from typing import Any, TypeVar
+from typing import TypeVar
 
 from ngio.common._pyramid import init_empty_pyramid
 from ngio.ome_zarr_meta import (
@@ -12,7 +12,6 @@ from ngio.ome_zarr_meta import (
     PixelSize,
 )
 from ngio.ome_zarr_meta.ngio_specs import (
-    ChannelVisualisation,
     SpaceUnits,
     TimeUnits,
     canonical_axes_order,
@@ -182,10 +181,6 @@ def _create_empty_image(
     name: str | None = None,
     chunks: Collection[int] | None = None,
     dtype: str = "uint16",
-    channel_labels: list[str] | None = None,
-    channel_wavelengths: list[str] | None = None,
-    channel_visualization: list[ChannelVisualisation] | None = None,
-    omero_kwargs: dict[str, Any] | None = None,
     overwrite: bool = False,
     version: str = "0.4",
 ) -> ZarrGroupHandler:
@@ -214,14 +209,6 @@ def _create_empty_image(
         chunks (Collection[int] | None, optional): The chunk shape. If None the shape
             is used. Defaults to None.
         dtype (str, optional): The data type of the image. Defaults to "uint16".
-        channel_labels (list[str] | None, optional): The labels of the channels.
-            Defaults to None.
-        channel_wavelengths (list[str] | None, optional): The wavelengths of the
-            channels. Defaults to None.
-        channel_visualization (list[ChannelVisualisation] | None, optional): The
-            visualisation of the channels. Defaults to None.
-        omero_kwargs (dict[str, Any] | None, optional): The OMERO metadata.
-            Defaults to None.
         overwrite (bool, optional): Whether to overwrite an existing image.
             Defaults to True.
         version (str, optional): The version of the OME-Zarr specification.
