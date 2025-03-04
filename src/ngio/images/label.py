@@ -82,7 +82,8 @@ class LabelsContainer:
 
     def get(self, name: str, path: str) -> Label:
         """Get a label from the group."""
-        raise NotImplementedError
+        group_handler = self._group_handler.derive_handler(name)
+        return Label(group_handler, path, None)
 
     def derive(
         self,

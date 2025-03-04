@@ -1,14 +1,13 @@
 """Generic class to handle Image-like data in a OME-NGFF file."""
 
-# %%
 from collections.abc import Collection
 from typing import Literal
 
 from dask import array as da
 
 from ngio.common import Dimensions
-from ngio.common._pyramid import init_empty_pyramid
 from ngio.images.abstract_image import AbstractImage, consolidate_image
+from ngio.images.create import _create_empty_image
 from ngio.ome_zarr_meta import (
     ImageMetaHandler,
     ImplementedImageMetaHandlers,
@@ -97,14 +96,6 @@ class Image(AbstractImage[ImageMetaHandler]):
         """Return the number of channels."""
         return len(self._channels_meta.channels)
 
-    def compute_percentile(
-        self, start_percentile: float = 0.1, end_percentile: float = 99.9
-    ) -> tuple[list[float], list[float]]:
-        """Compute the start and end percentiles for each channel of an image."""
-        return compute_image_percentile(
-            self, start_percentile=start_percentile, end_percentile=end_percentile
-        )
-
     def consolidate(
         self,
         order: Literal[0, 1, 2] = 1,
@@ -161,8 +152,7 @@ class ImagesContainer:
         self,
         labels: Collection[str] | int | None = None,
         wavelength_id: Collection[str] | None = None,
-        start_percentile: float = 0.1,
-        end_percentile: float = 99.9,
+        percentiles: tuple[float, float] | None = None,
         colors: Collection[str] | None = None,
         active: Collection[bool] | None = None,
         **omero_kwargs: dict,
@@ -174,10 +164,8 @@ class ImagesContainer:
                 If an integer is provided, the channels will be named "channel_i".
             wavelength_id(Collection[str] | None): The wavelength ID of the channel.
                 If None, the wavelength ID will be the same as the channel name.
-            start_percentile(float): The percentile to compute the start value of the
-                channel.
-            end_percentile(float): The percentile to compute the end value of the
-                channel.
+            percentiles(tuple[float, float] | None): The start and end percentiles
+                for each channel. If None, the percentiles will not be computed.
             colors(Collection[str, NgioColors] | None): The list of colors for the
                 channels. If None, the colors will be random.
             active (Collection[bool] | None):active(bool): Whether the channel should
@@ -185,7 +173,13 @@ class ImagesContainer:
             omero_kwargs(dict): Extra fields to store in the omero attributes.
         """
         ref = self.get()
-        start, end = compute_image_percentile(ref, start_percentile, end_percentile)
+
+        if percentiles is not None:
+            start, end = compute_image_percentile(
+                ref, start_percentile=percentiles[0], end_percentile=percentiles[1]
+            )
+        else:
+            start, end = None, None
 
         if labels is None:
             labels = ref.num_channels
@@ -204,6 +198,44 @@ class ImagesContainer:
         meta = self.meta
         meta.set_channels_meta(channel_meta)
         self._meta_handler.write_meta(meta)
+
+    def update_percentiles(
+        self,
+        start_percentile: float = 0.1,
+        end_percentile: float = 99.9,
+    ) -> None:
+        """Update the percentiles of the channels."""
+        if self.meta._channels_meta is None:
+            raise NgioValidationError("The channels meta is not initialized.")
+
+        image = self.get()
+        starts, ends = compute_image_percentile(
+            image, start_percentile=start_percentile, end_percentile=end_percentile
+        )
+
+        for c, channel in enumerate(self.meta._channels_meta.channels):
+            channel.channel_visualisation.start = starts[c]
+            channel.channel_visualisation.end = ends[c]
+
+        self._meta_handler.write_meta(self.meta)
+
+    def derive(
+        self,
+        store: StoreOrGroup,
+        ref_path: str | None = None,
+        shape: Collection[int] | None = None,
+        chunks: Collection[int] | None = None,
+        overwrite: bool = False,
+    ) -> "ImagesContainer":
+        """Create an OME-Zarr image from a numpy array."""
+        return derive_image_container(
+            image_container=self,
+            store=store,
+            ref_path=ref_path,
+            shape=shape,
+            chunks=chunks,
+            overwrite=overwrite,
+        )
 
     def get(
         self,
@@ -241,7 +273,10 @@ def compute_image_percentile(
     """
     starts, ends = [], []
     for c in range(image.num_channels):
-        data = image.get_array(c=c, mode="dask").ravel()
+        if image.num_channels == 1:
+            data = image.get_array(mode="dask").ravel()
+        else:
+            data = image.get_array(c=c, mode="dask").ravel()
         # remove all the zeros
         mask = data > 1e-16
         data = data[mask]
@@ -269,7 +304,6 @@ def derive_image_container(
     shape: Collection[int] | None = None,
     chunks: Collection[int] | None = None,
     overwrite: bool = False,
-    version: str = "0.4",
 ) -> ImagesContainer:
     """Create an OME-Zarr image from a numpy array."""
     if ref_path is None:
@@ -287,22 +321,52 @@ def derive_image_container(
                 "The shape of the new image does not match the reference image."
             )
 
-    mode = "w" if overwrite else "w-"
-    group_handler = ZarrGroupHandler(store=store, mode=mode, cache=False)
-    image_handler = ImplementedImageMetaHandlers().get_handler(
-        version=version, group_handler=group_handler
-    )
-    image_handler.write_meta(ref_meta)
-    scaling_factors = []
+    if chunks is None:
+        chunks = ref_image.chunks
+    else:
+        if len(chunks) != len(ref_image.chunks):
+            raise NgioValidationError(
+                "The chunks of the new image does not match the reference image."
+            )
 
-    init_empty_pyramid(
+    handler = _create_empty_image(
         store=store,
-        paths=ref_meta.paths,
-        scaling_factors=scaling_factors,
-        ref_shape=shape,
+        shape=shape,
+        xy_pixelsize=ref_image.pixel_size.x,
+        z_spacing=ref_image.pixel_size.z,
+        time_spacing=ref_image.pixel_size.t,
+        levels=ref_meta.levels,
+        xy_scaling_factor=2.0,  # will need to be fixed
+        z_scaling_factor=1.0,  # will need to be fixed
+        time_unit=ref_image.pixel_size.time_unit,
+        space_unit=ref_image.pixel_size.space_unit,
+        axes_names=ref_image.dataset.axes_mapper.on_disk_axes_names,
         chunks=chunks,
         dtype=ref_image.dtype,
-        mode="a",
+        overwrite=overwrite,
+        version=ref_meta.version,
     )
 
-    return ImagesContainer(group_handler)
+    image_container = ImagesContainer(handler)
+
+    if ref_image.num_channels == image_container.num_channels:
+        labels = ref_image.channel_labels
+        wavelength_id = ref_image.wavelength_ids
+        colors = [
+            c.channel_visualisation.color for c in ref_image._channels_meta.channels
+        ]
+        active = [
+            c.channel_visualisation.active for c in ref_image._channels_meta.channels
+        ]
+
+        image_container.initialize_channel_meta(
+            labels=labels,
+            wavelength_id=wavelength_id,
+            percentiles=None,
+            colors=colors,
+            active=active,
+        )
+    else:
+        image_container.initialize_channel_meta()
+
+    return image_container

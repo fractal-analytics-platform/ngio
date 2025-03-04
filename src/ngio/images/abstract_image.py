@@ -3,7 +3,6 @@
 from collections.abc import Collection, Iterable
 from typing import Generic, Literal, TypeVar
 
-import numpy as np
 import zarr
 
 from ngio.common import (
@@ -86,9 +85,9 @@ class AbstractImage(Generic[_image_handler]):
         return self.zarr_array.shape
 
     @property
-    def dtype(self) -> np.dtype:
+    def dtype(self) -> str:
         """Return the dtype of the image."""
-        return self.zarr_array.dtype
+        return str(self.zarr_array.dtype)
 
     @property
     def chunks(self) -> tuple[int, ...]:

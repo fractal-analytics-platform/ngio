@@ -131,8 +131,7 @@ class OmeZarrContainer:
         self,
         labels: Collection[str] | int | None = None,
         wavelength_id: Collection[str] | None = None,
-        start_percentile: float = 0.1,
-        end_percentile: float = 99.9,
+        percentiles: tuple[float, float] | None = None,
         colors: Collection[str] | None = None,
         active: Collection[bool] | None = None,
         **omero_kwargs: dict,
@@ -141,11 +140,20 @@ class OmeZarrContainer:
         self._images_container.initialize_channel_meta(
             labels=labels,
             wavelength_id=wavelength_id,
-            start_percentile=start_percentile,
-            end_percentile=end_percentile,
+            percentiles=percentiles,
             colors=colors,
             active=active,
             **omero_kwargs,
+        )
+
+    def update_percentiles(
+        self,
+        start_percentile: float = 0.1,
+        end_percentile: float = 99.9,
+    ) -> None:
+        """Update the percentiles of the image."""
+        self._images_container.update_percentiles(
+            start_percentile=start_percentile, end_percentile=end_percentile
         )
 
     def get_image(
@@ -161,6 +169,38 @@ class OmeZarrContainer:
             highest_resolution=highest_resolution,
         )
 
+    def derive_image(
+        self,
+        store: StoreOrGroup,
+        ref_path: str | None = None,
+        shape: Collection[int] | None = None,
+        chunks: Collection[int] | None = None,
+        copy_tables: bool = False,
+        copy_labels: bool = False,
+        overwrite: bool = False,
+    ) -> "OmeZarrContainer":
+        """Derive a new image from the current image."""
+        if copy_labels:
+            raise NotImplementedError("Copying labels is not yet implemented.")
+
+        if copy_tables:
+            raise NotImplementedError("Copying tables is not yet implemented.")
+
+        _ = self._images_container.derive(
+            store=store,
+            ref_path=ref_path,
+            shape=shape,
+            chunks=chunks,
+            overwrite=overwrite,
+        )
+        return OmeZarrContainer(
+            store=store,
+            cache=False,
+            mode="r+",
+            table_container=None,
+            label_container=None,
+        )
+
     def list_tables(self) -> list[str]:
         """List all tables in the image."""
         if self._tables_container is None:
@@ -168,51 +208,45 @@ class OmeZarrContainer:
         return self._tables_container.list()
 
     @overload
-    def get_table(self, table_name: str) -> Table: ...
+    def get_table(self, name: str, check_type: None) -> Table: ...
 
     @overload
-    def get_table(self, table_name: str, check_type: None) -> Table: ...
-
-    @overload
-    def get_table(
-        self, table_name: str, check_type: Literal["roi_table"]
-    ) -> RoiTable: ...
+    def get_table(self, name: str, check_type: Literal["roi_table"]) -> RoiTable: ...
 
     @overload
     def get_table(
-        self, table_name: str, check_type: Literal["masking_roi_table"]
+        self, name: str, check_type: Literal["masking_roi_table"]
     ) -> MaskingROITable: ...
 
     @overload
     def get_table(
-        self, table_name: str, check_type: Literal["feature_table"]
+        self, name: str, check_type: Literal["feature_table"]
     ) -> FeaturesTable: ...
 
-    def get_table(self, table_name: str, check_type: TypedTable | None = None) -> Table:
+    def get_table(self, name: str, check_type: TypedTable | None = None) -> Table:
         """Get a table from the image."""
         if self._tables_container is None:
             raise NgioValidationError("No tables found in the image.")
 
-        table = self._tables_container.get(table_name)
+        table = self._tables_container.get(name)
         match check_type:
             case "roi_table":
                 if not isinstance(table, RoiTable):
                     raise NgioValueError(
-                        f"Table '{table_name}' is not a ROI table. "
-                        f"Found type: {table.type()}"
+                        f"Table '{name}' is not a ROI table. Found type: {table.type()}"
                     )
                 return table
             case "masking_roi_table":
                 if not isinstance(table, MaskingROITable):
                     raise NgioValueError(
-                        f"Table '{table_name}' is not a masking ROI table. "
+                        f"Table '{name}' is not a masking ROI table. "
                         f"Found type: {table.type()}"
                     )
                 return table
             case "features_table":
                 if not isinstance(table, FeaturesTable):
                     raise NgioValueError(
-                        f"Table '{table_name}' is not a features table. "
+                        f"Table '{name}' is not a features table. "
                         f"Found type: {table.type()}"
                     )
                 return table
@@ -241,28 +275,21 @@ class OmeZarrContainer:
             return []
         return self._labels_container.list()
 
-    def get_label(self, label_name: str, path: str) -> Label:
+    def get_label(self, name: str, path: str) -> Label:
         """Get a label from the image."""
         if self._labels_container is None:
             raise NgioValidationError("No labels found in the image.")
-        return self._labels_container.get(name=label_name, path=path)
+        return self._labels_container.get(name=name, path=path)
 
-    def derive_label(self, label_name: str, **kwargs) -> Label:
+    def derive_label(self, name: str, **kwargs) -> Label:
         """Derive a label from an image."""
         if self._labels_container is None:
             raise NgioValidationError("No labels found in the image.")
 
         ref_image = self.get_image()
         return self._labels_container.derive(
-            name=label_name, reference_image=ref_image, **kwargs
+            name=name, reference_image=ref_image, **kwargs
         )
-
-    def derive(
-        self,
-        **kwargs,
-    ) -> "OmeZarrContainer":
-        """Derive a new image from the current image."""
-        raise NotImplementedError
 
 
 def open_omezarr_container(
@@ -315,8 +342,7 @@ def create_empty_omezarr(
     dtype: str = "uint16",
     channel_labels: list[str] | None = None,
     channel_wavelengths: list[str] | None = None,
-    start_percentile: float = 0.1,
-    end_percentile: float = 99.9,
+    percentiles: tuple[float, float] | None = None,
     channel_colors: Collection[str] | None = None,
     channel_active: Collection[bool] | None = None,
     overwrite: bool = False,
@@ -351,10 +377,8 @@ def create_empty_omezarr(
             Defaults to None.
         channel_wavelengths (list[str] | None, optional): The wavelengths of the
             channels. Defaults to None.
-        start_percentile (float, optional): The start percentile for the channels.
-            Defaults to 0.1.
-        end_percentile (float, optional): The end percentile for the channels.
-            Defaults to 99.9.
+        percentiles (tuple[float, float] | None, optional): The percentiles of the
+            channels. Defaults to None.
         channel_colors (Collection[str] | None, optional): The colors of the channels.
             Defaults to None.
         channel_active (Collection[bool] | None, optional): Whether the channels are
@@ -387,8 +411,7 @@ def create_empty_omezarr(
     omezarr.initialize_channel_meta(
         labels=channel_labels,
         wavelength_id=channel_wavelengths,
-        start_percentile=start_percentile,
-        end_percentile=end_percentile,
+        percentiles=percentiles,
         colors=channel_colors,
         active=channel_active,
     )
@@ -409,8 +432,7 @@ def create_omezarr_from_array(
     axes_names: Collection[str] | None = None,
     channel_labels: list[str] | None = None,
     channel_wavelengths: list[str] | None = None,
-    start_percentile: float = 0.1,
-    end_percentile: float = 99.9,
+    percentiles: tuple[float, float] | None = (0.1, 99.9),
     channel_colors: Collection[str] | None = None,
     channel_active: Collection[bool] | None = None,
     name: str | None = None,
@@ -446,10 +468,8 @@ def create_omezarr_from_array(
             Defaults to None.
         channel_wavelengths (list[str] | None, optional): The wavelengths of the
             channels. Defaults to None.
-        start_percentile (float, optional): The start percentile for the channels.
-            Defaults to 0.1.
-        end_percentile (float, optional): The end percentile for the channels.
-            Defaults to 99.9.
+        percentiles (tuple[float, float] | None, optional): The percentiles of the
+            channels. Defaults to None.
         channel_colors (Collection[str] | None, optional): The colors of the channels.
             Defaults to None.
         channel_active (Collection[bool] | None, optional): Whether the channels are
@@ -485,8 +505,7 @@ def create_omezarr_from_array(
     omezarr.initialize_channel_meta(
         labels=channel_labels,
         wavelength_id=channel_wavelengths,
-        start_percentile=start_percentile,
-        end_percentile=end_percentile,
+        percentiles=percentiles,
         colors=channel_colors,
         active=channel_active,
     )
