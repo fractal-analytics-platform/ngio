@@ -7,6 +7,7 @@ from typing import Literal
 from dask import array as da
 
 from ngio.common import Dimensions
+from ngio.common._pyramid import init_empty_pyramid
 from ngio.images.abstract_image import AbstractImage, consolidate_image
 from ngio.ome_zarr_meta import (
     ImageMetaHandler,
@@ -16,8 +17,6 @@ from ngio.ome_zarr_meta import (
 )
 from ngio.ome_zarr_meta.ngio_specs import (
     ChannelsMeta,
-    SpaceUnits,
-    TimeUnits,
 )
 from ngio.utils import (
     NgioValidationError,
@@ -264,60 +263,46 @@ def compute_image_percentile(
 
 
 def derive_image_container(
+    image_container: ImagesContainer,
     store: StoreOrGroup,
-    shape: Collection[int] | None,
-    xy_pixelsize: float | None = None,
-    z_spacing: float | None = None,
-    time_spacing: float | None = None,
-    levels: int | list[str] | None = None,
-    xy_scaling_factor: float | None = None,
-    z_scaling_factor: float | None = None,
-    space_unit: SpaceUnits | str | None = None,
-    time_unit: TimeUnits | str | None = None,
-    axes_names: Collection[str] | None = None,
-    channel_labels: list[str] | None = None,
-    channel_wavelengths: list[str] | None = None,
-    start_percentile: float = 0.1,
-    end_percentile: float = 99.9,
-    channel_colors: Collection[str] | None = None,
-    channel_active: Collection[bool] | None = None,
-    name: str | None = None,
+    ref_path: str | None = None,
+    shape: Collection[int] | None = None,
     chunks: Collection[int] | None = None,
     overwrite: bool = False,
     version: str = "0.4",
 ) -> ImagesContainer:
-    """Create an OME-Zarr image from a numpy array.
+    """Create an OME-Zarr image from a numpy array."""
+    if ref_path is None:
+        ref_image = image_container.get()
+    else:
+        ref_image = image_container.get(path=ref_path)
 
-    Args:
-        source (ImagesContainer): The source image to derive from.
-        store (StoreOrGroup): The Zarr store or group to create the image in.
-        shape (Collection[int], optional): The shape of the image.
-        xy_pixelsize (float, optional): The pixel size in x and y dimensions.
-        z_spacing (float, optional): The spacing between z slices.
-        time_spacing (float, optional): The spacing between time points.
-        levels (int | list[str], optional): The number of levels in the pyramid or a
-            list of paths to the levels.
-        xy_scaling_factor (float, optional): The scaling factor in x and y dimensions.
-        z_scaling_factor (float, optional): The scaling factor in z dimension.
-        space_unit (SpaceUnits | str | None, optional): The unit of the space.
-        time_unit (TimeUnits | str | None, optional): The unit of the time.
-        axes_names (Collection[str] | None, optional): The names of the axes.
-        channel_labels (list[str] | None, optional): The labels of the channels.
-        channel_wavelengths (list[str] | None, optional): The wavelength of the
-            channels.
-        start_percentile (float, optional): The percentile to compute the start value of
-            the channel.
-        end_percentile (float, optional): The percentile to compute the end value of the
-            channel.
-        channel_colors (Collection[str] | None, optional): The colors of the channels.
-        channel_active (Collection[bool] | None, optional): Whether the channels are
-            active.
-        name (str | None, optional): The name of the image.
-        chunks (Collection[int] | None, optional): The chunk shape.
-        overwrite (bool, optional): Whether to overwrite an existing image.
-        version (str, optional): The version of the OME-Zarr format.
+    ref_meta = ref_image.meta
 
-    Returns:
-        A new ImagesContainer object.
-    """
-    raise NotImplementedError
+    if shape is None:
+        shape = ref_image.shape
+    else:
+        if len(shape) != len(ref_image.shape):
+            raise NgioValidationError(
+                "The shape of the new image does not match the reference image."
+            )
+
+    mode = "w" if overwrite else "w-"
+    group_handler = ZarrGroupHandler(store=store, mode=mode, cache=False)
+    image_handler = ImplementedImageMetaHandlers().get_handler(
+        version=version, group_handler=group_handler
+    )
+    image_handler.write_meta(ref_meta)
+    scaling_factors = []
+
+    init_empty_pyramid(
+        store=store,
+        paths=ref_meta.paths,
+        scaling_factors=scaling_factors,
+        ref_shape=shape,
+        chunks=chunks,
+        dtype=ref_image.dtype,
+        mode="a",
+    )
+
+    return ImagesContainer(group_handler)

@@ -298,7 +298,7 @@ def open_image(
     )
 
 
-def create_empty_image(
+def create_empty_omezarr(
     store: StoreOrGroup,
     shape: Collection[int],
     xy_pixelsize: float,
@@ -395,7 +395,7 @@ def create_empty_image(
     return omezarr
 
 
-def create_image_from_array(
+def create_omezarr_from_array(
     store: StoreOrGroup,
     array: np.ndarray,
     xy_pixelsize: float,
