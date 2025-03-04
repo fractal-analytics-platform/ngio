@@ -1,9 +1,10 @@
 from pathlib import Path
 
+import fsspec
 import numpy as np
 import pytest
 
-from ngio import create_empty_omezarr, create_omezarr_from_array
+from ngio import create_empty_omezarr, create_omezarr_from_array, open_omezarr_container
 
 
 @pytest.mark.parametrize("array_mode", ["numpy", "dask"])
@@ -67,3 +68,28 @@ def test_create_omezarr_container(tmp_path: Path):
         xy_pixelsize=0.5,
         levels=3,
     )
+
+
+def test_remote_omezarr_container():
+    url = (
+        "https://raw.githubusercontent.com/"
+        "fractal-analytics-platform/fractal-ome-zarr-examples/"
+        "refs/heads/main/v04/"
+        "20200812-CardiomyocyteDifferentiation14-Cycle1_B_03_mip.zarr/"
+    )
+
+    fs = fsspec.implementations.http.HTTPFileSystem(client_kwargs={})
+    store = fs.get_mapper(url)
+
+    omezarr = open_omezarr_container(store)
+
+    assert omezarr.list_labels() == ["nuclei"]
+    assert omezarr.list_tables() == [
+        "FOV_ROI_table",
+        "nuclei_ROI_table",
+        "well_ROI_table",
+        "regionprops_DAPI",
+    ]
+
+    _ = omezarr.get_label("nuclei", path="0")
+    _ = omezarr.get_table("well_ROI_table")
