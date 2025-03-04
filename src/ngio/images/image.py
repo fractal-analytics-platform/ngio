@@ -35,7 +35,7 @@ def _check_channel_meta(meta: NgioImageMeta, dimension: Dimensions) -> ChannelsM
     return meta.channels_meta
 
 
-class Image(AbstractImage[ImageMetaHandler, NgioImageMeta]):
+class Image(AbstractImage[ImageMetaHandler]):
     """A class to handle a single image (or level) in an OME-Zarr image.
 
     This class is meant to be subclassed by specific image types.
@@ -63,6 +63,11 @@ class Image(AbstractImage[ImageMetaHandler, NgioImageMeta]):
             group_handler=group_handler, path=path, meta_handler=meta_handler
         )
         self._channels_meta = _check_channel_meta(self.meta, self.dimensions)
+
+    @property
+    def meta(self) -> NgioImageMeta:
+        """Return the metadata."""
+        return self._meta_handler.meta
 
     @property
     def channel_labels(self) -> list[str]:

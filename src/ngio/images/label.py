@@ -14,7 +14,7 @@ from ngio.utils import (
 )
 
 
-class Label(AbstractImage[LabelMetaHandler, NgioLabelMeta]):
+class Label(AbstractImage[LabelMetaHandler]):
     """Placeholder class for a label."""
 
     def __init__(
@@ -38,6 +38,11 @@ class Label(AbstractImage[LabelMetaHandler, NgioLabelMeta]):
         super().__init__(
             group_handler=group_handler, path=path, meta_handler=meta_handler
         )
+
+    @property
+    def meta(self) -> NgioLabelMeta:
+        """Return the metadata."""
+        return self._meta_handler.meta
 
     def consolidate(
         self,

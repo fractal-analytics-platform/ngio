@@ -1,6 +1,5 @@
 """Generic class to handle Image-like data in a OME-NGFF file."""
 
-# %%
 from collections.abc import Collection, Iterable
 from typing import Generic, Literal, TypeVar
 
@@ -19,8 +18,6 @@ from ngio.ome_zarr_meta import (
     Dataset,
     ImageMetaHandler,
     LabelMetaHandler,
-    NgioImageMeta,
-    NgioLabelMeta,
     PixelSize,
 )
 from ngio.utils import (
@@ -29,10 +26,9 @@ from ngio.utils import (
 )
 
 _image_handler = TypeVar("_image_handler", ImageMetaHandler, LabelMetaHandler)
-_image_meta = TypeVar("_image_meta", NgioImageMeta, NgioLabelMeta)
 
 
-class AbstractImage(Generic[_image_handler, _image_meta]):
+class AbstractImage(Generic[_image_handler]):
     """A class to handle a single image (or level) in an OME-Zarr image.
 
     This class is meant to be subclassed by specific image types.
@@ -78,11 +74,6 @@ class AbstractImage(Generic[_image_handler, _image_meta]):
     def meta_handler(self) -> _image_handler:
         """Return the metadata."""
         return self._meta_handler
-
-    @property
-    def meta(self) -> _image_meta:
-        """Return the metadata."""
-        return self._meta_handler.meta
 
     @property
     def zarr_array(self) -> zarr.Array:
