@@ -1,11 +1,27 @@
-"""Module for handling tables in the Fractal format."""
+"""Ngio Tables implementations."""
 
-from ngio.tables.tables_group import (
+from ngio.tables.backends import ImplementedTableBackends
+from ngio.tables.tables_container import (
     FeatureTable,
     MaskingROITable,
-    ROITable,
+    RoiTable,
     Table,
-    TableGroup,
+    TablesContainer,
+    TypedTable,
+    open_table,
+    open_tables_container,
 )
+from ngio.tables.v1._generic_table import GenericTable
 
-__all__ = ["Table", "ROITable", "FeatureTable", "MaskingROITable", "TableGroup"]
+__all__ = [
+    "FeatureTable",
+    "GenericTable",
+    "ImplementedTableBackends",
+    "MaskingROITable",
+    "RoiTable",
+    "Table",
+    "TablesContainer",
+    "TypedTable",
+    "open_table",
+    "open_tables_container",
+]

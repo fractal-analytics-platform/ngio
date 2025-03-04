@@ -2,29 +2,42 @@
 
 import os
 
-from ngio.utils._common_types import ArrayLike
+from ngio.common._common_types import ArrayLike
+from ngio.utils._datasets import download_ome_zarr_dataset, list_ome_zarr_datasets
 from ngio.utils._errors import (
     NgioFileExistsError,
     NgioFileNotFoundError,
-    NgioNGFFValidationError,
     NgioTableValidationError,
+    NgioValidationError,
+    NgioValueError,
 )
 from ngio.utils._logger import ngio_logger, set_logger_level
-from ngio.utils._pydantic_utils import BaseWithExtraFields, unique_items_validator
+from ngio.utils._zarr_utils import (
+    AccessModeLiteral,
+    StoreOrGroup,
+    ZarrGroupHandler,
+    open_group_wrapper,
+)
 
 set_logger_level(os.getenv("NGIO_LOGGER_LEVEL", "WARNING"))
 
 __all__ = [
+    # Zarr
+    "AccessModeLiteral",
     "ArrayLike",
-    # Pydantic
-    "BaseWithExtraFields",
-    "unique_items_validator",
-    # Logger
-    "ngio_logger",
-    "set_logger_level",
     # Errors
     "NgioFileExistsError",
     "NgioFileNotFoundError",
-    "NgioNGFFValidationError",
     "NgioTableValidationError",
+    "NgioValidationError",
+    "NgioValueError",
+    "StoreOrGroup",
+    "ZarrGroupHandler",
+    # Datasets
+    "download_ome_zarr_dataset",
+    "list_ome_zarr_datasets",
+    # Logger
+    "ngio_logger",
+    "open_group_wrapper",
+    "set_logger_level",
 ]

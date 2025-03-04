@@ -1,7 +1,8 @@
-"""This module contains the objects to handle the fractal tables V1."""
+"""Tables implementations for fractal_tables v1."""
 
-from ngio.tables.v1.feature_tables import FeatureTableV1
-from ngio.tables.v1.masking_roi_tables import MaskingROITableV1
-from ngio.tables.v1.roi_tables import ROITableV1
+from ngio.tables.v1._feature_table import FeatureTableV1
+from ngio.tables.v1._generic_table import GenericTable
+from ngio.tables.v1._masking_roi_table import MaskingROITableV1
+from ngio.tables.v1._roi_table import RoiTableV1
 
-__all__ = ["ROITableV1", "FeatureTableV1", "MaskingROITableV1"]
+__all__ = ["FeatureTableV1", "GenericTable", "MaskingROITableV1", "RoiTableV1"]

@@ -21,7 +21,7 @@ repos:
         args: [--force-exclude, --write-changes]
 
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: v0.4.8
+    rev: v0.9.6
     hooks:
       - id: ruff
         args: [--fix]  # may also add '--unsafe-fixes'

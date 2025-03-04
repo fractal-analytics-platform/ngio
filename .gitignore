@@ -119,5 +119,13 @@ pixi.lock
 *.zarr
 
 # ignore data directory
-data/
+./data/
 *.zip
+
+src/ngio/_v01
+tests/_v01
+
+# Ignore locks
+*.lock
+
+benchmark/*

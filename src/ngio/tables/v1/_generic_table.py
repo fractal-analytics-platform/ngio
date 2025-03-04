@@ -1,201 +1,118 @@
-"""Implementation of a Generic Table class."""
+"""Implementation of a generic table class."""
 
-from pathlib import Path
-from typing import Literal
-
-import anndata as ad
 import pandas as pd
-import zarr
 from pydantic import BaseModel
 
-from ngio.core.utils import State
-from ngio.tables._ad_reader import custom_read_zarr
-from ngio.tables._utils import Validator, table_ad_to_df, table_df_to_ad, validate_table
-
-REQUIRED_COLUMNS = [
-    "x_micrometer",
-    "y_micrometer",
-    "z_micrometer",
-    "len_x_micrometer",
-    "len_y_micrometer",
-    "len_z_micrometer",
-]
+from ngio.tables.backends import ImplementedTableBackends
+from ngio.utils import ZarrGroupHandler
 
 
-def write_table_ad(
-    group: zarr.Group,
-    table: pd.DataFrame,
-    index_key: str,
-    index_type: Literal["int", "str"],
-    meta: BaseModel,
-    validators: list[Validator] | None = None,
-) -> None:
-    """Write a table to a Zarr group.
+class GenericTableMeta(BaseModel):
+    """Metadata for the ROI table."""
 
-    Args:
-        group (zarr.Group): The group to write the table to.
-        table (pd.DataFrame): The table to write.
-        index_key (str): The column name to use as the index of the DataFrame.
-        index_type (str): The type of the index column in the DataFrame.
-        meta (BaseModel): The metadata of the table.
-        validators (list[Validator]): A list of functions to further validate the
-            table.
+    fractal_table_version: str | None = None
+    type: str | None = None
+    backend: str | None = None
+
+
+class GenericTable:
+    """Class to a non-specific table.
+
+    This can be used to load any table that does not have
+    a specific definition.
     """
-    ad_table = table_df_to_ad(
-        table,
-        index_key=index_key,
-        index_type=index_type,
-        validators=validators,
-    )
-
-    group_path = Path(group.store.path) / group.path
-    ad_table.write_zarr(group_path)
-    group.attrs.update(meta.model_dump(exclude=None))
-
-
-class BaseTable:
-    """A base table class to be used for table operations in all other tables."""
 
     def __init__(
         self,
-        group: zarr.Group,
-        index_key: str,
-        index_type: Literal["int", "str"],
-        validators: list[Validator] | None = None,
-    ):
-        """Initialize the class from an existing group.
+        dataframe: pd.DataFrame,
+    ) -> None:
+        """Initialize the GenericTable."""
+        self._meta = GenericTableMeta()
+        self._dataframe = dataframe
+        self._table_backend = None
 
-        Args:
-            group (zarr.Group): The group containing the
-                ROI table.
-            index_key (str): The column name to use as the index of the DataFrame.
-            index_type (str): The type of the index column in the DataFrame.
-            validators (list[Validator]): A list of functions to further validate the
-                table.
+    @staticmethod
+    def type() -> str:
+        """Return the type of the table."""
+        return "generic"
+
+    @staticmethod
+    def version() -> str:
+        """The generic table does not have a version.
+
+        Since does not follow a specific schema.
         """
-        self._table_group = group
-        self._index_key = index_key
-        self._index_type = index_type
-        self._validators = validators
+        return "1"
 
-        table_ad = custom_read_zarr(store=group)
+    @property
+    def backend_name(self) -> str | None:
+        """Return the name of the backend."""
+        if self._table_backend is None:
+            return None
+        return self._table_backend.backend_name()
 
-        self._table = table_ad_to_df(
-            table_ad=table_ad,
-            index_key=self._index_key,
-            index_type=self._index_type,
-            validators=self._validators,
+    @property
+    def dataframe(self) -> pd.DataFrame:
+        """Return the table as a DataFrame."""
+        return self._dataframe
+
+    @dataframe.setter
+    def dataframe(self, dataframe: pd.DataFrame) -> None:
+        """Set the table as a DataFrame."""
+        self._dataframe = dataframe
+
+    @classmethod
+    def _from_handler(
+        cls, handler: ZarrGroupHandler, backend_name: str | None = None
+    ) -> "GenericTable":
+        """Create a new ROI table from a Zarr group handler."""
+        meta = GenericTableMeta(**handler.load_attrs())
+        if backend_name is None:
+            backend = ImplementedTableBackends().get_backend(
+                backend_name=meta.backend,
+                group_handler=handler,
+                index_key=None,
+            )
+        else:
+            backend = ImplementedTableBackends().get_backend(
+                backend_name=backend_name,
+                group_handler=handler,
+                index_key=None,
+            )
+            meta.backend = backend_name
+
+        if not backend.implements_dataframe:
+            raise ValueError("The backend does not implement the dataframe protocol.")
+
+        dataframe = backend.load_as_dataframe()
+
+        table = cls(dataframe)
+        table._meta = meta
+        table._table_backend = backend
+        return table
+
+    def _set_backend(
+        self,
+        handler: ZarrGroupHandler,
+        backend_name: str | None = None,
+    ) -> None:
+        """Set the backend of the table."""
+        backend = ImplementedTableBackends().get_backend(
+            backend_name=backend_name,
+            group_handler=handler,
+            index_key=None,
         )
-        self.state = State.CONSOLIDATED
+        self._meta.backend = backend_name
+        self._table_backend = backend
 
-    @property
-    def root_path(self) -> str:
-        """Return the path of the root group.
-
-        This is in general the path of the NGFFImage.
-        """
-        return str(self._table_group.store.path)
-
-    @property
-    def group_path(self) -> str:
-        """Return the path of the group.
-
-        This is the path of the group containing the table.
-        """
-        root = self.root_path
-        if root.endswith("/"):
-            root = root[:-1]
-
-        return f"{root}/{self._table_group.path}"
-
-    @property
-    def table(self) -> pd.DataFrame:
-        """Return the ROI table as a DataFrame."""
-        return self._table
-
-    @table.setter
-    def table(self, table: pd.DataFrame) -> None:
-        raise NotImplementedError(
-            "Setting the table directly is not supported. "
-            "Please use the 'set_table' method."
-        )
-
-    def set_table(self, table: pd.DataFrame) -> None:
-        table = validate_table(
-            table_df=table,
-            index_key=self.index_key,
-            index_type=self.index_type,
-            validators=self._validators,
-        )
-        self._table = table
-
-    def as_anndata(self) -> ad.AnnData:
-        """Return the ROI table as an AnnData object."""
-        return table_df_to_ad(
-            self.table, index_key=self.index_key, index_type=self.index_type
-        )
-
-    def from_anndata(self, table_ad: ad.AnnData) -> None:
-        """Return the ROI table as an AnnData object."""
-        table = table_ad_to_df(
-            table_ad=table_ad,
-            index_key=self.index_key,
-            index_type=self.index_type,
-            validators=self._validators,
-        )
-        # Don't use the setter to avoid re-validating the table
-        self._table = table
-
-    @property
-    def index(self) -> list[int | str]:
-        """Return a list of all the labels in the table."""
-        return self.table.index.tolist()
-
-    @property
-    def group(self) -> zarr.Group:
-        """Return the group of the table."""
-        return self._table_group
-
-    @property
-    def index_key(self) -> str:
-        """Return the index key of the table."""
-        return self._index_key
-
-    @property
-    def index_type(self) -> Literal["int", "str"]:
-        """Return the index type of the table."""
-        return self._index_type
-
-    @property
-    def validators(self) -> list[Validator] | None:
-        """Return the validators of the table."""
-        return self._validators
-
-    @validators.setter
-    def validators(self, validators: list[Validator] | None) -> None:
-        """Set the validators of the table."""
-        self._validators = validators
-
-    def add_validator(self, validator: Validator) -> None:
-        """Add a validator to the table."""
-        if self._validators is None:
-            self._validators = []
-        self._validators.append(validator)
-
-    def consolidate(self, meta: BaseModel) -> None:
+    def consolidate(self) -> None:
         """Write the current state of the table to the Zarr file."""
-        table = self.table
-        table = validate_table(
-            table_df=table,
-            index_key=self.index_key,
-            index_type=self.index_type,
-            validators=self._validators,
-        )
-        write_table_ad(
-            group=self._table_group,
-            table=self.table,
-            index_key=self.index_key,
-            index_type=self.index_type,
-            meta=meta,
-            validators=self._validators,
+        if self._table_backend is None:
+            raise ValueError(
+                "No backend set for the table. "
+                "Please add the table to a OME-Zarr Image before calling consolidate."
+            )
+
+        self._table_backend.write_from_dataframe(
+            self._dataframe, metadata=self._meta.model_dump(exclude_none=True)
         )
