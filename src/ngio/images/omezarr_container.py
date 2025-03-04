@@ -18,7 +18,7 @@ from ngio.ome_zarr_meta.ngio_specs import (
     TimeUnits,
 )
 from ngio.tables import (
-    FeaturesTable,
+    FeatureTable,
     MaskingROITable,
     RoiTable,
     Table,
@@ -221,7 +221,7 @@ class OmeZarrContainer:
     @overload
     def get_table(
         self, name: str, check_type: Literal["feature_table"]
-    ) -> FeaturesTable: ...
+    ) -> FeatureTable: ...
 
     def get_table(self, name: str, check_type: TypedTable | None = None) -> Table:
         """Get a table from the image."""
@@ -243,10 +243,10 @@ class OmeZarrContainer:
                         f"Found type: {table.type()}"
                     )
                 return table
-            case "features_table":
-                if not isinstance(table, FeaturesTable):
+            case "feature_table":
+                if not isinstance(table, FeatureTable):
                     raise NgioValueError(
-                        f"Table '{name}' is not a features table. "
+                        f"Table '{name}' is not a feature table. "
                         f"Found type: {table.type()}"
                     )
                 return table

@@ -85,6 +85,7 @@ def validate_index_key(
 
     if index_key in dataframe.columns:
         dataframe = dataframe.set_index(index_key)
+        return dataframe
 
     if dataframe.index.name is None:
         dataframe.index.name = index_key

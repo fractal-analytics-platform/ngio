@@ -2,7 +2,7 @@
 
 from typing import Literal, Protocol
 
-from ngio.tables.v1 import FeaturesTableV1, MaskingROITableV1, RoiTableV1
+from ngio.tables.v1 import FeatureTableV1, MaskingROITableV1, RoiTableV1
 from ngio.tables.v1._generic_table import GenericTable
 from ngio.utils import (
     AccessModeLiteral,
@@ -14,7 +14,7 @@ from ngio.utils import (
 
 RoiTable = RoiTableV1
 MaskingROITable = MaskingROITableV1
-FeaturesTable = FeaturesTableV1
+FeatureTable = FeatureTableV1
 
 
 class Table(Protocol):
@@ -73,9 +73,7 @@ class ImplementedTables:
         """Create a new instance of the class if it does not exist."""
         if cls._instance is None:
             cls._instance = super().__new__(cls)
-            cls._instance._implemented_tables = {
-                "generic": GenericTable,
-            }
+            cls._instance._implemented_tables = {}
         return cls._instance
 
     def available_implementations(self) -> list[str]:
@@ -101,7 +99,6 @@ class ImplementedTables:
                 return table
             except Exception as e:
                 _errors[name] = e
-
         # If no table was found, we can try to load the table from a generic table
         try:
             table = GenericTable._from_handler(
@@ -207,7 +204,12 @@ class TablesContainer:
         table_handler = self._get_table_group_handler(name)
         table_type = _get_table_type(table_handler)
         table_version = _get_table_version(table_handler)
-        return ImplementedTables().get_table(table_type, table_version, table_handler)
+        return ImplementedTables().get_table(
+            type=table_type,
+            version=table_version,
+            handler=table_handler,
+            backend_name=backend_name,
+        )
 
     def add(
         self,
@@ -239,7 +241,9 @@ class TablesContainer:
             self._group_handler.write_attrs({"tables": existing_tables})
 
 
-ImplementedTables().add_implementation(RoiTable)
+ImplementedTables().add_implementation(RoiTableV1)
+ImplementedTables().add_implementation(MaskingROITableV1)
+ImplementedTables().add_implementation(FeatureTableV1)
 
 ###################################################################################
 #

@@ -189,7 +189,6 @@ def anndata_to_dataframe(
     """
     dataframe = anndata.to_df()
     dataframe[anndata.obs_keys()] = anndata.obs
-
     dataframe = validate_index_key(dataframe, index_key, overwrite=overwrite)
     dataframe = validate_index_dtype(dataframe, index_type)
     return dataframe
