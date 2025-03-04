@@ -14,9 +14,7 @@ from ngio.ome_zarr_meta import (
     NgioImageMeta,
     PixelSize,
 )
-from ngio.ome_zarr_meta.ngio_specs import (
-    ChannelsMeta,
-)
+from ngio.ome_zarr_meta.ngio_specs import Channel, ChannelsMeta, ChannelVisualisation
 from ngio.utils import (
     NgioValidationError,
     StoreOrGroup,
@@ -213,11 +211,24 @@ class ImagesContainer:
             image, start_percentile=start_percentile, end_percentile=end_percentile
         )
 
+        channels = []
         for c, channel in enumerate(self.meta._channels_meta.channels):
-            channel.channel_visualisation.start = starts[c]
-            channel.channel_visualisation.end = ends[c]
+            new_v = ChannelVisualisation(
+                start=starts[c],
+                end=ends[c],
+                **channel.channel_visualisation.model_dump(exclude={"start", "end"}),
+            )
+            new_c = Channel(
+                channel_visualisation=new_v,
+                **channel.model_dump(exclude={"channel_visualisation"}),
+            )
+            channels.append(new_c)
 
-        self._meta_handler.write_meta(self.meta)
+        new_meta = ChannelsMeta(channels=channels)
+
+        meta = self.meta
+        meta.set_channels_meta(new_meta)
+        self._meta_handler.write_meta(meta)
 
     def derive(
         self,

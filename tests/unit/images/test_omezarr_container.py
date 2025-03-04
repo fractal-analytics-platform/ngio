@@ -3,7 +3,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from ngio import create_empty_omezarr
+from ngio import create_empty_omezarr, create_omezarr_from_array
 
 
 @pytest.mark.parametrize("array_mode", ["numpy", "dask"])
@@ -20,6 +20,7 @@ def test_omezarr_container(tmp_path: Path, array_mode: str):
         dtype="uint8",
     )
 
+    assert isinstance(omezarr.__repr__(), str)
     assert omezarr.levels == 3
     assert omezarr.levels_paths == ["0", "1", "2"]
 
@@ -40,5 +41,29 @@ def test_omezarr_container(tmp_path: Path, array_mode: str):
     image.set_array(array, x=slice(None), axes_order=["c", "z", "y", "x"])
     image.consolidate(mode=array_mode)
 
+    # Omemeta
+    omezarr.initialize_channel_meta(labels=["channel_x"])
+    image = omezarr.get_image()
+    assert image.channel_labels == ["channel_x"]
+    omezarr.update_percentiles()
+
     image = omezarr.get_image(path="2")
     assert np.mean(image.get_array()) == 1
+
+    new_omezarr = omezarr.derive_image(tmp_path / "derived.zarr", ref_path="2")
+
+    assert new_omezarr.levels == 3
+    new_image = new_omezarr.get_image()
+    assert new_image.shape == image.shape
+
+
+def test_create_omezarr_container(tmp_path: Path):
+    # Very basic test to check if the container is working
+    # to be expanded with more meaningful tests
+    store = tmp_path / "omezarr.zarr"
+    create_omezarr_from_array(
+        store,
+        array=np.zeros((10, 20, 30), dtype="uint8"),
+        xy_pixelsize=0.5,
+        levels=3,
+    )
