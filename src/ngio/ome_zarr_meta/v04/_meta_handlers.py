@@ -3,12 +3,8 @@
 from ngio.ome_zarr_meta._generic_handlers import (
     BaseImageMetaHandler,
     BaseLabelMetaHandler,
-    ConverterError,
 )
-from ngio.ome_zarr_meta.ngio_specs import (
-    NgioImageMeta,
-    NgioLabelMeta,
-)
+from ngio.ome_zarr_meta.ngio_specs import AxesSetup
 from ngio.ome_zarr_meta.v04._v04_spec_utils import (
     ngio_to_v04_image_meta,
     ngio_to_v04_label_meta,
@@ -18,41 +14,41 @@ from ngio.ome_zarr_meta.v04._v04_spec_utils import (
 from ngio.utils import ZarrGroupHandler
 
 
-class V04ImageConverter:
-    def __init__(self):
-        pass
-
-    def from_dict(self, meta: dict) -> tuple[bool, NgioImageMeta | ConverterError]:
-        return v04_to_ngio_image_meta(meta)
-
-    def to_dict(self, meta: NgioImageMeta) -> dict:
-        return ngio_to_v04_image_meta(meta)
-
-
-class V04LabelConverter:
-    def __init__(self):
-        pass
-
-    def from_dict(self, meta: dict) -> tuple[bool, NgioLabelMeta | ConverterError]:
-        return v04_to_ngio_label_meta(meta)
-
-    def to_dict(self, meta: NgioLabelMeta) -> dict:
-        return ngio_to_v04_label_meta(meta)
-
-
 class V04ImageMetaHandler(BaseImageMetaHandler):
-    """Base class for handling OME-NGFF 0.4 metadata."""
+    """Base class for handling OME-Zarr 0.4 metadata."""
 
-    def __init__(self, group_handler: ZarrGroupHandler):
+    def __init__(
+        self,
+        group_handler: ZarrGroupHandler,
+        axes_setup: AxesSetup | None = None,
+        allow_non_canonical_axes: bool = False,
+        strict_canonical_order: bool = True,
+    ):
         super().__init__(
-            meta_converter=V04ImageConverter(), group_handler=group_handler
+            meta_importer=v04_to_ngio_image_meta,
+            meta_exporter=ngio_to_v04_image_meta,
+            group_handler=group_handler,
+            axes_setup=axes_setup,
+            allow_non_canonical_axes=allow_non_canonical_axes,
+            strict_canonical_order=strict_canonical_order,
         )
 
 
 class V04LabelMetaHandler(BaseLabelMetaHandler):
-    """Base class for handling OME-NGFF 0.4 metadata."""
+    """Base class for handling OME-Zarr 0.4 metadata."""
 
-    def __init__(self, group_handler: ZarrGroupHandler):
+    def __init__(
+        self,
+        group_handler: ZarrGroupHandler,
+        axes_setup: AxesSetup | None = None,
+        allow_non_canonical_axes: bool = False,
+        strict_canonical_order: bool = True,
+    ):
         super().__init__(
-            meta_converter=V04LabelConverter(), group_handler=group_handler
+            meta_importer=v04_to_ngio_label_meta,
+            meta_exporter=ngio_to_v04_label_meta,
+            group_handler=group_handler,
+            axes_setup=axes_setup,
+            allow_non_canonical_axes=allow_non_canonical_axes,
+            strict_canonical_order=strict_canonical_order,
         )
