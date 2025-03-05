@@ -28,7 +28,7 @@ def list_ome_zarr_datasets() -> list[str]:
 def download_ome_zarr_dataset(
     dataset_name: str,
     download_dir: str = "data",
-) -> str:
+) -> Path:
     """Download an OME-Zarr dataset.
 
     To list available datasets, use `list_ome_zarr_datasets`.

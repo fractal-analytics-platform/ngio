@@ -236,6 +236,8 @@ class ImagesContainer:
         ref_path: str | None = None,
         shape: Collection[int] | None = None,
         chunks: Collection[int] | None = None,
+        xy_scaling_factor: float = 2.0,
+        z_scaling_factor: float = 1.0,
         overwrite: bool = False,
     ) -> "ImagesContainer":
         """Create an OME-Zarr image from a numpy array."""
@@ -245,6 +247,8 @@ class ImagesContainer:
             ref_path=ref_path,
             shape=shape,
             chunks=chunks,
+            xy_scaling_factor=xy_scaling_factor,
+            z_scaling_factor=z_scaling_factor,
             overwrite=overwrite,
         )
 
@@ -314,6 +318,8 @@ def derive_image_container(
     ref_path: str | None = None,
     shape: Collection[int] | None = None,
     chunks: Collection[int] | None = None,
+    xy_scaling_factor: float = 2.0,
+    z_scaling_factor: float = 1.0,
     overwrite: bool = False,
 ) -> ImagesContainer:
     """Create an OME-Zarr image from a numpy array."""
@@ -347,8 +353,8 @@ def derive_image_container(
         z_spacing=ref_image.pixel_size.z,
         time_spacing=ref_image.pixel_size.t,
         levels=ref_meta.levels,
-        xy_scaling_factor=2.0,  # will need to be fixed
-        z_scaling_factor=1.0,  # will need to be fixed
+        xy_scaling_factor=xy_scaling_factor,
+        z_scaling_factor=z_scaling_factor,
         time_unit=ref_image.pixel_size.time_unit,
         space_unit=ref_image.pixel_size.space_unit,
         axes_names=ref_image.dataset.axes_mapper.on_disk_axes_names,

@@ -175,6 +175,8 @@ class OmeZarrContainer:
         ref_path: str | None = None,
         shape: Collection[int] | None = None,
         chunks: Collection[int] | None = None,
+        xy_scaling_factor: float = 2.0,
+        z_scaling_factor: float = 1.0,
         copy_tables: bool = False,
         copy_labels: bool = False,
         overwrite: bool = False,
@@ -191,6 +193,8 @@ class OmeZarrContainer:
             ref_path=ref_path,
             shape=shape,
             chunks=chunks,
+            xy_scaling_factor=xy_scaling_factor,
+            z_scaling_factor=z_scaling_factor,
             overwrite=overwrite,
         )
         return OmeZarrContainer(
@@ -281,15 +285,34 @@ class OmeZarrContainer:
             raise NgioValidationError("No labels found in the image.")
         return self._labels_container.get(name=name, path=path)
 
-    def derive_label(self, name: str, **kwargs) -> Label:
+    def derive_label(
+        self,
+        name: str,
+        ref_image: Image | None = None,
+        shape: Collection[int] | None = None,
+        chunks: Collection[int] | None = None,
+        dtype: str = "uint16",
+        xy_scaling_factor=2.0,
+        z_scaling_factor=1.0,
+        overwrite: bool = False,
+    ) -> Label:
         """Derive a label from an image."""
         if self._labels_container is None:
             raise NgioValidationError("No labels found in the image.")
 
-        ref_image = self.get_image()
-        return self._labels_container.derive(
-            name=name, reference_image=ref_image, **kwargs
+        if ref_image is None:
+            ref_image = self.get_image()
+        self._labels_container.derive(
+            name=name,
+            ref_image=ref_image,
+            shape=shape,
+            chunks=chunks,
+            dtype=dtype,
+            xy_scaling_factor=xy_scaling_factor,
+            z_scaling_factor=z_scaling_factor,
+            overwrite=overwrite,
         )
+        return self.get_label(name, path="0")
 
 
 def open_omezarr_container(

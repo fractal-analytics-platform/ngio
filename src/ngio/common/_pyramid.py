@@ -203,6 +203,7 @@ def init_empty_pyramid(
             dtype=dtype,
             chunks=chunks,
             dimension_separator="/",
+            overwrite=True,
         )
 
         # Todo redo this with when a proper build of pyramid is implemented
