@@ -1,8 +1,3 @@
-# ngio.core
+# ngio
 
-::: ngio.core
-    options:
-        members: no
-
-## NGFFImage
-::: ngio.core.NgffImage
+Work in progress! Sorry!
