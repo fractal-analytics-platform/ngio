@@ -171,17 +171,19 @@ class ImagesContainer:
             omero_kwargs(dict): Extra fields to store in the omero attributes.
         """
         low_res_dataset = self.meta.get_lowest_resolution_dataset()
-        ref = self.get(path=low_res_dataset.path)
+        ref_image = self.get(path=low_res_dataset.path)
 
         if percentiles is not None:
             start, end = compute_image_percentile(
-                ref, start_percentile=percentiles[0], end_percentile=percentiles[1]
+                ref_image,
+                start_percentile=percentiles[0],
+                end_percentile=percentiles[1],
             )
         else:
             start, end = None, None
 
         if labels is None:
-            labels = ref.num_channels
+            labels = ref_image.num_channels
 
         channel_meta = ChannelsMeta.default_init(
             labels=labels,
@@ -190,7 +192,7 @@ class ImagesContainer:
             start=start,
             end=end,
             active=active,
-            data_type=ref.dtype,
+            data_type=ref_image.dtype,
             **omero_kwargs,
         )
 
