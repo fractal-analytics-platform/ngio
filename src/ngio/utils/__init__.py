@@ -11,6 +11,7 @@ from ngio.utils._errors import (
     NgioValidationError,
     NgioValueError,
 )
+from ngio.utils._fractal_fsspec_store import fractal_fsspec_store
 from ngio.utils._logger import ngio_logger, set_logger_level
 from ngio.utils._zarr_utils import (
     AccessModeLiteral,
@@ -35,6 +36,8 @@ __all__ = [
     "ZarrGroupHandler",
     # Datasets
     "download_ome_zarr_dataset",
+    # Fractal
+    "fractal_fsspec_store",
     "list_ome_zarr_datasets",
     # Logger
     "ngio_logger",
