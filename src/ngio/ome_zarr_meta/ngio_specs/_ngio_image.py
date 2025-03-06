@@ -138,16 +138,16 @@ class AbstractNgioImageMeta:
         path: str | None = None,
         idx: int | None = None,
         pixel_size: PixelSize | None = None,
-        highest_resolution: bool = False,
         strict: bool = False,
     ) -> Dataset:
         """Get a dataset by its path, index or pixel size.
+
+        If all arguments are None, the dataset with the highest resolution is returned.
 
         Args:
             path(str): The path of the dataset.
             idx(int): The index of the dataset.
             pixel_size(PixelSize): The pixel size to search for.
-            highest_resolution(bool): If True, the dataset with the highest resolution
             strict(bool): If True, the pixel size must be exactly the same.
                 If pixel_size is None, strict is ignored.
         """
@@ -158,12 +158,11 @@ class AbstractNgioImageMeta:
                     path is not None,
                     idx is not None,
                     pixel_size is not None,
-                    highest_resolution,
                 ]
             )
-            != 1
+            > 1
         ):
-            raise NgioValueError("get_dataset must receive only one argument.")
+            raise NgioValueError("get_dataset must receive only one argument or None.")
 
         if path is not None:
             return self._get_dataset_by_path(path)
@@ -171,10 +170,8 @@ class AbstractNgioImageMeta:
             return self._get_dataset_by_index(idx)
         elif pixel_size is not None:
             return self._get_dataset_by_pixel_size(pixel_size, strict=strict)
-        elif highest_resolution:
-            return self.get_highest_resolution_dataset()
         else:
-            raise NgioValueError("get_dataset has no valid arguments.")
+            return self.get_highest_resolution_dataset()
 
     @classmethod
     def default_init(
@@ -231,6 +228,20 @@ class AbstractNgioImageMeta:
                 y=0.0,
                 z=0.0,
                 t=0.0,
+                space_unit=SpaceUnits.micrometer,
+                time_unit=TimeUnits.s,
+            ),
+            strict=False,
+        )
+
+    def get_lowest_resolution_dataset(self) -> Dataset:
+        """Get the dataset with the lowest resolution."""
+        return self._get_dataset_by_pixel_size(
+            pixel_size=PixelSize(
+                x=1000.0,
+                y=1000.0,
+                z=1000.0,
+                t=1000.0,
                 space_unit=SpaceUnits.micrometer,
                 time_unit=TimeUnits.s,
             ),

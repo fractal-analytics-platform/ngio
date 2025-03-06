@@ -26,10 +26,13 @@ def test_omezarr_container(tmp_path: Path, array_mode: str):
     assert omezarr.levels_paths == ["0", "1", "2"]
 
     image = omezarr.get_image()
+
     assert image.shape == (10, 20, 30)
     assert image.dtype == "uint8"
     assert image.chunks == (1, 20, 30)
     assert image.pixel_size.x == 0.5
+    assert image.meta.get_highest_resolution_dataset().path == "0"
+    assert image.meta.get_lowest_resolution_dataset().path == "2"
 
     array = image.get_array(
         x=slice(None), axes_order=["c", "z", "y", "x"], mode=array_mode

@@ -380,7 +380,7 @@ def test_image_meta():
     assert np.isclose(image_meta.z_scaling_factor, 1.0)
     assert image_meta.get_dataset(path="0").path == "0"
     assert image_meta.get_dataset(path="1").path == "1"
-    assert image_meta.get_dataset(highest_resolution=True).path == "0"
+    assert image_meta.get_dataset().path == "0"
     assert image_meta.get_dataset(pixel_size=datasets[-1].pixel_size).path == "3"
     assert image_meta.get_channel_idx(label="DAPI") == 0
     assert image_meta.get_channel_idx(wavelength_id="DAPI") == 0
@@ -426,7 +426,7 @@ def test_label_meta():
     assert np.isclose(label_meta.z_scaling_factor, 1.0)
     assert label_meta.get_dataset(path="0").path == "0"
     assert label_meta.get_dataset(path="1").path == "1"
-    assert label_meta.get_dataset(highest_resolution=True).path == "0"
+    assert label_meta.get_dataset().path == "0"
     assert label_meta.get_dataset(pixel_size=datasets[-1].pixel_size).path == "3"
 
 

@@ -170,7 +170,8 @@ class ImagesContainer:
                 be shown by default.
             omero_kwargs(dict): Extra fields to store in the omero attributes.
         """
-        ref = self.get()
+        low_res_dataset = self.meta.get_lowest_resolution_dataset()
+        ref = self.get(path=low_res_dataset.path)
 
         if percentiles is not None:
             start, end = compute_image_percentile(
@@ -206,9 +207,10 @@ class ImagesContainer:
         if self.meta._channels_meta is None:
             raise NgioValidationError("The channels meta is not initialized.")
 
-        image = self.get()
+        low_res_dataset = self.meta.get_lowest_resolution_dataset()
+        ref_image = self.get(path=low_res_dataset.path)
         starts, ends = compute_image_percentile(
-            image, start_percentile=start_percentile, end_percentile=end_percentile
+            ref_image, start_percentile=start_percentile, end_percentile=end_percentile
         )
 
         channels = []
@@ -256,13 +258,20 @@ class ImagesContainer:
         self,
         path: str | None = None,
         pixel_size: PixelSize | None = None,
-        highest_resolution: bool = True,
+        strict: bool = False,
     ) -> Image:
-        """Get an image at a specific level."""
-        if path is not None or pixel_size is not None:
-            highest_resolution = False
+        """Get an image at a specific level.
+
+        Args:
+            path (str | None): The path to the image in the omezarr file.
+            pixel_size (PixelSize | None): The pixel size of the image.
+            strict (bool): Only used if the pixel size is provided. If True, the
+                pixel size must match the image pixel size exactly. If False, the
+                closest pixel size level will be returned.
+
+        """
         dataset = self._meta_handler.meta.get_dataset(
-            path=path, pixel_size=pixel_size, highest_resolution=highest_resolution
+            path=path, pixel_size=pixel_size, strict=strict
         )
         return Image(
             group_handler=self._group_handler,

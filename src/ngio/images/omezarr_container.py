@@ -160,13 +160,20 @@ class OmeZarrContainer:
         self,
         path: str | None = None,
         pixel_size: PixelSize | None = None,
-        highest_resolution: bool = True,
+        strict: bool = False,
     ) -> Image:
-        """Get an image at a specific level."""
+        """Get an image at a specific level.
+
+        Args:
+            path (str | None): The path to the image in the omezarr file.
+            pixel_size (PixelSize | None): The pixel size of the image.
+            strict (bool): Only used if the pixel size is provided. If True, the
+                pixel size must match the image pixel size exactly. If False, the
+                closest pixel size level will be returned.
+
+        """
         return self._images_container.get(
-            path=path,
-            pixel_size=pixel_size,
-            highest_resolution=highest_resolution,
+            path=path, pixel_size=pixel_size, strict=strict
         )
 
     def derive_image(
@@ -279,11 +286,28 @@ class OmeZarrContainer:
             return []
         return self._labels_container.list()
 
-    def get_label(self, name: str, path: str) -> Label:
-        """Get a label from the image."""
+    def get_label(
+        self,
+        name: str,
+        path: str | None = None,
+        pixel_size: PixelSize | None = None,
+        strict: bool = False,
+    ) -> Label:
+        """Get a label from the group.
+
+        Args:
+            name (str): The name of the label.
+            path (str | None): The path to the image in the omezarr file.
+            pixel_size (PixelSize | None): The pixel size of the image.
+            strict (bool): Only used if the pixel size is provided. If True, the
+                pixel size must match the image pixel size exactly. If False, the
+                closest pixel size level will be returned.
+        """
         if self._labels_container is None:
             raise NgioValidationError("No labels found in the image.")
-        return self._labels_container.get(name=name, path=path)
+        return self._labels_container.get(
+            name=name, path=path, pixel_size=pixel_size, strict=strict
+        )
 
     def derive_label(
         self,
@@ -334,17 +358,29 @@ def open_image(
     store: StoreOrGroup,
     path: str | None = None,
     pixel_size: PixelSize | None = None,
-    highest_resolution: bool = False,
+    strict: bool = True,
     cache: bool = False,
     mode: AccessModeLiteral = "r+",
 ) -> Image:
-    """Open a single level image from an OME-Zarr image."""
+    """Open a single level image from an OME-Zarr image.
+
+    Args:
+        store (StoreOrGroup): The Zarr store or group to create the image in.
+        path (str | None): The path to the image in the omezarr file.
+        pixel_size (PixelSize | None): The pixel size of the image.
+        strict (bool): Only used if the pixel size is provided. If True, the
+                pixel size must match the image pixel size exactly. If False, the
+                closest pixel size level will be returned.
+        cache (bool): Whether to use a cache for the zarr group metadata.
+        mode (AccessModeLiteral): The
+            access mode for the image. Defaults to "r+".
+    """
     group_handler = ZarrGroupHandler(store, cache, mode)
     images_container = ImagesContainer(group_handler)
     return images_container.get(
         path=path,
         pixel_size=pixel_size,
-        highest_resolution=highest_resolution,
+        strict=strict,
     )
 
 

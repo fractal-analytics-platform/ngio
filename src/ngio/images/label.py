@@ -10,6 +10,7 @@ from ngio.ome_zarr_meta import (
     ImplementedLabelMetaHandlers,
     LabelMetaHandler,
     NgioLabelMeta,
+    PixelSize,
 )
 from ngio.ome_zarr_meta.ngio_specs import SpaceUnits, TimeUnits
 from ngio.utils import (
@@ -86,10 +87,37 @@ class LabelsContainer:
         attrs = self._group_handler.load_attrs()
         return attrs.get("labels", [])
 
-    def get(self, name: str, path: str) -> Label:
+    def _get(self, name: str, path: str) -> Label:
         """Get a label from the group."""
         group_handler = self._group_handler.derive_handler(name)
         return Label(group_handler, path, None)
+
+    def get(
+        self,
+        name: str,
+        path: str | None = None,
+        pixel_size: PixelSize | None = None,
+        strict: bool = False,
+    ) -> Label:
+        """Get a label from the group.
+
+        Args:
+            name (str): The name of the label.
+            path (str | None): The path to the image in the omezarr file.
+            pixel_size (PixelSize | None): The pixel size of the image.
+            strict (bool): Only used if the pixel size is provided. If True, the
+                pixel size must match the image pixel size exactly. If False, the
+                closest pixel size level will be returned.
+
+        """
+        group_handler = self._group_handler.derive_handler(name)
+        label_meta_handler = ImplementedLabelMetaHandlers().find_meta_handler(
+            group_handler
+        )
+        path = label_meta_handler.meta.get_dataset(
+            path=path, pixel_size=pixel_size, strict=strict
+        ).path
+        return Label(group_handler, path, label_meta_handler)
 
     def derive(
         self,
