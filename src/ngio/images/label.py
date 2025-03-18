@@ -149,6 +149,7 @@ class LabelsContainer:
             xy_scaling_factor=xy_scaling_factor,
             z_scaling_factor=z_scaling_factor,
             overwrite=overwrite,
+            name=name,
         )
 
         if name not in existing_labels:
@@ -214,6 +215,7 @@ def _derive_label(
     dtype: str = "uint16",
     xy_scaling_factor=2.0,
     z_scaling_factor=1.0,
+    name: str | None = None,
     overwrite: bool = False,
 ) -> None:
     """Create an OME-Zarr image from a numpy array."""
@@ -260,5 +262,6 @@ def _derive_label(
         dtype=dtype,
         overwrite=overwrite,
         version=ref_meta.version,
+        name=name,
     )
     return None

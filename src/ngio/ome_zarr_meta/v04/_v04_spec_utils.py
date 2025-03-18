@@ -301,10 +301,11 @@ def v04_to_ngio_label_meta(
     )
 
 
-def _ngio_to_v04_multiscale(datasets: list[Dataset]) -> MultiscaleV04:
+def _ngio_to_v04_multiscale(name: str | None, datasets: list[Dataset]) -> MultiscaleV04:
     """Convert a ngio multiscale to a v04 multiscale.
 
     Args:
+        name (str | None): The name of the multiscale.
         datasets (list[Dataset]): The ngio datasets.
 
     Returns:
@@ -340,9 +341,7 @@ def _ngio_to_v04_multiscale(datasets: list[Dataset]) -> MultiscaleV04:
             DatasetV04(path=dataset.path, coordinateTransformations=transform)
         )
     return MultiscaleV04(
-        axes=v04_axes,
-        datasets=tuple(v04_datasets),
-        version="0.4",
+        axes=v04_axes, datasets=tuple(v04_datasets), version="0.4", name=name
     )
 
 
@@ -387,11 +386,13 @@ def ngio_to_v04_image_meta(metadata: NgioImageMeta) -> dict:
     Returns:
         dict: The v04 image metadata.
     """
-    v04_muliscale = _ngio_to_v04_multiscale(metadata.datasets)
+    v04_muliscale = _ngio_to_v04_multiscale(
+        name=metadata.name, datasets=metadata.datasets
+    )
     v04_omero = _ngio_to_v04_omero(metadata._channels_meta)
 
     v04_image = ImageAttrsV04(multiscales=[v04_muliscale], omero=v04_omero)
-    return v04_image.model_dump(exclude_none=True)
+    return v04_image.model_dump(exclude_none=True, by_alias=True)
 
 
 def ngio_to_v04_label_meta(metadata: NgioLabelMeta) -> dict:
@@ -403,10 +404,12 @@ def ngio_to_v04_label_meta(metadata: NgioLabelMeta) -> dict:
     Returns:
         dict: The v04 image metadata.
     """
-    v04_muliscale = _ngio_to_v04_multiscale(metadata.datasets)
-    v04_label = LabelAttrsV04(
-        multiscales=[v04_muliscale],
-        # image_label is aliased as 'imae-label'
-        image_label=metadata.image_label.model_dump(),  # type: ignore
+    v04_muliscale = _ngio_to_v04_multiscale(
+        name=metadata.name, datasets=metadata.datasets
     )
-    return v04_label.model_dump(exclude_none=True)
+    labels_meta = {
+        "multiscales": [v04_muliscale],
+        "image-label": metadata.image_label.model_dump(),
+    }
+    v04_label = LabelAttrsV04(**labels_meta)
+    return v04_label.model_dump(exclude_none=True, by_alias=True)
