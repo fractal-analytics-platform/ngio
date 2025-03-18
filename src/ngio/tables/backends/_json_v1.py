@@ -13,7 +13,7 @@ class JsonTableBackend(AbstractTableBackend):
     @staticmethod
     def backend_name() -> str:
         """The name of the backend."""
-        return "json_v1"
+        return "experimental_json_v1"
 
     @staticmethod
     def implements_anndata() -> bool:
