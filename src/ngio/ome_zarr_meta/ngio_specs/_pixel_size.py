@@ -1,5 +1,8 @@
 """Fractal internal module for dataset metadata handling."""
 
+import math
+from functools import total_ordering
+
 import numpy as np
 
 from ngio.ome_zarr_meta.ngio_specs import SpaceUnits, TimeUnits
@@ -20,6 +23,7 @@ def _validate_type(value: float, name: str) -> float:
     return float(value)
 
 
+@total_ordering
 class PixelSize:
     """PixelSize class to store the pixel size in 3D space."""
 
@@ -50,9 +54,34 @@ class PixelSize:
         """Return a string representation of the pixel size."""
         return f"PixelSize(x={self.x}, y={self.y}, z={self.z}, t={self.t})"
 
+    def __eq__(self, other) -> bool:
+        """Check if two pixel sizes are equal."""
+        if not isinstance(other, PixelSize):
+            raise TypeError("Can only compare PixelSize with PixelSize.")
+
+        if self.time_unit != other.time_unit:
+            return False
+
+        if self.space_unit != other.space_unit:
+            return False
+
+        return math.isclose(self.distance(other), 0)
+
+    def __lt__(self, other: "PixelSize") -> bool:
+        """Check if one pixel size is less than the other."""
+        if not isinstance(other, PixelSize):
+            raise TypeError("Can only compare PixelSize with PixelSize.")
+        ref = PixelSize(0, 0, 0, 0, self.space_unit, self.time_unit)
+        return self.distance(ref) < other.distance(ref)
+
     def as_dict(self) -> dict:
         """Return the pixel size as a dictionary."""
         return {"t": self.t, "z": self.z, "y": self.y, "x": self.x}
+
+    @property
+    def tzyx(self) -> tuple[float, float, float, float]:
+        """Return the voxel size in t, z, y, x order."""
+        return self.t, self.z, self.y, self.x
 
     @property
     def zyx(self) -> tuple[float, float, float]:
@@ -80,5 +109,5 @@ class PixelSize:
         return self.t
 
     def distance(self, other: "PixelSize") -> float:
-        """Return the distance between two pixel sizes in 3D space."""
-        return float(np.linalg.norm(np.array(self.zyx) - np.array(other.zyx)))
+        """Return the distance between two pixel sizes."""
+        return float(np.linalg.norm(np.array(self.tzyx) - np.array(other.tzyx)))

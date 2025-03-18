@@ -14,8 +14,6 @@ import numpy as np
 from pydantic import BaseModel
 
 from ngio.ome_zarr_meta.ngio_specs._axes import (
-    SpaceUnits,
-    TimeUnits,
     canonical_axes,
 )
 from ngio.ome_zarr_meta.ngio_specs._channels import Channel, ChannelsMeta
@@ -56,122 +54,13 @@ class AbstractNgioImageMeta:
             raise NgioValidationError("At least one dataset must be provided.")
 
         self._datasets = datasets
+        self._axes_mapper = datasets[0].axes_mapper
 
     def __repr__(self):
         class_name = type(self).__name__
         paths = [dataset.path for dataset in self.datasets]
-        on_disk_axes = self.datasets[0].axes_mapper.on_disk_axes_names
-        return (
-            f"{class_name}(name={self.name}, "
-            f"datasets={paths}, "
-            f"on_disk_axes={on_disk_axes})"
-        )
-
-    @property
-    def version(self) -> NgffVersion:
-        """Version of the OME-NFF metadata used to build the object."""
-        return self._version
-
-    @property
-    def name(self) -> str | None:
-        """Name of the image."""
-        return self._name
-
-    @property
-    def datasets(self) -> list[Dataset]:
-        """List of datasets in the multiscale."""
-        return self._datasets
-
-    @property
-    def levels(self) -> int:
-        """Number of levels in the multiscale."""
-        return len(self.datasets)
-
-    @property
-    def paths(self) -> list[str]:
-        """List of paths of the datasets."""
-        return [dataset.path for dataset in self.datasets]
-
-    def _get_dataset_by_path(self, path: str) -> Dataset:
-        """Get a dataset by its path."""
-        for dataset in self.datasets:
-            if dataset.path == path:
-                return dataset
-        raise NgioValueError(f"Dataset with path {path} not found.")
-
-    def _get_dataset_by_index(self, idx: int) -> Dataset:
-        """Get a dataset by its index."""
-        if idx < 0 or idx >= len(self.datasets):
-            raise NgioValueError(f"Index {idx} out of range.")
-        return self.datasets[idx]
-
-    def _get_dataset_by_pixel_size(
-        self, pixel_size: PixelSize, strict: bool = False, tol: float = 1e-6
-    ) -> Dataset:
-        """Get a dataset with the closest pixel size.
-
-        Args:
-            pixel_size(PixelSize): The pixel size to search for.
-            strict(bool): If True, the pixel size must smaller than tol.
-            tol(float): Any pixel size with a distance less than tol will be considered.
-        """
-        min_dist = np.inf
-
-        closest_dataset = None
-        for dataset in self.datasets:
-            dist = dataset.pixel_size.distance(pixel_size)
-            if dist < min_dist:
-                min_dist = dist
-                closest_dataset = dataset
-
-        if closest_dataset is None:
-            raise NgioValueError("No dataset found.")
-
-        if strict and min_dist > tol:
-            raise NgioValueError("No dataset with a pixel size close enough.")
-
-        return closest_dataset
-
-    def get_dataset(
-        self,
-        *,
-        path: str | None = None,
-        idx: int | None = None,
-        pixel_size: PixelSize | None = None,
-        strict: bool = False,
-    ) -> Dataset:
-        """Get a dataset by its path, index or pixel size.
-
-        If all arguments are None, the dataset with the highest resolution is returned.
-
-        Args:
-            path(str): The path of the dataset.
-            idx(int): The index of the dataset.
-            pixel_size(PixelSize): The pixel size to search for.
-            strict(bool): If True, the pixel size must be exactly the same.
-                If pixel_size is None, strict is ignored.
-        """
-        # Only one of the arguments must be provided
-        if (
-            sum(
-                [
-                    path is not None,
-                    idx is not None,
-                    pixel_size is not None,
-                ]
-            )
-            > 1
-        ):
-            raise NgioValueError("get_dataset must receive only one argument or None.")
-
-        if path is not None:
-            return self._get_dataset_by_path(path)
-        elif idx is not None:
-            return self._get_dataset_by_index(idx)
-        elif pixel_size is not None:
-            return self._get_dataset_by_pixel_size(pixel_size, strict=strict)
-        else:
-            return self.get_highest_resolution_dataset()
+        on_disk_axes = self.axes_mapper.on_disk_axes_names
+        return f"{class_name}(name={self.name}, datasets={paths}, axes={on_disk_axes})"
 
     @classmethod
     def default_init(
@@ -220,64 +109,186 @@ class AbstractNgioImageMeta:
             datasets=datasets,
         )
 
-    def get_highest_resolution_dataset(self) -> Dataset:
-        """Get the dataset with the highest resolution."""
-        return self._get_dataset_by_pixel_size(
-            pixel_size=PixelSize(
-                x=0.0,
-                y=0.0,
-                z=0.0,
-                t=0.0,
-                space_unit=SpaceUnits.micrometer,
-                time_unit=TimeUnits.s,
-            ),
-            strict=False,
-        )
+    @property
+    def version(self) -> NgffVersion:
+        """Version of the OME-NFF metadata used to build the object."""
+        return self._version
+
+    @property
+    def name(self) -> str | None:
+        """Name of the image."""
+        return self._name
+
+    @property
+    def datasets(self) -> list[Dataset]:
+        """List of datasets in the multiscale."""
+        return self._datasets
+
+    @property
+    def axes_mapper(self):
+        """Return the axes mapper."""
+        return self._axes_mapper
+
+    @property
+    def levels(self) -> int:
+        """Number of levels in the multiscale."""
+        return len(self.datasets)
+
+    @property
+    def paths(self) -> list[str]:
+        """List of paths of the datasets."""
+        return [dataset.path for dataset in self.datasets]
+
+    def _get_dataset_by_path(self, path: str) -> Dataset:
+        """Get a dataset by its path."""
+        for dataset in self.datasets:
+            if dataset.path == path:
+                return dataset
+        raise NgioValueError(f"Dataset with path {path} not found.")
+
+    def _get_dataset_by_index(self, idx: int) -> Dataset:
+        """Get a dataset by its index."""
+        if idx < 0 or idx >= len(self.datasets):
+            raise NgioValueError(f"Index {idx} out of range.")
+        return self.datasets[idx]
+
+    def _find_closest_dataset(
+        self, pixel_size: PixelSize, mode: str = "any"
+    ) -> Dataset | None:
+        """Find the closest dataset to the given pixel size.
+
+        Args:
+            pixel_size(PixelSize): The pixel size to search for.
+            mode(str): The mode to find the closest dataset.
+                "any": Will find the closest dataset.
+                "lr": Will find closest "lower" resolution dataset.
+                "hr": Will find closest "higher" resolution
+        """
+        min_dist = np.inf
+        closest_dataset = None
+
+        if mode == "any":
+            datasets = self.datasets
+        elif mode == "lr":
+            # Lower resolution means that the pixel size is larger.
+            datasets = [d for d in self.datasets if d.pixel_size > pixel_size]
+        elif mode == "hr":
+            # Higher resolution means that the pixel size is smaller.
+            datasets = [d for d in self.datasets if d.pixel_size < pixel_size]
+        else:
+            raise NgioValueError(f"Mode {mode} not recognized.")
+
+        for d in datasets:
+            dist = d.pixel_size.distance(pixel_size)
+            if dist < min_dist:
+                min_dist = dist
+                closest_dataset = d
+
+        return closest_dataset
+
+    def _get_closest_dataset(
+        self, pixel_size: PixelSize, strict: bool = False
+    ) -> Dataset:
+        """Get a dataset with the closest pixel size.
+
+        Args:
+            pixel_size(PixelSize): The pixel size to search for.
+            strict(bool): If True, the pixel size must be exactly the same.
+        """
+        closest_dataset = self._find_closest_dataset(pixel_size, mode="any")
+
+        if closest_dataset is None:
+            raise NgioValueError("No dataset found.")
+
+        if strict and closest_dataset.pixel_size != pixel_size:
+            raise NgioValueError(
+                "No dataset with a pixel size close enough. "
+                "Best match is "
+                f"{closest_dataset.path}:{closest_dataset.pixel_size}"
+            )
+        return closest_dataset
 
     def get_lowest_resolution_dataset(self) -> Dataset:
         """Get the dataset with the lowest resolution."""
-        return self._get_dataset_by_pixel_size(
-            pixel_size=PixelSize(
-                x=1000.0,
-                y=1000.0,
-                z=1000.0,
-                t=1000.0,
-                space_unit=SpaceUnits.micrometer,
-                time_unit=TimeUnits.s,
-            ),
-            strict=False,
-        )
+        dataset = self.datasets[-1]
+        while True:
+            lower_res_dataset = self._find_closest_dataset(
+                dataset.pixel_size, mode="lr"
+            )
+            if lower_res_dataset is None:
+                break
+            dataset = lower_res_dataset
+        return dataset
 
-    def get_scaling_factor(self, axis_name: str) -> float:
-        """Get the scaling factors of the dataset."""
+    def get_highest_resolution_dataset(self) -> Dataset:
+        """Get the dataset with the highest resolution."""
+        dataset = self.datasets[0]
+        while True:
+            higher_res_dataset = self._find_closest_dataset(
+                dataset.pixel_size, mode="hr"
+            )
+            if higher_res_dataset is None:
+                break
+            dataset = higher_res_dataset
+        return dataset
+
+    def get_dataset(
+        self,
+        *,
+        path: str | None = None,
+        idx: int | None = None,
+        pixel_size: PixelSize | None = None,
+        strict: bool = False,
+    ) -> Dataset:
+        """Get a dataset by its path, index or pixel size.
+
+        If all arguments are None, the dataset with the highest resolution is returned.
+
+        Args:
+            path(str): The path of the dataset.
+            idx(int): The index of the dataset.
+            pixel_size(PixelSize): The pixel size to search for.
+            strict(bool): If True, the pixel size must be exactly the same.
+                If pixel_size is None, strict is ignored.
+        """
+        # Only one of the arguments must be provided
+        if (
+            sum(
+                [
+                    path is not None,
+                    idx is not None,
+                    pixel_size is not None,
+                ]
+            )
+            > 1
+        ):
+            raise NgioValueError("get_dataset must receive only one argument or None.")
+
+        if path is not None:
+            return self._get_dataset_by_path(path)
+        elif idx is not None:
+            return self._get_dataset_by_index(idx)
+        elif pixel_size is not None:
+            return self._get_closest_dataset(pixel_size, strict=strict)
+        else:
+            return self.get_highest_resolution_dataset()
+
+    def scaling_factor(self, path: str | None = None) -> list[float]:
+        """Get the scaling factors from a dataset to its lower resolution."""
+        dataset = self.get_dataset(path=path)
+        lr_dataset = self._find_closest_dataset(dataset.pixel_size, mode="lr")
+        if lr_dataset is None:
+            raise NgioValueError(
+                "No lower resolution dataset found. "
+                "This is the lowest resolution dataset."
+            )
+
         scaling_factors = []
-        for d1, d2 in zip(self.datasets[1:], self.datasets[:-1], strict=True):
-            scale_d1 = d1.get_scale(axis_name)
-            scale_d2 = d2.get_scale(axis_name)
-            scaling_factors.append(scale_d1 / scale_d2)
-
-        if not np.allclose(scaling_factors, scaling_factors[0]):
-            raise NgioValidationError(
-                f"Inconsistent scaling factors are not supported. {scaling_factors}"
-            )
-        return scaling_factors[0]
-
-    @property
-    def xy_scaling_factor(self) -> float:
-        """Get the xy scaling factor of the dataset."""
-        x_scaling_factors = self.get_scaling_factor("x")
-        y_scaling_factors = self.get_scaling_factor("y")
-        if not np.isclose(x_scaling_factors, y_scaling_factors):
-            raise NgioValidationError(
-                "Inconsistent scaling factors are not supported. "
-                f"{x_scaling_factors}, {y_scaling_factors}"
-            )
-        return x_scaling_factors
-
-    @property
-    def z_scaling_factor(self) -> float:
-        """Get the z scaling factor of the dataset."""
-        return self.get_scaling_factor("z")
+        for ax_name in self.axes_mapper.on_disk_axes_names:
+            s_d = dataset.get_scale(ax_name)
+            s_lr_d = lr_dataset.get_scale(ax_name)
+            scaling_factors.append(s_lr_d / s_d)
+        return scaling_factors
 
 
 class NgioLabelMeta(AbstractNgioImageMeta):
@@ -294,7 +305,7 @@ class NgioLabelMeta(AbstractNgioImageMeta):
         super().__init__(version, name, datasets)
 
         # Make sure that there are no channel axes
-        channel_axis = self.datasets[0].axes_mapper.get_axis("c")
+        channel_axis = self.axes_mapper.get_axis("c")
         if channel_axis is not None:
             raise NgioValidationError("Label metadata must not have channel axes.")
 
