@@ -99,7 +99,6 @@ class ImplementedTables:
                 return table
             except Exception as e:
                 _errors[name] = e
-        print(_errors)
         # If no table was found, we can try to load the table from a generic table
         try:
             table = GenericTable._from_handler(
