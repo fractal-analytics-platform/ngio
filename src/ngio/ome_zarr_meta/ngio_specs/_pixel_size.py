@@ -32,7 +32,7 @@ class PixelSize:
         x: float,
         y: float,
         z: float,
-        t: float = 0,
+        t: float = 1,
         space_unit: SpaceUnits = SpaceUnits.micrometer,
         time_unit: TimeUnits | None = TimeUnits.s,
     ):
@@ -59,12 +59,15 @@ class PixelSize:
         if not isinstance(other, PixelSize):
             raise TypeError("Can only compare PixelSize with PixelSize.")
 
-        if self.time_unit != other.time_unit:
+        if (
+            self.time_unit is not None
+            and other.time_unit is None
+            and self.time_unit != other.time_unit
+        ):
             return False
 
         if self.space_unit != other.space_unit:
             return False
-
         return math.isclose(self.distance(other), 0)
 
     def __lt__(self, other: "PixelSize") -> bool:
