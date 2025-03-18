@@ -4,8 +4,10 @@ This class follows the roi_table specification at:
 https://fractal-analytics-platform.github.io/fractal-tasks-core/tables/
 """
 
+# Import _type to avoid name conflict with table.type
+from builtins import type as _type
 from collections.abc import Iterable
-from typing import Literal
+from typing import Generic, Literal, TypeVar
 
 import pandas as pd
 from pydantic import BaseModel
@@ -97,17 +99,37 @@ class ROITableV1Meta(BaseModel):
     backend: str | None = None
 
 
-class RoiTableV1:
-    """Class to handle fractal ROI tables.
+class RegionMeta(BaseModel):
+    """Metadata for the region."""
 
-    To know more about the ROI table format, please refer to the
-    specification at:
-    https://fractal-analytics-platform.github.io/fractal-tasks-core/tables/
-    """
+    path: str
 
-    def __init__(self, rois: Iterable[WorldCooROI] | None = None) -> None:
+
+class MaskingROITableV1Meta(BaseModel):
+    """Metadata for the ROI table."""
+
+    fractal_table_version: Literal["1"] = "1"
+    type: Literal["masking_roi_table"] = "masking_roi_table"
+    backend: str | None = None
+    region: RegionMeta | None = None
+    instance_key: str = "label"
+
+
+_roi_meta = TypeVar("_roi_meta", ROITableV1Meta, MaskingROITableV1Meta)
+
+
+class _GenericROITableV1(Generic[_roi_meta]):
+    """Class to a non-specific table."""
+
+    _meta: _roi_meta
+
+    def __init__(
+        self, meta: _roi_meta | None = None, rois: Iterable[WorldCooROI] | None = None
+    ) -> None:
         """Create a new ROI table."""
-        self._meta = ROITableV1Meta()
+        if meta is None:
+            raise ValueError("Metadata must be provided.")
+        self._meta = meta
         self._table_backend = None
 
         self._rois = {}
@@ -115,14 +137,29 @@ class RoiTableV1:
             self.add(rois)
 
     @staticmethod
-    def type() -> Literal["roi_table"]:
+    def type() -> str:
         """Return the type of the table."""
-        return "roi_table"
+        raise NotImplementedError
 
     @staticmethod
     def version() -> Literal["1"]:
         """Return the version of the fractal table."""
         return "1"
+
+    @staticmethod
+    def _index_key() -> str:
+        """Return the index key of the table."""
+        raise NotImplementedError
+
+    @staticmethod
+    def _index_type() -> Literal["int", "str"]:
+        """Return the index type of the table."""
+        raise NotImplementedError
+
+    @staticmethod
+    def _meta_type() -> _type[_roi_meta]:
+        """Return the metadata type of the table."""
+        raise NotImplementedError
 
     @property
     def backend_name(self) -> str | None:
@@ -134,23 +171,23 @@ class RoiTableV1:
     @classmethod
     def _from_handler(
         cls, handler: ZarrGroupHandler, backend_name: str | None = None
-    ) -> "RoiTableV1":
+    ) -> "_GenericROITableV1":
         """Create a new ROI table from a Zarr store."""
-        meta = ROITableV1Meta(**handler.load_attrs())
+        meta = cls._meta_type()(**handler.load_attrs())
 
         if backend_name is None:
             backend = ImplementedTableBackends().get_backend(
                 backend_name=meta.backend,
                 group_handler=handler,
-                index_key="FieldIndex",
-                index_type="str",
+                index_key=cls._index_key(),
+                index_type=cls._index_type(),
             )
         else:
             backend = ImplementedTableBackends().get_backend(
                 backend_name=backend_name,
                 group_handler=handler,
-                index_key="FieldIndex",
-                index_type="str",
+                index_key=cls._index_key(),
+                index_type=cls._index_type(),
             )
             meta.backend = backend_name
 
@@ -159,6 +196,7 @@ class RoiTableV1:
                 "The backend does not implement the dataframe protocol."
             )
 
+        # This will be implemented in the child classes
         table = cls()
         table._meta = meta
         table._table_backend = backend
@@ -181,8 +219,8 @@ class RoiTableV1:
         backend = ImplementedTableBackends().get_backend(
             backend_name=backend_name,
             group_handler=handler,
-            index_key="FieldIndex",
-            index_type="str",
+            index_key=self._index_key(),
+            index_type=self._index_type(),
         )
         self._meta.backend = backend_name
         self._table_backend = backend
@@ -190,12 +228,6 @@ class RoiTableV1:
     def rois(self) -> list[WorldCooROI]:
         """List all ROIs in the table."""
         return list(self._rois.values())
-
-    def get(self, roi_name: str) -> WorldCooROI:
-        """Get an ROI from the table."""
-        if roi_name not in self._rois:
-            raise NgioValueError(f"ROI {roi_name} not found in the table.")
-        return self._rois[roi_name]
 
     def add(self, roi: WorldCooROI | Iterable[WorldCooROI]) -> None:
         """Append ROIs to the current table."""
@@ -215,7 +247,7 @@ class RoiTableV1:
                 "Please add the table to a OME-Zarr Image before calling consolidate."
             )
 
-        dataframe = _rois_to_dataframe(self._rois, index_key="FieldIndex")
+        dataframe = _rois_to_dataframe(self._rois, index_key=self._index_key())
         dataframe = validate_columns(
             dataframe,
             required_columns=REQUIRED_COLUMNS,
@@ -224,3 +256,89 @@ class RoiTableV1:
         self._table_backend.write_from_dataframe(
             dataframe, metadata=self._meta.model_dump(exclude_none=True)
         )
+
+
+class RoiTableV1(_GenericROITableV1[ROITableV1Meta]):
+    """Class to handle fractal ROI tables.
+
+    To know more about the ROI table format, please refer to the
+    specification at:
+    https://fractal-analytics-platform.github.io/fractal-tasks-core/tables/
+    """
+
+    def __init__(self, rois: Iterable[WorldCooROI] | None = None) -> None:
+        """Create a new ROI table."""
+        super().__init__(ROITableV1Meta(), rois)
+
+    @staticmethod
+    def type() -> Literal["roi_table"]:
+        """Return the type of the table."""
+        return "roi_table"
+
+    @staticmethod
+    def _index_key() -> str:
+        """Return the index key of the table."""
+        return "FieldIndex"
+
+    @staticmethod
+    def _index_type() -> Literal["int", "str"]:
+        """Return the index type of the table."""
+        return "str"
+
+    @staticmethod
+    def _meta_type() -> _type[ROITableV1Meta]:
+        """Return the metadata type of the table."""
+        return ROITableV1Meta
+
+    def get(self, roi_name: str) -> WorldCooROI:
+        """Get an ROI from the table."""
+        if roi_name not in self._rois:
+            raise NgioValueError(f"ROI {roi_name} not found in the table.")
+        return self._rois[roi_name]
+
+
+class MaskingROITableV1(_GenericROITableV1[MaskingROITableV1Meta]):
+    """Class to handle fractal ROI tables.
+
+    To know more about the ROI table format, please refer to the
+    specification at:
+    https://fractal-analytics-platform.github.io/fractal-tasks-core/tables/
+    """
+
+    def __init__(
+        self,
+        rois: Iterable[WorldCooROI] | None = None,
+        reference_label: str | None = None,
+    ) -> None:
+        """Create a new ROI table."""
+        meta = MaskingROITableV1Meta()
+        if reference_label is not None:
+            meta.region = RegionMeta(path=reference_label)
+        super().__init__(meta, rois)
+
+    @staticmethod
+    def type() -> Literal["masking_roi_table"]:
+        """Return the type of the table."""
+        return "masking_roi_table"
+
+    @staticmethod
+    def _index_key() -> str:
+        """Return the index key of the table."""
+        return "label"
+
+    @staticmethod
+    def _index_type() -> Literal["int", "str"]:
+        """Return the index type of the table."""
+        return "int"
+
+    @staticmethod
+    def _meta_type() -> _type[MaskingROITableV1Meta]:
+        """Return the metadata type of the table."""
+        return MaskingROITableV1Meta
+
+    def get(self, label: int) -> WorldCooROI:
+        """Get an ROI from the table."""
+        _label = str(label)
+        if _label not in self._rois:
+            raise KeyError(f"ROI {_label} not found in the table.")
+        return self._rois[_label]

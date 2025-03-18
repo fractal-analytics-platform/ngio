@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 
 from ngio.tables.tables_container import open_table, write_table
-from ngio.tables.v1._masking_roi_table import MaskingROITableV1, WorldCooROI
+from ngio.tables.v1._roi_table import MaskingROITableV1, WorldCooROI
 from ngio.utils import NgioValueError
 
 
