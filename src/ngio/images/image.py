@@ -339,7 +339,6 @@ def compute_image_percentile(
 
         starts.append(float(_s_perc))
         ends.append(float(_e_perc))
-
     return starts, ends
 
 

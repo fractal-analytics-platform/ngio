@@ -354,7 +354,7 @@ class OmeZarrContainer:
     def derive_label(
         self,
         name: str,
-        ref_image: Image,
+        ref_image: Image | None = None,
         shape: Collection[int] | None = None,
         pixel_size: PixelSize | None = None,
         axes_names: Collection[str] | None = None,

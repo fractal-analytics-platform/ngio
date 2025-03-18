@@ -60,6 +60,14 @@ def test_omezarr_container(tmp_path: Path, array_mode: str):
     new_image = new_omezarr.get_image()
     assert new_image.shape == image.shape
 
+    new_label = new_omezarr.derive_label("new_label")
+    assert new_label.shape == image.shape
+    assert new_label.meta.axes_mapper.on_disk_axes_names == ["z", "y", "x"]
+
+    assert new_omezarr.list_labels() == ["new_label"]
+    assert new_omezarr.list_tables() == []
+    assert new_omezarr.list_roi_tables() == []
+
 
 def test_create_omezarr_container(tmp_path: Path):
     # Very basic test to check if the container is working

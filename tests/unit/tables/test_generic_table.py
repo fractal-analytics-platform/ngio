@@ -53,4 +53,4 @@ def test_generic_anndata_table(tmp_path: Path, backend: str):
     loaded_df = loaded_table.dataframe
     assert set(loaded_df.columns) == {"a", "b", "c"}
 
-    np.testing.assert_allclose(loaded_ad.obsm["test"], test_obsm)
+    np.testing.assert_allclose(loaded_ad.obsm["test"], test_obsm)  # type: ignore
