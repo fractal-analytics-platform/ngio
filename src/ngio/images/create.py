@@ -24,12 +24,12 @@ _image_or_label_meta = TypeVar("_image_or_label_meta", NgioImageMeta, NgioLabelM
 
 def _init_generic_meta(
     meta_type: type[_image_or_label_meta],
-    xy_pixelsize: float,
+    pixelsize: float,
     axes_names: Collection[str],
     z_spacing: float = 1.0,
     time_spacing: float = 1.0,
     levels: int | list[str] = 5,
-    xy_scaling_factor: float = 2.0,
+    yx_scaling_factor: float | tuple[float, float] = 2.0,
     z_scaling_factor: float = 1.0,
     space_unit: SpaceUnits | str | None = None,
     time_unit: TimeUnits | str | None = None,
@@ -41,8 +41,16 @@ def _init_generic_meta(
     for ax in axes_names:
         if ax == "z":
             scaling_factors.append(z_scaling_factor)
-        elif ax in ["x", "y"]:
-            scaling_factors.append(xy_scaling_factor)
+        elif ax in ["x"]:
+            if isinstance(yx_scaling_factor, tuple):
+                scaling_factors.append(yx_scaling_factor[1])
+            else:
+                scaling_factors.append(yx_scaling_factor)
+        elif ax in ["y"]:
+            if isinstance(yx_scaling_factor, tuple):
+                scaling_factors.append(yx_scaling_factor[0])
+            else:
+                scaling_factors.append(yx_scaling_factor)
         else:
             scaling_factors.append(1.0)
 
@@ -61,8 +69,8 @@ def _init_generic_meta(
         raise ValueError(f"time_units can not be {type(time_unit)}.")
 
     pixel_sizes = PixelSize(
-        x=xy_pixelsize,
-        y=xy_pixelsize,
+        x=pixelsize,
+        y=pixelsize,
         z=z_spacing,
         t=time_spacing,
         space_unit=space_unit,
@@ -83,11 +91,11 @@ def _init_generic_meta(
 def _create_empty_label(
     store: StoreOrGroup,
     shape: Collection[int],
-    xy_pixelsize: float,
+    pixelsize: float,
     z_spacing: float = 1.0,
     time_spacing: float = 1.0,
     levels: int | list[str] = 5,
-    xy_scaling_factor: float = 2.0,
+    yx_scaling_factor: float | tuple[float, float] = 2.0,
     z_scaling_factor: float = 1.0,
     space_unit: SpaceUnits | str | None = None,
     time_unit: TimeUnits | str | None = None,
@@ -103,13 +111,13 @@ def _create_empty_label(
     Args:
         store (StoreOrGroup): The Zarr store or group to create the image in.
         shape (Collection[int]): The shape of the image.
-        xy_pixelsize (float): The pixel size in x and y dimensions.
+        pixelsize (float): The pixel size in x and y dimensions.
         z_spacing (float, optional): The spacing between z slices. Defaults to 1.0.
         time_spacing (float, optional): The spacing between time points.
             Defaults to 1.0.
         levels (int | list[str], optional): The number of levels in the pyramid or a
             list of level names. Defaults to 5.
-        xy_scaling_factor (float, optional): The down-scaling factor in x and y
+        yx_scaling_factor (float, optional): The down-scaling factor in x and y
             dimensions. Defaults to 2.0.
         z_scaling_factor (float, optional): The down-scaling factor in z dimension.
             Defaults to 1.0.
@@ -134,11 +142,11 @@ def _create_empty_label(
 
     meta, scaling_factors = _init_generic_meta(
         meta_type=NgioLabelMeta,
-        xy_pixelsize=xy_pixelsize,
+        pixelsize=pixelsize,
         z_spacing=z_spacing,
         time_spacing=time_spacing,
         levels=levels,
-        xy_scaling_factor=xy_scaling_factor,
+        yx_scaling_factor=yx_scaling_factor,
         z_scaling_factor=z_scaling_factor,
         space_unit=space_unit,
         time_unit=time_unit,
@@ -169,11 +177,11 @@ def _create_empty_label(
 def _create_empty_image(
     store: StoreOrGroup,
     shape: Collection[int],
-    xy_pixelsize: float,
+    pixelsize: float,
     z_spacing: float = 1.0,
     time_spacing: float = 1.0,
     levels: int | list[str] = 5,
-    xy_scaling_factor: float = 2,
+    yx_scaling_factor: float | tuple[float, float] = 2,
     z_scaling_factor: float = 1.0,
     space_unit: SpaceUnits | str | None = None,
     time_unit: TimeUnits | str | None = None,
@@ -189,13 +197,13 @@ def _create_empty_image(
     Args:
         store (StoreOrGroup): The Zarr store or group to create the image in.
         shape (Collection[int]): The shape of the image.
-        xy_pixelsize (float): The pixel size in x and y dimensions.
+        pixelsize (float): The pixel size in x and y dimensions.
         z_spacing (float, optional): The spacing between z slices. Defaults to 1.0.
         time_spacing (float, optional): The spacing between time points.
             Defaults to 1.0.
         levels (int | list[str], optional): The number of levels in the pyramid or a
             list of level names. Defaults to 5.
-        xy_scaling_factor (float, optional): The down-scaling factor in x and y
+        yx_scaling_factor (float, optional): The down-scaling factor in x and y
             dimensions. Defaults to 2.0.
         z_scaling_factor (float, optional): The down-scaling factor in z dimension.
             Defaults to 1.0.
@@ -220,11 +228,11 @@ def _create_empty_image(
 
     meta, scaling_factors = _init_generic_meta(
         meta_type=NgioImageMeta,
-        xy_pixelsize=xy_pixelsize,
+        pixelsize=pixelsize,
         z_spacing=z_spacing,
         time_spacing=time_spacing,
         levels=levels,
-        xy_scaling_factor=xy_scaling_factor,
+        yx_scaling_factor=yx_scaling_factor,
         z_scaling_factor=z_scaling_factor,
         space_unit=space_unit,
         time_unit=time_unit,

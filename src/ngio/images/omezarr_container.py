@@ -181,14 +181,35 @@ class OmeZarrContainer:
         store: StoreOrGroup,
         ref_path: str | None = None,
         shape: Collection[int] | None = None,
+        labels: Collection[str] | None = None,
+        pixel_size: PixelSize | None = None,
+        axes_names: Collection[str] | None = None,
         chunks: Collection[int] | None = None,
-        xy_scaling_factor: float = 2.0,
-        z_scaling_factor: float = 1.0,
-        copy_tables: bool = False,
+        dtype: str | None = None,
         copy_labels: bool = False,
+        copy_tables: bool = False,
         overwrite: bool = False,
     ) -> "OmeZarrContainer":
-        """Derive a new image from the current image."""
+        """Create an empty OME-Zarr container from an existing image.
+
+        Args:
+            store (StoreOrGroup): The Zarr store or group to create the image in.
+            ref_path (str | None): The path to the reference image in
+                the image container.
+            shape (Collection[int] | None): The shape of the new image.
+            labels (Collection[str] | None): The labels of the new image.
+            pixel_size (PixelSize | None): The pixel size of the new image.
+            axes_names (Collection[str] | None): The axes names of the new image.
+            chunks (Collection[int] | None): The chunk shape of the new image.
+            dtype (str | None): The data type of the new image.
+            copy_labels (bool): Whether to copy the labels from the reference image.
+            copy_tables (bool): Whether to copy the tables from the reference image.
+            overwrite (bool): Whether to overwrite an existing image.
+
+        Returns:
+            OmeZarrContainer: The new image container.
+
+        """
         if copy_labels:
             raise NotImplementedError("Copying labels is not yet implemented.")
 
@@ -199,17 +220,17 @@ class OmeZarrContainer:
             store=store,
             ref_path=ref_path,
             shape=shape,
+            labels=labels,
+            pixel_size=pixel_size,
+            axes_names=axes_names,
             chunks=chunks,
-            xy_scaling_factor=xy_scaling_factor,
-            z_scaling_factor=z_scaling_factor,
+            dtype=dtype,
             overwrite=overwrite,
         )
         return OmeZarrContainer(
             store=store,
-            cache=False,
-            mode="r+",
-            table_container=None,
-            label_container=None,
+            cache=self._group_handler.use_cache,
+            mode=self._group_handler.mode,
         )
 
     def list_tables(self) -> list[str]:
@@ -312,31 +333,49 @@ class OmeZarrContainer:
     def derive_label(
         self,
         name: str,
-        ref_image: Image | None = None,
+        ref_image: Image,
         shape: Collection[int] | None = None,
+        pixel_size: PixelSize | None = None,
+        axes_names: Collection[str] | None = None,
         chunks: Collection[int] | None = None,
-        dtype: str = "uint16",
-        xy_scaling_factor=2.0,
-        z_scaling_factor=1.0,
+        dtype: str | None = None,
         overwrite: bool = False,
-    ) -> Label:
-        """Derive a label from an image."""
+    ) -> "Label":
+        """Create an empty OME-Zarr label from a reference image.
+
+        And add the label to the /labels group.
+
+        Args:
+            store (StoreOrGroup): The Zarr store or group to create the image in.
+            ref_image (Image): The reference image.
+            name (str): The name of the new image.
+            shape (Collection[int] | None): The shape of the new image.
+            pixel_size (PixelSize | None): The pixel size of the new image.
+            axes_names (Collection[str] | None): The axes names of the new image.
+                For labels, the channel axis is not allowed.
+            chunks (Collection[int] | None): The chunk shape of the new image.
+            dtype (str | None): The data type of the new image.
+            overwrite (bool): Whether to overwrite an existing image.
+
+        Returns:
+            Label: The new label.
+
+        """
         if self._labels_container is None:
             raise NgioValidationError("No labels found in the image.")
 
         if ref_image is None:
             ref_image = self.get_image()
-        self._labels_container.derive(
+        return self._labels_container.derive(
             name=name,
             ref_image=ref_image,
             shape=shape,
+            pixel_size=pixel_size,
+            axes_names=axes_names,
             chunks=chunks,
             dtype=dtype,
-            xy_scaling_factor=xy_scaling_factor,
-            z_scaling_factor=z_scaling_factor,
             overwrite=overwrite,
         )
-        return self.get_label(name, path="0")
 
 
 def open_omezarr_container(
@@ -450,11 +489,11 @@ def create_empty_omezarr(
     handler = _create_empty_image(
         store=store,
         shape=shape,
-        xy_pixelsize=xy_pixelsize,
+        pixelsize=xy_pixelsize,
         z_spacing=z_spacing,
         time_spacing=time_spacing,
         levels=levels,
-        xy_scaling_factor=xy_scaling_factor,
+        yx_scaling_factor=xy_scaling_factor,
         z_scaling_factor=z_scaling_factor,
         space_unit=space_unit,
         time_unit=time_unit,
@@ -541,11 +580,11 @@ def create_omezarr_from_array(
     handler = _create_empty_image(
         store=store,
         shape=array.shape,
-        xy_pixelsize=xy_pixelsize,
+        pixelsize=xy_pixelsize,
         z_spacing=z_spacing,
         time_spacing=time_spacing,
         levels=levels,
-        xy_scaling_factor=xy_scaling_factor,
+        yx_scaling_factor=xy_scaling_factor,
         z_scaling_factor=z_scaling_factor,
         space_unit=space_unit,
         time_unit=time_unit,

@@ -273,8 +273,8 @@ class AbstractNgioImageMeta:
         else:
             return self.get_highest_resolution_dataset()
 
-    def scaling_factor(self, path: str | None = None) -> list[float]:
-        """Get the scaling factors from a dataset to its lower resolution."""
+    def _get_closest_datasets(self, path: str | None = None) -> tuple[Dataset, Dataset]:
+        """Get the closest datasets to a dataset."""
         dataset = self.get_dataset(path=path)
         lr_dataset = self._find_closest_dataset(dataset.pixel_size, mode="lr")
         if lr_dataset is None:
@@ -282,6 +282,11 @@ class AbstractNgioImageMeta:
                 "No lower resolution dataset found. "
                 "This is the lowest resolution dataset."
             )
+        return dataset, lr_dataset
+
+    def scaling_factor(self, path: str | None = None) -> list[float]:
+        """Get the scaling factors from a dataset to its lower resolution."""
+        dataset, lr_dataset = self._get_closest_datasets(path=path)
 
         scaling_factors = []
         for ax_name in self.axes_mapper.on_disk_axes_names:
@@ -289,6 +294,34 @@ class AbstractNgioImageMeta:
             s_lr_d = lr_dataset.get_scale(ax_name)
             scaling_factors.append(s_lr_d / s_d)
         return scaling_factors
+
+    def yx_scaling(self, path: str | None = None) -> tuple[float, float]:
+        """Get the scaling factor from a dataset to its lower resolution."""
+        dataset, lr_dataset = self._get_closest_datasets(path=path)
+
+        if lr_dataset is None:
+            raise NgioValueError(
+                "No lower resolution dataset found. "
+                "This is the lowest resolution dataset."
+            )
+
+        s_d = dataset.get_scale("y")
+        s_lr_d = lr_dataset.get_scale("y")
+        scale_y = s_lr_d / s_d
+
+        s_d = dataset.get_scale("x")
+        s_lr_d = lr_dataset.get_scale("x")
+        scale_x = s_lr_d / s_d
+
+        return scale_y, scale_x
+
+    def z_scaling(self, path: str | None = None) -> float:
+        """Get the scaling factor from a dataset to its lower resolution."""
+        dataset, lr_dataset = self._get_closest_datasets(path=path)
+
+        s_d = dataset.get_scale("z")
+        s_lr_d = lr_dataset.get_scale("z")
+        return s_lr_d / s_d
 
 
 class NgioLabelMeta(AbstractNgioImageMeta):
