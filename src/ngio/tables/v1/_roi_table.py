@@ -91,7 +91,7 @@ def _rois_to_dataframe(rois: dict[str, WorldCooROI], index_key: str) -> pd.DataF
     return dataframe
 
 
-class ROITableV1Meta(BaseModel):
+class RoiTableV1Meta(BaseModel):
     """Metadata for the ROI table."""
 
     fractal_table_version: Literal["1"] = "1"
@@ -105,7 +105,7 @@ class RegionMeta(BaseModel):
     path: str
 
 
-class MaskingROITableV1Meta(BaseModel):
+class MaskingRoiTableV1Meta(BaseModel):
     """Metadata for the ROI table."""
 
     fractal_table_version: Literal["1"] = "1"
@@ -115,10 +115,10 @@ class MaskingROITableV1Meta(BaseModel):
     instance_key: str = "label"
 
 
-_roi_meta = TypeVar("_roi_meta", ROITableV1Meta, MaskingROITableV1Meta)
+_roi_meta = TypeVar("_roi_meta", RoiTableV1Meta, MaskingRoiTableV1Meta)
 
 
-class _GenericROITableV1(Generic[_roi_meta]):
+class _GenericRoiTableV1(Generic[_roi_meta]):
     """Class to a non-specific table."""
 
     _meta: _roi_meta
@@ -171,7 +171,7 @@ class _GenericROITableV1(Generic[_roi_meta]):
     @classmethod
     def _from_handler(
         cls, handler: ZarrGroupHandler, backend_name: str | None = None
-    ) -> "_GenericROITableV1":
+    ) -> "_GenericRoiTableV1":
         """Create a new ROI table from a Zarr store."""
         meta = cls._meta_type()(**handler.load_attrs())
 
@@ -258,7 +258,7 @@ class _GenericROITableV1(Generic[_roi_meta]):
         )
 
 
-class RoiTableV1(_GenericROITableV1[ROITableV1Meta]):
+class RoiTableV1(_GenericRoiTableV1[RoiTableV1Meta]):
     """Class to handle fractal ROI tables.
 
     To know more about the ROI table format, please refer to the
@@ -268,7 +268,7 @@ class RoiTableV1(_GenericROITableV1[ROITableV1Meta]):
 
     def __init__(self, rois: Iterable[WorldCooROI] | None = None) -> None:
         """Create a new ROI table."""
-        super().__init__(ROITableV1Meta(), rois)
+        super().__init__(RoiTableV1Meta(), rois)
 
     @staticmethod
     def type() -> Literal["roi_table"]:
@@ -286,9 +286,9 @@ class RoiTableV1(_GenericROITableV1[ROITableV1Meta]):
         return "str"
 
     @staticmethod
-    def _meta_type() -> _type[ROITableV1Meta]:
+    def _meta_type() -> _type[RoiTableV1Meta]:
         """Return the metadata type of the table."""
-        return ROITableV1Meta
+        return RoiTableV1Meta
 
     def get(self, roi_name: str) -> WorldCooROI:
         """Get an ROI from the table."""
@@ -297,7 +297,7 @@ class RoiTableV1(_GenericROITableV1[ROITableV1Meta]):
         return self._rois[roi_name]
 
 
-class MaskingROITableV1(_GenericROITableV1[MaskingROITableV1Meta]):
+class MaskingROITableV1(_GenericRoiTableV1[MaskingRoiTableV1Meta]):
     """Class to handle fractal ROI tables.
 
     To know more about the ROI table format, please refer to the
@@ -311,7 +311,7 @@ class MaskingROITableV1(_GenericROITableV1[MaskingROITableV1Meta]):
         reference_label: str | None = None,
     ) -> None:
         """Create a new ROI table."""
-        meta = MaskingROITableV1Meta()
+        meta = MaskingRoiTableV1Meta()
         if reference_label is not None:
             meta.region = RegionMeta(path=reference_label)
         super().__init__(meta, rois)
@@ -332,9 +332,9 @@ class MaskingROITableV1(_GenericROITableV1[MaskingROITableV1Meta]):
         return "int"
 
     @staticmethod
-    def _meta_type() -> _type[MaskingROITableV1Meta]:
+    def _meta_type() -> _type[MaskingRoiTableV1Meta]:
         """Return the metadata type of the table."""
-        return MaskingROITableV1Meta
+        return MaskingRoiTableV1Meta
 
     def get(self, label: int) -> WorldCooROI:
         """Get an ROI from the table."""

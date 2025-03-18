@@ -19,6 +19,7 @@ from ngio.ome_zarr_meta.ngio_specs import (
 )
 from ngio.tables import (
     FeatureTable,
+    GenericRoiTable,
     MaskingROITable,
     RoiTable,
     Table,
@@ -239,6 +240,12 @@ class OmeZarrContainer:
             return []
         return self._tables_container.list()
 
+    def list_roi_tables(self) -> list[str]:
+        """List all ROI tables in the image."""
+        if self._tables_container is None:
+            return []
+        return self._tables_container.list_roi_tables()
+
     @overload
     def get_table(self, name: str, check_type: None) -> Table: ...
 
@@ -254,6 +261,11 @@ class OmeZarrContainer:
     def get_table(
         self, name: str, check_type: Literal["feature_table"]
     ) -> FeatureTable: ...
+
+    @overload
+    def get_table(
+        self, name: str, check_type: Literal["generic_roi_table"]
+    ) -> GenericRoiTable: ...
 
     def get_table(self, name: str, check_type: TypedTable | None = None) -> Table:
         """Get a table from the image."""
@@ -275,6 +287,15 @@ class OmeZarrContainer:
                         f"Found type: {table.type()}"
                     )
                 return table
+
+            case "generic_roi_table":
+                if not isinstance(table, GenericRoiTable):
+                    raise NgioValueError(
+                        f"Table '{name}' is not a generic ROI table. "
+                        f"Found type: {table.type()}"
+                    )
+                return table
+
             case "feature_table":
                 if not isinstance(table, FeatureTable):
                     raise NgioValueError(

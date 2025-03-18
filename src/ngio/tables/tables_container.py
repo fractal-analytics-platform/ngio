@@ -4,6 +4,7 @@ from typing import Literal, Protocol
 
 from ngio.tables.v1 import FeatureTableV1, MaskingROITableV1, RoiTableV1
 from ngio.tables.v1._generic_table import GenericTable
+from ngio.tables.v1._roi_table import _GenericRoiTableV1
 from ngio.utils import (
     AccessModeLiteral,
     NgioValidationError,
@@ -12,6 +13,7 @@ from ngio.utils import (
     ZarrGroupHandler,
 )
 
+GenericRoiTable = _GenericRoiTableV1
 RoiTable = RoiTableV1
 MaskingROITable = MaskingROITableV1
 FeatureTable = FeatureTableV1
@@ -55,7 +57,9 @@ class Table(Protocol):
         ...
 
 
-TypedTable = Literal["roi_table", "masking_roi_table", "feature_table"]
+TypedTable = Literal[
+    "roi_table", "masking_roi_table", "feature_table", "generic_roi_table"
+]
 
 
 def _unique_table_name(type_name, version) -> str:
@@ -181,6 +185,13 @@ class TablesContainer:
         """Get the group handler for a table."""
         handler = self._group_handler.derive_handler(path=name)
         return handler
+
+    def list_roi_tables(self) -> list[str]:
+        """List all ROI tables in the group."""
+        _tables = []
+        for _type in ["roi_table", "masking_roi_table"]:
+            _tables.extend(self.list(_type))
+        return _tables
 
     def list(self, filter_types: str | None = None) -> list[str]:
         """List all labels in the group."""
