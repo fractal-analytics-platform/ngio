@@ -1,10 +1,10 @@
 from pathlib import Path
 
-import fsspec
 import numpy as np
 import pytest
 
 from ngio import create_empty_omezarr, create_omezarr_from_array, open_omezarr_container
+from ngio.utils import fractal_fsspec_store
 
 
 @pytest.mark.parametrize("array_mode", ["numpy", "dask"])
@@ -81,9 +81,7 @@ def test_remote_omezarr_container():
         "20200812-CardiomyocyteDifferentiation14-Cycle1_B_03_mip.zarr/"
     )
 
-    fs = fsspec.implementations.http.HTTPFileSystem(client_kwargs={})
-    store = fs.get_mapper(url)
-
+    store = fractal_fsspec_store(url)
     omezarr = open_omezarr_container(store)
 
     assert omezarr.list_labels() == ["nuclei"]
