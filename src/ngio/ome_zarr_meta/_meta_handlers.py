@@ -11,11 +11,15 @@ from ngio.ome_zarr_meta.ngio_specs import (
     NgioPlateMeta,
     NgioWellMeta,
 )
-from ngio.ome_zarr_meta.v04._v04_spec_utils import (
+from ngio.ome_zarr_meta.v04 import (
     ngio_to_v04_image_meta,
     ngio_to_v04_label_meta,
+    ngio_to_v04_plate_meta,
+    ngio_to_v04_well_meta,
     v04_to_ngio_image_meta,
     v04_to_ngio_label_meta,
+    v04_to_ngio_plate_meta,
+    v04_to_ngio_well_meta,
 )
 from ngio.utils import (
     NgioValidationError,
@@ -442,6 +446,24 @@ class ImplementedMetaImporterExporter:
             _ie_name="_well_ie",
         )
 
+    def register_plate_ie(
+        self,
+        version: str,
+        importer: PlateMetaImporter,
+        exporter: PlateMetaExporter,
+        overwrite: bool = False,
+    ):
+        """Register an importer/exporter."""
+        importer_exporter = PlateImporterExporter(
+            version=version, importer=importer, exporter=exporter
+        )
+        self._register(
+            version=version,
+            importer=importer_exporter,
+            overwrite=overwrite,
+            _ie_name="_plate_ie",
+        )
+
     def _find_image_handler(
         self,
         group_handler: ZarrGroupHandler,
@@ -635,6 +657,13 @@ class ImplementedMetaImporterExporter:
         )
 
 
+###########################################################################
+#
+# Register metadata importers/exporters
+#
+###########################################################################
+
+
 ImplementedMetaImporterExporter().register_image_ie(
     version="0.4",
     importer=v04_to_ngio_image_meta,
@@ -645,6 +674,20 @@ ImplementedMetaImporterExporter().register_label_ie(
     importer=v04_to_ngio_label_meta,
     exporter=ngio_to_v04_label_meta,
 )
+ImplementedMetaImporterExporter().register_well_ie(
+    version="0.4", importer=v04_to_ngio_well_meta, exporter=ngio_to_v04_well_meta
+)
+ImplementedMetaImporterExporter().register_plate_ie(
+    version="0.4", importer=v04_to_ngio_plate_meta, exporter=ngio_to_v04_plate_meta
+)
+
+
+###########################################################################
+#
+# Public functions to avoid direct access to the importer/exporter
+# registration methods
+#
+###########################################################################
 
 
 def find_image_meta_handler(

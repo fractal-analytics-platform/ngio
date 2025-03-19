@@ -22,6 +22,8 @@ from ome_zarr_models.v04.multiscales import Multiscale as MultiscaleV04
 from ome_zarr_models.v04.omero import Channel as ChannelV04
 from ome_zarr_models.v04.omero import Omero as OmeroV04
 from ome_zarr_models.v04.omero import Window as WindowV04
+from ome_zarr_models.v04.plate import Plate as PlateV04
+from ome_zarr_models.v04.well import WellAttrs as WellAttrsV04
 from pydantic import ValidationError
 
 from ngio.ome_zarr_meta.ngio_specs import (
@@ -35,6 +37,8 @@ from ngio.ome_zarr_meta.ngio_specs import (
     ImageLabelSource,
     NgioImageMeta,
     NgioLabelMeta,
+    NgioPlateMeta,
+    NgioWellMeta,
     default_channel_name,
 )
 from ngio.ome_zarr_meta.ngio_specs._ngio_image import NgffVersion
@@ -413,3 +417,69 @@ def ngio_to_v04_label_meta(metadata: NgioLabelMeta) -> dict:
     }
     v04_label = LabelAttrsV04(**labels_meta)
     return v04_label.model_dump(exclude_none=True, by_alias=True)
+
+
+def v04_to_ngio_well_meta(
+    metadata: dict,
+) -> tuple[bool, NgioWellMeta | ValidationError]:
+    """Convert a v04 well metadata to a ngio well metadata.
+
+    Args:
+        metadata (dict): The v04 well metadata.
+
+    Returns:
+        result (bool): True if the conversion was successful, False otherwise.
+        ngio_well_meta (NgioWellMeta): The ngio well metadata.
+    """
+    try:
+        v04_well = WellAttrsV04(**metadata)
+    except ValidationError as e:
+        return False, e
+
+    return True, NgioWellMeta(**v04_well.model_dump())
+
+
+def v04_to_ngio_plate_meta(
+    metadata: dict,
+) -> tuple[bool, NgioPlateMeta | ValidationError]:
+    """Convert a v04 plate metadata to a ngio plate metadata.
+
+    Args:
+        metadata (dict): The v04 plate metadata.
+
+    Returns:
+        result (bool): True if the conversion was successful, False otherwise.
+        ngio_plate_meta (NgioPlateMeta): The ngio plate metadata.
+    """
+    try:
+        v04_plate = PlateV04(**metadata)
+    except ValidationError as e:
+        return False, e
+
+    return True, NgioPlateMeta(**v04_plate.model_dump())
+
+
+def ngio_to_v04_well_meta(metadata: NgioWellMeta) -> dict:
+    """Convert a ngio well metadata to a v04 well metadata.
+
+    Args:
+        metadata (NgioWellMeta): The ngio well metadata.
+
+    Returns:
+        dict: The v04 well metadata.
+    """
+    v04_well = WellAttrsV04(**metadata.model_dump())
+    return v04_well.model_dump(exclude_none=True, by_alias=True)
+
+
+def ngio_to_v04_plate_meta(metadata: NgioPlateMeta) -> dict:
+    """Convert a ngio plate metadata to a v04 plate metadata.
+
+    Args:
+        metadata (NgioPlateMeta): The ngio plate metadata.
+
+    Returns:
+        dict: The v04 plate metadata.
+    """
+    v04_plate = PlateV04(**metadata.model_dump())
+    return v04_plate.model_dump(exclude_none=True, by_alias=True)
