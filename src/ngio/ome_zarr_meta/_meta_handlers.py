@@ -745,6 +745,3 @@ def get_plate_meta_handler(
         group_handler=group_handler,
         version=version,
     )
-
-
-# %%
