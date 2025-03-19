@@ -1,6 +1,5 @@
 """Common utilities for working with Zarr groups in consistent ways."""
 
-# %%
 from pathlib import Path
 from typing import Literal
 
