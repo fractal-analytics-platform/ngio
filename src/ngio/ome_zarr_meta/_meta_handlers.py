@@ -1,6 +1,5 @@
 """Base class for handling OME-NGFF metadata in Zarr groups."""
 
-# %%
 from typing import Generic, Protocol, TypeVar
 
 from pydantic import ValidationError

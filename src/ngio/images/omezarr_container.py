@@ -1,6 +1,5 @@
 """Abstract class for handling OME-NGFF images."""
 
-# %%
 from collections.abc import Collection
 from typing import Literal, overload
 
