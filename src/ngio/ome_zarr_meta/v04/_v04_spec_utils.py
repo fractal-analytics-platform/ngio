@@ -15,6 +15,7 @@ from ome_zarr_models.v04.coordinate_transformations import VectorScale as Vector
 from ome_zarr_models.v04.coordinate_transformations import (
     VectorTranslation as VectorTranslationV04,
 )
+from ome_zarr_models.v04.hcs import HCSAttrs as HCSAttrsV04
 from ome_zarr_models.v04.image import ImageAttrs as ImageAttrsV04
 from ome_zarr_models.v04.image_label import ImageLabelAttrs as LabelAttrsV04
 from ome_zarr_models.v04.multiscales import Dataset as DatasetV04
@@ -22,7 +23,6 @@ from ome_zarr_models.v04.multiscales import Multiscale as MultiscaleV04
 from ome_zarr_models.v04.omero import Channel as ChannelV04
 from ome_zarr_models.v04.omero import Omero as OmeroV04
 from ome_zarr_models.v04.omero import Window as WindowV04
-from ome_zarr_models.v04.plate import Plate as PlateV04
 from ome_zarr_models.v04.well import WellAttrs as WellAttrsV04
 from pydantic import ValidationError
 
@@ -452,7 +452,7 @@ def v04_to_ngio_plate_meta(
         ngio_plate_meta (NgioPlateMeta): The ngio plate metadata.
     """
     try:
-        v04_plate = PlateV04(**metadata)
+        v04_plate = HCSAttrsV04(**metadata)
     except ValidationError as e:
         return False, e
 
@@ -481,5 +481,5 @@ def ngio_to_v04_plate_meta(metadata: NgioPlateMeta) -> dict:
     Returns:
         dict: The v04 plate metadata.
     """
-    v04_plate = PlateV04(**metadata.model_dump())
+    v04_plate = HCSAttrsV04(**metadata.model_dump())
     return v04_plate.model_dump(exclude_none=True, by_alias=True)
