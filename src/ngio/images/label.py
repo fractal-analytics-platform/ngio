@@ -7,10 +7,10 @@ from ngio.images.abstract_image import AbstractImage, consolidate_image
 from ngio.images.create import _create_empty_label
 from ngio.images.image import Image
 from ngio.ome_zarr_meta import (
-    ImplementedLabelMetaHandlers,
     LabelMetaHandler,
     NgioLabelMeta,
     PixelSize,
+    find_label_meta_handler,
 )
 from ngio.utils import (
     NgioValidationError,
@@ -38,9 +38,7 @@ class Label(AbstractImage[LabelMetaHandler]):
 
         """
         if meta_handler is None:
-            meta_handler = ImplementedLabelMetaHandlers().find_meta_handler(
-                group_handler
-            )
+            meta_handler = find_label_meta_handler(group_handler)
         super().__init__(
             group_handler=group_handler, path=path, meta_handler=meta_handler
         )
@@ -105,9 +103,7 @@ class LabelsContainer:
 
         """
         group_handler = self._group_handler.derive_handler(name)
-        label_meta_handler = ImplementedLabelMetaHandlers().find_meta_handler(
-            group_handler
-        )
+        label_meta_handler = find_label_meta_handler(group_handler)
         path = label_meta_handler.meta.get_dataset(
             path=path, pixel_size=pixel_size, strict=strict
         ).path

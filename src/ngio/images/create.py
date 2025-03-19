@@ -5,11 +5,11 @@ from typing import TypeVar
 
 from ngio.common._pyramid import init_empty_pyramid
 from ngio.ome_zarr_meta import (
-    ImplementedImageMetaHandlers,
-    ImplementedLabelMetaHandlers,
     NgioImageMeta,
     NgioLabelMeta,
     PixelSize,
+    get_image_meta_handler,
+    get_label_meta_handler,
 )
 from ngio.ome_zarr_meta.ngio_specs import (
     SpaceUnits,
@@ -157,9 +157,7 @@ def _create_empty_label(
 
     mode = "w" if overwrite else "w-"
     group_handler = ZarrGroupHandler(store=store, mode=mode, cache=False)
-    image_handler = ImplementedLabelMetaHandlers().get_handler(
-        version=version, group_handler=group_handler
-    )
+    image_handler = get_label_meta_handler(version=version, group_handler=group_handler)
     image_handler.write_meta(meta)
 
     init_empty_pyramid(
@@ -242,9 +240,7 @@ def _create_empty_image(
     )
     mode = "w" if overwrite else "w-"
     group_handler = ZarrGroupHandler(store=store, mode=mode, cache=False)
-    image_handler = ImplementedImageMetaHandlers().get_handler(
-        version=version, group_handler=group_handler
-    )
+    image_handler = get_image_meta_handler(version=version, group_handler=group_handler)
     image_handler.write_meta(meta)
 
     init_empty_pyramid(

@@ -10,9 +10,9 @@ from ngio.images.abstract_image import AbstractImage, consolidate_image
 from ngio.images.create import _create_empty_image
 from ngio.ome_zarr_meta import (
     ImageMetaHandler,
-    ImplementedImageMetaHandlers,
     NgioImageMeta,
     PixelSize,
+    find_image_meta_handler,
 )
 from ngio.ome_zarr_meta.ngio_specs import Channel, ChannelsMeta, ChannelVisualisation
 from ngio.utils import (
@@ -60,9 +60,7 @@ class Image(AbstractImage[ImageMetaHandler]):
 
         """
         if meta_handler is None:
-            meta_handler = ImplementedImageMetaHandlers().find_meta_handler(
-                group_handler
-            )
+            meta_handler = find_image_meta_handler(group_handler)
         super().__init__(
             group_handler=group_handler, path=path, meta_handler=meta_handler
         )
@@ -109,9 +107,7 @@ class ImagesContainer:
     def __init__(self, group_handler: ZarrGroupHandler) -> None:
         """Initialize the LabelGroupHandler."""
         self._group_handler = group_handler
-        self._meta_handler = ImplementedImageMetaHandlers().find_meta_handler(
-            group_handler
-        )
+        self._meta_handler = find_image_meta_handler(group_handler)
 
     @property
     def meta(self) -> NgioImageMeta:

@@ -28,6 +28,7 @@ from ngio.ome_zarr_meta.ngio_specs._channels import (
     default_channel_name,
 )
 from ngio.ome_zarr_meta.ngio_specs._dataset import Dataset
+from ngio.ome_zarr_meta.ngio_specs._ngio_hcs import NgioPlateMeta, NgioWellMeta
 from ngio.ome_zarr_meta.ngio_specs._ngio_image import (
     ImageLabelSource,
     NgioImageLabelMeta,
@@ -54,6 +55,8 @@ __all__ = [
     "NgioImageLabelMeta",
     "NgioImageMeta",
     "NgioLabelMeta",
+    "NgioPlateMeta",
+    "NgioWellMeta",
     "PixelSize",
     "SpaceUnits",
     "TimeUnits",
