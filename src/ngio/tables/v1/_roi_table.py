@@ -128,7 +128,7 @@ class _GenericRoiTableV1(Generic[_roi_meta]):
     ) -> None:
         """Create a new ROI table."""
         if meta is None:
-            raise ValueError("Metadata must be provided.")
+            raise NgioValueError("Metadata must be provided.")
         self._meta = meta
         self._table_backend = None
 

@@ -5,6 +5,8 @@ import dask.array as da
 import numpy as np
 from scipy.ndimage import zoom as scipy_zoom
 
+from ngio.utils import NgioValueError
+
 
 def _stacked_zoom(x, zoom_y, zoom_x, order=1, mode="grid-constant", grid_mode=True):
     *rest, yshape, xshape = x.shape
@@ -53,15 +55,15 @@ def _zoom_inputs_check(
     target_shape: tuple[int, ...] | None = None,
 ) -> tuple[np.ndarray, tuple[int, ...]]:
     if scale is None and target_shape is None:
-        raise ValueError("Either scale or target_shape must be provided")
+        raise NgioValueError("Either scale or target_shape must be provided")
 
     if scale is not None and target_shape is not None:
-        raise ValueError("Only one of scale or target_shape must be provided")
+        raise NgioValueError("Only one of scale or target_shape must be provided")
 
     if scale is None:
         assert target_shape is not None, "Target shape must be provided"
         if len(target_shape) != source_array.ndim:
-            raise ValueError(
+            raise NgioValueError(
                 "Target shape must have the "
                 "same number of dimensions as "
                 "the source array"

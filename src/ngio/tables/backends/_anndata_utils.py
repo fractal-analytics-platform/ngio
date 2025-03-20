@@ -17,6 +17,7 @@ from anndata.experimental import read_dispatched
 from ngio.tables._validators import validate_index_dtype, validate_index_key
 from ngio.utils import (
     NgioTableValidationError,
+    NgioValueError,
     StoreOrGroup,
     open_group_wrapper,
 )
@@ -90,7 +91,7 @@ def custom_read_zarr(
         _clean_uns(adata)
 
     if not isinstance(adata, AnnData):
-        raise ValueError(f"Expected an AnnData object, but got {type(adata)}")
+        raise NgioValueError(f"Expected an AnnData object, but got {type(adata)}")
     return adata
 
 

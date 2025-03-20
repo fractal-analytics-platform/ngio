@@ -11,7 +11,7 @@ from pydantic import BaseModel
 
 from ngio.tables._validators import validate_index_key
 from ngio.tables.backends import ImplementedTableBackends
-from ngio.utils import ZarrGroupHandler
+from ngio.utils import NgioValueError, ZarrGroupHandler
 
 
 class RegionMeta(BaseModel):
@@ -83,7 +83,7 @@ class FeatureTableV1:
     def dataframe(self) -> pd.DataFrame:
         """Return the table as a DataFrame."""
         if self._dataframe is None and self._table_backend is None:
-            raise ValueError(
+            raise NgioValueError(
                 "The table does not have a DataFrame in memory nor a backend."
             )
 
@@ -91,7 +91,7 @@ class FeatureTableV1:
             self._dataframe = self._table_backend.load_as_dataframe()
 
         if self._dataframe is None:
-            raise ValueError(
+            raise NgioValueError(
                 "The table does not have a DataFrame in memory nor a backend."
             )
         return self._dataframe
@@ -125,7 +125,9 @@ class FeatureTableV1:
             meta.backend = backend_name
 
         if not backend.implements_dataframe:
-            raise ValueError("The backend does not implement the dataframe protocol.")
+            raise NgioValueError(
+                "The backend does not implement the dataframe protocol."
+            )
 
         table = cls()
         table._meta = meta
@@ -151,7 +153,7 @@ class FeatureTableV1:
     def consolidate(self) -> None:
         """Write the current state of the table to the Zarr file."""
         if self._table_backend is None:
-            raise ValueError(
+            raise NgioValueError(
                 "No backend set for the table. "
                 "Please add the table to a OME-Zarr Image before calling consolidate."
             )

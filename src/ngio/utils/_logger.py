@@ -1,5 +1,7 @@
 import logging
 
+from ngio.utils._errors import NgioValueError
+
 # Configure the logger
 ngio_logger = logging.getLogger("NgioLogger")
 ngio_logger.setLevel(logging.ERROR)
@@ -24,6 +26,6 @@ def set_logger_level(level: str) -> None:
             Must be one of "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL".
     """
     if level not in ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]:
-        raise ValueError(f"Invalid log level: {level}")
+        raise NgioValueError(f"Invalid log level: {level}")
 
     ngio_logger.setLevel(level)

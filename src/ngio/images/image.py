@@ -401,7 +401,6 @@ def derive_image_container(
 
     if dtype is None:
         dtype = ref_image.dtype
-
     handler = _create_empty_image(
         store=store,
         shape=shape,
@@ -419,7 +418,6 @@ def derive_image_container(
         overwrite=overwrite,
         version=ref_meta.version,
     )
-
     image_container = ImagesContainer(handler)
 
     if ref_image.num_channels == image_container.num_channels:
@@ -452,5 +450,4 @@ def derive_image_container(
         colors=colors,
         active=active,
     )
-
     return image_container

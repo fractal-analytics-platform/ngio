@@ -9,7 +9,7 @@ from ngio.tables.backends._anndata_utils import (
     anndata_to_dataframe,
     dataframe_to_anndata,
 )
-from ngio.utils import ZarrGroupHandler
+from ngio.utils import NgioValueError, ZarrGroupHandler
 
 
 class GenericTableMeta(BaseModel):
@@ -35,12 +35,14 @@ class GenericTable:
         """Initialize the GenericTable."""
         self._meta = GenericTableMeta()
         if dataframe is None and anndata is None:
-            raise ValueError(
+            raise NgioValueError(
                 "Either a DataFrame or an AnnData object must be provided."
             )
 
         if dataframe is not None and anndata is not None:
-            raise ValueError("Only one of DataFrame or AnnData object can be provided.")
+            raise NgioValueError(
+                "Only one of DataFrame or AnnData object can be provided."
+            )
 
         self._dataframe = dataframe
         self._anndata = anndata
@@ -78,7 +80,7 @@ class GenericTable:
         if self._anndata is not None:
             return anndata_to_dataframe(self._anndata)
 
-        raise ValueError("No table loaded.")
+        raise NgioValueError("No table loaded.")
 
     @dataframe.setter
     def dataframe(self, dataframe: pd.DataFrame) -> None:
@@ -94,7 +96,7 @@ class GenericTable:
 
         if self._dataframe is not None:
             return dataframe_to_anndata(self._dataframe)
-        raise ValueError("No table loaded.")
+        raise NgioValueError("No table loaded.")
 
     @anndata.setter
     def anndata(self, anndata: AnnData) -> None:
@@ -130,7 +132,9 @@ class GenericTable:
             dataframe = backend.load_as_dataframe()
             table = cls(dataframe=dataframe)
         else:
-            raise ValueError("The backend does not implement the dataframe protocol.")
+            raise NgioValueError(
+                "The backend does not implement the dataframe protocol."
+            )
 
         table._meta = meta
         table._table_backend = backend
@@ -153,7 +157,7 @@ class GenericTable:
     def consolidate(self) -> None:
         """Write the current state of the table to the Zarr file."""
         if self._table_backend is None:
-            raise ValueError(
+            raise NgioValueError(
                 "No backend set for the table. "
                 "Please add the table to a OME-Zarr Image before calling consolidate."
             )

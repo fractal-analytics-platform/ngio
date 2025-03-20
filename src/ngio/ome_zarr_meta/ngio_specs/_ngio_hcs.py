@@ -13,6 +13,8 @@ from ome_zarr_models.v04.plate import (
 from ome_zarr_models.v04.well import WellAttrs
 from ome_zarr_models.v04.well_types import WellImage, WellMeta
 
+from ngio.utils import NgioValueError
+
 
 class NgioWellMeta(WellAttrs):
     """HCS well metadata."""
@@ -30,7 +32,7 @@ class NgioWellMeta(WellAttrs):
             _acquisition_ids = acquisition_ids
 
         if len(images_paths) != len(_acquisition_ids):
-            raise ValueError(
+            raise NgioValueError(
                 "Images paths and acquisition ids must have the same length."
             )
 
@@ -70,7 +72,9 @@ class NgioWellMeta(WellAttrs):
         list_of_images = self.well.images
         for image in list_of_images:
             if image.path == path:
-                raise ValueError(f"Image at path {path} already exists in the well.")
+                raise NgioValueError(
+                    f"Image at path {path} already exists in the well."
+                )
 
         new_image = WellImage(path=path, acquisition=acquisition)
         list_of_images.append(new_image)
@@ -91,7 +95,7 @@ class NgioWellMeta(WellAttrs):
                 return NgioWellMeta(
                     well=WellMeta(images=list_of_images, version=self.well.version)
                 )
-        raise ValueError(f"Image at path {path} not found in the well.")
+        raise NgioValueError(f"Image at path {path} not found in the well.")
 
 
 def _stringify_column(column: str | int) -> str:
@@ -138,9 +142,9 @@ def _relabel_wells(
         column_idx = _find_column_index(_columns, column)
 
         if row_idx is None:
-            raise ValueError(f"Row {row} not found in the plate.")
+            raise NgioValueError(f"Row {row} not found in the plate.")
         if column_idx is None:
-            raise ValueError(f"Column {column} not found in the plate.")
+            raise NgioValueError(f"Column {column} not found in the plate.")
 
         new_wells.append(
             WellInPlate(
@@ -172,7 +176,7 @@ class NgioPlateMeta(HCSAttrs):
             columns = []
 
         if len(rows) != len(columns):
-            raise ValueError("Rows and columns must have the same length.")
+            raise NgioValueError("Rows and columns must have the same length.")
 
         unique_rows = list(set(rows))
         unique_columns = list(set(columns))
@@ -199,7 +203,7 @@ class NgioPlateMeta(HCSAttrs):
             _acquisitions_ids = list(range(len(acquisitions_names)))
         elif acquisitions_ids is not None and acquisitions_names is not None:
             if len(acquisitions_ids) != len(acquisitions_names):
-                raise ValueError(
+                raise NgioValueError(
                     "Acquisitions ids and names must have the same length."
                 )
             _acquisitions_ids = acquisitions_ids
@@ -272,7 +276,7 @@ class NgioPlateMeta(HCSAttrs):
             str: The path of the well.
         """
         if row not in self.rows:
-            raise ValueError(
+            raise NgioValueError(
                 f"Row {row} not found in the plate. Available rows are {self.rows}."
             )
 
@@ -283,7 +287,7 @@ class NgioPlateMeta(HCSAttrs):
         try:
             _column = int(column)
         except ValueError:
-            raise ValueError(
+            raise NgioValueError(
                 f"Column {column} must be an integer or convertible to an integer."
             ) from None
 
@@ -293,7 +297,7 @@ class NgioPlateMeta(HCSAttrs):
             if well.columnIndex == column_idx and well.rowIndex == row_idx:
                 return well.path
 
-        raise ValueError(
+        raise NgioValueError(
             f"Well at row {row} and column {column} not found in the plate."
         )
 
@@ -389,11 +393,11 @@ class NgioPlateMeta(HCSAttrs):
         """
         row_idx = _find_row_index(self.rows, row)
         if row_idx is None:
-            raise ValueError(f"Row {row} not found in the plate.")
+            raise NgioValueError(f"Row {row} not found in the plate.")
 
         column_idx = _find_column_index(self.columns, column)
         if column_idx is None:
-            raise ValueError(f"Column {column} not found in the plate.")
+            raise NgioValueError(f"Column {column} not found in the plate.")
 
         wells = self.plate.wells
         for well_obj in wells:
@@ -401,7 +405,7 @@ class NgioPlateMeta(HCSAttrs):
                 wells.remove(well_obj)
                 break
         else:
-            raise ValueError(
+            raise NgioValueError(
                 f"Well at row {row} and column {column} not found in the plate."
             )
 

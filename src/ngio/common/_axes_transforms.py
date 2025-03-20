@@ -9,6 +9,7 @@ from ngio.ome_zarr_meta.ngio_specs._axes import (
     AxesTransformation,
     AxesTranspose,
 )
+from ngio.utils import NgioValueError
 
 T = TypeVar("T")
 
@@ -44,7 +45,7 @@ def transform_numpy_array(
         elif isinstance(operation, AxesSqueeze):
             array = np.squeeze(array, axis=operation.axes)
         else:
-            raise ValueError(f"Unknown operation {operation}")
+            raise NgioValueError(f"Unknown operation {operation}")
     return array
 
 
@@ -59,5 +60,5 @@ def transform_dask_array(
         elif isinstance(operation, AxesSqueeze):
             array = da.squeeze(array, axis=operation.axes)
         else:
-            raise ValueError(f"Unknown operation {operation}")
+            raise NgioValueError(f"Unknown operation {operation}")
     return array

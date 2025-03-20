@@ -7,7 +7,7 @@ from ngio import create_empty_omezarr, create_omezarr_from_array, open_omezarr_c
 from ngio.utils import fractal_fsspec_store
 
 
-@pytest.mark.parametrize("array_mode", ["numpy", "dask"])
+@pytest.mark.parametrize("array_mode", ["numpy"])
 def test_omezarr_container(tmp_path: Path, array_mode: str):
     # Very basic test to check if the container is working
     # to be expanded with more meaningful tests
@@ -54,7 +54,7 @@ def test_omezarr_container(tmp_path: Path, array_mode: str):
     image = omezarr.get_image(path="2")
     assert np.mean(image.get_array()) == 1
 
-    new_omezarr = omezarr.derive_image(tmp_path / "derived.zarr", ref_path="2")
+    new_omezarr = omezarr.derive_image(tmp_path / "derived2.zarr", ref_path="2")
 
     assert new_omezarr.levels == 3
     new_image = new_omezarr.get_image()

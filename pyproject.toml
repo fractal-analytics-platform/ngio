@@ -57,6 +57,7 @@ dev = [
     "napari",
     "pyqt5",
     "matplotlib",
+    "devtools",
     "notebook",
     "mypy",
     "pdbpp",      # https://github.com/pdbpp/pdbpp
@@ -217,11 +218,7 @@ serve_docs = "mkdocs serve"
 run_tests = "pytest"
 clean_nb_data = "rm -rf ./docs/notebooks/**/*.zarr"
 test_nb = { cmd = "jupyter-execute ./docs/notebooks/*.ipynb" }
-test = { depends-on = [
-    "run_tests",
-    "clean_nb_data",
-    "test_nb",
-] }
+test = { depends-on = ["run_tests", "clean_nb_data", "test_nb"] }
 pre_commit_install = "pre-commit install"
 
 ruff-fix-imports = "ruff check --select I --fix"

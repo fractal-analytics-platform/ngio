@@ -17,7 +17,7 @@ from ngio.ome_zarr_meta.ngio_specs import (
     canonical_axes_order,
     canonical_label_axes_order,
 )
-from ngio.utils import StoreOrGroup, ZarrGroupHandler
+from ngio.utils import NgioValueError, StoreOrGroup, ZarrGroupHandler
 
 _image_or_label_meta = TypeVar("_image_or_label_meta", NgioImageMeta, NgioLabelMeta)
 
@@ -59,14 +59,14 @@ def _init_generic_meta(
     elif isinstance(space_unit, str):
         space_unit = SpaceUnits(space_unit)
     elif not isinstance(space_unit, SpaceUnits):
-        raise ValueError(f"space_unit can not be {type(space_unit)}.")
+        raise NgioValueError(f"space_unit can not be {type(space_unit)}.")
 
     if time_unit is None:
         time_unit = TimeUnits.seconds
     elif isinstance(time_unit, str):
         time_unit = TimeUnits(time_unit)
     elif not isinstance(time_unit, TimeUnits):
-        raise ValueError(f"time_units can not be {type(time_unit)}.")
+        raise NgioValueError(f"time_units can not be {type(time_unit)}.")
 
     pixel_sizes = PixelSize(
         x=pixelsize,
@@ -169,6 +169,7 @@ def _create_empty_label(
         dtype=dtype,
         mode="a",
     )
+    group_handler._mode = "r+"
     return group_handler
 
 
@@ -252,4 +253,6 @@ def _create_empty_image(
         dtype=dtype,
         mode="a",
     )
+
+    group_handler._mode = "r+"
     return group_handler

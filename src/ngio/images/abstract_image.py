@@ -19,10 +19,7 @@ from ngio.ome_zarr_meta import (
     LabelMetaHandler,
     PixelSize,
 )
-from ngio.utils import (
-    NgioFileExistsError,
-    ZarrGroupHandler,
-)
+from ngio.utils import NgioFileExistsError, NgioValueError, ZarrGroupHandler
 
 _image_handler = TypeVar("_image_handler", ImageMetaHandler, LabelMetaHandler)
 
@@ -162,7 +159,7 @@ class AbstractImage(Generic[_image_handler]):
 
         for key in slice_kwargs.keys():
             if key in raster_roi:
-                raise ValueError(
+                raise NgioValueError(
                     f"Key {key} is already in the slice_kwargs. "
                     "Ambiguous which one to use: "
                     f"{key}={slice_kwargs[key]} or roi_{key}={raster_roi[key]}"
@@ -215,7 +212,7 @@ class AbstractImage(Generic[_image_handler]):
 
         for key in slice_kwargs.keys():
             if key in raster_roi:
-                raise ValueError(
+                raise NgioValueError(
                     f"Key {key} is already in the slice_kwargs. "
                     "Ambiguous which one to use: "
                     f"{key}={slice_kwargs[key]} or roi_{key}={raster_roi[key]}"
