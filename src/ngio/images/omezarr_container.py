@@ -57,15 +57,13 @@ class OmeZarrContainer:
 
     def __init__(
         self,
-        store: StoreOrGroup,
-        cache: bool = False,
-        mode: AccessModeLiteral = "r+",
+        group_handler: ZarrGroupHandler,
         table_container: TablesContainer | None = None,
         label_container: LabelsContainer | None = None,
         validate_arrays: bool = True,
     ) -> None:
         """Initialize the OmeZarrContainer."""
-        self._group_handler = ZarrGroupHandler(store, cache, mode)
+        self._group_handler = group_handler
         self._images_container = ImagesContainer(self._group_handler)
 
         if label_container is None:
@@ -227,10 +225,12 @@ class OmeZarrContainer:
             dtype=dtype,
             overwrite=overwrite,
         )
+
+        handler = ZarrGroupHandler(
+            store, cache=self._group_handler.use_cache, mode=self._group_handler.mode
+        )
         return OmeZarrContainer(
-            store=store,
-            cache=self._group_handler.use_cache,
-            mode=self._group_handler.mode,
+            group_handler=handler,
         )
 
     def list_tables(self) -> list[str]:
@@ -405,10 +405,9 @@ def open_omezarr_container(
     validate_arrays: bool = True,
 ) -> OmeZarrContainer:
     """Open an OME-Zarr image."""
+    handler = ZarrGroupHandler(store=store, cache=cache, mode=mode)
     return OmeZarrContainer(
-        store=store,
-        cache=cache,
-        mode=mode,
+        group_handler=handler,
         validate_arrays=validate_arrays,
     )
 
@@ -525,7 +524,7 @@ def create_empty_omezarr(
         version=version,
     )
 
-    omezarr = OmeZarrContainer(store=handler.store, mode="r+")
+    omezarr = OmeZarrContainer(group_handler=handler)
     omezarr.initialize_channel_meta(
         labels=channel_labels,
         wavelength_id=channel_wavelengths,
@@ -616,7 +615,7 @@ def create_omezarr_from_array(
         version=version,
     )
 
-    omezarr = OmeZarrContainer(store=handler.store, mode="r+")
+    omezarr = OmeZarrContainer(group_handler=handler)
     image = omezarr.get_image()
     image.set_array(array)
     image.consolidate()
