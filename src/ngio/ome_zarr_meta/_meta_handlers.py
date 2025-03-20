@@ -377,93 +377,6 @@ class ImplementedMetaImporterExporter:
             cls._plate_ie = {}
         return cls._instance
 
-    def _register(
-        self,
-        version: str,
-        importer: _importer_exporter,
-        overwrite: bool = False,
-        _ie_name: str = "_image_ie",
-    ):
-        """Register an importer/exporter."""
-        ie_dict = self.__getattribute__(_ie_name)
-        if version in ie_dict and not overwrite:
-            raise NgioValueError(
-                f"Importer/exporter for version {version} already exists."
-            )
-        ie_dict[version] = importer
-
-    def register_image_ie(
-        self,
-        version: str,
-        importer: ImageMetaImporter,
-        exporter: ImageMetaExporter,
-        overwrite: bool = False,
-    ):
-        """Register an importer/exporter."""
-        importer_exporter = ImageImporterExporter(
-            version=version, importer=importer, exporter=exporter
-        )
-        self._register(
-            version=version,
-            importer=importer_exporter,
-            overwrite=overwrite,
-            _ie_name="_image_ie",
-        )
-
-    def register_label_ie(
-        self,
-        version: str,
-        importer: LabelMetaImporter,
-        exporter: LabelMetaExporter,
-        overwrite: bool = False,
-    ):
-        """Register an importer/exporter."""
-        importer_exporter = LabelImporterExporter(
-            version=version, importer=importer, exporter=exporter
-        )
-        self._register(
-            version=version,
-            importer=importer_exporter,
-            overwrite=overwrite,
-            _ie_name="_label_ie",
-        )
-
-    def register_well_ie(
-        self,
-        version: str,
-        importer: WellMetaImporter,
-        exporter: WellMetaExporter,
-        overwrite: bool = False,
-    ):
-        """Register an importer/exporter."""
-        importer_exporter = WellImporterExporter(
-            version=version, importer=importer, exporter=exporter
-        )
-        self._register(
-            version=version,
-            importer=importer_exporter,
-            overwrite=overwrite,
-            _ie_name="_well_ie",
-        )
-
-    def register_plate_ie(
-        self,
-        version: str,
-        importer: PlateMetaImporter,
-        exporter: PlateMetaExporter,
-        overwrite: bool = False,
-    ):
-        """Register an importer/exporter."""
-        importer_exporter = PlateImporterExporter(
-            version=version, importer=importer, exporter=exporter
-        )
-        self._register(
-            version=version,
-            importer=importer_exporter,
-            overwrite=overwrite,
-            _ie_name="_plate_ie",
-        )
-
     def _find_image_handler(
         self,
         group_handler: ZarrGroupHandler,
@@ -536,6 +449,40 @@ class ImplementedMetaImporterExporter:
             strict_canonical_order=strict_canonical_order,
         )
 
+    def _register(
+        self,
+        version: str,
+        importer: _importer_exporter,
+        overwrite: bool = False,
+        _ie_name: str = "_image_ie",
+    ):
+        """Register an importer/exporter."""
+        ie_dict = self.__getattribute__(_ie_name)
+        if version in ie_dict and not overwrite:
+            raise NgioValueError(
+                f"Importer/exporter for version {version} already exists. "
+                "Use 'overwrite=True' to overwrite."
+            )
+        ie_dict[version] = importer
+
+    def register_image_ie(
+        self,
+        version: str,
+        importer: ImageMetaImporter,
+        exporter: ImageMetaExporter,
+        overwrite: bool = False,
+    ):
+        """Register an importer/exporter."""
+        importer_exporter = ImageImporterExporter(
+            version=version, importer=importer, exporter=exporter
+        )
+        self._register(
+            version=version,
+            importer=importer_exporter,
+            overwrite=overwrite,
+            _ie_name="_image_ie",
+        )
+
     def find_label_handler(
         self,
         group_handler: ZarrGroupHandler,
@@ -573,6 +520,24 @@ class ImplementedMetaImporterExporter:
             axes_setup=axes_setup,
             allow_non_canonical_axes=allow_non_canonical_axes,
             strict_canonical_order=strict_canonical_order,
+        )
+
+    def register_label_ie(
+        self,
+        version: str,
+        importer: LabelMetaImporter,
+        exporter: LabelMetaExporter,
+        overwrite: bool = False,
+    ):
+        """Register an importer/exporter."""
+        importer_exporter = LabelImporterExporter(
+            version=version, importer=importer, exporter=exporter
+        )
+        self._register(
+            version=version,
+            importer=importer_exporter,
+            overwrite=overwrite,
+            _ie_name="_label_ie",
         )
 
     def _find_hcs_handler(
@@ -629,6 +594,24 @@ class ImplementedMetaImporterExporter:
             group_handler=group_handler,
         )
 
+    def register_well_ie(
+        self,
+        version: str,
+        importer: WellMetaImporter,
+        exporter: WellMetaExporter,
+        overwrite: bool = False,
+    ):
+        """Register an importer/exporter."""
+        importer_exporter = WellImporterExporter(
+            version=version, importer=importer, exporter=exporter
+        )
+        self._register(
+            version=version,
+            importer=importer_exporter,
+            overwrite=overwrite,
+            _ie_name="_well_ie",
+        )
+
     def find_plate_handler(
         self,
         group_handler: ZarrGroupHandler,
@@ -654,6 +637,24 @@ class ImplementedMetaImporterExporter:
             meta_importer=plate_ie.importer,
             meta_exporter=plate_ie.exporter,
             group_handler=group_handler,
+        )
+
+    def register_plate_ie(
+        self,
+        version: str,
+        importer: PlateMetaImporter,
+        exporter: PlateMetaExporter,
+        overwrite: bool = False,
+    ):
+        """Register an importer/exporter."""
+        importer_exporter = PlateImporterExporter(
+            version=version, importer=importer, exporter=exporter
+        )
+        self._register(
+            version=version,
+            importer=importer_exporter,
+            overwrite=overwrite,
+            _ie_name="_plate_ie",
         )
 
 
