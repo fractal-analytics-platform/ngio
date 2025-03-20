@@ -17,6 +17,8 @@ from ngio.ome_zarr_meta.ngio_specs import (
     Dataset,
     NgioImageMeta,
     NgioLabelMeta,
+    NgioPlateMeta,
+    NgioWellMeta,
     PixelSize,
 )
 
@@ -29,6 +31,8 @@ __all__ = [
     "LabelMetaHandler",
     "NgioImageMeta",
     "NgioLabelMeta",
+    "NgioPlateMeta",
+    "NgioWellMeta",
     "PixelSize",
     "find_image_meta_handler",
     "find_label_meta_handler",

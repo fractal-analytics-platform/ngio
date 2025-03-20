@@ -1,5 +1,6 @@
 """Common utilities for working with Zarr groups in consistent ways."""
 
+# %%
 from pathlib import Path
 from typing import Literal
 
@@ -130,7 +131,7 @@ class ZarrGroupHandler:
                     "The store needs to be a path to use the lock mechanism."
                 )
             self._lock_path = f"{_store}.lock"
-            self._lock = FileLock(self._lock_path)
+            self._lock = FileLock(self._lock_path, timeout=10)
 
         else:
             self._lock_path = None
@@ -167,8 +168,13 @@ class ZarrGroupHandler:
         return self._mode  # type: ignore
 
     @property
-    def lock(self) -> BaseFileLock | None:
+    def lock(self) -> BaseFileLock:
         """Return the lock."""
+        if self._lock is None:
+            raise NgioValueError(
+                "The handler is not parallel safe. "
+                "Reopen the handler with parallel_safe=True."
+            )
         return self._lock
 
     @property
@@ -375,3 +381,6 @@ class ZarrGroupHandler:
             return True, self.derive_handler(path)
         except NgioError as e:
             return False, e
+
+
+# %%
