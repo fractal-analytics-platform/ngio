@@ -1,5 +1,6 @@
 """Abstract class for handling OME-NGFF images."""
 
+# %%
 from collections.abc import Collection
 from typing import Literal, overload
 
@@ -208,12 +209,6 @@ class OmeZarrContainer:
             OmeZarrContainer: The new image container.
 
         """
-        if copy_labels:
-            raise NotImplementedError("Copying labels is not yet implemented.")
-
-        if copy_tables:
-            raise NotImplementedError("Copying tables is not yet implemented.")
-
         _ = self._images_container.derive(
             store=store,
             ref_path=ref_path,
@@ -229,9 +224,22 @@ class OmeZarrContainer:
         handler = ZarrGroupHandler(
             store, cache=self._group_handler.use_cache, mode=self._group_handler.mode
         )
-        return OmeZarrContainer(
+
+        new_omezarr = OmeZarrContainer(
             group_handler=handler,
+            validate_arrays=False,
         )
+
+        if copy_labels:
+            self.labels_container._group_handler.copy_handler(
+                new_omezarr.labels_container._group_handler
+            )
+
+        if copy_tables:
+            self.tables_container._group_handler.copy_handler(
+                new_omezarr.tables_container._group_handler
+            )
+        return new_omezarr
 
     def list_tables(self) -> list[str]:
         """List all tables in the image."""

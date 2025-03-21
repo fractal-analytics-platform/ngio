@@ -382,5 +382,20 @@ class ZarrGroupHandler:
         except NgioError as e:
             return False, e
 
+    def copy_handler(self, handler: "ZarrGroupHandler") -> None:
+        """Copy the group to a new store."""
+        _, n_skipped, _ = zarr.copy_store(
+            source=self.group.store,
+            dest=handler.group.store,
+            source_path=self.group.path,
+            dest_path=handler.group.path,
+            if_exists="replace",
+        )
+        if n_skipped > 0:
+            raise NgioValueError(
+                f"Error copying group to {handler.full_path}, "
+                f"#{n_skipped} files where skipped."
+            )
+
 
 # %%
