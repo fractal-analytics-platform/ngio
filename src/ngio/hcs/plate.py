@@ -110,6 +110,17 @@ class OmeZarrPlate:
         """Return the wells paths in the plate."""
         return self.meta.wells_paths
 
+    def get_well_path(self, row: str, column: int | str) -> str:
+        """Return the well path in the plate."""
+        return self.meta.get_well_path(row=row, column=column)
+
+    def get_image_path(self, row: str, column: int | str, path: str) -> str:
+        """Return the image path in the plate."""
+        well = self.get_well(row, column)
+        if path not in well.paths():
+            raise ValueError(f"Image {path} does not exist in well {row}{column}")
+        return f"{self.get_well_path(row, column)}/{path}"
+
     def get_well(self, row: str, column: int | str) -> OmeZarrWell:
         """Get a well from the plate.
 
