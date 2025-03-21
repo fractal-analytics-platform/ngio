@@ -56,6 +56,17 @@ class WorldCooROI(BaseModel):
             z_length=_to_raster(self.z_length, pixel_size.z, dim_z),
         )
 
+    def zoom(self, zoom_factor: float = 1) -> "WorldCooROI":
+        """Zoom the ROI by a factor.
+
+        Args:
+            zoom_factor: The zoom factor. If the zoom factor
+                is less than 1 the ROI will be zoomed in.
+                If the zoom factor is greater than 1 the ROI will be zoomed out.
+                If the zoom factor is 1 the ROI will not be changed.
+        """
+        return zoom_roi(self, zoom_factor)
+
 
 class RasterCooROI(BaseModel):
     """Region of interest (ROI) metadata."""
@@ -89,3 +100,39 @@ class RasterCooROI(BaseModel):
             "y": slice(self.y, self.y + self.y_length),
             "z": slice(self.z, self.z + self.z_length),
         }
+
+
+def zoom_roi(roi: WorldCooROI, zoom_factor: float = 1) -> WorldCooROI:
+    """Zoom the ROI by a factor.
+
+    Args:
+        roi: The ROI to zoom.
+        zoom_factor: The zoom factor. If the zoom factor
+            is less than 1 the ROI will be zoomed in.
+            If the zoom factor is greater than 1 the ROI will be zoomed out.
+            If the zoom factor is 1 the ROI will not be changed.
+    """
+    if zoom_factor <= 0:
+        raise ValueError("Zoom factor must be greater than 0.")
+
+    # the zoom factor needs to be rescaled
+    # from the range [-1, inf) to [0, inf)
+    zoom_factor -= 1
+    diff_x = roi.x_length * zoom_factor
+    diff_y = roi.y_length * zoom_factor
+
+    new_x = max(roi.x - diff_x / 2, 0)
+    new_y = max(roi.y - diff_y / 2, 0)
+
+    new_roi = WorldCooROI(
+        name=roi.name,
+        x=new_x,
+        y=new_y,
+        z=roi.z,
+        x_length=roi.x_length + diff_x,
+        y_length=roi.y_length + diff_y,
+        z_length=roi.z_length,
+        unit=roi.unit,
+    )
+
+    return new_roi

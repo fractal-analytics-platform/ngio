@@ -1,8 +1,10 @@
 """A module for handling label images in OME-NGFF files."""
 
+# %%
 from collections.abc import Collection
 from typing import Literal
 
+from ngio.common import compute_masking_roi
 from ngio.images.abstract_image import AbstractImage, consolidate_image
 from ngio.images.create import _create_empty_label
 from ngio.images.image import Image
@@ -12,6 +14,7 @@ from ngio.ome_zarr_meta import (
     PixelSize,
     find_label_meta_handler,
 )
+from ngio.tables import MaskingROITable
 from ngio.utils import (
     NgioValidationError,
     NgioValueError,
@@ -47,6 +50,10 @@ class Label(AbstractImage[LabelMetaHandler]):
     def meta(self) -> NgioLabelMeta:
         """Return the metadata."""
         return self._meta_handler.meta
+
+    def build_masking_roi_table(self) -> MaskingROITable:
+        """Build a masking ROI table from the label."""
+        return build_masking_roi_table(self)
 
     def consolidate(
         self,
@@ -262,3 +269,14 @@ def _derive_label(
         name=name,
     )
     return None
+
+
+def build_masking_roi_table(label: Label) -> MaskingROITable:
+    """Build a masking ROI table from a label."""
+    if label.dimensions.is_time_series:
+        raise NgioValueError("Time series labels are not supported.")
+
+    array = label.get_array(axes_order=["z", "y", "x"], mode="dask")
+
+    rois = compute_masking_roi(array, label.pixel_size)
+    return MaskingROITable(rois, reference_label=label.meta.name)
