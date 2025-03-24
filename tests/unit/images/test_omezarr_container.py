@@ -106,6 +106,14 @@ def test_create_omezarr_container(tmp_path: Path, array_mode: str):
     assert new_omezarr.list_tables() == []
     assert new_omezarr.list_roi_tables() == []
 
+    # Test masked image instantiation
+    masked_image = new_omezarr.get_masked_image(masking_label_name="new_label")
+    assert masked_image.shape == image.shape
+    masked_label = new_omezarr.get_masked_label(
+        label_name="new_label", masking_label_name="new_label"
+    )
+    assert masked_label.shape == image.shape
+
 
 def test_remote_omezarr_container():
     url = (
