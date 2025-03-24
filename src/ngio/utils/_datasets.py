@@ -29,7 +29,7 @@ def list_ome_zarr_datasets() -> list[str]:
 
 def download_ome_zarr_dataset(
     dataset_name: str,
-    download_dir: str = "data",
+    download_dir: str | Path = "data",
 ) -> Path:
     """Download an OME-Zarr dataset.
 

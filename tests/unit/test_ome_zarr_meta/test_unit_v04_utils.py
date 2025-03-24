@@ -15,7 +15,7 @@ from ngio.ome_zarr_meta.v04._v04_spec_utils import (
 
 
 def test_image_round_trip():
-    path = "tests/data/meta_v04/base_ome_zarr_image_meta.json"
+    path = "tests/data/v04/meta/base_ome_zarr_image_meta.json"
     with open(path) as f:
         input_metadata = json.load(f)
 
@@ -28,7 +28,7 @@ def test_image_round_trip():
 
 
 def test_label_round_trip():
-    path = "tests/data/meta_v04/base_ome_zarr_label_meta.json"
+    path = "tests/data/v04/meta/base_ome_zarr_label_meta.json"
     with open(path) as f:
         metadata = json.load(f)
 

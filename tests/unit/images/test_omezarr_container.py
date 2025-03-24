@@ -3,12 +3,50 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from ngio import create_empty_omezarr, create_omezarr_from_array, open_omezarr_container
+from ngio import create_empty_omezarr, open_omezarr_container
 from ngio.utils import fractal_fsspec_store
 
 
+@pytest.mark.parametrize(
+    "zarr_name",
+    [
+        "test_image_yx.zarr",
+        "test_image_cyx.zarr",
+        "test_image_zyx.zarr",
+        "test_image_czyx.zarr",
+        "test_image_c1yx.zarr",
+        "test_image_tyx.zarr",
+        "test_image_tcyx.zarr",
+        "test_image_tzyx.zarr",
+        "test_image_tczyx.zarr",
+    ],
+)
+def test_open_omezarr_container(images_v04: dict[str, Path], zarr_name: str):
+    path = images_v04[zarr_name]
+    omezarr = open_omezarr_container(path)
+
+    image = omezarr.get_image()
+    label = omezarr.get_label("label")
+
+    roi = image.build_image_roi_table().get("image")
+    image.get_roi(roi)
+    label.get_roi(roi)
+
+
+def test_open_real_omezarr(cardiomyocyte_tiny_path: Path):
+    cardiomyocyte_tiny_path = cardiomyocyte_tiny_path / "B" / "03" / "0"
+    omezarr = open_omezarr_container(cardiomyocyte_tiny_path)
+    assert omezarr.list_labels() == [], omezarr.list_labels()
+    assert omezarr.list_tables() == ["FOV_ROI_table", "well_ROI_table"], (
+        omezarr.list_tables()
+    )
+    assert omezarr.list_roi_tables() == ["FOV_ROI_table", "well_ROI_table"], (
+        omezarr.list_roi_tables()
+    )
+
+
 @pytest.mark.parametrize("array_mode", ["numpy", "dask"])
-def test_omezarr_container(tmp_path: Path, array_mode: str):
+def test_create_omezarr_container(tmp_path: Path, array_mode: str):
     # Very basic test to check if the container is working
     # to be expanded with more meaningful tests
     store = tmp_path / "omezarr.zarr"
@@ -67,18 +105,6 @@ def test_omezarr_container(tmp_path: Path, array_mode: str):
     assert new_omezarr.list_labels() == ["new_label"]
     assert new_omezarr.list_tables() == []
     assert new_omezarr.list_roi_tables() == []
-
-
-def test_create_omezarr_container(tmp_path: Path):
-    # Very basic test to check if the container is working
-    # to be expanded with more meaningful tests
-    store = tmp_path / "omezarr.zarr"
-    create_omezarr_from_array(
-        store,
-        array=np.zeros((10, 20, 30), dtype="uint8"),
-        xy_pixelsize=0.5,
-        levels=3,
-    )
 
 
 def test_remote_omezarr_container():

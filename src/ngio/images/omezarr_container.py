@@ -68,12 +68,7 @@ class OmeZarrContainer:
         self._group_handler = group_handler
         self._images_container = ImagesContainer(self._group_handler)
 
-        if label_container is None:
-            label_container = _default_label_container(self._group_handler)
         self._labels_container = label_container
-
-        if table_container is None:
-            table_container = _default_table_container(self._group_handler)
         self._tables_container = table_container
 
     def __repr__(self) -> str:
@@ -102,14 +97,18 @@ class OmeZarrContainer:
     def labels_container(self) -> LabelsContainer:
         """Return the labels container."""
         if self._labels_container is None:
-            raise NgioValidationError("No labels found in the image.")
+            self._labels_container = _default_label_container(self._group_handler)
+            if self._labels_container is None:
+                raise NgioValidationError("No labels found in the image.")
         return self._labels_container
 
     @property
     def tables_container(self) -> TablesContainer:
         """Return the tables container."""
         if self._tables_container is None:
-            raise NgioValidationError("No tables found in the image.")
+            self._tables_container = _default_table_container(self._group_handler)
+            if self._tables_container is None:
+                raise NgioValidationError("No tables found in the image.")
         return self._tables_container
 
     @property
@@ -282,15 +281,11 @@ class OmeZarrContainer:
 
     def list_tables(self) -> list[str]:
         """List all tables in the image."""
-        if self._tables_container is None:
-            return []
-        return self._tables_container.list()
+        return self.tables_container.list()
 
     def list_roi_tables(self) -> list[str]:
         """List all ROI tables in the image."""
-        if self._tables_container is None:
-            return []
-        return self._tables_container.list_roi_tables()
+        return self.tables_container.list_roi_tables()
 
     @overload
     def get_table(self, name: str, check_type: None) -> Table: ...
@@ -315,10 +310,7 @@ class OmeZarrContainer:
 
     def get_table(self, name: str, check_type: TypedTable | None = None) -> Table:
         """Get a table from the image."""
-        if self._tables_container is None:
-            raise NgioValidationError("No tables found in the image.")
-
-        table = self._tables_container.get(name)
+        table = self.tables_container.get(name)
         match check_type:
             case "roi_table":
                 if not isinstance(table, RoiTable):
@@ -370,17 +362,13 @@ class OmeZarrContainer:
         overwrite: bool = False,
     ) -> None:
         """Add a table to the image."""
-        if self._tables_container is None:
-            raise NgioValidationError("No tables found in the image.")
-        self._tables_container.add(
+        self.tables_container.add(
             name=name, table=table, backend=backend, overwrite=overwrite
         )
 
     def list_labels(self) -> list[str]:
         """List all labels in the image."""
-        if self._labels_container is None:
-            return []
-        return self._labels_container.list()
+        return self.labels_container.list()
 
     def get_label(
         self,
@@ -399,9 +387,7 @@ class OmeZarrContainer:
                 pixel size must match the image pixel size exactly. If False, the
                 closest pixel size level will be returned.
         """
-        if self._labels_container is None:
-            raise NgioValidationError("No labels found in the image.")
-        return self._labels_container.get(
+        return self.labels_container.get(
             name=name, path=path, pixel_size=pixel_size, strict=strict
         )
 
@@ -478,12 +464,9 @@ class OmeZarrContainer:
             Label: The new label.
 
         """
-        if self._labels_container is None:
-            raise NgioValidationError("No labels found in the image.")
-
         if ref_image is None:
             ref_image = self.get_image()
-        return self._labels_container.derive(
+        return self.labels_container.derive(
             name=name,
             ref_image=ref_image,
             shape=shape,

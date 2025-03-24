@@ -140,6 +140,12 @@ def _create_empty_label(
     if axes_names is None:
         axes_names = canonical_label_axes_order()[-len(shape) :]
 
+    if len(axes_names) != len(shape):
+        raise NgioValueError(
+            f"Number of axes names {axes_names} does not match the number of "
+            f"dimensions {shape}."
+        )
+
     meta, scaling_factors = _init_generic_meta(
         meta_type=NgioLabelMeta,
         pixelsize=pixelsize,
@@ -224,6 +230,12 @@ def _create_empty_image(
     """
     if axes_names is None:
         axes_names = canonical_axes_order()[-len(shape) :]
+
+    if len(axes_names) != len(shape):
+        raise NgioValueError(
+            f"Number of axes names {axes_names} does not match the number of "
+            f"dimensions {shape}."
+        )
 
     meta, scaling_factors = _init_generic_meta(
         meta_type=NgioImageMeta,
