@@ -12,11 +12,22 @@ cardiomyocyte_tiny_source_path = download_ome_zarr_dataset(
     "CardiomyocyteTiny", download_dir=zenodo_download_dir
 )
 
+cardiomyocyte_small_mip_source_path = download_ome_zarr_dataset(
+    "CardiomyocyteSmallMip", download_dir=zenodo_download_dir
+)
+
 
 @pytest.fixture
 def cardiomyocyte_tiny_path(tmp_path: Path) -> Path:
     dest_path = tmp_path / cardiomyocyte_tiny_source_path.stem
     shutil.copytree(cardiomyocyte_tiny_source_path, dest_path, dirs_exist_ok=True)
+    return dest_path
+
+
+@pytest.fixture
+def cardiomyocyte_small_mip_path(tmp_path: Path) -> Path:
+    dest_path = tmp_path / cardiomyocyte_small_mip_source_path.stem
+    shutil.copytree(cardiomyocyte_small_mip_source_path, dest_path, dirs_exist_ok=True)
     return dest_path
 
 
