@@ -4,11 +4,14 @@ These are the interfaces bwteen the ROI tables / masking ROI tables and
     the ImageLikeHandler.
 """
 
+from collections.abc import Iterable
+
 import numpy as np
 from pydantic import BaseModel, ConfigDict, Field
 
 from ngio.common._dimensions import Dimensions
 from ngio.ome_zarr_meta.ngio_specs import PixelSize, SpaceUnits
+from ngio.utils import NgioValueError
 
 
 def _to_raster(value: float, pixel_size: float, max_shape: int) -> int:
@@ -136,3 +139,23 @@ def zoom_roi(roi: WorldCooROI, zoom_factor: float = 1) -> WorldCooROI:
     )
 
     return new_roi
+
+
+def roi_to_slice_kwargs(
+    roi: WorldCooROI,
+    pixel_size: PixelSize,
+    dimensions: Dimensions,
+    **slice_kwargs: slice | int | Iterable[int],
+) -> dict[str, slice | int | Iterable[int]]:
+    """Convert a WorldCooROI to slice_kwargs."""
+    raster_roi = roi.to_raster_coo(
+        pixel_size=pixel_size, dimensions=dimensions
+    ).to_slices()
+    for key in slice_kwargs.keys():
+        if key in raster_roi:
+            raise NgioValueError(
+                f"Key {key} is already in the slice_kwargs. "
+                "Ambiguous which one to use: "
+                f"{key}={slice_kwargs[key]} or roi_{key}={raster_roi[key]}"
+            )
+    return {**raster_roi, **slice_kwargs}

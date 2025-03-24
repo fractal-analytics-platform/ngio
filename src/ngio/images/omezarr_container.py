@@ -9,6 +9,7 @@ import numpy as np
 from ngio.images.create import _create_empty_image
 from ngio.images.image import Image, ImagesContainer
 from ngio.images.label import Label, LabelsContainer
+from ngio.images.masked_image import MaskedImage, MaskedLabel
 from ngio.ome_zarr_meta import (
     NgioImageMeta,
     PixelSize,
@@ -173,6 +174,44 @@ class OmeZarrContainer:
         """
         return self._images_container.get(
             path=path, pixel_size=pixel_size, strict=strict
+        )
+
+    def get_masked_image(
+        self,
+        masking_label_name: str,
+        masking_table_name: str | None = None,
+        path: str | None = None,
+        pixel_size: PixelSize | None = None,
+        strict: bool = False,
+    ) -> MaskedImage:
+        """Get a masked image at a specific level.
+
+        Args:
+            masking_label_name (str): The name of the label.
+            masking_table_name (str | None): The name of the masking table.
+            path (str | None): The path to the image in the omezarr file.
+            pixel_size (PixelSize | None): The pixel size of the image.
+            strict (bool): Only used if the pixel size is provided. If True, the
+                pixel size must match the image pixel size exactly. If False, the
+                closest pixel size level will be returned.
+        """
+        image = self.get_image(path=path, pixel_size=pixel_size, strict=strict)
+        masking_label = self.get_label(
+            name=masking_label_name, path=path, pixel_size=pixel_size, strict=strict
+        )
+        if masking_table_name is None:
+            masking_table = masking_label.build_masking_roi_table()
+        else:
+            masking_table = self.get_table(
+                masking_table_name, check_type="masking_roi_table"
+            )
+
+        return MaskedImage(
+            group_handler=image._group_handler,
+            path=masking_label.path,
+            meta_handler=image.meta_handler,
+            label=masking_label,
+            masking_roi_table=masking_table,
         )
 
     def derive_image(
@@ -356,6 +395,48 @@ class OmeZarrContainer:
             raise NgioValidationError("No labels found in the image.")
         return self._labels_container.get(
             name=name, path=path, pixel_size=pixel_size, strict=strict
+        )
+
+    def get_masked_label(
+        self,
+        label_name: str,
+        masking_label_name: str,
+        masking_table_name: str | None = None,
+        path: str | None = None,
+        pixel_size: PixelSize | None = None,
+        strict: bool = False,
+    ) -> MaskedLabel:
+        """Get a masked image at a specific level.
+
+        Args:
+            label_name (str): The name of the label.
+            masking_label_name (str): The name of the masking label.
+            masking_table_name (str | None): The name of the masking table.
+            path (str | None): The path to the image in the omezarr file.
+            pixel_size (PixelSize | None): The pixel size of the image.
+            strict (bool): Only used if the pixel size is provided. If True, the
+                pixel size must match the image pixel size exactly. If False, the
+                closest pixel size level will be returned.
+        """
+        label = self.get_label(
+            name=label_name, path=path, pixel_size=pixel_size, strict=strict
+        )
+        masking_label = self.get_label(
+            name=masking_label_name, path=path, pixel_size=pixel_size, strict=strict
+        )
+        if masking_table_name is None:
+            masking_table = label.build_masking_roi_table()
+        else:
+            masking_table = self.get_table(
+                masking_table_name, check_type="masking_roi_table"
+            )
+
+        return MaskedLabel(
+            group_handler=label._group_handler,
+            path=label.path,
+            meta_handler=label.meta_handler,
+            label=masking_label,
+            masking_roi_table=masking_table,
         )
 
     def derive_label(

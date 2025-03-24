@@ -165,13 +165,18 @@ def _mask_pipe_common(
     label_array: zarr.Array,
     label: int,
     *,
-    dimensions: Dimensions,
+    dimensions_array: Dimensions,
+    dimensions_label: Dimensions,
     axes_order: Collection[str] | None = None,
     mode: Literal["numpy", "dask", "delayed"] = "numpy",
     **slice_kwargs: slice | int | Iterable[int],
 ):
     array_patch = get_pipe(
-        array, dimensions=dimensions, axes_order=axes_order, mode=mode, **slice_kwargs
+        array,
+        dimensions=dimensions_array,
+        axes_order=axes_order,
+        mode=mode,
+        **slice_kwargs,
     )
 
     if "c" in slice_kwargs.keys():
@@ -183,7 +188,7 @@ def _mask_pipe_common(
 
     label_patch = get_pipe(
         label_array,
-        dimensions=dimensions,
+        dimensions=dimensions_label,
         axes_order=axes_order,
         mode=mode,
         **slice_kwargs,
@@ -205,7 +210,8 @@ def get_masked_pipe(
     label_array: zarr.Array,
     label: int,
     *,
-    dimensions: Dimensions,
+    dimensions_array: Dimensions,
+    dimensions_label: Dimensions,
     axes_order: Collection[str] | None = None,
     mode: Literal["numpy", "dask", "delayed"] = "numpy",
     **slice_kwargs: slice | int | Iterable[int],
@@ -214,7 +220,8 @@ def get_masked_pipe(
         array=array,
         label_array=label_array,
         label=label,
-        dimensions=dimensions,
+        dimensions_array=dimensions_array,
+        dimensions_label=dimensions_label,
         axes_order=axes_order,
         mode=mode,
         **slice_kwargs,
@@ -229,7 +236,8 @@ def set_masked_pipe(
     label: int,
     patch: ArrayLike,
     *,
-    dimensions: Dimensions,
+    dimensions_array: Dimensions,
+    dimensions_label: Dimensions,
     axes_order: Collection[str] | None = None,
     **slice_kwargs: slice | int | Iterable[int],
 ):
@@ -246,10 +254,13 @@ def set_masked_pipe(
         array=array,
         label_array=label_array,
         label=label,
-        dimensions=dimensions,
+        dimensions_array=dimensions_array,
+        dimensions_label=dimensions_label,
         axes_order=axes_order,
         mode=mode,
         **slice_kwargs,
     )
     patch = np.where(mask, patch, array_patch)
-    set_pipe(array, patch, dimensions=dimensions, axes_order=axes_order, **slice_kwargs)
+    set_pipe(
+        array, patch, dimensions=dimensions_array, axes_order=axes_order, **slice_kwargs
+    )

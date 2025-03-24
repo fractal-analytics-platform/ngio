@@ -11,6 +11,7 @@ from ngio.common import (
     WorldCooROI,
     consolidate_pyramid,
     get_pipe,
+    roi_to_slice_kwargs,
     set_pipe,
 )
 from ngio.ome_zarr_meta import (
@@ -19,7 +20,7 @@ from ngio.ome_zarr_meta import (
     LabelMetaHandler,
     PixelSize,
 )
-from ngio.utils import NgioFileExistsError, NgioValueError, ZarrGroupHandler
+from ngio.utils import NgioFileExistsError, ZarrGroupHandler
 
 _image_handler = TypeVar("_image_handler", ImageMetaHandler, LabelMetaHandler)
 
@@ -217,25 +218,6 @@ def consolidate_image(
     )
 
 
-def _roi_to_slice_kwargs(
-    roi: WorldCooROI,
-    image: AbstractImage,
-    **slice_kwargs: slice | int | Iterable[int],
-) -> dict[str, slice | int | Iterable[int]]:
-    """Convert a WorldCooROI to slice_kwargs."""
-    raster_roi = roi.to_raster_coo(
-        pixel_size=image.pixel_size, dimensions=image.dimensions
-    ).to_slices()
-    for key in slice_kwargs.keys():
-        if key in raster_roi:
-            raise NgioValueError(
-                f"Key {key} is already in the slice_kwargs. "
-                "Ambiguous which one to use: "
-                f"{key}={slice_kwargs[key]} or roi_{key}={raster_roi[key]}"
-            )
-    return {**raster_roi, **slice_kwargs}
-
-
 def get_roi_pipe(
     image: AbstractImage,
     roi: WorldCooROI,
@@ -255,7 +237,12 @@ def get_roi_pipe(
     Returns:
         The array of the region of interest.
     """
-    slice_kwargs = _roi_to_slice_kwargs(roi, image, **slice_kwargs)
+    slice_kwargs = roi_to_slice_kwargs(
+        roi=roi,
+        pixel_size=image.pixel_size,
+        dimensions=image.dimensions,
+        **slice_kwargs,
+    )
     return get_pipe(
         array=image.zarr_array,
         dimensions=image.dimensions,
@@ -282,7 +269,12 @@ def set_roi_pipe(
         **slice_kwargs: The slices to set the patch.
 
     """
-    slice_kwargs = _roi_to_slice_kwargs(roi, image, **slice_kwargs)
+    slice_kwargs = roi_to_slice_kwargs(
+        roi=roi,
+        pixel_size=image.pixel_size,
+        dimensions=image.dimensions,
+        **slice_kwargs,
+    )
     set_pipe(
         array=image.zarr_array,
         patch=patch,
