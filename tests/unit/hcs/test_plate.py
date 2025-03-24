@@ -45,8 +45,13 @@ def test_create_and_edit_plate(tmp_path: Path):
     with pytest.raises(NgioValueError):
         test_plate.add_image(row="B", column="03", image_path="1", acquisition_id=1)
 
-    test_plate.add_image(row="C", column="02", image_path="1", acquisition_id=1)
+    test_plate.atomic_add_image(row="C", column="02", image_path="1", acquisition_id=1)
 
     assert test_plate.columns == ["02", "03"]
     assert test_plate.rows == ["B", "C"]
     assert test_plate.acquisitions_ids == [0, 1]
+
+    assert len(test_plate.wells_paths) == 2
+
+    test_plate.remove_image(row="C", column="02", image_path="1")
+    assert len(test_plate.wells_paths) == 1
