@@ -1,6 +1,5 @@
 """A module for handling label images in OME-NGFF files."""
 
-# %%
 from collections.abc import Collection
 from typing import Literal
 
@@ -52,7 +51,7 @@ class Label(AbstractImage[LabelMetaHandler]):
         return self._meta_handler.meta
 
     def build_masking_roi_table(self) -> MaskingROITable:
-        """Build a masking ROI table from the label."""
+        """Compute the masking ROI table."""
         return build_masking_roi_table(self)
 
     def consolidate(
@@ -272,7 +271,7 @@ def _derive_label(
 
 
 def build_masking_roi_table(label: Label) -> MaskingROITable:
-    """Build a masking ROI table from a label."""
+    """Compute the masking ROI table for a label."""
     if label.dimensions.is_time_series:
         raise NgioValueError("Time series labels are not supported.")
 

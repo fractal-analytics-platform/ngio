@@ -151,6 +151,10 @@ def roi_to_slice_kwargs(
     raster_roi = roi.to_raster_coo(
         pixel_size=pixel_size, dimensions=dimensions
     ).to_slices()
+
+    if not dimensions.has_axis(axis_name="z"):
+        raster_roi.pop("z")
+
     for key in slice_kwargs.keys():
         if key in raster_roi:
             raise NgioValueError(

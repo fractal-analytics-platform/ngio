@@ -8,6 +8,7 @@ import zarr
 from ngio.common import (
     ArrayLike,
     Dimensions,
+    RasterCooROI,
     WorldCooROI,
     consolidate_pyramid,
     get_pipe,
@@ -20,6 +21,7 @@ from ngio.ome_zarr_meta import (
     LabelMetaHandler,
     PixelSize,
 )
+from ngio.tables import RoiTable
 from ngio.utils import NgioFileExistsError, ZarrGroupHandler
 
 _image_handler = TypeVar("_image_handler", ImageMetaHandler, LabelMetaHandler)
@@ -200,6 +202,10 @@ class AbstractImage(Generic[_image_handler]):
             image=self, roi=roi, patch=patch, axes_order=axes_order, **slice_kwargs
         )
 
+    def build_image_roi_table(self, name: str = "image") -> RoiTable:
+        """Build the ROI table for an image."""
+        return build_image_roi_table(image=self, name=name)
+
 
 def consolidate_image(
     image: AbstractImage,
@@ -282,3 +288,22 @@ def set_roi_pipe(
         axes_order=axes_order,
         **slice_kwargs,
     )
+
+
+def build_image_roi_table(image: AbstractImage, name: str = "image") -> RoiTable:
+    """Build the ROI table for an image."""
+    dim_z, dim_y, dim_x = (
+        image.dimensions.get("z", strict=False),
+        image.dimensions.get("y"),
+        image.dimensions.get("x"),
+    )
+    image_roi = RasterCooROI(
+        name=name,
+        x=0,
+        y=0,
+        z=0,
+        x_length=dim_x,
+        y_length=dim_y,
+        z_length=dim_z,
+    )
+    return RoiTable(rois=[image_roi.to_world_coo_roi(pixel_size=image.pixel_size)])

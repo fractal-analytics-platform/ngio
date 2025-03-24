@@ -354,6 +354,14 @@ class OmeZarrContainer:
             case _:
                 raise NgioValueError(f"Unknown check_type: {check_type}")
 
+    def build_image_roi_table(self, name: str = "image") -> RoiTable:
+        """Compute the ROI table for an image."""
+        return self.get_image().build_image_roi_table(name=name)
+
+    def build_masking_roi_table(self, label: str) -> MaskingROITable:
+        """Compute the masking ROI table for a label."""
+        return self.get_label(label).build_masking_roi_table()
+
     def add_table(
         self,
         name: str,

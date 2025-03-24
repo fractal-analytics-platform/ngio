@@ -286,6 +286,8 @@ class AbstractNgioImageMeta:
 
     def scaling_factor(self, path: str | None = None) -> list[float]:
         """Get the scaling factors from a dataset to its lower resolution."""
+        if self.levels == 1:
+            return [1.0] * len(self.axes_mapper.on_disk_axes_names)
         dataset, lr_dataset = self._get_closest_datasets(path=path)
 
         scaling_factors = []
@@ -297,6 +299,8 @@ class AbstractNgioImageMeta:
 
     def yx_scaling(self, path: str | None = None) -> tuple[float, float]:
         """Get the scaling factor from a dataset to its lower resolution."""
+        if self.levels == 1:
+            return 1.0, 1.0
         dataset, lr_dataset = self._get_closest_datasets(path=path)
 
         if lr_dataset is None:
@@ -317,6 +321,8 @@ class AbstractNgioImageMeta:
 
     def z_scaling(self, path: str | None = None) -> float:
         """Get the scaling factor from a dataset to its lower resolution."""
+        if self.levels == 1:
+            return 1.0
         dataset, lr_dataset = self._get_closest_datasets(path=path)
 
         s_d = dataset.get_scale("z")
