@@ -28,7 +28,11 @@ from ngio.ome_zarr_meta.ngio_specs._channels import (
     default_channel_name,
 )
 from ngio.ome_zarr_meta.ngio_specs._dataset import Dataset
-from ngio.ome_zarr_meta.ngio_specs._ngio_hcs import NgioPlateMeta, NgioWellMeta
+from ngio.ome_zarr_meta.ngio_specs._ngio_hcs import (
+    ImageInWellPath,
+    NgioPlateMeta,
+    NgioWellMeta,
+)
 from ngio.ome_zarr_meta.ngio_specs._ngio_image import (
     ImageLabelSource,
     NgioImageLabelMeta,
@@ -50,6 +54,7 @@ __all__ = [
     "ChannelVisualisation",
     "ChannelsMeta",
     "Dataset",
+    "ImageInWellPath",
     "ImageLabelSource",
     "NgioColors",
     "NgioImageLabelMeta",

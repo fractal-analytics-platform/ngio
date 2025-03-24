@@ -2,6 +2,7 @@
 
 from ngio.images import OmeZarrContainer
 from ngio.ome_zarr_meta import (
+    ImageInWellPath,
     NgioPlateMeta,
     NgioWellMeta,
     find_plate_meta_handler,
@@ -74,6 +75,10 @@ class OmeZarrPlate:
         """
         self._group_handler = group_handler
         self._meta_handler = find_plate_meta_handler(group_handler)
+
+    def __repr__(self) -> str:
+        """Return a string representation of the plate."""
+        return f"Plate([rows x columns] ({len(self.rows)} x {len(self.columns)})"
 
     @property
     def meta_handler(self):
@@ -188,7 +193,7 @@ class OmeZarrPlate:
         acquisition_id: int | None = None,
         acquisition_name: str | None = None,
         atomic: bool = False,
-    ):
+    ) -> StoreOrGroup:
         """Add an image to an ome-zarr plate."""
         if atomic:
             plate_lock = self._group_handler.lock
@@ -214,9 +219,7 @@ class OmeZarrPlate:
             if len(attrs) == 0:
                 # Initialize the well metadata
                 # if the group is empty
-                well_meta = NgioWellMeta.default_init(
-                    images_paths=[], acquisition_ids=None
-                )
+                well_meta = NgioWellMeta.default_init()
                 meta_handler = get_well_meta_handler(group_handler, version="0.4")
             else:
                 meta_handler = find_well_meta_handler(group_handler)
@@ -228,6 +231,8 @@ class OmeZarrPlate:
             meta_handler.write_meta(well_meta)
             meta_handler._group_handler.clean_cache()
 
+        return group_handler.get_group(image_path, create_mode=True)
+
     def atomic_add_image(
         self,
         row: str,
@@ -235,7 +240,7 @@ class OmeZarrPlate:
         image_path: str,
         acquisition_id: int | None = None,
         acquisition_name: str | None = None,
-    ):
+    ) -> StoreOrGroup:
         """Parallel safe version of add_image."""
         return self._add_image(
             row=row,
@@ -253,7 +258,7 @@ class OmeZarrPlate:
         image_path: str,
         acquisition_id: int | None = None,
         acquisition_name: str | None = None,
-    ):
+    ) -> StoreOrGroup:
         """Add an image to an ome-zarr plate."""
         return self._add_image(
             row=row,
@@ -358,24 +363,37 @@ def open_omezarr_plate(
 def create_empty_plate(
     store: StoreOrGroup,
     name: str,
+    images: list[ImageInWellPath] | None = None,
     version: str = "0.4",
     cache: bool = False,
     overwrite: bool = False,
     parallel_safe: bool = True,
-):
+) -> OmeZarrPlate:
     """Initialize and create an empty OME-Zarr plate."""
     mode = "w" if overwrite else "w-"
     group_handler = ZarrGroupHandler(
-        store=store, cache=cache, mode=mode, parallel_safe=parallel_safe
+        store=store, cache=True, mode=mode, parallel_safe=False
     )
     meta_handler = get_plate_meta_handler(group_handler, version=version)
     plate_meta = NgioPlateMeta.default_init(
-        rows=[],
-        columns=[],
-        acquisitions_ids=None,
-        acquisitions_names=None,
         name=name,
         version=version,
     )
     meta_handler.write_meta(plate_meta)
-    return OmeZarrPlate(group_handler)
+
+    if images is not None:
+        plate = OmeZarrPlate(group_handler)
+        for image in images:
+            plate.add_image(
+                row=image.row,
+                column=image.column,
+                image_path=image.path,
+                acquisition_id=image.acquisition_id,
+                acquisition_name=image.acquisition_name,
+            )
+    return open_omezarr_plate(
+        store=store,
+        cache=cache,
+        mode="r+",
+        parallel_safe=parallel_safe,
+    )

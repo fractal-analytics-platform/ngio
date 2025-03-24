@@ -15,6 +15,7 @@ from ngio.ome_zarr_meta._meta_handlers import (
 from ngio.ome_zarr_meta.ngio_specs import (
     AxesMapper,
     Dataset,
+    ImageInWellPath,
     NgioImageMeta,
     NgioLabelMeta,
     NgioPlateMeta,
@@ -25,6 +26,7 @@ from ngio.ome_zarr_meta.ngio_specs import (
 __all__ = [
     "AxesMapper",
     "Dataset",
+    "ImageInWellPath",
     "ImageMetaHandler",
     "ImageMetaHandler",
     "LabelMetaHandler",

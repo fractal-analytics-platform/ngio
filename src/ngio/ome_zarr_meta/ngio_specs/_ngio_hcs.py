@@ -12,8 +12,19 @@ from ome_zarr_models.v04.plate import (
 )
 from ome_zarr_models.v04.well import WellAttrs
 from ome_zarr_models.v04.well_types import WellImage, WellMeta
+from pydantic import BaseModel
 
 from ngio.utils import NgioValueError
+
+
+class ImageInWellPath(BaseModel):
+    """Image in a well."""
+
+    row: str
+    column: str | int
+    path: str
+    acquisition_id: int | None = None
+    acquisition_name: str | None = None
 
 
 class NgioWellMeta(WellAttrs):
@@ -22,28 +33,16 @@ class NgioWellMeta(WellAttrs):
     @classmethod
     def default_init(
         cls,
-        images_paths: list[str],
-        acquisition_ids: list[int] | None = None,
+        images: list[ImageInWellPath] | None = None,
         version: Literal["0.4"] | None = None,
     ) -> "NgioWellMeta":
-        if acquisition_ids is None:
-            _acquisition_ids = [None] * len(images_paths)
-        else:
-            _acquisition_ids = acquisition_ids
+        well = cls(well=WellMeta(images=[], version=version))
+        if images is None:
+            return well
 
-        if len(images_paths) != len(_acquisition_ids):
-            raise NgioValueError(
-                "Images paths and acquisition ids must have the same length."
-            )
-
-        images = [
-            WellImage(path=image_path, acquisition=acquisition_id)
-            for image_path, acquisition_id in zip(
-                images_paths, _acquisition_ids, strict=True
-            )
-        ]
-
-        return cls(well=WellMeta(images=images, version=version))
+        for image in images:
+            well = well.add_image(path=image.path, acquisition=image.acquisition_id)
+        return well
 
     def paths(self, acquisition: int | None = None) -> list[str]:
         """Return the images paths in the well.
@@ -163,78 +162,33 @@ class NgioPlateMeta(HCSAttrs):
     @classmethod
     def default_init(
         cls,
-        rows: list[str] | None = None,
-        columns: list[str] | None = None,
-        acquisitions_ids: list[int] | None = None,
-        acquisitions_names: list[str] | None = None,
+        images: list[ImageInWellPath] | None = None,
         name: str | None = None,
         version: str | None = None,
     ) -> "NgioPlateMeta":
-        if rows is None:
-            rows = []
-        if columns is None:
-            columns = []
-
-        if len(rows) != len(columns):
-            raise NgioValueError("Rows and columns must have the same length.")
-
-        unique_rows = list(set(rows))
-        unique_columns = list(set(columns))
-
-        _wells = []
-        for row, column in zip(rows, columns, strict=True):
-            # No need to use the _find_row_index and _find_column_index functions
-            # because we are sure that the row and column are in the list
-            row_idx = unique_rows.index(row)
-            column_idx = unique_columns.index(column)
-            _wells.append(
-                WellInPlate(
-                    path=f"{row}/{_stringify_column(column)}",
-                    rowIndex=row_idx,
-                    columnIndex=column_idx,
-                )
-            )
-
-        if acquisitions_ids is not None and acquisitions_names is None:
-            _acquisitions_ids = acquisitions_ids
-            _acquisitions_names = [None] * len(acquisitions_ids)
-        elif acquisitions_ids is None and acquisitions_names is not None:
-            _acquisitions_names = acquisitions_names
-            _acquisitions_ids = list(range(len(acquisitions_names)))
-        elif acquisitions_ids is not None and acquisitions_names is not None:
-            if len(acquisitions_ids) != len(acquisitions_names):
-                raise NgioValueError(
-                    "Acquisitions ids and names must have the same length."
-                )
-            _acquisitions_ids = acquisitions_ids
-            _acquisitions_names = acquisitions_names
-        else:
-            _acquisitions_ids = None
-            _acquisitions_names = None
-
-        if _acquisitions_ids is not None and _acquisitions_names is not None:
-            _acquisitions = [
-                Acquisition(id=acquisition_id, name=acquisition_name)
-                for acquisition_id, acquisition_name in zip(
-                    _acquisitions_ids, _acquisitions_names, strict=True
-                )
-            ]
-        else:
-            _acquisitions = None
-
-        return cls(
+        plate = cls(
             plate=Plate(
-                rows=[Row(name=row) for row in unique_rows],
-                columns=[
-                    Column(name=_stringify_column(column)) for column in unique_columns
-                ],
-                acquisitions=_acquisitions,
-                wells=_wells,
+                rows=[],
+                columns=[],
+                acquisitions=None,
+                wells=[],
                 field_count=None,
                 version=version,
                 name=name,
             )
         )
+
+        if images is None:
+            return plate
+
+        for image in images:
+            plate = plate.add_well(
+                row=image.row,
+                column=image.column,
+                acquisition_id=image.acquisition_id,
+                acquisition_name=image.acquisition_name,
+            )
+        return plate
 
     @property
     def columns(self) -> list[str]:
