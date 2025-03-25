@@ -211,6 +211,15 @@ def test_pixel_size():
     ps_3 = PixelSize(x=1.0, y=1.0, z=1.0, t=1.0)
     np.testing.assert_allclose(ps_1.distance(ps_3), np.sqrt(2.0) / 2)
 
+    # Test comparison
+    p1 = PixelSize(x=1, y=1, z=0.1243532)
+    p2 = PixelSize(x=1, y=1, z=0.1243532)
+    assert p1 == p2
+
+    p_small = PixelSize(x=0.1, y=0.1, z=0.1)
+    p_large = PixelSize(x=2, y=2, z=2)
+    assert p_small < p_large
+
 
 def test_dataset():
     on_disk_axes = [
@@ -376,8 +385,8 @@ def test_image_meta():
     assert image_meta.levels == 4
     assert image_meta.name == "test"
     assert image_meta.version == "0.4"
-    assert np.isclose(image_meta.xy_scaling_factor, 2.0)
-    assert np.isclose(image_meta.z_scaling_factor, 1.0)
+    assert len(image_meta.scaling_factor()) == 5
+    np.testing.assert_allclose(image_meta.scaling_factor(), [1, 1, 1, 2, 2])
     assert image_meta.get_dataset(path="0").path == "0"
     assert image_meta.get_dataset(path="1").path == "1"
     assert image_meta.get_dataset().path == "0"
@@ -422,8 +431,7 @@ def test_label_meta():
     assert label_meta.levels == 4
     assert label_meta.name == "test"
     assert label_meta.version == "0.4"
-    assert np.isclose(label_meta.xy_scaling_factor, 2.0)
-    assert np.isclose(label_meta.z_scaling_factor, 1.0)
+    np.testing.assert_allclose(label_meta.scaling_factor(), [1, 1, 2, 2])
     assert label_meta.get_dataset(path="0").path == "0"
     assert label_meta.get_dataset(path="1").path == "1"
     assert label_meta.get_dataset().path == "0"

@@ -1,6 +1,5 @@
 """Abstract class for handling OME-NGFF images."""
 
-# %%
 from collections.abc import Collection
 from typing import Literal, overload
 
@@ -9,6 +8,7 @@ import numpy as np
 from ngio.images.create import _create_empty_image
 from ngio.images.image import Image, ImagesContainer
 from ngio.images.label import Label, LabelsContainer
+from ngio.images.masked_image import MaskedImage, MaskedLabel
 from ngio.ome_zarr_meta import (
     NgioImageMeta,
     PixelSize,
@@ -19,6 +19,7 @@ from ngio.ome_zarr_meta.ngio_specs import (
 )
 from ngio.tables import (
     FeatureTable,
+    GenericRoiTable,
     MaskingROITable,
     RoiTable,
     Table,
@@ -57,23 +58,16 @@ class OmeZarrContainer:
 
     def __init__(
         self,
-        store: StoreOrGroup,
-        cache: bool = False,
-        mode: AccessModeLiteral = "r+",
+        group_handler: ZarrGroupHandler,
         table_container: TablesContainer | None = None,
         label_container: LabelsContainer | None = None,
         validate_arrays: bool = True,
     ) -> None:
         """Initialize the OmeZarrContainer."""
-        self._group_handler = ZarrGroupHandler(store, cache, mode)
+        self._group_handler = group_handler
         self._images_container = ImagesContainer(self._group_handler)
 
-        if label_container is None:
-            label_container = _default_label_container(self._group_handler)
         self._labels_container = label_container
-
-        if table_container is None:
-            table_container = _default_table_container(self._group_handler)
         self._tables_container = table_container
 
     def __repr__(self) -> str:
@@ -102,14 +96,18 @@ class OmeZarrContainer:
     def labels_container(self) -> LabelsContainer:
         """Return the labels container."""
         if self._labels_container is None:
-            raise NgioValidationError("No labels found in the image.")
+            self._labels_container = _default_label_container(self._group_handler)
+            if self._labels_container is None:
+                raise NgioValidationError("No labels found in the image.")
         return self._labels_container
 
     @property
     def tables_container(self) -> TablesContainer:
         """Return the tables container."""
         if self._tables_container is None:
-            raise NgioValidationError("No tables found in the image.")
+            self._tables_container = _default_table_container(self._group_handler)
+            if self._tables_container is None:
+                raise NgioValidationError("No tables found in the image.")
         return self._tables_container
 
     @property
@@ -176,47 +174,117 @@ class OmeZarrContainer:
             path=path, pixel_size=pixel_size, strict=strict
         )
 
+    def get_masked_image(
+        self,
+        masking_label_name: str,
+        masking_table_name: str | None = None,
+        path: str | None = None,
+        pixel_size: PixelSize | None = None,
+        strict: bool = False,
+    ) -> MaskedImage:
+        """Get a masked image at a specific level.
+
+        Args:
+            masking_label_name (str): The name of the label.
+            masking_table_name (str | None): The name of the masking table.
+            path (str | None): The path to the image in the omezarr file.
+            pixel_size (PixelSize | None): The pixel size of the image.
+            strict (bool): Only used if the pixel size is provided. If True, the
+                pixel size must match the image pixel size exactly. If False, the
+                closest pixel size level will be returned.
+        """
+        image = self.get_image(path=path, pixel_size=pixel_size, strict=strict)
+        masking_label = self.get_label(
+            name=masking_label_name, path=path, pixel_size=pixel_size, strict=strict
+        )
+        if masking_table_name is None:
+            masking_table = masking_label.build_masking_roi_table()
+        else:
+            masking_table = self.get_table(
+                masking_table_name, check_type="masking_roi_table"
+            )
+
+        return MaskedImage(
+            group_handler=image._group_handler,
+            path=masking_label.path,
+            meta_handler=image.meta_handler,
+            label=masking_label,
+            masking_roi_table=masking_table,
+        )
+
     def derive_image(
         self,
         store: StoreOrGroup,
         ref_path: str | None = None,
         shape: Collection[int] | None = None,
+        labels: Collection[str] | None = None,
+        pixel_size: PixelSize | None = None,
+        axes_names: Collection[str] | None = None,
         chunks: Collection[int] | None = None,
-        xy_scaling_factor: float = 2.0,
-        z_scaling_factor: float = 1.0,
-        copy_tables: bool = False,
+        dtype: str | None = None,
         copy_labels: bool = False,
+        copy_tables: bool = False,
         overwrite: bool = False,
     ) -> "OmeZarrContainer":
-        """Derive a new image from the current image."""
-        if copy_labels:
-            raise NotImplementedError("Copying labels is not yet implemented.")
+        """Create an empty OME-Zarr container from an existing image.
 
-        if copy_tables:
-            raise NotImplementedError("Copying tables is not yet implemented.")
+        Args:
+            store (StoreOrGroup): The Zarr store or group to create the image in.
+            ref_path (str | None): The path to the reference image in
+                the image container.
+            shape (Collection[int] | None): The shape of the new image.
+            labels (Collection[str] | None): The labels of the new image.
+            pixel_size (PixelSize | None): The pixel size of the new image.
+            axes_names (Collection[str] | None): The axes names of the new image.
+            chunks (Collection[int] | None): The chunk shape of the new image.
+            dtype (str | None): The data type of the new image.
+            copy_labels (bool): Whether to copy the labels from the reference image.
+            copy_tables (bool): Whether to copy the tables from the reference image.
+            overwrite (bool): Whether to overwrite an existing image.
 
+        Returns:
+            OmeZarrContainer: The new image container.
+
+        """
         _ = self._images_container.derive(
             store=store,
             ref_path=ref_path,
             shape=shape,
+            labels=labels,
+            pixel_size=pixel_size,
+            axes_names=axes_names,
             chunks=chunks,
-            xy_scaling_factor=xy_scaling_factor,
-            z_scaling_factor=z_scaling_factor,
+            dtype=dtype,
             overwrite=overwrite,
         )
-        return OmeZarrContainer(
-            store=store,
-            cache=False,
-            mode="r+",
-            table_container=None,
-            label_container=None,
+
+        handler = ZarrGroupHandler(
+            store, cache=self._group_handler.use_cache, mode=self._group_handler.mode
         )
+
+        new_omezarr = OmeZarrContainer(
+            group_handler=handler,
+            validate_arrays=False,
+        )
+
+        if copy_labels:
+            self.labels_container._group_handler.copy_handler(
+                new_omezarr.labels_container._group_handler
+            )
+
+        if copy_tables:
+            self.tables_container._group_handler.copy_handler(
+                new_omezarr.tables_container._group_handler
+            )
+        return new_omezarr
 
     def list_tables(self) -> list[str]:
         """List all tables in the image."""
-        if self._tables_container is None:
-            return []
-        return self._tables_container.list()
+        return self.tables_container.list()
+
+    def list_roi_tables(self) -> list[str]:
+        """List all ROI tables in the image."""
+        return self.tables_container.list_roi_tables()
 
     @overload
     def get_table(self, name: str, check_type: None) -> Table: ...
@@ -234,12 +302,14 @@ class OmeZarrContainer:
         self, name: str, check_type: Literal["feature_table"]
     ) -> FeatureTable: ...
 
+    @overload
+    def get_table(
+        self, name: str, check_type: Literal["generic_roi_table"]
+    ) -> GenericRoiTable: ...
+
     def get_table(self, name: str, check_type: TypedTable | None = None) -> Table:
         """Get a table from the image."""
-        if self._tables_container is None:
-            raise NgioValidationError("No tables found in the image.")
-
-        table = self._tables_container.get(name)
+        table = self.tables_container.get(name)
         match check_type:
             case "roi_table":
                 if not isinstance(table, RoiTable):
@@ -254,6 +324,15 @@ class OmeZarrContainer:
                         f"Found type: {table.type()}"
                     )
                 return table
+
+            case "generic_roi_table":
+                if not isinstance(table, GenericRoiTable):
+                    raise NgioValueError(
+                        f"Table '{name}' is not a generic ROI table. "
+                        f"Found type: {table.type()}"
+                    )
+                return table
+
             case "feature_table":
                 if not isinstance(table, FeatureTable):
                     raise NgioValueError(
@@ -266,6 +345,14 @@ class OmeZarrContainer:
             case _:
                 raise NgioValueError(f"Unknown check_type: {check_type}")
 
+    def build_image_roi_table(self, name: str = "image") -> RoiTable:
+        """Compute the ROI table for an image."""
+        return self.get_image().build_image_roi_table(name=name)
+
+    def build_masking_roi_table(self, label: str) -> MaskingROITable:
+        """Compute the masking ROI table for a label."""
+        return self.get_label(label).build_masking_roi_table()
+
     def add_table(
         self,
         name: str,
@@ -274,17 +361,13 @@ class OmeZarrContainer:
         overwrite: bool = False,
     ) -> None:
         """Add a table to the image."""
-        if self._tables_container is None:
-            raise NgioValidationError("No tables found in the image.")
-        self._tables_container.add(
+        self.tables_container.add(
             name=name, table=table, backend=backend, overwrite=overwrite
         )
 
     def list_labels(self) -> list[str]:
         """List all labels in the image."""
-        if self._labels_container is None:
-            return []
-        return self._labels_container.list()
+        return self.labels_container.list()
 
     def get_label(
         self,
@@ -303,10 +386,50 @@ class OmeZarrContainer:
                 pixel size must match the image pixel size exactly. If False, the
                 closest pixel size level will be returned.
         """
-        if self._labels_container is None:
-            raise NgioValidationError("No labels found in the image.")
-        return self._labels_container.get(
+        return self.labels_container.get(
             name=name, path=path, pixel_size=pixel_size, strict=strict
+        )
+
+    def get_masked_label(
+        self,
+        label_name: str,
+        masking_label_name: str,
+        masking_table_name: str | None = None,
+        path: str | None = None,
+        pixel_size: PixelSize | None = None,
+        strict: bool = False,
+    ) -> MaskedLabel:
+        """Get a masked image at a specific level.
+
+        Args:
+            label_name (str): The name of the label.
+            masking_label_name (str): The name of the masking label.
+            masking_table_name (str | None): The name of the masking table.
+            path (str | None): The path to the image in the omezarr file.
+            pixel_size (PixelSize | None): The pixel size of the image.
+            strict (bool): Only used if the pixel size is provided. If True, the
+                pixel size must match the image pixel size exactly. If False, the
+                closest pixel size level will be returned.
+        """
+        label = self.get_label(
+            name=label_name, path=path, pixel_size=pixel_size, strict=strict
+        )
+        masking_label = self.get_label(
+            name=masking_label_name, path=path, pixel_size=pixel_size, strict=strict
+        )
+        if masking_table_name is None:
+            masking_table = masking_label.build_masking_roi_table()
+        else:
+            masking_table = self.get_table(
+                masking_table_name, check_type="masking_roi_table"
+            )
+
+        return MaskedLabel(
+            group_handler=label._group_handler,
+            path=label.path,
+            meta_handler=label.meta_handler,
+            label=masking_label,
+            masking_roi_table=masking_table,
         )
 
     def derive_label(
@@ -314,29 +437,44 @@ class OmeZarrContainer:
         name: str,
         ref_image: Image | None = None,
         shape: Collection[int] | None = None,
+        pixel_size: PixelSize | None = None,
+        axes_names: Collection[str] | None = None,
         chunks: Collection[int] | None = None,
-        dtype: str = "uint16",
-        xy_scaling_factor=2.0,
-        z_scaling_factor=1.0,
+        dtype: str | None = None,
         overwrite: bool = False,
-    ) -> Label:
-        """Derive a label from an image."""
-        if self._labels_container is None:
-            raise NgioValidationError("No labels found in the image.")
+    ) -> "Label":
+        """Create an empty OME-Zarr label from a reference image.
 
+        And add the label to the /labels group.
+
+        Args:
+            store (StoreOrGroup): The Zarr store or group to create the image in.
+            ref_image (Image): The reference image.
+            name (str): The name of the new image.
+            shape (Collection[int] | None): The shape of the new image.
+            pixel_size (PixelSize | None): The pixel size of the new image.
+            axes_names (Collection[str] | None): The axes names of the new image.
+                For labels, the channel axis is not allowed.
+            chunks (Collection[int] | None): The chunk shape of the new image.
+            dtype (str | None): The data type of the new image.
+            overwrite (bool): Whether to overwrite an existing image.
+
+        Returns:
+            Label: The new label.
+
+        """
         if ref_image is None:
             ref_image = self.get_image()
-        self._labels_container.derive(
+        return self.labels_container.derive(
             name=name,
             ref_image=ref_image,
             shape=shape,
+            pixel_size=pixel_size,
+            axes_names=axes_names,
             chunks=chunks,
             dtype=dtype,
-            xy_scaling_factor=xy_scaling_factor,
-            z_scaling_factor=z_scaling_factor,
             overwrite=overwrite,
         )
-        return self.get_label(name, path="0")
 
 
 def open_omezarr_container(
@@ -346,10 +484,9 @@ def open_omezarr_container(
     validate_arrays: bool = True,
 ) -> OmeZarrContainer:
     """Open an OME-Zarr image."""
+    handler = ZarrGroupHandler(store=store, cache=cache, mode=mode)
     return OmeZarrContainer(
-        store=store,
-        cache=cache,
-        mode=mode,
+        group_handler=handler,
         validate_arrays=validate_arrays,
     )
 
@@ -450,11 +587,11 @@ def create_empty_omezarr(
     handler = _create_empty_image(
         store=store,
         shape=shape,
-        xy_pixelsize=xy_pixelsize,
+        pixelsize=xy_pixelsize,
         z_spacing=z_spacing,
         time_spacing=time_spacing,
         levels=levels,
-        xy_scaling_factor=xy_scaling_factor,
+        yx_scaling_factor=xy_scaling_factor,
         z_scaling_factor=z_scaling_factor,
         space_unit=space_unit,
         time_unit=time_unit,
@@ -466,7 +603,7 @@ def create_empty_omezarr(
         version=version,
     )
 
-    omezarr = OmeZarrContainer(store=handler.store, mode="r+")
+    omezarr = OmeZarrContainer(group_handler=handler)
     omezarr.initialize_channel_meta(
         labels=channel_labels,
         wavelength_id=channel_wavelengths,
@@ -541,11 +678,11 @@ def create_omezarr_from_array(
     handler = _create_empty_image(
         store=store,
         shape=array.shape,
-        xy_pixelsize=xy_pixelsize,
+        pixelsize=xy_pixelsize,
         z_spacing=z_spacing,
         time_spacing=time_spacing,
         levels=levels,
-        xy_scaling_factor=xy_scaling_factor,
+        yx_scaling_factor=xy_scaling_factor,
         z_scaling_factor=z_scaling_factor,
         space_unit=space_unit,
         time_unit=time_unit,
@@ -557,7 +694,7 @@ def create_omezarr_from_array(
         version=version,
     )
 
-    omezarr = OmeZarrContainer(store=handler.store, mode="r+")
+    omezarr = OmeZarrContainer(group_handler=handler)
     image = omezarr.get_image()
     image.set_array(array)
     image.consolidate()

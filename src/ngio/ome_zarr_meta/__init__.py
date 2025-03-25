@@ -1,35 +1,47 @@
 """Utilities for reading and writing OME-Zarr metadata."""
 
-from ngio.ome_zarr_meta._generic_handlers import (
-    BaseImageMetaHandler,
-    BaseLabelMetaHandler,
+from ngio.ome_zarr_meta._meta_handlers import (
     ImageMetaHandler,
     LabelMetaHandler,
-)
-from ngio.ome_zarr_meta._meta_handlers import (
-    ImplementedImageMetaHandlers,
-    ImplementedLabelMetaHandlers,
-    open_image_meta_handler,
+    find_image_meta_handler,
+    find_label_meta_handler,
+    find_plate_meta_handler,
+    find_well_meta_handler,
+    get_image_meta_handler,
+    get_label_meta_handler,
+    get_plate_meta_handler,
+    get_well_meta_handler,
 )
 from ngio.ome_zarr_meta.ngio_specs import (
     AxesMapper,
     Dataset,
+    ImageInWellPath,
     NgioImageMeta,
     NgioLabelMeta,
+    NgioPlateMeta,
+    NgioWellMeta,
     PixelSize,
 )
 
 __all__ = [
     "AxesMapper",
-    "BaseImageMetaHandler",
-    "BaseLabelMetaHandler",
     "Dataset",
+    "ImageInWellPath",
     "ImageMetaHandler",
-    "ImplementedImageMetaHandlers",
-    "ImplementedLabelMetaHandlers",
+    "ImageMetaHandler",
+    "LabelMetaHandler",
     "LabelMetaHandler",
     "NgioImageMeta",
     "NgioLabelMeta",
+    "NgioPlateMeta",
+    "NgioWellMeta",
     "PixelSize",
-    "open_image_meta_handler",
+    "find_image_meta_handler",
+    "find_label_meta_handler",
+    "find_plate_meta_handler",
+    "find_well_meta_handler",
+    "get_image_meta_handler",
+    "get_label_meta_handler",
+    "get_plate_meta_handler",
+    "get_well_meta_handler",
 ]

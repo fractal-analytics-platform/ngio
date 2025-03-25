@@ -10,9 +10,9 @@ from ngio.images.abstract_image import AbstractImage, consolidate_image
 from ngio.images.create import _create_empty_image
 from ngio.ome_zarr_meta import (
     ImageMetaHandler,
-    ImplementedImageMetaHandlers,
     NgioImageMeta,
     PixelSize,
+    find_image_meta_handler,
 )
 from ngio.ome_zarr_meta.ngio_specs import Channel, ChannelsMeta, ChannelVisualisation
 from ngio.utils import (
@@ -60,9 +60,7 @@ class Image(AbstractImage[ImageMetaHandler]):
 
         """
         if meta_handler is None:
-            meta_handler = ImplementedImageMetaHandlers().find_meta_handler(
-                group_handler
-            )
+            meta_handler = find_image_meta_handler(group_handler)
         super().__init__(
             group_handler=group_handler, path=path, meta_handler=meta_handler
         )
@@ -109,9 +107,7 @@ class ImagesContainer:
     def __init__(self, group_handler: ZarrGroupHandler) -> None:
         """Initialize the LabelGroupHandler."""
         self._group_handler = group_handler
-        self._meta_handler = ImplementedImageMetaHandlers().find_meta_handler(
-            group_handler
-        )
+        self._meta_handler = find_image_meta_handler(group_handler)
 
     @property
     def meta(self) -> NgioImageMeta:
@@ -239,20 +235,40 @@ class ImagesContainer:
         store: StoreOrGroup,
         ref_path: str | None = None,
         shape: Collection[int] | None = None,
+        labels: Collection[str] | None = None,
+        pixel_size: PixelSize | None = None,
+        axes_names: Collection[str] | None = None,
         chunks: Collection[int] | None = None,
-        xy_scaling_factor: float = 2.0,
-        z_scaling_factor: float = 1.0,
+        dtype: str | None = None,
         overwrite: bool = False,
     ) -> "ImagesContainer":
-        """Create an OME-Zarr image from a numpy array."""
+        """Create an empty OME-Zarr image from an existing image.
+
+        Args:
+            store (StoreOrGroup): The Zarr store or group to create the image in.
+            ref_path (str | None): The path to the reference image in
+                the image container.
+            shape (Collection[int] | None): The shape of the new image.
+            labels (Collection[str] | None): The labels of the new image.
+            pixel_size (PixelSize | None): The pixel size of the new image.
+            axes_names (Collection[str] | None): The axes names of the new image.
+            chunks (Collection[int] | None): The chunk shape of the new image.
+            dtype (str | None): The data type of the new image.
+            overwrite (bool): Whether to overwrite an existing image.
+
+        Returns:
+            ImagesContainer: The new image
+        """
         return derive_image_container(
             image_container=self,
             store=store,
             ref_path=ref_path,
             shape=shape,
+            labels=labels,
+            pixel_size=pixel_size,
+            axes_names=axes_names,
             chunks=chunks,
-            xy_scaling_factor=xy_scaling_factor,
-            z_scaling_factor=z_scaling_factor,
+            dtype=dtype,
             overwrite=overwrite,
         )
 
@@ -319,7 +335,6 @@ def compute_image_percentile(
 
         starts.append(float(_s_perc))
         ends.append(float(_e_perc))
-
     return starts, ends
 
 
@@ -328,12 +343,31 @@ def derive_image_container(
     store: StoreOrGroup,
     ref_path: str | None = None,
     shape: Collection[int] | None = None,
+    labels: Collection[str] | None = None,
+    pixel_size: PixelSize | None = None,
+    axes_names: Collection[str] | None = None,
     chunks: Collection[int] | None = None,
-    xy_scaling_factor: float = 2.0,
-    z_scaling_factor: float = 1.0,
+    dtype: str | None = None,
     overwrite: bool = False,
 ) -> ImagesContainer:
-    """Create an OME-Zarr image from a numpy array."""
+    """Create an empty OME-Zarr image from an existing image.
+
+    Args:
+        image_container (ImagesContainer): The image container to derive the new image.
+        store (StoreOrGroup): The Zarr store or group to create the image in.
+        ref_path (str | None): The path to the reference image in the image container.
+        shape (Collection[int] | None): The shape of the new image.
+        labels (Collection[str] | None): The labels of the new image.
+        pixel_size (PixelSize | None): The pixel size of the new image.
+        axes_names (Collection[str] | None): The axes names of the new image.
+        chunks (Collection[int] | None): The chunk shape of the new image.
+        dtype (str | None): The data type of the new image.
+        overwrite (bool): Whether to overwrite an existing image.
+
+    Returns:
+        ImagesContainer: The new image
+
+    """
     if ref_path is None:
         ref_image = image_container.get()
     else:
@@ -343,58 +377,77 @@ def derive_image_container(
 
     if shape is None:
         shape = ref_image.shape
-    else:
-        if len(shape) != len(ref_image.shape):
-            raise NgioValidationError(
-                "The shape of the new image does not match the reference image."
-            )
+
+    if pixel_size is None:
+        pixel_size = ref_image.pixel_size
+
+    if axes_names is None:
+        axes_names = ref_meta.axes_mapper.on_disk_axes_names
+
+    if len(axes_names) != len(shape):
+        raise NgioValidationError(
+            "The axes names of the new image does not match the reference image."
+            f"Got {axes_names} for shape {shape}."
+        )
 
     if chunks is None:
         chunks = ref_image.chunks
-    else:
-        if len(chunks) != len(ref_image.chunks):
-            raise NgioValidationError(
-                "The chunks of the new image does not match the reference image."
-            )
 
+    if len(chunks) != len(shape):
+        raise NgioValidationError(
+            "The chunks of the new image does not match the reference image."
+            f"Got {chunks} for shape {shape}."
+        )
+
+    if dtype is None:
+        dtype = ref_image.dtype
     handler = _create_empty_image(
         store=store,
         shape=shape,
-        xy_pixelsize=ref_image.pixel_size.x,
-        z_spacing=ref_image.pixel_size.z,
-        time_spacing=ref_image.pixel_size.t,
+        pixelsize=pixel_size.x,
+        z_spacing=pixel_size.z,
+        time_spacing=pixel_size.t,
         levels=ref_meta.levels,
-        xy_scaling_factor=xy_scaling_factor,
-        z_scaling_factor=z_scaling_factor,
-        time_unit=ref_image.pixel_size.time_unit,
-        space_unit=ref_image.pixel_size.space_unit,
-        axes_names=ref_image.dataset.axes_mapper.on_disk_axes_names,
+        yx_scaling_factor=ref_meta.yx_scaling(),
+        z_scaling_factor=ref_meta.z_scaling(),
+        time_unit=pixel_size.time_unit,
+        space_unit=pixel_size.space_unit,
+        axes_names=axes_names,
         chunks=chunks,
-        dtype=ref_image.dtype,
+        dtype=dtype,
         overwrite=overwrite,
         version=ref_meta.version,
     )
-
     image_container = ImagesContainer(handler)
 
     if ref_image.num_channels == image_container.num_channels:
-        labels = ref_image.channel_labels
+        _labels = ref_image.channel_labels
         wavelength_id = ref_image.wavelength_ids
+
         colors = [
             c.channel_visualisation.color for c in ref_image._channels_meta.channels
         ]
         active = [
             c.channel_visualisation.active for c in ref_image._channels_meta.channels
         ]
-
-        image_container.initialize_channel_meta(
-            labels=labels,
-            wavelength_id=wavelength_id,
-            percentiles=None,
-            colors=colors,
-            active=active,
-        )
     else:
-        image_container.initialize_channel_meta()
+        _labels = None
+        wavelength_id = None
+        colors = None
+        active = None
 
+    if labels is not None:
+        if len(labels) != image_container.num_channels:
+            raise NgioValidationError(
+                "The number of labels does not match the number of channels."
+            )
+        _labels = labels
+
+    image_container.initialize_channel_meta(
+        labels=_labels,
+        wavelength_id=wavelength_id,
+        percentiles=None,
+        colors=colors,
+        active=active,
+    )
     return image_container

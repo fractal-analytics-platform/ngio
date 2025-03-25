@@ -360,6 +360,17 @@ class ChannelsMeta(BaseModel):
         if isinstance(active, Collection):
             _active = _check_elements(active, bool)
 
+        all_lengths = [
+            len(labels),
+            len(_wavelength_id),
+            len(_colors),
+            len(_start),
+            len(_end),
+            len(_active),
+        ]
+        if len(set(all_lengths)) != 1:
+            raise NgioValueError("Channels information must all have the same length.")
+
         channels = []
         for ch_name, w_id, color, s, e, a in zip(
             labels, _wavelength_id, _colors, _start, _end, _active, strict=True

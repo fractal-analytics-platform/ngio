@@ -131,7 +131,7 @@ class ZarrGroupHandler:
                     "The store needs to be a path to use the lock mechanism."
                 )
             self._lock_path = f"{_store}.lock"
-            self._lock = FileLock(self._lock_path)
+            self._lock = FileLock(self._lock_path, timeout=10)
 
         else:
             self._lock_path = None
@@ -168,8 +168,13 @@ class ZarrGroupHandler:
         return self._mode  # type: ignore
 
     @property
-    def lock(self) -> BaseFileLock | None:
+    def lock(self) -> BaseFileLock:
         """Return the lock."""
+        if self._lock is None:
+            raise NgioValueError(
+                "The handler is not parallel safe. "
+                "Reopen the handler with parallel_safe=True."
+            )
         return self._lock
 
     @property
@@ -376,3 +381,21 @@ class ZarrGroupHandler:
             return True, self.derive_handler(path)
         except NgioError as e:
             return False, e
+
+    def copy_handler(self, handler: "ZarrGroupHandler") -> None:
+        """Copy the group to a new store."""
+        _, n_skipped, _ = zarr.copy_store(
+            source=self.group.store,
+            dest=handler.group.store,
+            source_path=self.group.path,
+            dest_path=handler.group.path,
+            if_exists="replace",
+        )
+        if n_skipped > 0:
+            raise NgioValueError(
+                f"Error copying group to {handler.full_path}, "
+                f"#{n_skipped} files where skipped."
+            )
+
+
+# %%

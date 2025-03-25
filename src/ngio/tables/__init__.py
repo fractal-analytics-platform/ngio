@@ -3,6 +3,7 @@
 from ngio.tables.backends import ImplementedTableBackends
 from ngio.tables.tables_container import (
     FeatureTable,
+    GenericRoiTable,
     MaskingROITable,
     RoiTable,
     Table,
@@ -15,6 +16,7 @@ from ngio.tables.v1._generic_table import GenericTable
 
 __all__ = [
     "FeatureTable",
+    "GenericRoiTable",
     "GenericTable",
     "ImplementedTableBackends",
     "MaskingROITable",

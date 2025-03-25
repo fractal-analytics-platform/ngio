@@ -51,18 +51,20 @@ dependencies = [
 # https://peps.python.org/pep-0621/#dependencies-optional-dependencies
 # "extras" (e.g. for `pip install .[test]`)
 [project.optional-dependencies]
-test = ["pytest", "pytest-cov"]
+test = ["pytest", "pytest-cov", "scikit-image"]
 
 dev = [
     "napari",
     "pyqt5",
     "matplotlib",
+    "devtools",
     "notebook",
     "mypy",
-    "pdbpp",      # https://github.com/pdbpp/pdbpp
+    "pdbpp",        # https://github.com/pdbpp/pdbpp
     "pre-commit",
-    "rich",       # https://github.com/Textualize/rich
+    "rich",         # https://github.com/Textualize/rich
     "ruff",
+    "scikit-image",
 ] # add anything else you like to have in your dev environment here
 
 docs = [
@@ -212,18 +214,12 @@ test13 = { features = ["py13", "test"], solve-group = "py13" }
 # dev env
 dev = { features = ["dev", "test"], solve-group = "py11" }
 
-
-[tool.pixi.feature.py11.tasks]
-pytest_test11 = "pytest"
+[tool.pixi.tasks]
+serve_docs = "mkdocs serve"
+run_tests = "pytest"
+clean_nb_data = "rm -rf ./docs/notebooks/**/*.zarr"
 test_nb = { cmd = "jupyter-execute ./docs/notebooks/*.ipynb" }
-
-[tool.pixi.feature.py12.tasks]
-pytest_test12 = "pytest"
-
-[tool.pixi.feature.py13.tasks]
-pytest_test13 = "pytest"
-
-[tool.pixi.feature.task-feat.tasks]
+test = { depends-on = ["run_tests", "clean_nb_data", "test_nb"] }
 pre_commit_install = "pre-commit install"
 
 ruff-fix-imports = "ruff check --select I --fix"
@@ -232,13 +228,4 @@ ruff-format = { cmd = "ruff format", depends-on = ["ruff-fix-imports"] }
 pre-commit = { cmd = "pre-commit run --all-files", depends-on = [
     "pre_commit_install",
     "ruff-format",
-] }
-
-[tool.pixi.tasks]
-serve_docs = "mkdocs serve"
-test = { depends-on = [
-    "pytest_test11",
-    "pytest_test12",
-    "pytest_test13",
-    "test_nb",
 ] }

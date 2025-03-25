@@ -116,7 +116,10 @@ ENV/
 pixi.lock
 *.egg-info
 
+# Ignore all .zarr directories
 *.zarr
+# but allow .zarr in tests/data
+!tests/data/**/**/test_*.zarr
 
 # ignore data directory
 ./data/

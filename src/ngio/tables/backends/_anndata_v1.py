@@ -10,6 +10,7 @@ from ngio.tables.backends._anndata_utils import (
     custom_read_zarr,
     dataframe_to_anndata,
 )
+from ngio.utils import NgioValueError
 
 
 class AnnDataBackend(AbstractTableBackend):
@@ -65,7 +66,7 @@ class AnnDataBackend(AbstractTableBackend):
         """Consolidate the metadata in the store."""
         store = self._group_handler.store
         if not isinstance(store, str | Path):
-            raise ValueError(
+            raise NgioValueError(
                 "To write an AnnData object the store must be a local path/str."
             )
 

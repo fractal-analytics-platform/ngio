@@ -19,16 +19,18 @@ from ngio.utils import NgioValueError, ZarrGroupHandler
 def test_backend_manager(tmp_path: Path):
     manager = ImplementedTableBackends()
 
-    assert set(manager.available_backends) == {"json_v1", "anndata_v1"}
+    assert set(manager.available_backends) == {"experimental_json_v1", "anndata_v1"}
     manager.add_backend(JsonTableBackend, overwrite=True)
 
     manager2 = ImplementedTableBackends()
-    assert set(manager2.available_backends) == {"json_v1", "anndata_v1"}
-    assert set(manager.available_backends) == {"json_v1", "anndata_v1"}
+    assert set(manager2.available_backends) == {"experimental_json_v1", "anndata_v1"}
+    assert set(manager.available_backends) == {"experimental_json_v1", "anndata_v1"}
 
     store = tmp_path / "test_backend_manager.zarr"
     handler = ZarrGroupHandler(store=store, cache=True, mode="a")
-    backend = manager.get_backend(backend_name="json_v1", group_handler=handler)
+    backend = manager.get_backend(
+        backend_name="experimental_json_v1", group_handler=handler
+    )
     assert isinstance(backend, JsonTableBackend)
 
     backend = manager.get_backend(None, handler)
@@ -46,7 +48,7 @@ def test_json_backend(tmp_path: Path):
     handler = ZarrGroupHandler(store=store, cache=True, mode="a")
     backend = JsonTableBackend(handler)
 
-    assert backend.backend_name() == "json_v1"
+    assert backend.backend_name() == "experimental_json_v1"
     assert not backend.implements_anndata()
     assert backend.implements_dataframe()
 

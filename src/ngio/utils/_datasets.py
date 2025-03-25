@@ -4,6 +4,8 @@ from pathlib import Path
 
 import pooch
 
+from ngio.utils._errors import NgioValueError
+
 _ome_zarr_zoo = {
     "CardiomyocyteTiny": {
         "url": "https://zenodo.org/records/13305156/files/20200812-CardiomyocyteDifferentiation14-Cycle1.zarr.zip",
@@ -27,7 +29,7 @@ def list_ome_zarr_datasets() -> list[str]:
 
 def download_ome_zarr_dataset(
     dataset_name: str,
-    download_dir: str = "data",
+    download_dir: str | Path = "data",
 ) -> Path:
     """Download an OME-Zarr dataset.
 
@@ -38,7 +40,7 @@ def download_ome_zarr_dataset(
         download_dir (str): The download directory. Defaults to "data".
     """
     if dataset_name not in _ome_zarr_zoo:
-        raise ValueError(f"Dataset {dataset_name} not found in the OME-Zarr zoo.")
+        raise NgioValueError(f"Dataset {dataset_name} not found in the OME-Zarr zoo.")
     ome_zarr_url = _ome_zarr_zoo[dataset_name]
     pooch.retrieve(
         path=download_dir,

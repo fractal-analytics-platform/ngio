@@ -15,6 +15,7 @@ from ome_zarr_models.v04.coordinate_transformations import VectorScale as Vector
 from ome_zarr_models.v04.coordinate_transformations import (
     VectorTranslation as VectorTranslationV04,
 )
+from ome_zarr_models.v04.hcs import HCSAttrs as HCSAttrsV04
 from ome_zarr_models.v04.image import ImageAttrs as ImageAttrsV04
 from ome_zarr_models.v04.image_label import ImageLabelAttrs as LabelAttrsV04
 from ome_zarr_models.v04.multiscales import Dataset as DatasetV04
@@ -22,6 +23,7 @@ from ome_zarr_models.v04.multiscales import Multiscale as MultiscaleV04
 from ome_zarr_models.v04.omero import Channel as ChannelV04
 from ome_zarr_models.v04.omero import Omero as OmeroV04
 from ome_zarr_models.v04.omero import Window as WindowV04
+from ome_zarr_models.v04.well import WellAttrs as WellAttrsV04
 from pydantic import ValidationError
 
 from ngio.ome_zarr_meta.ngio_specs import (
@@ -35,6 +37,8 @@ from ngio.ome_zarr_meta.ngio_specs import (
     ImageLabelSource,
     NgioImageMeta,
     NgioLabelMeta,
+    NgioPlateMeta,
+    NgioWellMeta,
     default_channel_name,
 )
 from ngio.ome_zarr_meta.ngio_specs._ngio_image import NgffVersion
@@ -301,10 +305,11 @@ def v04_to_ngio_label_meta(
     )
 
 
-def _ngio_to_v04_multiscale(datasets: list[Dataset]) -> MultiscaleV04:
+def _ngio_to_v04_multiscale(name: str | None, datasets: list[Dataset]) -> MultiscaleV04:
     """Convert a ngio multiscale to a v04 multiscale.
 
     Args:
+        name (str | None): The name of the multiscale.
         datasets (list[Dataset]): The ngio datasets.
 
     Returns:
@@ -340,9 +345,7 @@ def _ngio_to_v04_multiscale(datasets: list[Dataset]) -> MultiscaleV04:
             DatasetV04(path=dataset.path, coordinateTransformations=transform)
         )
     return MultiscaleV04(
-        axes=v04_axes,
-        datasets=tuple(v04_datasets),
-        version="0.4",
+        axes=v04_axes, datasets=tuple(v04_datasets), version="0.4", name=name
     )
 
 
@@ -387,11 +390,13 @@ def ngio_to_v04_image_meta(metadata: NgioImageMeta) -> dict:
     Returns:
         dict: The v04 image metadata.
     """
-    v04_muliscale = _ngio_to_v04_multiscale(metadata.datasets)
+    v04_muliscale = _ngio_to_v04_multiscale(
+        name=metadata.name, datasets=metadata.datasets
+    )
     v04_omero = _ngio_to_v04_omero(metadata._channels_meta)
 
     v04_image = ImageAttrsV04(multiscales=[v04_muliscale], omero=v04_omero)
-    return v04_image.model_dump(exclude_none=True)
+    return v04_image.model_dump(exclude_none=True, by_alias=True)
 
 
 def ngio_to_v04_label_meta(metadata: NgioLabelMeta) -> dict:
@@ -403,10 +408,78 @@ def ngio_to_v04_label_meta(metadata: NgioLabelMeta) -> dict:
     Returns:
         dict: The v04 image metadata.
     """
-    v04_muliscale = _ngio_to_v04_multiscale(metadata.datasets)
-    v04_label = LabelAttrsV04(
-        multiscales=[v04_muliscale],
-        # image_label is aliased as 'imae-label'
-        image_label=metadata.image_label.model_dump(),  # type: ignore
+    v04_muliscale = _ngio_to_v04_multiscale(
+        name=metadata.name, datasets=metadata.datasets
     )
-    return v04_label.model_dump(exclude_none=True)
+    labels_meta = {
+        "multiscales": [v04_muliscale],
+        "image-label": metadata.image_label.model_dump(),
+    }
+    v04_label = LabelAttrsV04(**labels_meta)
+    return v04_label.model_dump(exclude_none=True, by_alias=True)
+
+
+def v04_to_ngio_well_meta(
+    metadata: dict,
+) -> tuple[bool, NgioWellMeta | ValidationError]:
+    """Convert a v04 well metadata to a ngio well metadata.
+
+    Args:
+        metadata (dict): The v04 well metadata.
+
+    Returns:
+        result (bool): True if the conversion was successful, False otherwise.
+        ngio_well_meta (NgioWellMeta): The ngio well metadata.
+    """
+    try:
+        v04_well = WellAttrsV04(**metadata)
+    except ValidationError as e:
+        return False, e
+
+    return True, NgioWellMeta(**v04_well.model_dump())
+
+
+def v04_to_ngio_plate_meta(
+    metadata: dict,
+) -> tuple[bool, NgioPlateMeta | ValidationError]:
+    """Convert a v04 plate metadata to a ngio plate metadata.
+
+    Args:
+        metadata (dict): The v04 plate metadata.
+
+    Returns:
+        result (bool): True if the conversion was successful, False otherwise.
+        ngio_plate_meta (NgioPlateMeta): The ngio plate metadata.
+    """
+    try:
+        v04_plate = HCSAttrsV04(**metadata)
+    except ValidationError as e:
+        return False, e
+
+    return True, NgioPlateMeta(**v04_plate.model_dump())
+
+
+def ngio_to_v04_well_meta(metadata: NgioWellMeta) -> dict:
+    """Convert a ngio well metadata to a v04 well metadata.
+
+    Args:
+        metadata (NgioWellMeta): The ngio well metadata.
+
+    Returns:
+        dict: The v04 well metadata.
+    """
+    v04_well = WellAttrsV04(**metadata.model_dump())
+    return v04_well.model_dump(exclude_none=True, by_alias=True)
+
+
+def ngio_to_v04_plate_meta(metadata: NgioPlateMeta) -> dict:
+    """Convert a ngio plate metadata to a v04 plate metadata.
+
+    Args:
+        metadata (NgioPlateMeta): The ngio plate metadata.
+
+    Returns:
+        dict: The v04 plate metadata.
+    """
+    v04_plate = HCSAttrsV04(**metadata.model_dump())
+    return v04_plate.model_dump(exclude_none=True, by_alias=True)

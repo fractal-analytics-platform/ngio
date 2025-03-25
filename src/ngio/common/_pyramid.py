@@ -7,7 +7,12 @@ import numpy as np
 import zarr
 
 from ngio.common._zoom import _zoom_inputs_check, dask_zoom, numpy_zoom
-from ngio.utils import AccessModeLiteral, StoreOrGroup, open_group_wrapper
+from ngio.utils import (
+    AccessModeLiteral,
+    NgioValueError,
+    StoreOrGroup,
+    open_group_wrapper,
+)
 
 
 def _on_disk_numpy_zoom(
@@ -64,7 +69,7 @@ def _on_disk_coarsen(
         elif _order == 0:
             aggregation_function = np.max
         else:
-            raise ValueError(
+            raise NgioValueError(
                 f"Aggregation function must be provided for order {_order}"
             )
 
@@ -77,7 +82,7 @@ def _on_disk_coarsen(
         if factor.is_integer():
             coarsening_setup[i] = int(factor)
         else:
-            raise ValueError(
+            raise NgioValueError(
                 f"Coarsening factor must be an integer, got {factor} on axis {i}"
             )
 
@@ -103,13 +108,13 @@ def on_disk_zoom(
         mode (Literal["dask", "numpy", "coarsen"]): The mode to use. Defaults to "dask".
     """
     if not isinstance(source, zarr.Array):
-        raise ValueError("source must be a zarr array")
+        raise NgioValueError("source must be a zarr array")
 
     if not isinstance(target, zarr.Array):
-        raise ValueError("target must be a zarr array")
+        raise NgioValueError("target must be a zarr array")
 
     if source.dtype != target.dtype:
-        raise ValueError("source and target must have the same dtype")
+        raise NgioValueError("source and target must have the same dtype")
 
     match mode:
         case "numpy":
@@ -122,7 +127,7 @@ def on_disk_zoom(
                 target,
             )
         case _:
-            raise ValueError("mode must be either 'dask', 'numpy' or 'coarsen'")
+            raise NgioValueError("mode must be either 'dask', 'numpy' or 'coarsen'")
 
 
 def _find_closest_arrays(
@@ -181,19 +186,19 @@ def init_empty_pyramid(
 ) -> None:
     # Return the an Image object
     if chunks is not None and len(chunks) != len(ref_shape):
-        raise ValueError(
+        raise NgioValueError(
             "The shape and chunks must have the same number of dimensions."
         )
 
     if len(ref_shape) != len(scaling_factors):
-        raise ValueError(
+        raise NgioValueError(
             "The shape and scaling factor must have the same number of dimensions."
         )
 
     root_group, _ = open_group_wrapper(store, mode=mode)
     for path in paths:
         if any(s < 1 for s in ref_shape):
-            raise ValueError(
+            raise NgioValueError(
                 "Level shape must be at least 1 on all dimensions. "
                 f"Calculated shape: {ref_shape} at level {path}."
             )
@@ -218,6 +223,6 @@ def init_empty_pyramid(
         if chunks is None:
             chunks = new_arr.chunks
             if chunks is None:
-                raise ValueError("Something went wrong with the chunks")
+                raise NgioValueError("Something went wrong with the chunks")
         chunks = [min(c, s) for c, s in zip(chunks, ref_shape, strict=True)]
     return None

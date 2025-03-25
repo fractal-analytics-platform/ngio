@@ -4,9 +4,7 @@ from typing import Protocol
 import pandas as pd
 import pandas.api.types as ptypes
 
-from ngio.utils import (
-    NgioTableValidationError,
-)
+from ngio.utils import NgioTableValidationError, NgioValueError
 
 
 class TableValidator(Protocol):
@@ -134,7 +132,7 @@ def validate_index_dtype(dataframe: pd.DataFrame, index_type: str) -> pd.DataFra
                     f"Table index must be of integer type, got {dataframe.index.dtype}"
                 )
         case _:
-            raise ValueError(f"index_type {index_type} not recognized")
+            raise NgioValueError(f"index_type {index_type} not recognized")
 
     return dataframe
 

@@ -57,6 +57,13 @@ class Dimensions:
             return 1
         return self._shape[index]
 
+    def has_axis(self, axis_name: str) -> bool:
+        """Return whether the axis exists."""
+        index = self._axes_mapper.get_axis(axis_name)
+        if index is None:
+            return False
+        return True
+
     def get_shape(self, axes_order: Collection[str]) -> tuple[int, ...]:
         """Return the shape in the given axes order."""
         transforms = self._axes_mapper.to_order(axes_order)

@@ -8,9 +8,11 @@ import zarr
 from ngio.common import (
     ArrayLike,
     Dimensions,
+    RasterCooROI,
     WorldCooROI,
     consolidate_pyramid,
     get_pipe,
+    roi_to_slice_kwargs,
     set_pipe,
 )
 from ngio.ome_zarr_meta import (
@@ -19,10 +21,8 @@ from ngio.ome_zarr_meta import (
     LabelMetaHandler,
     PixelSize,
 )
-from ngio.utils import (
-    NgioFileExistsError,
-    ZarrGroupHandler,
-)
+from ngio.tables import RoiTable
+from ngio.utils import NgioFileExistsError, ZarrGroupHandler
 
 _image_handler = TypeVar("_image_handler", ImageMetaHandler, LabelMetaHandler)
 
@@ -156,19 +156,8 @@ class AbstractImage(Generic[_image_handler]):
         Returns:
             The array of the region of interest.
         """
-        raster_roi = roi.to_raster_coo(
-            pixel_size=self.pixel_size, dimensions=self.dimensions
-        ).to_slices()
-
-        for key in slice_kwargs.keys():
-            if key in raster_roi:
-                raise ValueError(
-                    f"Key {key} is already in the slice_kwargs. "
-                    "Ambiguous which one to use: "
-                    f"{key}={slice_kwargs[key]} or roi_{key}={raster_roi[key]}"
-                )
-        return self.get_array(
-            axes_order=axes_order, mode=mode, **raster_roi, **slice_kwargs
+        return get_roi_pipe(
+            image=self, roi=roi, axes_order=axes_order, mode=mode, **slice_kwargs
         )
 
     def set_array(
@@ -209,18 +198,13 @@ class AbstractImage(Generic[_image_handler]):
             **slice_kwargs: The slices to set the patch.
 
         """
-        raster_roi = roi.to_raster_coo(
-            pixel_size=self.pixel_size, dimensions=self.dimensions
-        ).to_slices()
+        return set_roi_pipe(
+            image=self, roi=roi, patch=patch, axes_order=axes_order, **slice_kwargs
+        )
 
-        for key in slice_kwargs.keys():
-            if key in raster_roi:
-                raise ValueError(
-                    f"Key {key} is already in the slice_kwargs. "
-                    "Ambiguous which one to use: "
-                    f"{key}={slice_kwargs[key]} or roi_{key}={raster_roi[key]}"
-                )
-        self.set_array(patch=patch, axes_order=axes_order, **raster_roi, **slice_kwargs)
+    def build_image_roi_table(self, name: str = "image") -> RoiTable:
+        """Build the ROI table for an image."""
+        return build_image_roi_table(image=self, name=name)
 
 
 def consolidate_image(
@@ -238,3 +222,88 @@ def consolidate_image(
     consolidate_pyramid(
         source=image.zarr_array, targets=targets, order=order, mode=mode
     )
+
+
+def get_roi_pipe(
+    image: AbstractImage,
+    roi: WorldCooROI,
+    axes_order: Collection[str] | None = None,
+    mode: Literal["numpy", "dask", "delayed"] = "numpy",
+    **slice_kwargs: slice | int | Iterable[int],
+) -> ArrayLike:
+    """Get a slice of the image.
+
+    Args:
+        image: The image to get the ROI.
+        roi: The region of interest to get the array.
+        axes_order: The order of the axes to return the array.
+        mode: The mode to return the array.
+        **slice_kwargs: The slices to get the array.
+
+    Returns:
+        The array of the region of interest.
+    """
+    slice_kwargs = roi_to_slice_kwargs(
+        roi=roi,
+        pixel_size=image.pixel_size,
+        dimensions=image.dimensions,
+        **slice_kwargs,
+    )
+    return get_pipe(
+        array=image.zarr_array,
+        dimensions=image.dimensions,
+        axes_order=axes_order,
+        mode=mode,
+        **slice_kwargs,
+    )
+
+
+def set_roi_pipe(
+    image: AbstractImage,
+    roi: WorldCooROI,
+    patch: ArrayLike,
+    axes_order: Collection[str] | None = None,
+    **slice_kwargs: slice | int | Iterable[int],
+) -> None:
+    """Set a slice of the image.
+
+    Args:
+        image: The image to set the ROI.
+        roi: The region of interest to set the patch.
+        patch: The patch to set.
+        axes_order: The order of the axes to set the patch.
+        **slice_kwargs: The slices to set the patch.
+
+    """
+    slice_kwargs = roi_to_slice_kwargs(
+        roi=roi,
+        pixel_size=image.pixel_size,
+        dimensions=image.dimensions,
+        **slice_kwargs,
+    )
+    set_pipe(
+        array=image.zarr_array,
+        patch=patch,
+        dimensions=image.dimensions,
+        axes_order=axes_order,
+        **slice_kwargs,
+    )
+
+
+def build_image_roi_table(image: AbstractImage, name: str = "image") -> RoiTable:
+    """Build the ROI table for an image."""
+    dim_z, dim_y, dim_x = (
+        image.dimensions.get("z", strict=False),
+        image.dimensions.get("y"),
+        image.dimensions.get("x"),
+    )
+    image_roi = RasterCooROI(
+        name=name,
+        x=0,
+        y=0,
+        z=0,
+        x_length=dim_x,
+        y_length=dim_y,
+        z_length=dim_z,
+    )
+    return RoiTable(rois=[image_roi.to_world_coo_roi(pixel_size=image.pixel_size)])

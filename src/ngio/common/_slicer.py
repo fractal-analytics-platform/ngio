@@ -1,4 +1,3 @@
-# %%
 from collections.abc import Iterable
 
 import dask.array as da
@@ -69,7 +68,7 @@ def compute_and_slices(
             slice_ = _validate_slice(slice_, shape)
 
         elif not isinstance(slice_, slice):
-            raise ValueError(
+            raise NgioValueError(
                 f"Invalid slice definition {slice_} of type {type(slice_)}"
             )
         _slices[axis.on_disk_name] = slice_

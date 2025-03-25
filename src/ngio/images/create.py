@@ -5,11 +5,11 @@ from typing import TypeVar
 
 from ngio.common._pyramid import init_empty_pyramid
 from ngio.ome_zarr_meta import (
-    ImplementedImageMetaHandlers,
-    ImplementedLabelMetaHandlers,
     NgioImageMeta,
     NgioLabelMeta,
     PixelSize,
+    get_image_meta_handler,
+    get_label_meta_handler,
 )
 from ngio.ome_zarr_meta.ngio_specs import (
     SpaceUnits,
@@ -17,19 +17,19 @@ from ngio.ome_zarr_meta.ngio_specs import (
     canonical_axes_order,
     canonical_label_axes_order,
 )
-from ngio.utils import StoreOrGroup, ZarrGroupHandler
+from ngio.utils import NgioValueError, StoreOrGroup, ZarrGroupHandler
 
 _image_or_label_meta = TypeVar("_image_or_label_meta", NgioImageMeta, NgioLabelMeta)
 
 
 def _init_generic_meta(
     meta_type: type[_image_or_label_meta],
-    xy_pixelsize: float,
+    pixelsize: float,
     axes_names: Collection[str],
     z_spacing: float = 1.0,
     time_spacing: float = 1.0,
     levels: int | list[str] = 5,
-    xy_scaling_factor: float = 2.0,
+    yx_scaling_factor: float | tuple[float, float] = 2.0,
     z_scaling_factor: float = 1.0,
     space_unit: SpaceUnits | str | None = None,
     time_unit: TimeUnits | str | None = None,
@@ -41,8 +41,16 @@ def _init_generic_meta(
     for ax in axes_names:
         if ax == "z":
             scaling_factors.append(z_scaling_factor)
-        elif ax in ["x", "y"]:
-            scaling_factors.append(xy_scaling_factor)
+        elif ax in ["x"]:
+            if isinstance(yx_scaling_factor, tuple):
+                scaling_factors.append(yx_scaling_factor[1])
+            else:
+                scaling_factors.append(yx_scaling_factor)
+        elif ax in ["y"]:
+            if isinstance(yx_scaling_factor, tuple):
+                scaling_factors.append(yx_scaling_factor[0])
+            else:
+                scaling_factors.append(yx_scaling_factor)
         else:
             scaling_factors.append(1.0)
 
@@ -51,18 +59,18 @@ def _init_generic_meta(
     elif isinstance(space_unit, str):
         space_unit = SpaceUnits(space_unit)
     elif not isinstance(space_unit, SpaceUnits):
-        raise ValueError(f"space_unit can not be {type(space_unit)}.")
+        raise NgioValueError(f"space_unit can not be {type(space_unit)}.")
 
     if time_unit is None:
         time_unit = TimeUnits.seconds
     elif isinstance(time_unit, str):
         time_unit = TimeUnits(time_unit)
     elif not isinstance(time_unit, TimeUnits):
-        raise ValueError(f"time_units can not be {type(time_unit)}.")
+        raise NgioValueError(f"time_units can not be {type(time_unit)}.")
 
     pixel_sizes = PixelSize(
-        x=xy_pixelsize,
-        y=xy_pixelsize,
+        x=pixelsize,
+        y=pixelsize,
         z=z_spacing,
         t=time_spacing,
         space_unit=space_unit,
@@ -83,11 +91,11 @@ def _init_generic_meta(
 def _create_empty_label(
     store: StoreOrGroup,
     shape: Collection[int],
-    xy_pixelsize: float,
+    pixelsize: float,
     z_spacing: float = 1.0,
     time_spacing: float = 1.0,
     levels: int | list[str] = 5,
-    xy_scaling_factor: float = 2.0,
+    yx_scaling_factor: float | tuple[float, float] = 2.0,
     z_scaling_factor: float = 1.0,
     space_unit: SpaceUnits | str | None = None,
     time_unit: TimeUnits | str | None = None,
@@ -103,13 +111,13 @@ def _create_empty_label(
     Args:
         store (StoreOrGroup): The Zarr store or group to create the image in.
         shape (Collection[int]): The shape of the image.
-        xy_pixelsize (float): The pixel size in x and y dimensions.
+        pixelsize (float): The pixel size in x and y dimensions.
         z_spacing (float, optional): The spacing between z slices. Defaults to 1.0.
         time_spacing (float, optional): The spacing between time points.
             Defaults to 1.0.
         levels (int | list[str], optional): The number of levels in the pyramid or a
             list of level names. Defaults to 5.
-        xy_scaling_factor (float, optional): The down-scaling factor in x and y
+        yx_scaling_factor (float, optional): The down-scaling factor in x and y
             dimensions. Defaults to 2.0.
         z_scaling_factor (float, optional): The down-scaling factor in z dimension.
             Defaults to 1.0.
@@ -132,13 +140,19 @@ def _create_empty_label(
     if axes_names is None:
         axes_names = canonical_label_axes_order()[-len(shape) :]
 
+    if len(axes_names) != len(shape):
+        raise NgioValueError(
+            f"Number of axes names {axes_names} does not match the number of "
+            f"dimensions {shape}."
+        )
+
     meta, scaling_factors = _init_generic_meta(
         meta_type=NgioLabelMeta,
-        xy_pixelsize=xy_pixelsize,
+        pixelsize=pixelsize,
         z_spacing=z_spacing,
         time_spacing=time_spacing,
         levels=levels,
-        xy_scaling_factor=xy_scaling_factor,
+        yx_scaling_factor=yx_scaling_factor,
         z_scaling_factor=z_scaling_factor,
         space_unit=space_unit,
         time_unit=time_unit,
@@ -149,9 +163,7 @@ def _create_empty_label(
 
     mode = "w" if overwrite else "w-"
     group_handler = ZarrGroupHandler(store=store, mode=mode, cache=False)
-    image_handler = ImplementedLabelMetaHandlers().get_handler(
-        version=version, group_handler=group_handler
-    )
+    image_handler = get_label_meta_handler(version=version, group_handler=group_handler)
     image_handler.write_meta(meta)
 
     init_empty_pyramid(
@@ -163,17 +175,18 @@ def _create_empty_label(
         dtype=dtype,
         mode="a",
     )
+    group_handler._mode = "r+"
     return group_handler
 
 
 def _create_empty_image(
     store: StoreOrGroup,
     shape: Collection[int],
-    xy_pixelsize: float,
+    pixelsize: float,
     z_spacing: float = 1.0,
     time_spacing: float = 1.0,
     levels: int | list[str] = 5,
-    xy_scaling_factor: float = 2,
+    yx_scaling_factor: float | tuple[float, float] = 2,
     z_scaling_factor: float = 1.0,
     space_unit: SpaceUnits | str | None = None,
     time_unit: TimeUnits | str | None = None,
@@ -189,13 +202,13 @@ def _create_empty_image(
     Args:
         store (StoreOrGroup): The Zarr store or group to create the image in.
         shape (Collection[int]): The shape of the image.
-        xy_pixelsize (float): The pixel size in x and y dimensions.
+        pixelsize (float): The pixel size in x and y dimensions.
         z_spacing (float, optional): The spacing between z slices. Defaults to 1.0.
         time_spacing (float, optional): The spacing between time points.
             Defaults to 1.0.
         levels (int | list[str], optional): The number of levels in the pyramid or a
             list of level names. Defaults to 5.
-        xy_scaling_factor (float, optional): The down-scaling factor in x and y
+        yx_scaling_factor (float, optional): The down-scaling factor in x and y
             dimensions. Defaults to 2.0.
         z_scaling_factor (float, optional): The down-scaling factor in z dimension.
             Defaults to 1.0.
@@ -218,13 +231,19 @@ def _create_empty_image(
     if axes_names is None:
         axes_names = canonical_axes_order()[-len(shape) :]
 
+    if len(axes_names) != len(shape):
+        raise NgioValueError(
+            f"Number of axes names {axes_names} does not match the number of "
+            f"dimensions {shape}."
+        )
+
     meta, scaling_factors = _init_generic_meta(
         meta_type=NgioImageMeta,
-        xy_pixelsize=xy_pixelsize,
+        pixelsize=pixelsize,
         z_spacing=z_spacing,
         time_spacing=time_spacing,
         levels=levels,
-        xy_scaling_factor=xy_scaling_factor,
+        yx_scaling_factor=yx_scaling_factor,
         z_scaling_factor=z_scaling_factor,
         space_unit=space_unit,
         time_unit=time_unit,
@@ -234,9 +253,7 @@ def _create_empty_image(
     )
     mode = "w" if overwrite else "w-"
     group_handler = ZarrGroupHandler(store=store, mode=mode, cache=False)
-    image_handler = ImplementedImageMetaHandlers().get_handler(
-        version=version, group_handler=group_handler
-    )
+    image_handler = get_image_meta_handler(version=version, group_handler=group_handler)
     image_handler.write_meta(meta)
 
     init_empty_pyramid(
@@ -248,4 +265,6 @@ def _create_empty_image(
         dtype=dtype,
         mode="a",
     )
+
+    group_handler._mode = "r+"
     return group_handler

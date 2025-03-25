@@ -3,16 +3,17 @@
 from collections.abc import Collection
 from typing import Literal
 
+from ngio.common import compute_masking_roi
 from ngio.images.abstract_image import AbstractImage, consolidate_image
 from ngio.images.create import _create_empty_label
 from ngio.images.image import Image
 from ngio.ome_zarr_meta import (
-    ImplementedLabelMetaHandlers,
     LabelMetaHandler,
     NgioLabelMeta,
     PixelSize,
+    find_label_meta_handler,
 )
-from ngio.ome_zarr_meta.ngio_specs import SpaceUnits, TimeUnits
+from ngio.tables import MaskingROITable
 from ngio.utils import (
     NgioValidationError,
     NgioValueError,
@@ -39,9 +40,7 @@ class Label(AbstractImage[LabelMetaHandler]):
 
         """
         if meta_handler is None:
-            meta_handler = ImplementedLabelMetaHandlers().find_meta_handler(
-                group_handler
-            )
+            meta_handler = find_label_meta_handler(group_handler)
         super().__init__(
             group_handler=group_handler, path=path, meta_handler=meta_handler
         )
@@ -50,6 +49,10 @@ class Label(AbstractImage[LabelMetaHandler]):
     def meta(self) -> NgioLabelMeta:
         """Return the metadata."""
         return self._meta_handler.meta
+
+    def build_masking_roi_table(self) -> MaskingROITable:
+        """Compute the masking ROI table."""
+        return build_masking_roi_table(self)
 
     def consolidate(
         self,
@@ -87,11 +90,6 @@ class LabelsContainer:
         attrs = self._group_handler.load_attrs()
         return attrs.get("labels", [])
 
-    def _get(self, name: str, path: str) -> Label:
-        """Get a label from the group."""
-        group_handler = self._group_handler.derive_handler(name)
-        return Label(group_handler, path, None)
-
     def get(
         self,
         name: str,
@@ -111,9 +109,7 @@ class LabelsContainer:
 
         """
         group_handler = self._group_handler.derive_handler(name)
-        label_meta_handler = ImplementedLabelMetaHandlers().find_meta_handler(
-            group_handler
-        )
+        label_meta_handler = find_label_meta_handler(group_handler)
         path = label_meta_handler.meta.get_dataset(
             path=path, pixel_size=pixel_size, strict=strict
         ).path
@@ -124,13 +120,32 @@ class LabelsContainer:
         name: str,
         ref_image: Image,
         shape: Collection[int] | None = None,
+        pixel_size: PixelSize | None = None,
+        axes_names: Collection[str] | None = None,
         chunks: Collection[int] | None = None,
-        dtype: str = "uint16",
-        xy_scaling_factor=2.0,
-        z_scaling_factor=1.0,
+        dtype: str | None = None,
         overwrite: bool = False,
-    ) -> None:
-        """Add a label to the group."""
+    ) -> "Label":
+        """Create an empty OME-Zarr label from a reference image.
+
+        And add the label to the /labels group.
+
+        Args:
+            store (StoreOrGroup): The Zarr store or group to create the image in.
+            ref_image (Image): The reference image.
+            name (str): The name of the new image.
+            shape (Collection[int] | None): The shape of the new image.
+            pixel_size (PixelSize | None): The pixel size of the new image.
+            axes_names (Collection[str] | None): The axes names of the new image.
+                For labels, the channel axis is not allowed.
+            chunks (Collection[int] | None): The chunk shape of the new image.
+            dtype (str | None): The data type of the new image.
+            overwrite (bool): Whether to overwrite an existing image.
+
+        Returns:
+            Label: The new label.
+
+        """
         existing_labels = self.list()
         if name in existing_labels and not overwrite:
             raise NgioValueError(
@@ -141,124 +156,126 @@ class LabelsContainer:
         label_group = self._group_handler.get_group(name, create_mode=True)
 
         _derive_label(
+            store=label_group,
             ref_image=ref_image,
-            store=label_group,
+            name=name,
             shape=shape,
-            chunks=chunks,
-            dtype=dtype,
-            xy_scaling_factor=xy_scaling_factor,
-            z_scaling_factor=z_scaling_factor,
-            overwrite=overwrite,
-        )
-
-        if name not in existing_labels:
-            existing_labels.append(name)
-            self._group_handler.write_attrs({"labels": existing_labels})
-
-    def new(
-        self,
-        name: str,
-        shape: Collection[int],
-        xy_pixelsize: float,
-        z_spacing: float = 1.0,
-        time_spacing: float = 1.0,
-        levels: "int | list[str]" = 5,
-        xy_scaling_factor: float = 2.0,
-        z_scaling_factor: float = 1.0,
-        space_unit: SpaceUnits | str | None = None,
-        time_unit: TimeUnits | str | None = None,
-        axes_names: Collection[str] | None = None,
-        chunks: Collection[int] | None = None,
-        dtype: str = "uint16",
-        overwrite: bool = False,
-        version: str = "0.4",
-    ) -> None:
-        """Add a label to the group."""
-        existing_labels = self.list()
-        if name in existing_labels and not overwrite:
-            raise NgioValueError(
-                f"Table '{name}' already exists in the group. "
-                "Use overwrite=True to replace it."
-            )
-
-        label_group = self._group_handler.get_group(name, create_mode=True)
-
-        _create_empty_label(
-            store=label_group,
-            shape=shape,
-            xy_pixelsize=xy_pixelsize,
-            z_spacing=z_spacing,
-            time_spacing=time_spacing,
-            levels=levels,
-            xy_scaling_factor=xy_scaling_factor,
-            z_scaling_factor=z_scaling_factor,
-            space_unit=space_unit,
-            time_unit=time_unit,
+            pixel_size=pixel_size,
             axes_names=axes_names,
             chunks=chunks,
             dtype=dtype,
             overwrite=overwrite,
-            version=version,
         )
 
         if name not in existing_labels:
             existing_labels.append(name)
             self._group_handler.write_attrs({"labels": existing_labels})
 
+        return self.get(name)
+
 
 def _derive_label(
-    ref_image: Image,
     store: StoreOrGroup,
+    ref_image: Image,
+    name: str,
     shape: Collection[int] | None = None,
+    pixel_size: PixelSize | None = None,
+    axes_names: Collection[str] | None = None,
     chunks: Collection[int] | None = None,
-    dtype: str = "uint16",
-    xy_scaling_factor=2.0,
-    z_scaling_factor=1.0,
+    dtype: str | None = None,
     overwrite: bool = False,
 ) -> None:
-    """Create an OME-Zarr image from a numpy array."""
+    """Create an empty OME-Zarr label from a reference image.
+
+    Args:
+        store (StoreOrGroup): The Zarr store or group to create the image in.
+        ref_image (Image): The reference image.
+        name (str): The name of the new image.
+        shape (Collection[int] | None): The shape of the new image.
+        pixel_size (PixelSize | None): The pixel size of the new image.
+        axes_names (Collection[str] | None): The axes names of the new image.
+            For labels, the channel axis is not allowed.
+        chunks (Collection[int] | None): The chunk shape of the new image.
+        dtype (str | None): The data type of the new image.
+        overwrite (bool): Whether to overwrite an existing image.
+
+    Returns:
+        None
+
+    """
     ref_meta = ref_image.meta
-    # remove channls if present
-    shape_ref = ref_image.shape
-    chunks_ref = ref_image.chunks
-    axes_names_ref = ref_image.dataset.axes_mapper.on_disk_axes_names
-    c_axis = ref_image.dataset.axes_mapper.get_index("c")
-    if c_axis is not None:
-        shape_ref = shape_ref[:c_axis] + shape_ref[c_axis + 1 :]
-        chunks_ref = chunks_ref[:c_axis] + chunks_ref[c_axis + 1 :]
-        axes_names_ref = axes_names_ref[:c_axis] + axes_names_ref[c_axis + 1 :]
 
     if shape is None:
-        shape = shape_ref
+        shape = ref_image.shape
+
+    if pixel_size is None:
+        pixel_size = ref_image.pixel_size
+
+    if axes_names is None:
+        axes_names = ref_meta.axes_mapper.on_disk_axes_names
+        c_axis = ref_meta.axes_mapper.get_index("c")
+    else:
+        if "c" in axes_names:
+            raise NgioValidationError(
+                "Labels cannot have a channel axis. "
+                "Please remove the channel axis from the axes names."
+            )
+        c_axis = None
+
+    if len(axes_names) != len(shape):
+        raise NgioValidationError(
+            "The axes names of the new image does not match the reference image."
+            f"Got {axes_names} for shape {shape}."
+        )
 
     if chunks is None:
-        chunks = chunks_ref
+        chunks = ref_image.chunks
 
-    if len(shape) != len(shape_ref):
-        raise NgioValidationError(
-            "The shape of the new image does not match the reference image."
-        )
-
-    if len(chunks) != len(chunks_ref):
+    if len(chunks) != len(shape):
         raise NgioValidationError(
             "The chunks of the new image does not match the reference image."
+            f"Got {chunks} for shape {shape}."
         )
+
+    if dtype is None:
+        dtype = ref_image.dtype
+
+    if c_axis is not None:
+        # remove channel if present
+        shape = list(shape)
+        shape = shape[:c_axis] + shape[c_axis + 1 :]
+        chunks = list(chunks)
+        chunks = chunks[:c_axis] + chunks[c_axis + 1 :]
+        axes_names = list(axes_names)
+        axes_names = axes_names[:c_axis] + axes_names[c_axis + 1 :]
 
     _ = _create_empty_label(
         store=store,
         shape=shape,
-        xy_pixelsize=ref_image.pixel_size.x,
+        pixelsize=ref_image.pixel_size.x,
         z_spacing=ref_image.pixel_size.z,
         time_spacing=ref_image.pixel_size.t,
         levels=ref_meta.levels,
-        xy_scaling_factor=xy_scaling_factor,
-        z_scaling_factor=z_scaling_factor,
+        yx_scaling_factor=ref_meta.yx_scaling(),
+        z_scaling_factor=ref_meta.z_scaling(),
         time_unit=ref_image.pixel_size.time_unit,
         space_unit=ref_image.pixel_size.space_unit,
-        axes_names=axes_names_ref,
+        axes_names=axes_names,
         chunks=chunks,
         dtype=dtype,
         overwrite=overwrite,
         version=ref_meta.version,
+        name=name,
     )
     return None
+
+
+def build_masking_roi_table(label: Label) -> MaskingROITable:
+    """Compute the masking ROI table for a label."""
+    if label.dimensions.is_time_series:
+        raise NgioValueError("Time series labels are not supported.")
+
+    array = label.get_array(axes_order=["z", "y", "x"], mode="dask")
+
+    rois = compute_masking_roi(array, label.pixel_size)
+    return MaskingROITable(rois, reference_label=label.meta.name)
