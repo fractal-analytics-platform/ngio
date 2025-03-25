@@ -41,6 +41,9 @@ def custom_read_zarr(
     """
     group, _ = open_group_wrapper(store=store, mode="r")
 
+    if not isinstance(group.store, zarr.DirectoryStore):
+        elem_to_read = ["X", "obs", "var"]
+
     if elem_to_read is None:
         elem_to_read = [
             "X",
