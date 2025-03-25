@@ -152,4 +152,4 @@ def test_remote_omezarr_container():
     # ]
 
     _ = omezarr.get_label("nuclei", path="0")
-    # _ = omezarr.get_table("well_ROI_table")
+    _ = omezarr.get_table("well_ROI_table", check_type="roi_table")
