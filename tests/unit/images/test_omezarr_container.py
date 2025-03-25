@@ -25,9 +25,11 @@ def test_open_omezarr_container(images_v04: dict[str, Path], zarr_name: str):
     path = images_v04[zarr_name]
     omezarr = open_omezarr_container(path)
 
+    whole_image_roi = omezarr.build_image_roi_table().get("image")
     image = omezarr.get_image()
-    label = omezarr.get_label("label")
+    assert image.get_roi(whole_image_roi).shape == image.shape
 
+    label = omezarr.get_label("label")
     roi = image.build_image_roi_table().get("image")
     image.get_roi(roi)
     label.get_roi(roi)
