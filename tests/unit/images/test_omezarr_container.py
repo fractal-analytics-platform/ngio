@@ -35,16 +35,31 @@ def test_open_omezarr_container(images_v04: dict[str, Path], zarr_name: str):
     label.get_roi(roi)
 
 
-def test_open_real_omezarr(cardiomyocyte_tiny_path: Path):
+def test_omezarr_tables(cardiomyocyte_tiny_path: Path):
     cardiomyocyte_tiny_path = cardiomyocyte_tiny_path / "B" / "03" / "0"
     omezarr = open_omezarr_container(cardiomyocyte_tiny_path)
-    assert omezarr.list_labels() == [], omezarr.list_labels()
     assert omezarr.list_tables() == ["FOV_ROI_table", "well_ROI_table"], (
         omezarr.list_tables()
     )
     assert omezarr.list_roi_tables() == ["FOV_ROI_table", "well_ROI_table"], (
         omezarr.list_roi_tables()
     )
+
+    fov_roi = omezarr.get_table("FOV_ROI_table", check_type=None)
+    assert len(fov_roi.rois()) == 2  # type: ignore
+    roi_table_1 = omezarr.get_table("well_ROI_table", check_type="generic_roi_table")
+    assert len(roi_table_1.rois()) == 1
+    roi_table_2 = omezarr.get_table("well_ROI_table", check_type="roi_table")
+    assert len(roi_table_2.rois()) == 1
+
+    new_well_roi_table = omezarr.build_image_roi_table()
+    omezarr.add_table("new_well_ROI_table", new_well_roi_table)
+
+    assert omezarr.list_tables() == [
+        "FOV_ROI_table",
+        "well_ROI_table",
+        "new_well_ROI_table",
+    ]
 
 
 @pytest.mark.parametrize("array_mode", ["numpy", "dask"])
