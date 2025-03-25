@@ -13,9 +13,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
       - name: Check and Download Artifacts
         run: |
           bash .github/scripts/download_data.sh
@@ -27,6 +24,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: 🐍 Set up Python
         uses: actions/setup-python@v5
@@ -41,28 +40,22 @@ jobs:
           python -m pip install .[dev]
           python -m pip install .[docs]
 
-      - name: Configure Git for Mike
+      - name: Configure Git user
         run: |
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
-          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
-
-      - name: Deploy Docs with Mike
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+        
+      - name: Deploy docs
         run: |
-          git pull
-          if [[ "${GITHUB_REF}" == "refs/heads/main" ]]; then
-            mike deploy latest --push --update-aliases
-          elif [[ "${GITHUB_REF}" == "refs/heads/docs_update" ]]; then
-            mike deploy dev --push --update-aliases
+          VERSION=$(echo $GITHUB_REF | sed 's/refs\/tags\///' | sed 's/refs\/heads\///')
+          echo "Deploying version $VERSION"
+          # Check if the version is a stable release
+          # Meaning that starts with "v" and contains only numbers and dots
+          if [[ $GITHUB_REF == refs/tags/* ]] && [[ $VERSION =~ ^v[0-9.]+$ ]]; then
+            mike deploy --push --update-aliases $VERSION stable
+            mike set-default --push stable
+            echo "Deployed stable version"
           else
-            VERSION=${GITHUB_REF#refs/tags/v}
-            mike deploy "$VERSION" --push --update-aliases
-            mike set-default "$VERSION" --push
+            mike deploy --push dev
+            echo "Deployed development version"
           fi
-
-      # If something goes wrong with --pre tests, we can open an issue in the repo
-      - name: Deploy Docs
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          personal_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./site
