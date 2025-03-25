@@ -28,7 +28,7 @@ jobs:
       - run: pipx run check-manifest
 
   
-  download-artifacts:
+  download-test-ome-zarr:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -44,7 +44,7 @@ jobs:
 
   test:
     name: ${{ matrix.platform }} (${{ matrix.python-version }})
-    needs: download-artifacts
+    needs: download-test-ome-zarr
     runs-on: ${{ matrix.platform }}
     strategy:
       fail-fast: false
