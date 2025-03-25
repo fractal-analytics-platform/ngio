@@ -3,7 +3,7 @@
 [![License](https://img.shields.io/pypi/l/ngio.svg?color=green)](https://github.com/lorenzocerrone/ngio/raw/main/LICENSE)
 [![PyPI](https://img.shields.io/pypi/v/ngio.svg?color=green)](https://pypi.org/project/ngio)
 [![Python Version](https://img.shields.io/pypi/pyversions/ngio.svg?color=green)](https://python.org)
-[![CI](https://github.com/lorenzocerrone/ngio/actions/workflows/ci.yml/badge.svg)](https://github.com/fractal-analytics-platform/ngio/actions/workflows/ci.yml)
+[![CI](https://github.com/fractal-analytics-platform/ngio/actions/workflows/ci.yml/badge.svg)](https://github.com/fractal-analytics-platform/ngio/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/fractal-analytics-platform/ngio/graph/badge.svg?token=FkmF26FZki)](https://codecov.io/gh/fractal-analytics-platform/ngio)
 
 NGIO is a Python library to streamline OME-Zarr image analysis workflows.
