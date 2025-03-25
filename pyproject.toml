@@ -51,7 +51,7 @@ dependencies = [
 # https://peps.python.org/pep-0621/#dependencies-optional-dependencies
 # "extras" (e.g. for `pip install .[test]`)
 [project.optional-dependencies]
-test = ["pytest", "pytest-cov"]
+test = ["pytest", "pytest-cov", "scikit-image"]
 
 dev = [
     "napari",
@@ -60,10 +60,11 @@ dev = [
     "devtools",
     "notebook",
     "mypy",
-    "pdbpp",      # https://github.com/pdbpp/pdbpp
+    "pdbpp",        # https://github.com/pdbpp/pdbpp
     "pre-commit",
-    "rich",       # https://github.com/Textualize/rich
+    "rich",         # https://github.com/Textualize/rich
     "ruff",
+    "scikit-image",
 ] # add anything else you like to have in your dev environment here
 
 docs = [
