@@ -6,7 +6,7 @@ import pytest
 
 from ngio.utils import download_ome_zarr_dataset
 
-zenodo_download_dir = Path("tests/data/v04/zenodo_images/")
+zenodo_download_dir = Path(__file__).parent.parent / "data"
 os.makedirs(zenodo_download_dir, exist_ok=True)
 cardiomyocyte_tiny_source_path = download_ome_zarr_dataset(
     "CardiomyocyteTiny", download_dir=zenodo_download_dir
