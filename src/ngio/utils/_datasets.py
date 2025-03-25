@@ -8,13 +8,13 @@ from ngio.utils._errors import NgioValueError
 
 _ome_zarr_zoo = {
     "CardiomyocyteTiny": {
-        "url": "https://zenodo.org/records/_13305156/files/20200812-CardiomyocyteDifferentiation14-Cycle1.zarr.zip",
+        "url": "https://zenodo.org/records/13305156/files/20200812-CardiomyocyteDifferentiation14-Cycle1.zarr.zip",
         "known_hash": "md5:efc21fe8d4ea3abab76226d8c166452c",
         "fname": "20200812-CardiomyocyteDifferentiation14-Cycle1.zarr.zip",
         "processor": pooch.Unzip(extract_dir=""),
     },
     "CardiomyocyteSmallMip": {
-        "url": "https://zenodo.org/records/_13305316/files/20200812-CardiomyocyteDifferentiation14-Cycle1_mip.zarr.zip",
+        "url": "https://zenodo.org/records/13305316/files/20200812-CardiomyocyteDifferentiation14-Cycle1_mip.zarr.zip",
         "known_hash": "md5:3ed3ea898e0ed42d397da2e1dbe40750",
         "fname": "20200812-CardiomyocyteDifferentiation14-Cycle1_mip.zarr.zip",
         "processor": pooch.Unzip(extract_dir=""),
