@@ -38,8 +38,21 @@ jobs:
           python -m pip install .[dev]
           python -m pip install .[docs]
 
-      - name: 📚 Build Docs
-        run: mkdocs build --clean
+      - name: Configure Git for Mike
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+
+      - name: Deploy Docs with Mike
+        run: |
+          if [[ "${GITHUB_REF}" == "refs/heads/main" ]]; then
+            mike deploy latest --push --update-aliases
+          else
+            VERSION=${GITHUB_REF#refs/tags/v}
+            mike deploy "$VERSION" --push --update-aliases
+            mike set-default "$VERSION" --push
+          fi
 
       # If something goes wrong with --pre tests, we can open an issue in the repo
       - name: Deploy Docs
