@@ -49,6 +49,7 @@ jobs:
 
       - name: Deploy Docs with Mike
         run: |
+          git pull
           if [[ "${GITHUB_REF}" == "refs/heads/main" ]]; then
             mike deploy latest --push --update-aliases
           elif [[ "${GITHUB_REF}" == "refs/heads/docs_update" ]]; then
