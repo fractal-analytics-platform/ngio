@@ -40,6 +40,8 @@ theme:
     - search.share
 
 extra:
+  version:
+    provider: mike
   social:
     - icon: fontawesome/brands/github
       link: "https://github.com/fractal-analytics-platform/ngio"

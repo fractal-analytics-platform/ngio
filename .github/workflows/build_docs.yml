@@ -4,16 +4,28 @@ on:
   push:
     branches:
       - main
+      - docs_update
     tags:
       - "v*"
 
 jobs:
+  download-test-ome-zarr:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check and Download Artifacts
+        run: |
+          bash .github/scripts/download_data.sh
+
   deploy:
     name: Deploy Docs
+    needs: download-test-ome-zarr
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: 🐍 Set up Python
         uses: actions/setup-python@v5
@@ -28,12 +40,22 @@ jobs:
           python -m pip install .[dev]
           python -m pip install .[docs]
 
-      - name: 📚 Build Docs
-        run: mkdocs build --clean
-
-      # If something goes wrong with --pre tests, we can open an issue in the repo
-      - name: Deploy Docs
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          personal_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./site
+      - name: Configure Git user
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+        
+      - name: Deploy docs
+        run: |
+          VERSION=$(echo $GITHUB_REF | sed 's/refs\/tags\///' | sed 's/refs\/heads\///')
+          echo "Deploying version $VERSION"
+          # Check if the version is a stable release
+          # Meaning that starts with "v" and contains only numbers and dots
+          if [[ $GITHUB_REF == refs/tags/* ]] && [[ $VERSION =~ ^v[0-9.]+$ ]]; then
+            mike deploy --push --update-aliases $VERSION stable
+            mike set-default --push stable
+            echo "Deployed stable version"
+          else
+            mike deploy --push dev
+            echo "Deployed development version"
+          fi
