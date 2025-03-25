@@ -48,6 +48,8 @@ jobs:
         run: |
           if [[ "${GITHUB_REF}" == "refs/heads/main" ]]; then
             mike deploy latest --push --update-aliases
+          elif [[ "${GITHUB_REF}" == "refs/heads/docs_update" ]]; then
+            mike deploy dev --push --update-aliases
           else
             VERSION=${GITHUB_REF#refs/tags/v}
             mike deploy "$VERSION" --push --update-aliases
