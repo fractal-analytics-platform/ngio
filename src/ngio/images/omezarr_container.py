@@ -419,7 +419,7 @@ class OmeZarrContainer:
             name=masking_label_name, path=path, pixel_size=pixel_size, strict=strict
         )
         if masking_table_name is None:
-            masking_table = label.build_masking_roi_table()
+            masking_table = masking_label.build_masking_roi_table()
         else:
             masking_table = self.get_table(
                 masking_table_name, check_type="masking_roi_table"
