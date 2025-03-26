@@ -100,6 +100,36 @@ class AbstractImage(Generic[_image_handler]):
         return self._dimensions
 
     @property
+    def is_3d(self) -> bool:
+        """Return True if the image is 3D."""
+        return self.dimensions.is_3d
+
+    @property
+    def is_2d(self) -> bool:
+        """Return True if the image is 2D."""
+        return self.dimensions.is_2d
+
+    @property
+    def is_time_series(self) -> bool:
+        """Return True if the image is a time series."""
+        return self.dimensions.is_time_series
+
+    @property
+    def is_2d_time_series(self) -> bool:
+        """Return True if the image is a 2D time series."""
+        return self.dimensions.is_2d_time_series
+
+    @property
+    def is_3d_time_series(self) -> bool:
+        """Return True if the image is a 3D time series."""
+        return self.dimensions.is_3d_time_series
+
+    @property
+    def is_multi_channels(self) -> bool:
+        """Return True if the image is multichannel."""
+        return self.dimensions.is_multi_channels
+
+    @property
     def pixel_size(self) -> PixelSize:
         """Return the pixel size of the image."""
         return self._pixel_size

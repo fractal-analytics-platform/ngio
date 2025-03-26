@@ -342,12 +342,6 @@ class NgioLabelMeta(AbstractNgioImageMeta):
     ) -> None:
         """Initialize the ImageMeta object."""
         super().__init__(version, name, datasets)
-
-        # Make sure that there are no channel axes
-        channel_axis = self.axes_mapper.get_axis("c")
-        if channel_axis is not None:
-            raise NgioValidationError("Label metadata must not have channel axes.")
-
         image_label = (
             ImageLabelSource.default_init(self.version)
             if image_label is None

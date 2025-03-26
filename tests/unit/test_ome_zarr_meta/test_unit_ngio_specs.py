@@ -438,7 +438,7 @@ def test_label_meta():
     assert label_meta.get_dataset(pixel_size=datasets[-1].pixel_size).path == "3"
 
 
-def test_fail_label_meta():
+def test_channels_label_meta():
     on_disk_axes = [
         Axis(on_disk_name="t", axis_type=AxisType.time, unit=TimeUnits.s),
         Axis(on_disk_name="c"),
@@ -465,9 +465,4 @@ def test_fail_label_meta():
             s * f for s, f in zip(on_disk_scale, [1, 1, 1, 2, 2], strict=True)
         ]
 
-    with pytest.raises(ValueError):
-        NgioLabelMeta(
-            version="0.4",
-            name="test",
-            datasets=datasets,
-        )
+    _ = NgioLabelMeta(version="0.4", name="test", datasets=datasets)

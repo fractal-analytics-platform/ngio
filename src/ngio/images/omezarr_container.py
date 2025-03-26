@@ -125,6 +125,36 @@ class OmeZarrContainer:
         """Return the paths of the levels in the image."""
         return self._images_container.levels_paths
 
+    @property
+    def is_3d(self) -> bool:
+        """Return True if the image is 3D."""
+        return self.get_image().is_3d
+
+    @property
+    def is_2d(self) -> bool:
+        """Return True if the image is 2D."""
+        return self.get_image().is_2d
+
+    @property
+    def is_time_series(self) -> bool:
+        """Return True if the image is a time series."""
+        return self.get_image().is_time_series
+
+    @property
+    def is_2d_time_series(self) -> bool:
+        """Return True if the image is a 2D time series."""
+        return self.get_image().is_2d_time_series
+
+    @property
+    def is_3d_time_series(self) -> bool:
+        """Return True if the image is a 3D time series."""
+        return self.get_image().is_3d_time_series
+
+    @property
+    def is_multi_channels(self) -> bool:
+        """Return True if the image is multichannel."""
+        return self.get_image().is_multi_channels
+
     def initialize_channel_meta(
         self,
         labels: Collection[str] | int | None = None,

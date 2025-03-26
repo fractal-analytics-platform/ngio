@@ -79,6 +79,11 @@ def test_create_omezarr_container(tmp_path: Path, array_mode: str):
     assert isinstance(omezarr.__repr__(), str)
     assert omezarr.levels == 3
     assert omezarr.levels_paths == ["0", "1", "2"]
+    assert omezarr.is_3d
+    assert not omezarr.is_time_series
+    assert not omezarr.is_multi_channels
+    assert not omezarr.is_2d_time_series
+    assert not omezarr.is_3d_time_series
 
     image = omezarr.get_image()
 
