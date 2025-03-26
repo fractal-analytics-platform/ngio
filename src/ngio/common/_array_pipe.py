@@ -179,13 +179,6 @@ def _mask_pipe_common(
         **slice_kwargs,
     )
 
-    if "c" in slice_kwargs.keys():
-        # This makes the strong assumption that the
-        # user is passing the channel axis as "c"
-        # This will fail if the channel axis is queried
-        # with a different on-disk name
-        slice_kwargs.pop("c")
-
     label_patch = get_pipe(
         label_array,
         dimensions=dimensions_label,
