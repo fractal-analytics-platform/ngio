@@ -56,5 +56,6 @@ jobs:
             echo "Deployed stable version"
           else
             mike deploy --push dev
+            mike set-default --push dev
             echo "Deployed development version"
           fi
