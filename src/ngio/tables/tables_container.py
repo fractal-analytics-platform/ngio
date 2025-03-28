@@ -2,7 +2,7 @@
 
 from typing import Literal, Protocol
 
-from ngio.tables.v1 import FeatureTableV1, MaskingROITableV1, RoiTableV1
+from ngio.tables.v1 import FeatureTableV1, MaskingRoiTableV1, RoiTableV1
 from ngio.tables.v1._generic_table import GenericTable
 from ngio.tables.v1._roi_table import _GenericRoiTableV1
 from ngio.utils import (
@@ -15,7 +15,7 @@ from ngio.utils import (
 
 GenericRoiTable = _GenericRoiTableV1
 RoiTable = RoiTableV1
-MaskingROITable = MaskingROITableV1
+MaskingRoiTable = MaskingRoiTableV1
 FeatureTable = FeatureTableV1
 
 
@@ -253,7 +253,7 @@ class TablesContainer:
 
 
 ImplementedTables().add_implementation(RoiTableV1)
-ImplementedTables().add_implementation(MaskingROITableV1)
+ImplementedTables().add_implementation(MaskingRoiTableV1)
 ImplementedTables().add_implementation(FeatureTableV1)
 
 ###################################################################################

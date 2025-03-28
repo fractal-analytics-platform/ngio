@@ -20,7 +20,7 @@ from ngio.ome_zarr_meta.ngio_specs import (
 from ngio.tables import (
     FeatureTable,
     GenericRoiTable,
-    MaskingROITable,
+    MaskingRoiTable,
     RoiTable,
     Table,
     TablesContainer,
@@ -325,7 +325,7 @@ class OmeZarrContainer:
     @overload
     def get_table(
         self, name: str, check_type: Literal["masking_roi_table"]
-    ) -> MaskingROITable: ...
+    ) -> MaskingRoiTable: ...
 
     @overload
     def get_table(
@@ -348,7 +348,7 @@ class OmeZarrContainer:
                     )
                 return table
             case "masking_roi_table":
-                if not isinstance(table, MaskingROITable):
+                if not isinstance(table, MaskingRoiTable):
                     raise NgioValueError(
                         f"Table '{name}' is not a masking ROI table. "
                         f"Found type: {table.type()}"
@@ -379,7 +379,7 @@ class OmeZarrContainer:
         """Compute the ROI table for an image."""
         return self.get_image().build_image_roi_table(name=name)
 
-    def build_masking_roi_table(self, label: str) -> MaskingROITable:
+    def build_masking_roi_table(self, label: str) -> MaskingRoiTable:
         """Compute the masking ROI table for a label."""
         return self.get_label(label).build_masking_roi_table()
 

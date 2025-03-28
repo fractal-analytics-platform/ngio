@@ -8,8 +8,8 @@ import zarr
 from ngio.common import (
     ArrayLike,
     Dimensions,
-    RasterCooROI,
-    WorldCooROI,
+    Roi,
+    RoiPixels,
     consolidate_pyramid,
     get_pipe,
     roi_to_slice_kwargs,
@@ -170,7 +170,7 @@ class AbstractImage(Generic[_image_handler]):
 
     def get_roi(
         self,
-        roi: WorldCooROI,
+        roi: Roi,
         axes_order: Collection[str] | None = None,
         mode: Literal["numpy", "dask", "delayed"] = "numpy",
         **slice_kwargs: slice | int | Iterable[int],
@@ -214,7 +214,7 @@ class AbstractImage(Generic[_image_handler]):
 
     def set_roi(
         self,
-        roi: WorldCooROI,
+        roi: Roi,
         patch: ArrayLike,
         axes_order: Collection[str] | None = None,
         **slice_kwargs: slice | int | Iterable[int],
@@ -256,7 +256,7 @@ def consolidate_image(
 
 def get_roi_pipe(
     image: AbstractImage,
-    roi: WorldCooROI,
+    roi: Roi,
     axes_order: Collection[str] | None = None,
     mode: Literal["numpy", "dask", "delayed"] = "numpy",
     **slice_kwargs: slice | int | Iterable[int],
@@ -290,7 +290,7 @@ def get_roi_pipe(
 
 def set_roi_pipe(
     image: AbstractImage,
-    roi: WorldCooROI,
+    roi: Roi,
     patch: ArrayLike,
     axes_order: Collection[str] | None = None,
     **slice_kwargs: slice | int | Iterable[int],
@@ -327,7 +327,7 @@ def build_image_roi_table(image: AbstractImage, name: str = "image") -> RoiTable
         image.dimensions.get("y"),
         image.dimensions.get("x"),
     )
-    image_roi = RasterCooROI(
+    image_roi = RoiPixels(
         name=name,
         x=0,
         y=0,
@@ -336,4 +336,4 @@ def build_image_roi_table(image: AbstractImage, name: str = "image") -> RoiTable
         y_length=dim_y,
         z_length=dim_z,
     )
-    return RoiTable(rois=[image_roi.to_world_coo_roi(pixel_size=image.pixel_size)])
+    return RoiTable(rois=[image_roi.to_roi(pixel_size=image.pixel_size)])

@@ -12,7 +12,7 @@ from typing import Generic, Literal, TypeVar
 import pandas as pd
 from pydantic import BaseModel
 
-from ngio.common import WorldCooROI
+from ngio.common import Roi
 from ngio.tables._validators import validate_columns
 from ngio.tables.backends import ImplementedTableBackends
 from ngio.utils import NgioValueError, ZarrGroupHandler
@@ -37,7 +37,7 @@ TRANSLATION_COLUMNS = ["translation_x", "translation_y", "translation_z"]
 OPTIONAL_COLUMNS = ORIGIN_COLUMNS + TRANSLATION_COLUMNS
 
 
-def _dataframe_to_rois(dataframe: pd.DataFrame) -> dict[str, WorldCooROI]:
+def _dataframe_to_rois(dataframe: pd.DataFrame) -> dict[str, Roi]:
     """Convert a DataFrame to a WorldCooROI object."""
     rois = {}
     for key, row in dataframe.iterrows():
@@ -47,7 +47,7 @@ def _dataframe_to_rois(dataframe: pd.DataFrame) -> dict[str, WorldCooROI]:
         translation = {col: row.get(col, None) for col in TRANSLATION_COLUMNS}
         translation = dict(filter(lambda x: x[1] is not None, translation.items()))
 
-        roi = WorldCooROI(
+        roi = Roi(
             name=str(key),
             x=row["x_micrometer"],
             y=row["y_micrometer"],
@@ -63,7 +63,7 @@ def _dataframe_to_rois(dataframe: pd.DataFrame) -> dict[str, WorldCooROI]:
     return rois
 
 
-def _rois_to_dataframe(rois: dict[str, WorldCooROI], index_key: str) -> pd.DataFrame:
+def _rois_to_dataframe(rois: dict[str, Roi], index_key: str) -> pd.DataFrame:
     """Convert a list of WorldCooROI objects to a DataFrame."""
     data = []
     for roi in rois.values():
@@ -124,7 +124,7 @@ class _GenericRoiTableV1(Generic[_roi_meta]):
     _meta: _roi_meta
 
     def __init__(
-        self, meta: _roi_meta | None = None, rois: Iterable[WorldCooROI] | None = None
+        self, meta: _roi_meta | None = None, rois: Iterable[Roi] | None = None
     ) -> None:
         """Create a new ROI table."""
         if meta is None:
@@ -225,13 +225,13 @@ class _GenericRoiTableV1(Generic[_roi_meta]):
         self._meta.backend = backend_name
         self._table_backend = backend
 
-    def rois(self) -> list[WorldCooROI]:
+    def rois(self) -> list[Roi]:
         """List all ROIs in the table."""
         return list(self._rois.values())
 
-    def add(self, roi: WorldCooROI | Iterable[WorldCooROI]) -> None:
+    def add(self, roi: Roi | Iterable[Roi]) -> None:
         """Append ROIs to the current table."""
-        if isinstance(roi, WorldCooROI):
+        if isinstance(roi, Roi):
             roi = [roi]
 
         for _roi in roi:
@@ -266,7 +266,7 @@ class RoiTableV1(_GenericRoiTableV1[RoiTableV1Meta]):
     https://fractal-analytics-platform.github.io/fractal-tasks-core/tables/
     """
 
-    def __init__(self, rois: Iterable[WorldCooROI] | None = None) -> None:
+    def __init__(self, rois: Iterable[Roi] | None = None) -> None:
         """Create a new ROI table."""
         super().__init__(RoiTableV1Meta(), rois)
 
@@ -290,14 +290,14 @@ class RoiTableV1(_GenericRoiTableV1[RoiTableV1Meta]):
         """Return the metadata type of the table."""
         return RoiTableV1Meta
 
-    def get(self, roi_name: str) -> WorldCooROI:
+    def get(self, roi_name: str) -> Roi:
         """Get an ROI from the table."""
         if roi_name not in self._rois:
             raise NgioValueError(f"ROI {roi_name} not found in the table.")
         return self._rois[roi_name]
 
 
-class MaskingROITableV1(_GenericRoiTableV1[MaskingRoiTableV1Meta]):
+class MaskingRoiTableV1(_GenericRoiTableV1[MaskingRoiTableV1Meta]):
     """Class to handle fractal ROI tables.
 
     To know more about the ROI table format, please refer to the
@@ -307,7 +307,7 @@ class MaskingROITableV1(_GenericRoiTableV1[MaskingRoiTableV1Meta]):
 
     def __init__(
         self,
-        rois: Iterable[WorldCooROI] | None = None,
+        rois: Iterable[Roi] | None = None,
         reference_label: str | None = None,
     ) -> None:
         """Create a new ROI table."""
@@ -336,7 +336,7 @@ class MaskingROITableV1(_GenericRoiTableV1[MaskingRoiTableV1Meta]):
         """Return the metadata type of the table."""
         return MaskingRoiTableV1Meta
 
-    def get(self, label: int) -> WorldCooROI:
+    def get(self, label: int) -> Roi:
         """Get an ROI from the table."""
         _label = str(label)
         if _label not in self._rois:

@@ -26,7 +26,7 @@ def _to_world(value: int, pixel_size: float) -> float:
     return value * pixel_size
 
 
-class WorldCooROI(BaseModel):
+class Roi(BaseModel):
     """Region of interest (ROI) metadata."""
 
     name: str
@@ -40,16 +40,16 @@ class WorldCooROI(BaseModel):
 
     model_config = ConfigDict(extra="allow")
 
-    def to_raster_coo(
+    def to_pixel_roi(
         self, pixel_size: PixelSize, dimensions: Dimensions
-    ) -> "RasterCooROI":
+    ) -> "RoiPixels":
         """Convert to raster coordinates."""
         dim_x = dimensions.get("x")
         dim_y = dimensions.get("y")
         # Will default to 1 if z does not exist
         dim_z = dimensions.get("z", strict=False)
 
-        return RasterCooROI(
+        return RoiPixels(
             name=self.name,
             x=_to_raster(self.x, pixel_size.x, dim_x),
             y=_to_raster(self.y, pixel_size.y, dim_y),
@@ -59,7 +59,7 @@ class WorldCooROI(BaseModel):
             z_length=_to_raster(self.z_length, pixel_size.z, dim_z),
         )
 
-    def zoom(self, zoom_factor: float = 1) -> "WorldCooROI":
+    def zoom(self, zoom_factor: float = 1) -> "Roi":
         """Zoom the ROI by a factor.
 
         Args:
@@ -71,7 +71,7 @@ class WorldCooROI(BaseModel):
         return zoom_roi(self, zoom_factor)
 
 
-class RasterCooROI(BaseModel):
+class RoiPixels(BaseModel):
     """Region of interest (ROI) metadata."""
 
     name: str
@@ -83,9 +83,9 @@ class RasterCooROI(BaseModel):
     z_length: int
     model_config = ConfigDict(extra="allow")
 
-    def to_world_coo_roi(self, pixel_size: PixelSize) -> WorldCooROI:
+    def to_roi(self, pixel_size: PixelSize) -> Roi:
         """Convert to world coordinates."""
-        return WorldCooROI(
+        return Roi(
             name=self.name,
             x=_to_world(self.x, pixel_size.x),
             y=_to_world(self.y, pixel_size.y),
@@ -105,7 +105,7 @@ class RasterCooROI(BaseModel):
         }
 
 
-def zoom_roi(roi: WorldCooROI, zoom_factor: float = 1) -> WorldCooROI:
+def zoom_roi(roi: Roi, zoom_factor: float = 1) -> Roi:
     """Zoom the ROI by a factor.
 
     Args:
@@ -127,7 +127,7 @@ def zoom_roi(roi: WorldCooROI, zoom_factor: float = 1) -> WorldCooROI:
     new_x = max(roi.x - diff_x / 2, 0)
     new_y = max(roi.y - diff_y / 2, 0)
 
-    new_roi = WorldCooROI(
+    new_roi = Roi(
         name=roi.name,
         x=new_x,
         y=new_y,
@@ -142,13 +142,13 @@ def zoom_roi(roi: WorldCooROI, zoom_factor: float = 1) -> WorldCooROI:
 
 
 def roi_to_slice_kwargs(
-    roi: WorldCooROI,
+    roi: Roi,
     pixel_size: PixelSize,
     dimensions: Dimensions,
     **slice_kwargs: slice | int | Iterable[int],
 ) -> dict[str, slice | int | Iterable[int]]:
     """Convert a WorldCooROI to slice_kwargs."""
-    raster_roi = roi.to_raster_coo(
+    raster_roi = roi.to_pixel_roi(
         pixel_size=pixel_size, dimensions=dimensions
     ).to_slices()
 

@@ -7,7 +7,7 @@ from ngio.common import ArrayLike, get_masked_pipe, roi_to_slice_kwargs, set_mas
 from ngio.images.image import Image
 from ngio.images.label import Label
 from ngio.ome_zarr_meta import ImageMetaHandler, LabelMetaHandler
-from ngio.tables import MaskingROITable
+from ngio.tables import MaskingRoiTable
 from ngio.utils import (
     ZarrGroupHandler,
 )
@@ -22,7 +22,7 @@ class MaskedImage(Image):
         path: str,
         meta_handler: ImageMetaHandler | None,
         label: Label,
-        masking_roi_table: MaskingROITable,
+        masking_roi_table: MaskingRoiTable,
     ) -> None:
         """Initialize the Image at a single level.
 
@@ -116,7 +116,7 @@ class MaskedLabel(Label):
         path: str,
         meta_handler: LabelMetaHandler | None,
         label: Label,
-        masking_roi_table: MaskingROITable,
+        masking_roi_table: MaskingRoiTable,
     ) -> None:
         """Initialize the Image at a single level.
 

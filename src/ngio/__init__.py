@@ -9,7 +9,7 @@ except PackageNotFoundError:  # pragma: no cover
 __author__ = "Lorenzo Cerrone"
 __email__ = "lorenzo.cerrone@uzh.ch"
 
-from ngio.common import ArrayLike, Dimensions
+from ngio.common import ArrayLike, Dimensions, Roi, RoiPixels
 from ngio.hcs import OmeZarrPlate, create_empty_plate, open_omezarr_plate
 from ngio.images import (
     Image,
@@ -32,6 +32,8 @@ __all__ = [
     "OmeZarrContainer",
     "OmeZarrPlate",
     "PixelSize",
+    "Roi",
+    "RoiPixels",
     "create_empty_omezarr",
     "create_empty_plate",
     "create_omezarr_from_array",

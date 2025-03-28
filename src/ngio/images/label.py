@@ -13,7 +13,7 @@ from ngio.ome_zarr_meta import (
     PixelSize,
     find_label_meta_handler,
 )
-from ngio.tables import MaskingROITable
+from ngio.tables import MaskingRoiTable
 from ngio.utils import (
     NgioValidationError,
     NgioValueError,
@@ -45,12 +45,16 @@ class Label(AbstractImage[LabelMetaHandler]):
             group_handler=group_handler, path=path, meta_handler=meta_handler
         )
 
+    def __repr__(self) -> str:
+        """Return the string representation of the label."""
+        return f"Label(path={self.path}, {self.dimensions})"
+
     @property
     def meta(self) -> NgioLabelMeta:
         """Return the metadata."""
         return self._meta_handler.meta
 
-    def build_masking_roi_table(self) -> MaskingROITable:
+    def build_masking_roi_table(self) -> MaskingRoiTable:
         """Compute the masking ROI table."""
         return build_masking_roi_table(self)
 
@@ -270,7 +274,7 @@ def _derive_label(
     return None
 
 
-def build_masking_roi_table(label: Label) -> MaskingROITable:
+def build_masking_roi_table(label: Label) -> MaskingRoiTable:
     """Compute the masking ROI table for a label."""
     if label.dimensions.is_time_series:
         raise NgioValueError("Time series labels are not supported.")
@@ -278,4 +282,4 @@ def build_masking_roi_table(label: Label) -> MaskingROITable:
     array = label.get_array(axes_order=["z", "y", "x"], mode="dask")
 
     rois = compute_masking_roi(array, label.pixel_size)
-    return MaskingROITable(rois, reference_label=label.meta.name)
+    return MaskingRoiTable(rois, reference_label=label.meta.name)
