@@ -270,6 +270,11 @@ class RoiTableV1(_GenericRoiTableV1[RoiTableV1Meta]):
         """Create a new ROI table."""
         super().__init__(RoiTableV1Meta(), rois)
 
+    def __repr__(self) -> str:
+        """Return a string representation of the table."""
+        prop = f"num_rois={len(self._rois)}"
+        return f"RoiTableV1({prop})"
+
     @staticmethod
     def type() -> Literal["roi_table"]:
         """Return the type of the table."""
@@ -316,6 +321,13 @@ class MaskingRoiTableV1(_GenericRoiTableV1[MaskingRoiTableV1Meta]):
             meta.region = RegionMeta(path=reference_label)
         super().__init__(meta, rois)
 
+    def __repr__(self) -> str:
+        """Return a string representation of the table."""
+        prop = f"num_rois={len(self._rois)}"
+        if self.reference_label is not None:
+            prop += f", reference_label={self.reference_label}"
+        return f"MaskingRoiTableV1({prop})"
+
     @staticmethod
     def type() -> Literal["masking_roi_table"]:
         """Return the type of the table."""
@@ -335,6 +347,22 @@ class MaskingRoiTableV1(_GenericRoiTableV1[MaskingRoiTableV1Meta]):
     def _meta_type() -> _type[MaskingRoiTableV1Meta]:
         """Return the metadata type of the table."""
         return MaskingRoiTableV1Meta
+
+    @property
+    def reference_label(self) -> str | None:
+        """Return the reference label."""
+        path = self._meta.region
+        if path is None:
+            return None
+
+        path = path.path
+
+        if path.startswith("../"):
+            path = path[3:]
+
+        if path.endswith("/"):
+            path = path[:-1]
+        return path
 
     def get(self, label: int) -> Roi:
         """Get an ROI from the table."""

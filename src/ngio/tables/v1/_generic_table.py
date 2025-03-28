@@ -51,6 +51,16 @@ class GenericTable:
 
         self._table_backend = None
 
+    def __repr__(self) -> str:
+        """Return a string representation of the table."""
+        if self._dataframe is not None:
+            num_rows = len(self.dataframe)
+            num_columns = len(self.dataframe.columns)
+            prop = f"num_rows={num_rows}, num_columns={num_columns}, mode=dataframe"
+        else:
+            prop = "mode=anndata"
+        return f"GenericTable({prop})"
+
     @staticmethod
     def type() -> str:
         """Return the type of the table."""
