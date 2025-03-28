@@ -1,43 +1,60 @@
-# Welcome to NGIO
 
-NGIO is a Python library to streamline OME-Zarr image analysis workflows.
+NGIO is a Python library designed to simplify bio-image analysis workflows, offering an intuitive interface for working with OME-Zarr files.
 
-**Main Goals:**
+## What is NGIO?
 
-- Abstract object base API for handling OME-Zarr files
-- Powefull iterators for processing data using common access patterns
-- Tight integration with [Fractal's Table Fractal](https://fractal-analytics-platform.github.io/fractal-tasks-core/tables/)
-- Validate OME-Zarr files
+NGIO is built for the [OME-Zarr](https://ngff.openmicroscopy.org/) file format, a modern, cloud-optimized format for biological imaging data. OME-Zarr stores large, multi-dimensional microscopy images and metadata in an efficient and scalable way.
 
-To get started, check out the [Getting Started](getting-started.md) guide.
+NGIO's mission is to streamline working with OME-Zarr files by providing a simple, object-based API for opening, exploring, and manipulating OME-Zarr Images and HCS Plates. It also offers comprehensive support for tables and regions of interest (ROIs), making it easy to extract and analyze specific regions in your data.
 
-## 🚧 Ngio is Under active Development 🚧
+## Key Features
 
-### Roadmap
+### 📊 Simple Object-Based API
 
-| Feature | Status | ETA | Description |
-|---------|--------|-----|-------------|
-| Metadata Handling | ✅ | | Read, Write, Validate OME-Zarr Metadata (0.4 supported, 0.5 ready) |
-| OME-Zarr Validation | ✅ | | Validate OME-Zarr files for compliance with the OME-Zarr Specification + Compliance between Metadata and Data |
-| Base Image Handling | ✅ | | Load data from OME-Zarr files, retrieve basic metadata, and write data |
-| ROI Handling | ✅ | | Common ROI models |
-| Label Handling | ✅ | Mid-September | Based on Image Handling |
-| Table Validation | ✅ | Mid-September | Validate Table fractal V1 + Compliance between Metadata and Data |
-| Table Handling | ✅ | Mid-September | Read, Write ROI, Features, and Masked Tables |
-| Basic Iterators | Ongoing | End-September | Read and Write Iterators for common access patterns |
-| Base Documentation | ✅ | End-September | API Documentation and Examples |
-| Beta Ready Testing | ✅ | End-September | Beta Testing; Library is ready for testing, but the API is not stable |
-| Streaming from Fractal | Ongoing | December | Ngio can stream ome-zarr from fractal |
-| Mask Iterators | Ongoing | Early 2025 | Iterators over Masked Tables |
-| Advanced Iterators | Not started | mid-2025 | Iterators for advanced access patterns |
-| Parallel Iterators | Not started | mid-2025 | Concurrent Iterators for parallel read and write |
-| Full Documentation | Not started | 2025 | Complete Documentation |
-| Release 1.0 (Commitment to API) | Not started | 2025 | API is stable; breaking changes will be avoided |
+- Easily open, explore, and manipulate OME-Zarr Images and HCS Plates
+- Create and derive new images and labels with minimal boilerplate code
+
+### 🔍 Rich Tables and Regions of Interest (ROI) Support
+
+- Extract and analyze specific regions of interest
+- Tight integration with [Fractal's Table Framework](https://fractal-analytics-platform.github.io/fractal-tasks-core/tables/)
+
+### 🔄 Scalable Data Processing (Coming Soon)
+
+- Powerful iterators for processing data at scale
+- Efficient memory management for large datasets
+
+## Getting Started
+
+Refer to the [Getting Started](getting_started/0_quickstart.md) guide to integrate NGIO into your workflows. We also provide a collection of [tutorials](tutorials/image_processing.ipynb) to help you get up and running quickly.
+For more advanced usage and API documentation, see our [API Reference](api/ngio.md).
+
+## Development Status
+
+!!! warning
+    NGIO is under active development and is not yet stable. The API is subject to change, and bugs and breaking changes are expected.
+
+### Available Features
+
+- ✅ OME-Zarr metadata handling and validation
+- ✅ Image and label access across pyramid levels
+- ✅ ROI and table support
+- ✅ Streaming from remote sources
+- ✅ Documentation and examples
+
+### Upcoming Features
+
+- Advanced image processing iterators
+- Parallel processing capabilities
 
 ## Contributors
 
-`ngio` is developed at the [BioVisionCenter](https://www.biovisioncenter.uzh.ch/en.html) at the University of Zurich. The main contributors are: [@lorenzocerrone](https://github.com/lorenzocerrone), [@jluethi](https://github.com/jluethi).
+NGIO is developed at the [BioVisionCenter](https://www.biovisioncenter.uzh.ch/en.html), University of Zurich, by [@lorenzocerrone](https://github.com/lorenzocerrone) and [@jluethi](https://github.com/jluethi).
 
 ## License
 
-`ngio` is released according to the BSD-3-Clause License. See [LICENSE](https://github.com/fractal-analytics-platform/ngio/blob/main/LICENSE)
+NGIO is released under the BSD-3-Clause License. See [LICENSE](https://github.com/fractal-analytics-platform/ngio/blob/main/LICENSE) for details.
+
+## Repository
+
+Visit our [GitHub repository](https://github.com/fractal-analytics-platform/ngio) for the latest code, issues, and contributions.
