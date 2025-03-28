@@ -28,7 +28,7 @@ class MaskedImage(Image):
 
         Args:
             group_handler: The Zarr group handler.
-            path: The path to the image in the omezarr file.
+            path: The path to the image in the ome_zarr file.
             meta_handler: The image metadata handler.
             label: The label image.
             masking_roi_table: The masking ROI table.
@@ -122,7 +122,7 @@ class MaskedLabel(Label):
 
         Args:
             group_handler: The Zarr group handler.
-            path: The path to the image in the omezarr file.
+            path: The path to the image in the ome_zarr file.
             meta_handler: The image metadata handler.
             label: The label image.
             masking_roi_table: The masking ROI table.

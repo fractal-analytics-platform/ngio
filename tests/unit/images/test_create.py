@@ -3,7 +3,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from ngio import create_empty_omezarr, create_omezarr_from_array
+from ngio import create_empty_ome_zarr, create_ome_zarr_from_array
 from ngio.utils import NgioValueError
 
 
@@ -82,17 +82,17 @@ from ngio.utils import NgioValueError
 )
 def test_create_empty(tmp_path: Path, create_kwargs: dict):
     create_kwargs["store"] = tmp_path / create_kwargs["store"]
-    omezarr = create_empty_omezarr(**create_kwargs, dtype="uint8", levels=1)
-    omezarr.derive_label("label1")
+    ome_zarr = create_empty_ome_zarr(**create_kwargs, dtype="uint8", levels=1)
+    ome_zarr.derive_label("label1")
 
     shape = create_kwargs.pop("shape")
     array = np.random.randint(0, 255, shape, dtype="uint8")
-    create_omezarr_from_array(array=array, **create_kwargs, levels=1, overwrite=True)
+    create_ome_zarr_from_array(array=array, **create_kwargs, levels=1, overwrite=True)
 
 
 def test_create_fail(tmp_path: Path):
     with pytest.raises(NgioValueError):
-        create_omezarr_from_array(
+        create_ome_zarr_from_array(
             array=np.random.randint(0, 255, (64, 64), dtype="uint8"),
             store=tmp_path / "fail.zarr",
             xy_pixelsize=0.5,
@@ -102,7 +102,7 @@ def test_create_fail(tmp_path: Path):
         )
 
     with pytest.raises(NgioValueError):
-        create_omezarr_from_array(
+        create_ome_zarr_from_array(
             array=np.random.randint(0, 255, (2, 64, 64), dtype="uint8"),
             store=tmp_path / "fail.zarr",
             xy_pixelsize=0.5,
@@ -117,7 +117,7 @@ def test_create_fail(tmp_path: Path):
         )
 
     with pytest.raises(NgioValueError):
-        create_omezarr_from_array(
+        create_ome_zarr_from_array(
             array=np.random.randint(0, 255, (2, 64, 64), dtype="uint8"),
             store=tmp_path / "fail.zarr",
             xy_pixelsize=0.5,
