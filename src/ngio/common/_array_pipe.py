@@ -124,7 +124,7 @@ def get_pipe(
         case "dask":
             return _dask_get_pipe(array, slices, transformations)
 
-        case "delayed_numpy":
+        case "delayed":
             return _delayed_numpy_get_pipe(array, slices, transformations)
 
         case _:

@@ -3,13 +3,13 @@ from pathlib import Path
 import pytest
 
 from ngio.tables.tables_container import open_table, write_table
-from ngio.tables.v1._roi_table import MaskingROITableV1, WorldCooROI
+from ngio.tables.v1._roi_table import MaskingRoiTableV1, Roi
 from ngio.utils import NgioValueError
 
 
 def test_masking_roi_table_v1(tmp_path: Path):
     rois = {
-        1: WorldCooROI(
+        1: Roi(
             name="1",
             x=0.0,
             y=0.0,
@@ -21,10 +21,10 @@ def test_masking_roi_table_v1(tmp_path: Path):
         )
     }
 
-    table = MaskingROITableV1(rois=rois.values())
+    table = MaskingRoiTableV1(rois=rois.values())
 
     table.add(
-        roi=WorldCooROI(
+        roi=Roi(
             name="2",
             x=0.0,
             y=0.0,
@@ -38,7 +38,7 @@ def test_masking_roi_table_v1(tmp_path: Path):
 
     with pytest.raises(NgioValueError):
         table.add(
-            roi=WorldCooROI(
+            roi=Roi(
                 name="2",
                 x=0.0,
                 y=0.0,
@@ -53,7 +53,7 @@ def test_masking_roi_table_v1(tmp_path: Path):
     write_table(store=tmp_path / "roi_table.zarr", table=table, backend="anndata_v1")
 
     loaded_table = open_table(store=tmp_path / "roi_table.zarr")
-    assert isinstance(loaded_table, MaskingROITableV1)
+    assert isinstance(loaded_table, MaskingRoiTableV1)
 
     assert loaded_table._meta.backend == "anndata_v1"
     assert loaded_table._meta.fractal_table_version == loaded_table.version()

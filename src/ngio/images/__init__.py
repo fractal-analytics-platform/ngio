@@ -2,12 +2,12 @@
 
 from ngio.images.image import Image, ImagesContainer
 from ngio.images.label import Label, LabelsContainer
-from ngio.images.omezarr_container import (
+from ngio.images.ome_zarr_container import (
     OmeZarrContainer,
-    create_empty_omezarr,
-    create_omezarr_from_array,
+    create_empty_ome_zarr,
+    create_ome_zarr_from_array,
     open_image,
-    open_omezarr_container,
+    open_ome_zarr_container,
 )
 
 __all__ = [
@@ -16,8 +16,8 @@ __all__ = [
     "Label",
     "LabelsContainer",
     "OmeZarrContainer",
-    "create_empty_omezarr",
-    "create_omezarr_from_array",
+    "create_empty_ome_zarr",
+    "create_ome_zarr_from_array",
     "open_image",
-    "open_omezarr_container",
+    "open_ome_zarr_container",
 ]

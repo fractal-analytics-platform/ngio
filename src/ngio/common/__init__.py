@@ -15,7 +15,7 @@ from ngio.common._common_types import ArrayLike
 from ngio.common._dimensions import Dimensions
 from ngio.common._masking_roi import compute_masking_roi
 from ngio.common._pyramid import consolidate_pyramid, init_empty_pyramid, on_disk_zoom
-from ngio.common._roi import RasterCooROI, WorldCooROI, roi_to_slice_kwargs
+from ngio.common._roi import Roi, RoiPixels, roi_to_slice_kwargs
 from ngio.common._slicer import (
     SliceTransform,
     compute_and_slices,
@@ -29,9 +29,9 @@ from ngio.common._zoom import dask_zoom, numpy_zoom
 __all__ = [
     "ArrayLike",
     "Dimensions",
-    "RasterCooROI",
+    "Roi",
+    "RoiPixels",
     "SliceTransform",
-    "WorldCooROI",
     "compute_and_slices",
     "compute_masking_roi",
     "consolidate_pyramid",

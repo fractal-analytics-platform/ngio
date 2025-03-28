@@ -339,7 +339,7 @@ class OmeZarrPlate:
         )
 
 
-def open_omezarr_plate(
+def open_ome_zarr_plate(
     store: StoreOrGroup,
     cache: bool = False,
     mode: AccessModeLiteral = "r+",
@@ -391,7 +391,7 @@ def create_empty_plate(
                 acquisition_id=image.acquisition_id,
                 acquisition_name=image.acquisition_name,
             )
-    return open_omezarr_plate(
+    return open_ome_zarr_plate(
         store=store,
         cache=cache,
         mode="r+",

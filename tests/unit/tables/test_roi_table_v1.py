@@ -3,13 +3,13 @@ from pathlib import Path
 import pytest
 
 from ngio.tables.tables_container import open_table, write_table
-from ngio.tables.v1._roi_table import RoiTableV1, WorldCooROI
+from ngio.tables.v1._roi_table import Roi, RoiTableV1
 from ngio.utils import NgioValueError
 
 
 def test_roi_table_v1(tmp_path: Path):
     rois = {
-        "roi1": WorldCooROI(
+        "roi1": Roi(
             name="roi1",
             x=0.0,
             y=0.0,
@@ -24,7 +24,7 @@ def test_roi_table_v1(tmp_path: Path):
     table = RoiTableV1(rois=rois.values())
 
     table.add(
-        roi=WorldCooROI(
+        roi=Roi(
             name="roi2",
             x=0.0,
             y=0.0,
@@ -38,7 +38,7 @@ def test_roi_table_v1(tmp_path: Path):
 
     with pytest.raises(NgioValueError):
         table.add(
-            roi=WorldCooROI(
+            roi=Roi(
                 name="roi2",
                 x=0.0,
                 y=0.0,

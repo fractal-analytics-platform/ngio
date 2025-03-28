@@ -1,10 +1,10 @@
 from ngio import PixelSize
-from ngio.common import Dimensions, WorldCooROI
+from ngio.common import Dimensions, Roi
 from ngio.ome_zarr_meta.ngio_specs import AxesMapper, Axis
 
 
 def test_rois():
-    roi = WorldCooROI(
+    roi = Roi(
         name="test",
         x=0.0,
         y=0.0,
@@ -23,7 +23,7 @@ def test_rois():
     dims = Dimensions(shape=(30, 30), axes_mapper=ax_mapper)
 
     pixel_size = PixelSize(x=1.0, y=1.0, z=1.0)
-    raster_roi = roi.to_raster_coo(pixel_size, dims)
+    raster_roi = roi.to_pixel_roi(pixel_size, dims)
 
     assert raster_roi.to_slices() == {
         "x": slice(0, 1),
@@ -33,7 +33,7 @@ def test_rois():
     assert roi.model_extra is not None
     assert roi.model_extra["other"] == "other"
 
-    world_roi_2 = raster_roi.to_world_coo_roi(pixel_size)
+    world_roi_2 = raster_roi.to_roi(pixel_size)
 
     assert world_roi_2.x == 0.0
     assert world_roi_2.y == 0.0

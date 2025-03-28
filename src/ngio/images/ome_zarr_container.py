@@ -20,7 +20,7 @@ from ngio.ome_zarr_meta.ngio_specs import (
 from ngio.tables import (
     FeatureTable,
     GenericRoiTable,
-    MaskingROITable,
+    MaskingRoiTable,
     RoiTable,
     Table,
     TablesContainer,
@@ -193,7 +193,7 @@ class OmeZarrContainer:
         """Get an image at a specific level.
 
         Args:
-            path (str | None): The path to the image in the omezarr file.
+            path (str | None): The path to the image in the ome_zarr file.
             pixel_size (PixelSize | None): The pixel size of the image.
             strict (bool): Only used if the pixel size is provided. If True, the
                 pixel size must match the image pixel size exactly. If False, the
@@ -217,7 +217,7 @@ class OmeZarrContainer:
         Args:
             masking_label_name (str): The name of the label.
             masking_table_name (str | None): The name of the masking table.
-            path (str | None): The path to the image in the omezarr file.
+            path (str | None): The path to the image in the ome_zarr file.
             pixel_size (PixelSize | None): The pixel size of the image.
             strict (bool): Only used if the pixel size is provided. If True, the
                 pixel size must match the image pixel size exactly. If False, the
@@ -292,21 +292,21 @@ class OmeZarrContainer:
             store, cache=self._group_handler.use_cache, mode=self._group_handler.mode
         )
 
-        new_omezarr = OmeZarrContainer(
+        new_ome_zarr = OmeZarrContainer(
             group_handler=handler,
             validate_arrays=False,
         )
 
         if copy_labels:
             self.labels_container._group_handler.copy_handler(
-                new_omezarr.labels_container._group_handler
+                new_ome_zarr.labels_container._group_handler
             )
 
         if copy_tables:
             self.tables_container._group_handler.copy_handler(
-                new_omezarr.tables_container._group_handler
+                new_ome_zarr.tables_container._group_handler
             )
-        return new_omezarr
+        return new_ome_zarr
 
     def list_tables(self) -> list[str]:
         """List all tables in the image."""
@@ -325,7 +325,7 @@ class OmeZarrContainer:
     @overload
     def get_table(
         self, name: str, check_type: Literal["masking_roi_table"]
-    ) -> MaskingROITable: ...
+    ) -> MaskingRoiTable: ...
 
     @overload
     def get_table(
@@ -348,7 +348,7 @@ class OmeZarrContainer:
                     )
                 return table
             case "masking_roi_table":
-                if not isinstance(table, MaskingROITable):
+                if not isinstance(table, MaskingRoiTable):
                     raise NgioValueError(
                         f"Table '{name}' is not a masking ROI table. "
                         f"Found type: {table.type()}"
@@ -379,7 +379,7 @@ class OmeZarrContainer:
         """Compute the ROI table for an image."""
         return self.get_image().build_image_roi_table(name=name)
 
-    def build_masking_roi_table(self, label: str) -> MaskingROITable:
+    def build_masking_roi_table(self, label: str) -> MaskingRoiTable:
         """Compute the masking ROI table for a label."""
         return self.get_label(label).build_masking_roi_table()
 
@@ -410,7 +410,7 @@ class OmeZarrContainer:
 
         Args:
             name (str): The name of the label.
-            path (str | None): The path to the image in the omezarr file.
+            path (str | None): The path to the image in the ome_zarr file.
             pixel_size (PixelSize | None): The pixel size of the image.
             strict (bool): Only used if the pixel size is provided. If True, the
                 pixel size must match the image pixel size exactly. If False, the
@@ -435,7 +435,7 @@ class OmeZarrContainer:
             label_name (str): The name of the label.
             masking_label_name (str): The name of the masking label.
             masking_table_name (str | None): The name of the masking table.
-            path (str | None): The path to the image in the omezarr file.
+            path (str | None): The path to the image in the ome_zarr file.
             pixel_size (PixelSize | None): The pixel size of the image.
             strict (bool): Only used if the pixel size is provided. If True, the
                 pixel size must match the image pixel size exactly. If False, the
@@ -507,7 +507,7 @@ class OmeZarrContainer:
         )
 
 
-def open_omezarr_container(
+def open_ome_zarr_container(
     store: StoreOrGroup,
     cache: bool = False,
     mode: AccessModeLiteral = "r+",
@@ -533,7 +533,7 @@ def open_image(
 
     Args:
         store (StoreOrGroup): The Zarr store or group to create the image in.
-        path (str | None): The path to the image in the omezarr file.
+        path (str | None): The path to the image in the ome_zarr file.
         pixel_size (PixelSize | None): The pixel size of the image.
         strict (bool): Only used if the pixel size is provided. If True, the
                 pixel size must match the image pixel size exactly. If False, the
@@ -551,7 +551,7 @@ def open_image(
     )
 
 
-def create_empty_omezarr(
+def create_empty_ome_zarr(
     store: StoreOrGroup,
     shape: Collection[int],
     xy_pixelsize: float,
@@ -633,18 +633,18 @@ def create_empty_omezarr(
         version=version,
     )
 
-    omezarr = OmeZarrContainer(group_handler=handler)
-    omezarr.initialize_channel_meta(
+    ome_zarr = OmeZarrContainer(group_handler=handler)
+    ome_zarr.initialize_channel_meta(
         labels=channel_labels,
         wavelength_id=channel_wavelengths,
         percentiles=percentiles,
         colors=channel_colors,
         active=channel_active,
     )
-    return omezarr
+    return ome_zarr
 
 
-def create_omezarr_from_array(
+def create_ome_zarr_from_array(
     store: StoreOrGroup,
     array: np.ndarray,
     xy_pixelsize: float,
@@ -724,15 +724,15 @@ def create_omezarr_from_array(
         version=version,
     )
 
-    omezarr = OmeZarrContainer(group_handler=handler)
-    image = omezarr.get_image()
+    ome_zarr = OmeZarrContainer(group_handler=handler)
+    image = ome_zarr.get_image()
     image.set_array(array)
     image.consolidate()
-    omezarr.initialize_channel_meta(
+    ome_zarr.initialize_channel_meta(
         labels=channel_labels,
         wavelength_id=channel_wavelengths,
         percentiles=percentiles,
         colors=channel_colors,
         active=channel_active,
     )
-    return omezarr
+    return ome_zarr
