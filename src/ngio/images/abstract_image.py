@@ -43,7 +43,7 @@ class AbstractImage(Generic[_image_handler]):
 
         Args:
             group_handler: The Zarr group handler.
-            path: The path to the image in the omezarr file.
+            path: The path to the image in the ome_zarr file.
             meta_handler: The image metadata handler.
 
         """

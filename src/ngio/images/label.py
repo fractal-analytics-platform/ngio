@@ -35,7 +35,7 @@ class Label(AbstractImage[LabelMetaHandler]):
 
         Args:
             group_handler: The Zarr group handler.
-            path: The path to the image in the omezarr file.
+            path: The path to the image in the ome_zarr file.
             meta_handler: The image metadata handler.
 
         """
@@ -105,7 +105,7 @@ class LabelsContainer:
 
         Args:
             name (str): The name of the label.
-            path (str | None): The path to the image in the omezarr file.
+            path (str | None): The path to the image in the ome_zarr file.
             pixel_size (PixelSize | None): The pixel size of the image.
             strict (bool): Only used if the pixel size is provided. If True, the
                 pixel size must match the image pixel size exactly. If False, the
