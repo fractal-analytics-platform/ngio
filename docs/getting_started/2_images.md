@@ -195,4 +195,4 @@ Often, you might want to create a new label based on an existing image. You can 
 ```
 
 This will create a new label with the same dimensions as the original label (without channels) and compatible metadata.
-If you wanto to create a new label with slightly different metadata see [API Reference](https://fractal-analytics-platform.github.io/ngio/api/).
+If you want to create a new label with slightly different metadata see [API Reference](https://fractal-analytics-platform.github.io/ngio/api/).

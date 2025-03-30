@@ -41,9 +41,9 @@ of labels, and tables available.
 - **Table management** allow to check which tables are available, access them, and create new tables
 - **Derive new OME-Zarr images** allow to create new images based on the original one, with the same or similar metadata
 
-### What is not the OmeZarr Container?
+### What is the OmeZarr Container not?
 
-The `OmeZarr Container` object does allow use to interact with the image data directly. For that we need to interact with the `Image`, `Label`, and `Table` objects.
+The `OmeZarr Container` object does not allow the user to interact with the image data directly. For that, we need to use the `Image`, `Label`, and `Table` objects.
 
 ### OME-Zarr Overview
 
@@ -119,7 +119,7 @@ new_ome_zarr_image = create_ome_zarr_from_array(
 
 ### Opening Remote OME-Zarr Containers
 
-You can use `ngio` to open remote OME-Zarr to open remote OME-Zarr containers. 
+You can use `ngio` to open remote OME-Zarr containers. 
 For publicly available OME-Zarr containers, you can just use the `open_ome_zarr_container` function with a URL.
 
 For example, to open a remote OME-Zarr container hosted on a github repository:
