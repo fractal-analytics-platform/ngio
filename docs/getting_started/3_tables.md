@@ -67,7 +67,7 @@ Ngio supports tree types of tables: `roi_table`, `feature_table`, and `mask_tabl
     ```
 
     This will return all the ROIs in the table.
-    Rois can be used to slice the image data:
+    ROIs can be used to slice the image data:
     ```pycon exec="true" source="console" session="get_started"
     >>> roi = roi_table.get("FOV_1")
     >>> roi_data = image.get_roi(roi)
@@ -123,7 +123,7 @@ Ngio supports tree types of tables: `roi_table`, `feature_table`, and `mask_tabl
     >>> masking_table.get(1)
     >>> print(masking_table.get(100)) # markdown-exec: hide
     ```
-    Rois can be used to slice the image data:
+    ROIs can be used to slice the image data:
     ```pycon exec="true" source="console" session="get_started"
     >>> roi = masking_table.get(100)
     >>> roi_data = image.get_roi(roi)
@@ -179,7 +179,7 @@ Ngio supports tree types of tables: `roi_table`, `feature_table`, and `mask_tabl
 
 #### Creating a Table
 
-Tables (diffently from Images and Labels) can be purely in memory objects, and don't need to be save on disk.
+Tables (differently from Images and Labels) can be purely in memory objects, and don't need to be saved on disk.
 
 === "Creating a ROI Table"
     ```pycon exec="true" source="console" session="get_started"
@@ -240,7 +240,7 @@ Tables (diffently from Images and Labels) can be purely in memory objects, and d
     >>> print(generic_table) # markdown-exec: hide
     ```
 
-    Or from a "AnnData" object:
+    Or from an "AnnData" object:
 
     ```pycon exec="true" source="console" session="get_started"
     >>> from ngio.tables import GenericTable
