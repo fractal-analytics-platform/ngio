@@ -78,7 +78,7 @@ class OmeZarrPlate:
 
     def __repr__(self) -> str:
         """Return a string representation of the plate."""
-        return f"Plate([rows x columns] ({len(self.rows)} x {len(self.columns)})"
+        return f"Plate([rows x columns] ({len(self.rows)} x {len(self.columns)}))"
 
     @property
     def meta_handler(self):
