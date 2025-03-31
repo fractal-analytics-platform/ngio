@@ -18,13 +18,13 @@ def test_open_real_ome_zarr_plate(cardiomyocyte_tiny_path: Path):
         "20200812-CardiomyocyteDifferentiation14-Cycle1"
     ]
 
-    well_path = ome_zarr_plate.get_well_path("B", "03")
-    well_path2 = ome_zarr_plate.get_well_path("B", 3)
+    well_path = ome_zarr_plate._well_path("B", "03")
+    well_path2 = ome_zarr_plate._well_path("B", 3)
     assert well_path == well_path2
     well = ome_zarr_plate.get_well("B", "03")
     assert well.paths() == ["0"]
 
-    image_path = ome_zarr_plate.get_image_path("B", "03", "0")
+    image_path = ome_zarr_plate._image_path("B", "03", "0")
     assert image_path == "B/03/0"
 
     images_plate = ome_zarr_plate.get_images()
