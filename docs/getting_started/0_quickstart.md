@@ -1,12 +1,12 @@
 # Quickstart
 
-`ngio` is a Python package that provides a simple and intuitive API for reading and writing data to and from various data sources. This guide will walk you through the basics of using `ngio` to read and write data.
+Ngio is a Python package that provides a simple and intuitive API for reading and writing data to and from OME-Zarr. This guide will walk you through the basics of using `ngio` to read and write data.
 
 ## Installation
 
 `ngio` can be installed from PyPI, conda-forge, or from source.
 
-- Python `>=3.11`
+- `ngio` requires Python `>=3.11`
 
 === "pip"
 
@@ -73,23 +73,23 @@ Let's start by opening an OME-Zarr file and inspecting its contents.
 >>> print(ome_zarr_container) # markdown-exec: hide
 ```
 
-### What is the OmeZarr container?
+### What is the OME-Zarr container?
 
-The `ome_zarr_container` is the core of ngio and the entry point to working with OME-Zarr images. It provides high-level access to the image metadata, images, labels, and tables.
+The `OME-Zarr Container` is the core of ngio and the entry point to working with OME-Zarr images. It provides high-level access to the image metadata, images, labels, and tables.
 
-### What is the OmeZarr container not?
+### What is the OME-Zarr container not?
 
-The `OmeZarr Container` object does not allow the user to interact with the image data directly. For that, we need to use the `Image`, `Label`, and `Table` objects.
+The `OME-Zarr Container` object does not allow the user to interact with the image data directly. For that, we need to use the `Image`, `Label`, and `Table` objects.
 
 ## Next steps
 
-To learn how to work with the `OmeZarr Container` object, but also with the image, label, and table data, check out the following guides:
+To learn how to work with the `OME-Zarr Container` object, but also with the image, label, and table data, check out the following guides:
 
-- [Ome-Zarr Container](1_ome_zarr_containers.md): An overview on how to user the Ome-Zarr Container object and how to create new images and labels.
+- [OME-Zarr Container](1_ome_zarr_containers.md): An overview on how to use the OME-Zarr Container object and how to create new images and labels.
 - [Images/Labels](2_images.md): To know more on how to work with image data.
 - [Tables](3_tables.md): To know more on how to work with table data, and how you can combine tables with image data.
 - [Masked Images/Labels](4_masked_images.md): To know more on how to work with masked image data.
-- [HCS Plates](5_hcs.md): To know more on how to work with HCS Plate data.
+- [HCS Plates](5_hcs.md): To know more on how to work with HCS plate data.
 
 Also, checkout our jupyer notebook tutorials for more examples:
 
