@@ -1,7 +1,5 @@
 """HCS (High Content Screening) specific metadata classes for NGIO."""
 
-from typing import Literal
-
 from ome_zarr_models.v04.hcs import HCSAttrs
 from ome_zarr_models.v04.plate import (
     Acquisition,
@@ -14,6 +12,7 @@ from ome_zarr_models.v04.well import WellAttrs
 from ome_zarr_models.v04.well_types import WellImage, WellMeta
 from pydantic import BaseModel
 
+from ngio.ome_zarr_meta.ngio_specs._ngio_image import NgffVersion
 from ngio.utils import NgioValueError
 
 
@@ -34,8 +33,10 @@ class NgioWellMeta(WellAttrs):
     def default_init(
         cls,
         images: list[ImageInWellPath] | None = None,
-        version: Literal["0.4"] | None = None,
+        version: NgffVersion | None = None,
     ) -> "NgioWellMeta":
+        if version is None:
+            version = "0.4"
         well = cls(well=WellMeta(images=[], version=version))
         if images is None:
             return well
@@ -164,7 +165,7 @@ class NgioPlateMeta(HCSAttrs):
         cls,
         images: list[ImageInWellPath] | None = None,
         name: str | None = None,
-        version: str | None = None,
+        version: NgffVersion | None = None,
     ) -> "NgioPlateMeta":
         plate = cls(
             plate=Plate(

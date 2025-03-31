@@ -35,6 +35,7 @@ from ngio.ome_zarr_meta.ngio_specs._ngio_hcs import (
 )
 from ngio.ome_zarr_meta.ngio_specs._ngio_image import (
     ImageLabelSource,
+    NgffVersion,
     NgioImageLabelMeta,
     NgioImageMeta,
     NgioLabelMeta,
@@ -56,6 +57,7 @@ __all__ = [
     "Dataset",
     "ImageInWellPath",
     "ImageLabelSource",
+    "NgffVersion",
     "NgioColors",
     "NgioImageLabelMeta",
     "NgioImageMeta",

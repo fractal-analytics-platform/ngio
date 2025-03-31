@@ -41,7 +41,6 @@ from ngio.ome_zarr_meta.ngio_specs import (
     NgioWellMeta,
     default_channel_name,
 )
-from ngio.ome_zarr_meta.ngio_specs._ngio_image import NgffVersion
 
 
 def _is_v04_image_meta(metadata: dict) -> ImageAttrsV04 | ValidationError:
@@ -290,7 +289,7 @@ def v04_to_ngio_label_meta(
         else:
             image_label_source = source.image
         image_label_source = ImageLabelSource(
-            version=NgffVersion.v04,
+            version="0.4",
             source={"image": image_label_source},
         )
     name = v04_muliscale.name

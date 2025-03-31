@@ -13,10 +13,7 @@ from ngio.ome_zarr_meta import (
     NgioImageMeta,
     PixelSize,
 )
-from ngio.ome_zarr_meta.ngio_specs import (
-    SpaceUnits,
-    TimeUnits,
-)
+from ngio.ome_zarr_meta.ngio_specs import NgffVersion, SpaceUnits, TimeUnits
 from ngio.tables import (
     FeatureTable,
     GenericRoiTable,
@@ -572,7 +569,7 @@ def create_empty_ome_zarr(
     channel_colors: Collection[str] | None = None,
     channel_active: Collection[bool] | None = None,
     overwrite: bool = False,
-    version: str = "0.4",
+    version: NgffVersion = "0.4",
 ) -> OmeZarrContainer:
     """Create an empty OME-Zarr image with the given shape and metadata.
 
@@ -611,7 +608,7 @@ def create_empty_ome_zarr(
             active. Defaults to None.
         overwrite (bool, optional): Whether to overwrite an existing image.
             Defaults to True.
-        version (str, optional): The version of the OME-Zarr specification.
+        version (NgffVersion, optional): The version of the OME-Zarr specification.
             Defaults to "0.4".
     """
     handler = _create_empty_image(
@@ -664,7 +661,7 @@ def create_ome_zarr_from_array(
     name: str | None = None,
     chunks: Collection[int] | None = None,
     overwrite: bool = False,
-    version: str = "0.4",
+    version: NgffVersion = "0.4",
 ) -> OmeZarrContainer:
     """Create an OME-Zarr image from a numpy array.
 
