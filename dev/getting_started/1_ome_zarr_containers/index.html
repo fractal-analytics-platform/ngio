@@ -10,26 +10,28 @@
       
       
       
-        <link rel="canonical" href="https://github.com/fractal-analytics-platform/ngio.git/dev/">
+        <link rel="canonical" href="https://github.com/fractal-analytics-platform/ngio.git/dev/getting_started/1_ome_zarr_containers/">
       
       
+        <link rel="prev" href="../0_quickstart/">
       
-        <link rel="next" href="getting_started/0_quickstart/">
+      
+        <link rel="next" href="../2_images/">
       
       
-      <link rel="icon" href="images/favicon.ico">
+      <link rel="icon" href="../../images/favicon.ico">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.10">
     
     
       
-        <title>NGIO: Next Generation File Format I/O</title>
+        <title>1. OmeZarr Container - NGIO: Next Generation File Format I/O</title>
       
     
     
-      <link rel="stylesheet" href="assets/stylesheets/main.4af4bdda.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.4af4bdda.min.css">
       
         
-        <link rel="stylesheet" href="assets/stylesheets/palette.06af60db.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.06af60db.min.css">
       
       
 
@@ -48,13 +50,13 @@
       
     
     
-      <link rel="stylesheet" href="assets/_markdown_exec_pyodide.css">
+      <link rel="stylesheet" href="../../assets/_markdown_exec_pyodide.css">
     
-      <link rel="stylesheet" href="assets/_markdown_exec_ansi.css">
+      <link rel="stylesheet" href="../../assets/_markdown_exec_ansi.css">
     
-      <link rel="stylesheet" href="assets/_mkdocstrings.css">
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
     
-    <script>__md_scope=new URL(".",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -80,7 +82,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#what-is-ngio" class="md-skip">
+        <a href="#1-omezarr-container" class="md-skip">
           Skip to content
         </a>
       
@@ -100,7 +102,7 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="." title="NGIO: Next Generation File Format I/O" class="md-header__button md-logo" aria-label="NGIO: Next Generation File Format I/O" data-md-component="logo">
+    <a href="../.." title="NGIO: Next Generation File Format I/O" class="md-header__button md-logo" aria-label="NGIO: Next Generation File Format I/O" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -120,7 +122,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              NGIO: Streamlined OME-Zarr Image Analysis
+              1. OmeZarr Container
             
           </span>
         </div>
@@ -240,7 +242,7 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="." title="NGIO: Next Generation File Format I/O" class="md-nav__button md-logo" aria-label="NGIO: Next Generation File Format I/O" data-md-component="logo">
+    <a href="../.." title="NGIO: Next Generation File Format I/O" class="md-nav__button md-logo" aria-label="NGIO: Next Generation File Format I/O" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -267,30 +269,10 @@
       
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    NGIO: Streamlined OME-Zarr Image Analysis
-    
-  </span>
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="." class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
         
   
   
@@ -301,144 +283,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#what-is-ngio" class="md-nav__link">
-    <span class="md-ellipsis">
-      What is NGIO?
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#key-features" class="md-nav__link">
-    <span class="md-ellipsis">
-      Key Features
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Key Features">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#simple-object-based-api" class="md-nav__link">
-    <span class="md-ellipsis">
-      📊 Simple Object-Based API
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#rich-tables-and-regions-of-interest-roi-support" class="md-nav__link">
-    <span class="md-ellipsis">
-      🔍 Rich Tables and Regions of Interest (ROI) Support
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#scalable-data-processing-coming-soon" class="md-nav__link">
-    <span class="md-ellipsis">
-      🔄 Scalable Data Processing (Coming Soon)
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#getting-started" class="md-nav__link">
-    <span class="md-ellipsis">
-      Getting Started
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#development-status" class="md-nav__link">
-    <span class="md-ellipsis">
-      Development Status
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Development Status">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#available-features" class="md-nav__link">
-    <span class="md-ellipsis">
-      Available Features
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#upcoming-features" class="md-nav__link">
-    <span class="md-ellipsis">
-      Upcoming Features
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#contributors" class="md-nav__link">
-    <span class="md-ellipsis">
-      Contributors
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#license" class="md-nav__link">
-    <span class="md-ellipsis">
-      License
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#repository" class="md-nav__link">
-    <span class="md-ellipsis">
-      Repository
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -447,8 +291,10 @@
       
   
   
+    
   
   
+  
     
     
       
@@ -473,11 +319,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
         
           
           <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
@@ -493,7 +339,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_2">
             <span class="md-nav__icon md-icon"></span>
             Getting Started
@@ -507,7 +353,7 @@
   
   
     <li class="md-nav__item">
-      <a href="getting_started/0_quickstart/" class="md-nav__link">
+      <a href="../0_quickstart/" class="md-nav__link">
         
   
   
@@ -527,10 +373,32 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="getting_started/1_ome_zarr_containers/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    1. OmeZarr Container
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -541,6 +409,104 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#main-concepts" class="md-nav__link">
+    <span class="md-ellipsis">
+      Main concepts
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Main concepts">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-is-the-omezarr-container" class="md-nav__link">
+    <span class="md-ellipsis">
+      What is the OmeZarr container?
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-is-the-omezarr-container-not" class="md-nav__link">
+    <span class="md-ellipsis">
+      What is the OmeZarr container not?
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ome-zarr-overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      OME-Zarr overview
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#accessing-images-labels-tables" class="md-nav__link">
+    <span class="md-ellipsis">
+      Accessing images / labels / tables
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#creating-derived-images" class="md-nav__link">
+    <span class="md-ellipsis">
+      Creating derived images
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#creating-new-images" class="md-nav__link">
+    <span class="md-ellipsis">
+      Creating new images
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#opening-remote-ome-zarr-containers" class="md-nav__link">
+    <span class="md-ellipsis">
+      Opening remote OME-Zarr containers
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -553,7 +519,7 @@
   
   
     <li class="md-nav__item">
-      <a href="getting_started/2_images/" class="md-nav__link">
+      <a href="../2_images/" class="md-nav__link">
         
   
   
@@ -576,7 +542,7 @@
   
   
     <li class="md-nav__item">
-      <a href="getting_started/3_tables/" class="md-nav__link">
+      <a href="../3_tables/" class="md-nav__link">
         
   
   
@@ -599,7 +565,7 @@
   
   
     <li class="md-nav__item">
-      <a href="getting_started/4_masked_images/" class="md-nav__link">
+      <a href="../4_masked_images/" class="md-nav__link">
         
   
   
@@ -622,7 +588,7 @@
   
   
     <li class="md-nav__item">
-      <a href="getting_started/5_hcs/" class="md-nav__link">
+      <a href="../5_hcs/" class="md-nav__link">
         
   
   
@@ -705,7 +671,7 @@
   
   
     <li class="md-nav__item">
-      <a href="tutorials/image_processing/" class="md-nav__link">
+      <a href="../../tutorials/image_processing/" class="md-nav__link">
         
   
   
@@ -728,7 +694,7 @@
   
   
     <li class="md-nav__item">
-      <a href="tutorials/image_segmentation/" class="md-nav__link">
+      <a href="../../tutorials/image_segmentation/" class="md-nav__link">
         
   
   
@@ -751,7 +717,7 @@
   
   
     <li class="md-nav__item">
-      <a href="tutorials/feature_extraction/" class="md-nav__link">
+      <a href="../../tutorials/feature_extraction/" class="md-nav__link">
         
   
   
@@ -774,7 +740,7 @@
   
   
     <li class="md-nav__item">
-      <a href="tutorials/hcs_processing/" class="md-nav__link">
+      <a href="../../tutorials/hcs_processing/" class="md-nav__link">
         
   
   
@@ -861,7 +827,7 @@
   
   
     <li class="md-nav__item">
-      <a href="api/ngio/" class="md-nav__link">
+      <a href="../../api/ngio/" class="md-nav__link">
         
   
   
@@ -884,7 +850,7 @@
   
   
     <li class="md-nav__item">
-      <a href="api/images/" class="md-nav__link">
+      <a href="../../api/images/" class="md-nav__link">
         
   
   
@@ -907,7 +873,7 @@
   
   
     <li class="md-nav__item">
-      <a href="api/tables/" class="md-nav__link">
+      <a href="../../api/tables/" class="md-nav__link">
         
   
   
@@ -930,7 +896,7 @@
   
   
     <li class="md-nav__item">
-      <a href="api/hcs/" class="md-nav__link">
+      <a href="../../api/hcs/" class="md-nav__link">
         
   
   
@@ -953,7 +919,7 @@
   
   
     <li class="md-nav__item">
-      <a href="api/utils/" class="md-nav__link">
+      <a href="../../api/utils/" class="md-nav__link">
         
   
   
@@ -976,7 +942,7 @@
   
   
     <li class="md-nav__item">
-      <a href="api/common/" class="md-nav__link">
+      <a href="../../api/common/" class="md-nav__link">
         
   
   
@@ -1055,7 +1021,7 @@
   
   
     <li class="md-nav__item">
-      <a href="contributing/" class="md-nav__link">
+      <a href="../../contributing/" class="md-nav__link">
         
   
   
@@ -1078,7 +1044,7 @@
   
   
     <li class="md-nav__item">
-      <a href="code_of_conduct/" class="md-nav__link">
+      <a href="../../code_of_conduct/" class="md-nav__link">
         
   
   
@@ -1118,6 +1084,8 @@
   
   
   
+    
+  
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
@@ -1126,46 +1094,28 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#what-is-ngio" class="md-nav__link">
+  <a href="#main-concepts" class="md-nav__link">
     <span class="md-ellipsis">
-      What is NGIO?
+      Main concepts
     </span>
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#key-features" class="md-nav__link">
-    <span class="md-ellipsis">
-      Key Features
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Key Features">
+    <nav class="md-nav" aria-label="Main concepts">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#simple-object-based-api" class="md-nav__link">
+  <a href="#what-is-the-omezarr-container" class="md-nav__link">
     <span class="md-ellipsis">
-      📊 Simple Object-Based API
+      What is the OmeZarr container?
     </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#rich-tables-and-regions-of-interest-roi-support" class="md-nav__link">
+  <a href="#what-is-the-omezarr-container-not" class="md-nav__link">
     <span class="md-ellipsis">
-      🔍 Rich Tables and Regions of Interest (ROI) Support
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#scalable-data-processing-coming-soon" class="md-nav__link">
-    <span class="md-ellipsis">
-      🔄 Scalable Data Processing (Coming Soon)
+      What is the OmeZarr container not?
     </span>
   </a>
   
@@ -1177,69 +1127,45 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#getting-started" class="md-nav__link">
+  <a href="#ome-zarr-overview" class="md-nav__link">
     <span class="md-ellipsis">
-      Getting Started
+      OME-Zarr overview
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#development-status" class="md-nav__link">
+  <a href="#accessing-images-labels-tables" class="md-nav__link">
     <span class="md-ellipsis">
-      Development Status
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Development Status">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#available-features" class="md-nav__link">
-    <span class="md-ellipsis">
-      Available Features
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#upcoming-features" class="md-nav__link">
-    <span class="md-ellipsis">
-      Upcoming Features
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#contributors" class="md-nav__link">
-    <span class="md-ellipsis">
-      Contributors
+      Accessing images / labels / tables
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#license" class="md-nav__link">
+  <a href="#creating-derived-images" class="md-nav__link">
     <span class="md-ellipsis">
-      License
+      Creating derived images
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#repository" class="md-nav__link">
+  <a href="#creating-new-images" class="md-nav__link">
     <span class="md-ellipsis">
-      Repository
+      Creating new images
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#opening-remote-ome-zarr-containers" class="md-nav__link">
+    <span class="md-ellipsis">
+      Opening remote OME-Zarr containers
     </span>
   </a>
   
@@ -1264,55 +1190,146 @@
   
 
 
-  <h1>NGIO: Streamlined OME-Zarr Image Analysis</h1>
+<h1 id="1-omezarr-container">1. OmeZarr Container</h1>
+<p>Let's see how to open and explore an OME-Zarr image using <code>ngio</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ngio</span><span class="w"> </span><span class="kn">import</span> <span class="n">open_ome_zarr_container</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ngio.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">download_ome_zarr_dataset</span>
 
-<p>NGIO is a Python library designed to simplify bio-image analysis workflows, offering an intuitive interface for working with OME-Zarr files.</p>
-<h2 id="what-is-ngio">What is NGIO?</h2>
-<p>NGIO is built for the <a href="https://ngff.openmicroscopy.org/">OME-Zarr</a> file format, a modern, cloud-optimized format for biological imaging data. OME-Zarr stores large, multi-dimensional microscopy images and metadata in an efficient and scalable way.</p>
-<p>NGIO's mission is to streamline working with OME-Zarr files by providing a simple, object-based API for opening, exploring, and manipulating OME-Zarr Images and HCS Plates. It also offers comprehensive support for tables and regions of interest (ROIs), making it easy to extract and analyze specific regions in your data.</p>
-<h2 id="key-features">Key Features</h2>
-<h3 id="simple-object-based-api">📊 Simple Object-Based API</h3>
+<span class="c1"># Download a sample dataset</span>
+<span class="n">download_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;./data&quot;</span><span class="p">)</span>
+<span class="n">hcs_path</span> <span class="o">=</span> <span class="n">download_ome_zarr_dataset</span><span class="p">(</span><span class="s2">&quot;CardiomyocyteSmallMip&quot;</span><span class="p">,</span> <span class="n">download_dir</span><span class="o">=</span><span class="n">download_dir</span><span class="p">)</span>
+<span class="n">image_path</span> <span class="o">=</span> <span class="n">hcs_path</span> <span class="o">/</span> <span class="s2">&quot;B&quot;</span> <span class="o">/</span> <span class="s2">&quot;03&quot;</span> <span class="o">/</span> <span class="s2">&quot;0&quot;</span>
+
+<span class="c1"># Open the OME-Zarr container</span>
+<span class="n">ome_zarr_container</span> <span class="o">=</span> <span class="n">open_ome_zarr_container</span><span class="p">(</span><span class="n">image_path</span><span class="p">)</span>
+</code></pre></div>
+<div class="result"></div>
+<p>The <code>ome_zarr_container</code> in is your entry point to working with OME-Zarr images. It provides high-level access to the image metadata, images, labels, and tables.</p>
+<div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">ome_zarr_container</span>
+<span class="go">OmeZarrContainer(levels=5, #labels=4, #tables=7)</span>
+</code></pre></div>
+<p>The <code>ome_zarr_container</code> will be the starting point for all your image processing tasks.</p>
+<h2 id="main-concepts">Main concepts</h2>
+<h3 id="what-is-the-omezarr-container">What is the OmeZarr container?</h3>
+<p>The <code>OmeZarr Container</code> in ngio is your entry point to working with OME-Zarr images.</p>
+<p>It provides:</p>
 <ul>
-<li>Easily open, explore, and manipulate OME-Zarr Images and HCS Plates</li>
-<li>Create and derive new images and labels with minimal boilerplate code</li>
+<li><strong>OME-Zarr overview</strong> it can be used to get an overview of the OME-Zarr file, including the number of image metadata, list
+of labels, and tables available.</li>
+<li><strong>Image access</strong> allow to access the images at different resolution levels and pixel sizes</li>
+<li><strong>Label management</strong> allow to check which labels are available, access them, and create new labels</li>
+<li><strong>Table management</strong> allow to check which tables are available, access them, and create new tables</li>
+<li><strong>Derive new OME-Zarr images</strong> allow to create new images based on the original one, with the same or similar metadata</li>
 </ul>
-<h3 id="rich-tables-and-regions-of-interest-roi-support">🔍 Rich Tables and Regions of Interest (ROI) Support</h3>
-<ul>
-<li>Extract and analyze specific regions of interest</li>
-<li>Tight integration with <a href="https://fractal-analytics-platform.github.io/fractal-tasks-core/tables/">Fractal's Table Framework</a></li>
-</ul>
-<h3 id="scalable-data-processing-coming-soon">🔄 Scalable Data Processing (Coming Soon)</h3>
-<ul>
-<li>Powerful iterators for processing data at scale</li>
-<li>Efficient memory management for large datasets</li>
-</ul>
-<h2 id="getting-started">Getting Started</h2>
-<p>Refer to the <a href="getting_started/0_quickstart/">Getting Started</a> guide to integrate NGIO into your workflows. We also provide a collection of <a href="tutorials/image_processing/">tutorials</a> to help you get up and running quickly.
-For more advanced usage and API documentation, see our <a href="api/ngio/">API Reference</a>.</p>
-<h2 id="development-status">Development Status</h2>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>NGIO is under active development and is not yet stable. The API is subject to change, and bugs and breaking changes are expected.</p>
+<h3 id="what-is-the-omezarr-container-not">What is the OmeZarr container not?</h3>
+<p>The <code>OmeZarr Container</code> object does not allow the user to interact with the image data directly. For that, we need to use the <code>Image</code>, <code>Label</code>, and <code>Table</code> objects.</p>
+<h2 id="ome-zarr-overview">OME-Zarr overview</h2>
+<p>For example:</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="1:4"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><input id="__tabbed_1_3" name="__tabbed_1" type="radio" /><input id="__tabbed_1_4" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">Number of Resolution Levels</label><label for="__tabbed_1_2">Available Paths</label><label for="__tabbed_1_3">Dimensionality</label><label for="__tabbed_1_4">Full Metadata Object</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<p>Show the number of resolution levels:
+<div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">ome_zarr_container</span><span class="o">.</span><span class="n">levels</span> <span class="c1"># Show the number of resolution levels</span>
+<span class="go">5</span>
+</code></pre></div></p>
 </div>
-<h3 id="available-features">Available Features</h3>
-<ul>
-<li>✅ OME-Zarr metadata handling and validation</li>
-<li>✅ Image and label access across pyramid levels</li>
-<li>✅ ROI and table support</li>
-<li>✅ Streaming from remote sources</li>
-<li>✅ Documentation and examples</li>
-</ul>
-<h3 id="upcoming-features">Upcoming Features</h3>
-<ul>
-<li>Advanced image processing iterators</li>
-<li>Parallel processing capabilities</li>
-</ul>
-<h2 id="contributors">Contributors</h2>
-<p>NGIO is developed at the <a href="https://www.biovisioncenter.uzh.ch/en.html">BioVisionCenter</a>, University of Zurich, by <a href="https://github.com/lorenzocerrone">@lorenzocerrone</a> and <a href="https://github.com/jluethi">@jluethi</a>.</p>
-<h2 id="license">License</h2>
-<p>NGIO is released under the BSD-3-Clause License. See <a href="https://github.com/fractal-analytics-platform/ngio/blob/main/LICENSE">LICENSE</a> for details.</p>
-<h2 id="repository">Repository</h2>
-<p>Visit our <a href="https://github.com/fractal-analytics-platform/ngio">GitHub repository</a> for the latest code, issues, and contributions.</p>
+<div class="tabbed-block">
+<p>Show the paths to all available resolution levels:
+<div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">ome_zarr_container</span><span class="o">.</span><span class="n">levels_paths</span> <span class="c1"># Show the paths to all available images</span>
+<span class="go">[&#39;0&#39;, &#39;1&#39;, &#39;2&#39;, &#39;3&#39;, &#39;4&#39;]</span>
+</code></pre></div></p>
+</div>
+<div class="tabbed-block">
+<p>Show if the image is 2D or 3D:
+<div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">ome_zarr_container</span><span class="o">.</span><span class="n">is_3d</span> <span class="c1"># Get if the image is 3D</span>
+<span class="go">False</span>
+</code></pre></div>
+or if the image is a time series:
+<div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">ome_zarr_container</span><span class="o">.</span><span class="n">is_time_series</span> <span class="c1"># Get if the image is a time series</span>
+<span class="go">False</span>
+</code></pre></div></p>
+</div>
+<div class="tabbed-block">
+<p><div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">metadata</span> <span class="o">=</span> <span class="n">ome_zarr_container</span><span class="o">.</span><span class="n">image_meta</span>
+<span class="go">NgioImageMeta(name=None, datasets=[&#39;0&#39;, &#39;1&#39;, &#39;2&#39;, &#39;3&#39;, &#39;4&#39;], axes=[&#39;c&#39;, &#39;z&#39;, &#39;y&#39;, &#39;x&#39;])</span>
+</code></pre></div>
+The metadata object contains all the information about the image, for example, the channel labels:
+<div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">metadata</span><span class="o">.</span><span class="n">channel_labels</span>
+<span class="go">[&#39;DAPI&#39;, &#39;nanog&#39;, &#39;Lamin B1&#39;]</span>
+</code></pre></div></p>
+</div>
+</div>
+</div>
+<h2 id="accessing-images-labels-tables">Accessing images / labels / tables</h2>
+<p>To access images, labels, and tables, you can use the <code>get_image</code>, <code>get_label</code>, and <code>get_table</code> methods of the <code>OmeZarrContainer</code> object.</p>
+<p>A variety of examples and additional information can be found in the <a href="../2_images/">Images/Lables</a>, and <a href="../3_tables.md">Tables</a> sections.</p>
+<h2 id="creating-derived-images">Creating derived images</h2>
+<p>When processing an image, you might want to create a new image with the same metadata:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Create a new image based on the original</span>
+<span class="n">new_image</span> <span class="o">=</span> <span class="n">ome_zarr_container</span><span class="o">.</span><span class="n">derive_image</span><span class="p">(</span><span class="s2">&quot;data/new_ome.zarr&quot;</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</code></pre></div>
+<p>This will create a new OME-Zarr image with the same metadata as the original image.
+But you can also create a new image with slightly different metadata, for example, with a different shape:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Create a new image with a different shape</span>
+<span class="n">new_image</span> <span class="o">=</span> <span class="n">ome_zarr_container</span><span class="o">.</span><span class="n">derive_image</span><span class="p">(</span>
+    <span class="s2">&quot;data/new_ome.zarr&quot;</span><span class="p">,</span> 
+    <span class="n">overwrite</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> 
+    <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">128</span><span class="p">,</span> <span class="mi">128</span><span class="p">),</span> 
+    <span class="n">xy_pixelsize</span><span class="o">=</span><span class="mf">0.65</span><span class="p">,</span> 
+    <span class="n">z_spacing</span><span class="o">=</span><span class="mf">1.0</span>
+<span class="p">)</span>
+</code></pre></div>
+<h2 id="creating-new-images">Creating new images</h2>
+<p>You can create OME-Zarr images from an existing numpy array using the <code>create_ome_zarr_from_array</code> function.</p>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ngio</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_ome_zarr_from_array</span>
+
+<span class="c1"># Create a random 3D array</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">128</span><span class="p">,</span> <span class="mi">128</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+
+<span class="c1"># Convert to OME-NGFF</span>
+<span class="n">new_ome_zarr_image</span> <span class="o">=</span> <span class="n">create_ome_zarr_from_array</span><span class="p">(</span>
+    <span class="n">store</span><span class="o">=</span><span class="s2">&quot;random_ome.zarr&quot;</span><span class="p">,</span> 
+    <span class="n">array</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> 
+    <span class="n">xy_pixelsize</span><span class="o">=</span><span class="mf">0.65</span><span class="p">,</span> 
+    <span class="n">z_spacing</span><span class="o">=</span><span class="mf">1.0</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Alternatively, if you wanto to create an a empty OME-Zarr image, you can use the <code>create_empty_ome_zarr</code> function:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">ngio</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_empty_ome_zarr</span>
+<span class="c1"># Create an empty OME-Zarr image</span>
+<span class="n">new_ome_zarr_image</span> <span class="o">=</span> <span class="n">create_empty_ome_zarr</span><span class="p">(</span>
+    <span class="n">store</span><span class="o">=</span><span class="s2">&quot;empty_ome.zarr&quot;</span><span class="p">,</span> 
+    <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">128</span><span class="p">,</span> <span class="mi">128</span><span class="p">),</span> 
+    <span class="n">xy_pixelsize</span><span class="o">=</span><span class="mf">0.65</span><span class="p">,</span> 
+    <span class="n">z_spacing</span><span class="o">=</span><span class="mf">1.0</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>This will create an empty OME-Zarr image with the specified shape and pixel sizes.</p>
+<h2 id="opening-remote-ome-zarr-containers">Opening remote OME-Zarr containers</h2>
+<p>You can use <code>ngio</code> to open remote OME-Zarr containers.
+For publicly available OME-Zarr containers, you can just use the <code>open_ome_zarr_container</code> function with a URL.</p>
+<p>For example, to open a remote OME-Zarr container hosted on a github repository:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">ngio.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">fractal_fsspec_store</span>
+
+<span class="n">url</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s2">&quot;https://raw.githubusercontent.com/&quot;</span>
+    <span class="s2">&quot;fractal-analytics-platform/fractal-ome-zarr-examples/&quot;</span>
+    <span class="s2">&quot;refs/heads/main/v04/&quot;</span>
+    <span class="s2">&quot;20200812-CardiomyocyteDifferentiation14-Cycle1_B_03_mip.zarr/&quot;</span>
+<span class="p">)</span>
+
+<span class="n">store</span> <span class="o">=</span> <span class="n">fractal_fsspec_store</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="n">url</span><span class="p">)</span>
+<span class="n">ome_zarr_container</span> <span class="o">=</span> <span class="n">open_ome_zarr_container</span><span class="p">(</span><span class="n">store</span><span class="p">)</span>
+</code></pre></div>
+<p>For fractal users, the <code>fractal_fsspec_store</code> function can be used to open private OME-Zarr containers.
+In this case we need to provide a <code>fractal_token</code> to authenticate the user.</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">ngio.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">fractal_fsspec_store</span>
+
+<span class="n">store</span> <span class="o">=</span> <span class="n">fractal_fsspec_store</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="s2">&quot;https://fracral_url...&quot;</span><span class="p">,</span> <span class="n">fractal_token</span><span class="o">=</span><span class="s2">&quot;**your_secret_token**&quot;</span><span class="p">)</span>
+<span class="n">ome_zarr_container</span> <span class="o">=</span> <span class="n">open_ome_zarr_container</span><span class="p">(</span><span class="n">store</span><span class="p">)</span>
+</code></pre></div>
 
 
 
@@ -1335,7 +1352,7 @@ For more advanced usage and API documentation, see our <a href="api/ngio/">API R
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 28, 2025 15:29:17">March 28, 2025</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 31, 2025 12:37:48">March 31, 2025</span>
   </span>
 
     
@@ -1345,7 +1362,7 @@ For more advanced usage and API documentation, see our <a href="api/ngio/">API R
     <span class="md-icon" title="Created">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 8, 2024 08:17:16">July 8, 2024</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 28, 2025 15:29:17">March 28, 2025</span>
   </span>
 
     
@@ -1366,6 +1383,11 @@ For more advanced usage and API documentation, see our <a href="api/ngio/">API R
         <a href="https://github.com/lorenzocerrone" class="md-author" title="@lorenzocerrone">
           
           <img src="https://avatars.githubusercontent.com/u/23013839?v=4&size=72" alt="lorenzocerrone">
+        </a>
+      
+        <a href="https://github.com/csoneson" class="md-author" title="@csoneson">
+          
+          <img src="https://avatars.githubusercontent.com/u/5628952?v=4&size=72" alt="csoneson">
         </a>
       
       
@@ -1398,15 +1420,31 @@ For more advanced usage and API documentation, see our <a href="api/ngio/">API R
       
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
+          
+          <a href="../0_quickstart/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Quickstart">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Quickstart
+              </div>
+            </div>
+          </a>
+        
         
           
-          <a href="getting_started/0_quickstart/" class="md-footer__link md-footer__link--next" aria-label="Next: Quickstart">
+          <a href="../2_images/" class="md-footer__link md-footer__link--next" aria-label="Next: 2. Images and Labels">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Quickstart
+                2. Images and Labels
               </div>
             </div>
             <div class="md-footer__button md-icon">
@@ -1460,12 +1498,12 @@ For more advanced usage and API documentation, see our <a href="api/ngio/">API R
     
     
       
-      <script id="__config" type="application/json">{"base": ".", "features": ["content.tooltips", "content.tabs.link", "content.code.annotate", "navigation.instant", "navigation.instant.progress", "navigation.sections", "navigation.path", "navigation.indexes", "navigation.footer", "toc.follow", "search.suggest", "search.share"], "search": "assets/javascripts/workers/search.f8cc74c7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"base": "../..", "features": ["content.tooltips", "content.tabs.link", "content.code.annotate", "navigation.instant", "navigation.instant.progress", "navigation.sections", "navigation.path", "navigation.indexes", "navigation.footer", "toc.follow", "search.suggest", "search.share"], "search": "../../assets/javascripts/workers/search.f8cc74c7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
-      <script src="assets/javascripts/bundle.c8b220af.min.js"></script>
+      <script src="../../assets/javascripts/bundle.c8b220af.min.js"></script>
       
-        <script src="assets/_markdown_exec_pyodide.js"></script>
+        <script src="../../assets/_markdown_exec_pyodide.js"></script>
       
     
   </body>
