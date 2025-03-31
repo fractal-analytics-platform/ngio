@@ -2,7 +2,7 @@
 
 Tables are not part of the OME-Zarr specification but can be used in ngio to store measurements, features, regions of interest (ROIs), and other tabular data.
 
-#### Getting a Table
+## Getting a table
 
 We can list all available tables and load a specific table:
 
@@ -18,54 +18,42 @@ Ngio supports tree types of tables: `roi_table`, `feature_table`, and `mask_tabl
 === "ROI Table"
     ROI tables can be used to store arbitrary regions of interest (ROIs) in the image.
     Here for example we will load the `FOV_ROI_table` that contains the microscope field of view (FOV) ROIs:
-
     ```pycon exec="true" source="console" session="get_started"
     >>> roi_table = ome_zarr_container.get_table("FOV_ROI_table") # Get a ROI table
     >>> roi_table.get("FOV_1")
     >>> print(roi_table.get("FOV_1")) # markdown-exec: hide
     ```
-
     ```python exec="1" html="1" session="get_started"
     from io import StringIO
-
     import matplotlib.pyplot as plt
     import numpy as np
     # Create a random colormap for labels
     from matplotlib.colors import ListedColormap
     from matplotlib.patches import Rectangle
-
     np.random.seed(0)
     cmap_array = np.random.rand(1000, 3)
     cmap_array[0] = 0
     cmap = ListedColormap(cmap_array)
-
     image_3 = ome_zarr_container.get_image(path="3")
     image_data = image_3.get_array(c=0)
     image_data = np.squeeze(image_data)
-
     roi = roi_table.get("FOV_1")
     roi = roi.to_pixel_roi(pixel_size=image_3.pixel_size, dimensions=image_3.dimensions)
-
     #label_3 = ome_zarr_container.get_label("nuclei", pixel_size=image_3.pixel_size)
     #label_data = label_3.get_array()
     #label_data = np.squeeze(label_data)
-
     fig, ax = plt.subplots(figsize=(8, 4))
     ax.set_title("FOV_1 ROI")
     ax.imshow(image_data, cmap='gray')
-
     ax.add_patch(Rectangle((roi.x, roi.y), roi.x_length, roi.y_length, edgecolor='red', facecolor='none', lw=2))
-
     #ax.imshow(label_data, cmap=cmap, alpha=0.6)
     # make sure the roi is centered
     ax.axis('off')
     fig.tight_layout()
-
     buffer = StringIO()
     plt.savefig(buffer, format="svg")
     print(buffer.getvalue())
     ```
-
     This will return all the ROIs in the table.
     ROIs can be used to slice the image data:
     ```pycon exec="true" source="console" session="get_started"
@@ -75,40 +63,31 @@ Ngio supports tree types of tables: `roi_table`, `feature_table`, and `mask_tabl
     >>> print(roi_data.shape) # markdown-exec: hide
     ```
     This will return the image data for the specified ROI.
-
     ```python exec="1" html="1" session="get_started"
     from io import StringIO
-
     import matplotlib.pyplot as plt
     import numpy as np
     # Create a random colormap for labels
     from matplotlib.colors import ListedColormap
     from matplotlib.patches import Rectangle
-
     np.random.seed(0)
     cmap_array = np.random.rand(1000, 3)
     cmap_array[0] = 0
     cmap = ListedColormap(cmap_array)
-
     roi = roi_table.get("FOV_1")
-
     image_3 = ome_zarr_container.get_image(path="3")
     image_data = image_3.get_roi(roi, c=0)
     image_data = np.squeeze(image_data)
-
     #label_3 = ome_zarr_container.get_label("nuclei", pixel_size=image_3.pixel_size)
     #label_data = label_3.get_array()
     #label_data = np.squeeze(label_data)
-
     fig, ax = plt.subplots(figsize=(8, 4))
     ax.set_title("FOV_1 ROI")
     ax.imshow(image_data, cmap='gray')
-
     #ax.imshow(label_data, cmap=cmap, alpha=0.6)
     # make sure the roi is centered
     ax.axis('off')
     fig.tight_layout()
-
     buffer = StringIO()
     plt.savefig(buffer, format="svg")
     print(buffer.getvalue())
@@ -117,7 +96,6 @@ Ngio supports tree types of tables: `roi_table`, `feature_table`, and `mask_tabl
 === "Masking ROI Table"
     Masking ROIs are a special type of ROIs that can be used to store masks for objects in the image.
     The `nuclei_ROI_table` contains the masks for the `nuclei` label in the image, and is indexed by the label id.
-
     ```pycon exec="true" source="console" session="get_started"
     >>> masking_table = ome_zarr_container.get_table("nuclei_ROI_table") # Get a mask table
     >>> masking_table.get(1)
@@ -131,31 +109,24 @@ Ngio supports tree types of tables: `roi_table`, `feature_table`, and `mask_tabl
     >>> print(roi_data.shape) # markdown-exec: hide
     ```
     This will return the image data for the specified ROI.
-
     ```python exec="1" html="1" session="get_started"
     from io import StringIO
-
     import matplotlib.pyplot as plt
     import numpy as np
     # Create a random colormap for labels
     from matplotlib.colors import ListedColormap
     from matplotlib.patches import Rectangle
-
     np.random.seed(0)
     cmap_array = np.random.rand(1000, 3)
     cmap_array[0] = 0
     cmap = ListedColormap(cmap_array)
-
     roi = masking_table.get(100)
-
     image_3 = ome_zarr_container.get_image(path="2")
     image_data = image_3.get_roi(roi, c=0)
     image_data = np.squeeze(image_data)
-
     label_3 = ome_zarr_container.get_label("nuclei", pixel_size=image_3.pixel_size)
     label_data = label_3.get_roi(roi)
     label_data = np.squeeze(label_data)
-
     fig, ax = plt.subplots(figsize=(8, 4))
     ax.set_title("Label 1 ROI")
     ax.imshow(image_data, cmap='gray')
@@ -163,7 +134,6 @@ Ngio supports tree types of tables: `roi_table`, `feature_table`, and `mask_tabl
     # make sure the roi is centered
     ax.axis('off')
     fig.tight_layout()
-
     buffer = StringIO()
     plt.savefig(buffer, format="svg")
     print(buffer.getvalue())
@@ -177,7 +147,7 @@ Ngio supports tree types of tables: `roi_table`, `feature_table`, and `mask_tabl
     >>> print(feature_table.dataframe.head(5).to_markdown()) # markdown-exec: hide
     ```
 
-#### Creating a Table
+## Creating a table
 
 Tables (differently from Images and Labels) can be purely in memory objects, and don't need to be saved on disk.
 
@@ -189,14 +159,12 @@ Tables (differently from Images and Labels) can be purely in memory objects, and
     >>> roi_table = RoiTable(rois=[roi])
     >>> print(roi_table) # markdown-exec: hide
     ```
-
     If you would like to create on-the-fly a ROI table for the whole image:
     ```pycon exec="true" source="console" session="get_started"
     >>> roi_table = ome_zarr_container.build_image_roi_table("whole_image")
     >>> roi_table
     >>> print(ome_zarr_container.build_image_roi_table("whole_image")) # markdown-exec: hide
     ```
-
     The `build_image_roi_table` method will create a ROI table with a single ROI that covers the whole image.
     This table is not associated with the image and is purely in memory.
     If we want to save it to disk, we can use the `add_table` method:
@@ -229,7 +197,6 @@ Tables (differently from Images and Labels) can be purely in memory objects, and
 === "Creating a Generic Table"
     Sometimes you might want to create a table that doesn't fit into the `ROI`, `Masking`, or `Feature` categories.
     In this case, you can use the `GenericTable` class, which allows you to store any tabular data.
-
     It can be created from a pandas `Dataframe`:
     ```pycon exec="true" source="console" session="get_started"
     >>> from ngio.tables import GenericTable
@@ -239,9 +206,7 @@ Tables (differently from Images and Labels) can be purely in memory objects, and
     >>> generic_table
     >>> print(generic_table) # markdown-exec: hide
     ```
-
     Or from an "AnnData" object:
-
     ```pycon exec="true" source="console" session="get_started"
     >>> from ngio.tables import GenericTable
     >>> import anndata as ad

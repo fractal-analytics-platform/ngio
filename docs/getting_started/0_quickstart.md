@@ -73,15 +73,15 @@ Let's start by opening an OME-Zarr file and inspecting its contents.
 >>> print(ome_zarr_container) # markdown-exec: hide
 ```
 
-### What is the OmeZarr Container?
+### What is the OmeZarr container?
 
 The `ome_zarr_container` is the core of ngio and the entry point to working with OME-Zarr images. It provides high-level access to the image metadata, images, labels, and tables.
 
-### What is the OmeZarr Container not?
+### What is the OmeZarr container not?
 
 The `OmeZarr Container` object does not allow the user to interact with the image data directly. For that, we need to use the `Image`, `Label`, and `Table` objects.
 
-## Next Steps
+## Next steps
 
 To learn how to work with the `OmeZarr Container` object, but also with the image, label, and table data, check out the following guides:
 

@@ -73,7 +73,7 @@ plugins:
       repository: fractal-analytics-platform/ngio
       branch: main
   - mkdocs-jupyter:
-      execute: false
+      execute: true
 
 markdown_extensions:
   - admonition

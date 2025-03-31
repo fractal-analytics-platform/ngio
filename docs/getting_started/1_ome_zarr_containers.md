@@ -26,9 +26,9 @@ The `ome_zarr_container` in is your entry point to working with OME-Zarr images.
 
 The `ome_zarr_container` will be the starting point for all your image processing tasks.
 
-## Main Concepts
+## Main concepts
 
-### What is the OmeZarr Container?
+### What is the OmeZarr container?
 
 The `OmeZarr Container` in ngio is your entry point to working with OME-Zarr images.
 
@@ -41,11 +41,11 @@ of labels, and tables available.
 - **Table management** allow to check which tables are available, access them, and create new tables
 - **Derive new OME-Zarr images** allow to create new images based on the original one, with the same or similar metadata
 
-### What is the OmeZarr Container not?
+### What is the OmeZarr container not?
 
 The `OmeZarr Container` object does not allow the user to interact with the image data directly. For that, we need to use the `Image`, `Label`, and `Table` objects.
 
-### OME-Zarr Overview
+## OME-Zarr overview
 
 For example:
 
@@ -86,9 +86,13 @@ For example:
     >>> print(metadata.channel_labels) # markdown-exec: hide
     ```
 
-## Advanced Usage
+## Accessing images / labels / tables
 
-### Creating Derived Images
+To access images, labels, and tables, you can use the `get_image`, `get_label`, and `get_table` methods of the `OmeZarrContainer` object.
+
+A variety of examples and additional information can be found in the [Images/Lables](./2_images.md), and [Tables](../3_tables.md) sections.
+
+## Creating derived images
 
 When processing an image, you might want to create a new image with the same metadata:
 
@@ -97,9 +101,23 @@ When processing an image, you might want to create a new image with the same met
 new_image = ome_zarr_container.derive_image("data/new_ome.zarr", overwrite=True)
 ```
 
-### Creating Images from Arrays
+This will create a new OME-Zarr image with the same metadata as the original image.
+But you can also create a new image with slightly different metadata, for example, with a different shape:
 
-You can also create OME-NGFF images from scratch:
+```python
+# Create a new image with a different shape
+new_image = ome_zarr_container.derive_image(
+    "data/new_ome.zarr", 
+    overwrite=True, 
+    shape=(16, 128, 128), 
+    xy_pixelsize=0.65, 
+    z_spacing=1.0
+)
+```
+
+## Creating new images
+
+You can create OME-Zarr images from an existing numpy array using the `create_ome_zarr_from_array` function.
 
 ```python
 import numpy as np
@@ -117,16 +135,30 @@ new_ome_zarr_image = create_ome_zarr_from_array(
 )
 ```
 
-### Opening Remote OME-Zarr Containers
+Alternatively, if you wanto to create an a empty OME-Zarr image, you can use the `create_empty_ome_zarr` function:
 
-You can use `ngio` to open remote OME-Zarr containers. 
+```python
+from ngio import create_empty_ome_zarr
+# Create an empty OME-Zarr image
+new_ome_zarr_image = create_empty_ome_zarr(
+    store="empty_ome.zarr", 
+    shape=(16, 128, 128), 
+    xy_pixelsize=0.65, 
+    z_spacing=1.0
+)
+```
+
+This will create an empty OME-Zarr image with the specified shape and pixel sizes.
+
+## Opening remote OME-Zarr containers
+
+You can use `ngio` to open remote OME-Zarr containers.
 For publicly available OME-Zarr containers, you can just use the `open_ome_zarr_container` function with a URL.
 
 For example, to open a remote OME-Zarr container hosted on a github repository:
 
 ```python
-import fsspec
-import fsspec.implementations.http
+from ngio.utils import fractal_fsspec_store
 
 url = (
     "https://raw.githubusercontent.com/"
@@ -135,12 +167,12 @@ url = (
     "20200812-CardiomyocyteDifferentiation14-Cycle1_B_03_mip.zarr/"
 )
 
-fs = fsspec.implementations.http.HTTPFileSystem(client_kwargs={})
-store = fs.get_mapper(url)
+store = fractal_fsspec_store(url=url)
 ome_zarr_container = open_ome_zarr_container(store)
 ```
 
-If you are a Fractal user, you can use the `fractal_fsspec_store` function to open a remote OME-Zarr container. This function will create an authenticated `fsspec` store that can be used to access the OME-Zarr container.
+For fractal users, the `fractal_fsspec_store` function can be used to open private OME-Zarr containers.
+In this case we need to provide a `fractal_token` to authenticate the user.
 
 ```python
 from ngio.utils import fractal_fsspec_store

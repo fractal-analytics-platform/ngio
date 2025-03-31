@@ -1,9 +1,11 @@
 # 2. Images and Labels
 
+## Images
+
 In order to start working with the image data, we need to instantiate an `Image` object.
 ngio provides a high-level API to access the image data at different resolution levels and pixel sizes.
 
-#### Getting an Image
+### Getting an image
 
 === "Highest Resolution Image"
     By default, the `get_image` method returns the highest resolution image:
@@ -64,7 +66,7 @@ Similarly to the `OmeZarr Container`, the `Image` object provides a high-level A
     ```
     The `axes` attribute returns the order of the axes in the image.
 
-#### Working with Image Data
+### Working with image data
 
 Once you have the `Image` object, you can access the image data as a:
 
@@ -127,12 +129,12 @@ image.consolidate() # Consolidate the changes to all resolution levels, see belo
     ```
     This will write the changes to the OME-Zarr file at all resolution levels.
 
-### Labels
+## Labels
 
 `Labels` represent segmentation masks that identify objects in the image. In ngio `Labels` are similar to `Images` and can
 be accessed and manipulated in the same way.
 
-#### Getting a Label
+### Getting a label
 
 Now let's see what labels are available in our image:
 
@@ -181,11 +183,11 @@ We have `4` labels available in our image. Let's see how to access them:
     ```
     This will return the label with the nearest resolution to the requested pixel size.
 
-#### Working with Label Data
+### Working with label data
 
 Data access and manipulation for `Labels` is similar to `Images`. You can use the `get_array` and `set_array` methods to access and modify the label data.
 
-#### Deriving a Label
+### Deriving a label
 
 Often, you might want to create a new label based on an existing image. You can do this using the `derive_label` method:
 
