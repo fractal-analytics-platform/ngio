@@ -2,33 +2,33 @@ from pathlib import Path
 
 import pytest
 
-from ngio import create_empty_plate, open_omezarr_plate
+from ngio import create_empty_plate, open_ome_zarr_plate
 from ngio.utils import NgioValueError
 
 
-def test_open_real_omezarr_plate(cardiomyocyte_tiny_path: Path):
+def test_open_real_ome_zarr_plate(cardiomyocyte_tiny_path: Path):
     cardiomyocyte_tiny_path = cardiomyocyte_tiny_path
-    omezarr_plate = open_omezarr_plate(cardiomyocyte_tiny_path)
+    ome_zarr_plate = open_ome_zarr_plate(cardiomyocyte_tiny_path)
 
-    assert isinstance(omezarr_plate.__repr__(), str)
-    assert omezarr_plate.columns == ["03"]
-    assert omezarr_plate.rows == ["B"]
-    assert omezarr_plate.acquisitions_ids == [0]
-    assert omezarr_plate.acquisitions_names == [
+    assert isinstance(ome_zarr_plate.__repr__(), str)
+    assert ome_zarr_plate.columns == ["03"]
+    assert ome_zarr_plate.rows == ["B"]
+    assert ome_zarr_plate.acquisitions_ids == [0]
+    assert ome_zarr_plate.acquisitions_names == [
         "20200812-CardiomyocyteDifferentiation14-Cycle1"
     ]
 
-    well_path = omezarr_plate.get_well_path("B", "03")
-    well_path2 = omezarr_plate.get_well_path("B", 3)
+    well_path = ome_zarr_plate._well_path("B", "03")
+    well_path2 = ome_zarr_plate._well_path("B", 3)
     assert well_path == well_path2
-    well = omezarr_plate.get_well("B", "03")
+    well = ome_zarr_plate.get_well("B", "03")
     assert well.paths() == ["0"]
 
-    image_path = omezarr_plate.get_image_path("B", "03", "0")
+    image_path = ome_zarr_plate._image_path("B", "03", "0")
     assert image_path == "B/03/0"
 
-    images_plate = omezarr_plate.get_images()
-    images_well = omezarr_plate.get_well_images("B", "03")
+    images_plate = ome_zarr_plate.get_images()
+    images_well = ome_zarr_plate.get_well_images("B", "03")
     assert len(images_plate) == 1
     assert len(images_well) == 1
 
@@ -51,7 +51,7 @@ def test_create_and_edit_plate(tmp_path: Path):
     assert test_plate.rows == ["B", "C"]
     assert test_plate.acquisitions_ids == [0, 1]
 
-    assert len(test_plate.wells_paths) == 2
+    assert len(test_plate.wells_paths()) == 2
 
     test_plate.remove_image(row="C", column="02", image_path="1")
-    assert len(test_plate.wells_paths) == 1
+    assert len(test_plate.wells_paths()) == 1

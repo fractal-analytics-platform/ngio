@@ -8,14 +8,15 @@ import zarr
 from ngio.common import (
     ArrayLike,
     Dimensions,
-    RasterCooROI,
-    WorldCooROI,
+    Roi,
+    RoiPixels,
     consolidate_pyramid,
     get_pipe,
     roi_to_slice_kwargs,
     set_pipe,
 )
 from ngio.ome_zarr_meta import (
+    AxesMapper,
     Dataset,
     ImageMetaHandler,
     LabelMetaHandler,
@@ -43,7 +44,7 @@ class AbstractImage(Generic[_image_handler]):
 
         Args:
             group_handler: The Zarr group handler.
-            path: The path to the image in the omezarr file.
+            path: The path to the image in the ome_zarr file.
             meta_handler: The image metadata handler.
 
         """
@@ -63,7 +64,7 @@ class AbstractImage(Generic[_image_handler]):
             shape=self._zarr_array.shape, axes_mapper=self._dataset.axes_mapper
         )
 
-        self._axer_mapper = self._dataset.axes_mapper
+        self._axes_mapper = self._dataset.axes_mapper
 
     def __repr__(self) -> str:
         """Return a string representation of the image."""
@@ -98,6 +99,11 @@ class AbstractImage(Generic[_image_handler]):
     def dimensions(self) -> Dimensions:
         """Return the dimensions of the image."""
         return self._dimensions
+
+    @property
+    def axes_mapper(self) -> AxesMapper:
+        """Return the axes mapper of the image."""
+        return self._axes_mapper
 
     @property
     def is_3d(self) -> bool:
@@ -144,6 +150,10 @@ class AbstractImage(Generic[_image_handler]):
         """Return the path of the image."""
         return self._dataset.path
 
+    def has_axis(self, axis: str) -> bool:
+        """Return True if the image has the given axis."""
+        return self.dimensions.has_axis(axis)
+
     def get_array(
         self,
         axes_order: Collection[str] | None = None,
@@ -170,7 +180,7 @@ class AbstractImage(Generic[_image_handler]):
 
     def get_roi(
         self,
-        roi: WorldCooROI,
+        roi: Roi,
         axes_order: Collection[str] | None = None,
         mode: Literal["numpy", "dask", "delayed"] = "numpy",
         **slice_kwargs: slice | int | Iterable[int],
@@ -214,7 +224,7 @@ class AbstractImage(Generic[_image_handler]):
 
     def set_roi(
         self,
-        roi: WorldCooROI,
+        roi: Roi,
         patch: ArrayLike,
         axes_order: Collection[str] | None = None,
         **slice_kwargs: slice | int | Iterable[int],
@@ -256,7 +266,7 @@ def consolidate_image(
 
 def get_roi_pipe(
     image: AbstractImage,
-    roi: WorldCooROI,
+    roi: Roi,
     axes_order: Collection[str] | None = None,
     mode: Literal["numpy", "dask", "delayed"] = "numpy",
     **slice_kwargs: slice | int | Iterable[int],
@@ -290,7 +300,7 @@ def get_roi_pipe(
 
 def set_roi_pipe(
     image: AbstractImage,
-    roi: WorldCooROI,
+    roi: Roi,
     patch: ArrayLike,
     axes_order: Collection[str] | None = None,
     **slice_kwargs: slice | int | Iterable[int],
@@ -327,7 +337,7 @@ def build_image_roi_table(image: AbstractImage, name: str = "image") -> RoiTable
         image.dimensions.get("y"),
         image.dimensions.get("x"),
     )
-    image_roi = RasterCooROI(
+    image_roi = RoiPixels(
         name=name,
         x=0,
         y=0,
@@ -336,4 +346,4 @@ def build_image_roi_table(image: AbstractImage, name: str = "image") -> RoiTable
         y_length=dim_y,
         z_length=dim_z,
     )
-    return RoiTable(rois=[image_roi.to_world_coo_roi(pixel_size=image.pixel_size)])
+    return RoiTable(rois=[image_roi.to_roi(pixel_size=image.pixel_size)])

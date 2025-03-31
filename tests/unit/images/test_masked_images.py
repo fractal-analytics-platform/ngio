@@ -5,7 +5,7 @@ import pytest
 from scipy import ndimage
 from skimage.segmentation import watershed
 
-from ngio import create_omezarr_from_array
+from ngio import create_ome_zarr_from_array
 
 
 def _draw_random_labels(shape: tuple[int, ...], num_regions: int):
@@ -30,19 +30,20 @@ def test_masking(tmp_path: Path, array_mode: str, shape: tuple[int, ...]):
     labels_stats = dict(zip(unique_labels, counts, strict=True))
 
     store = tmp_path / "test_image_yx_random_label.zarr"
-    # Create a new omezarr with the mask
-    omezarr = create_omezarr_from_array(
+    # Create a new ome_zarr with the mask
+    ome_zarr = create_ome_zarr_from_array(
         store=store,
         array=mask,
         xy_pixelsize=0.5,
         levels=1,
         overwrite=True,
     )
-    label = omezarr.derive_label("label")
+    label = ome_zarr.derive_label("label")
     label.set_array(label_image)
 
     # Masking image test
-    masked_image = omezarr.get_masked_image("label")
+    masked_image = ome_zarr.get_masked_image("label")
+    assert isinstance(masked_image.__repr__(), str)
     _roi_array = masked_image.get_roi(label=1, zoom_factor=1.123, mode=array_mode)
     masked_image.set_roi_masked(
         label=1, patch=np.ones_like(_roi_array), zoom_factor=1.123
@@ -56,10 +57,11 @@ def test_masking(tmp_path: Path, array_mode: str, shape: tuple[int, ...]):
     masked_image.set_roi(label=1, patch=np.zeros_like(_roi_array), zoom_factor=1.123)
 
     # Masking label test (recreate the label)
-    omezarr.derive_label("empty_label")
-    masked_new_label = omezarr.get_masked_label(
+    ome_zarr.derive_label("empty_label")
+    masked_new_label = ome_zarr.get_masked_label(
         "empty_label", masking_label_name="label"
     )
+    assert isinstance(masked_new_label.__repr__(), str)
 
     for label_id in labels_stats.keys():
         label_mask = masked_new_label.get_roi(label_id, mode=array_mode)

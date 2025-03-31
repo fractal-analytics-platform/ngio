@@ -11,7 +11,10 @@ from ngio.tables.v1 import FeatureTableV1
 def test_generic_table(tmp_path: Path, backend: str):
     store = tmp_path / "test.zarr"
     test_df = pd.DataFrame({"a": [1, 2, 3], "b": [4, 5, 6], "label": [1, 2, 3]})
-    table = FeatureTableV1(test_df)
+    table = FeatureTableV1(test_df, reference_label="label")
+    assert isinstance(table.__repr__(), str)
+    assert table._meta.region.path == "../labels/label"
+    assert table.reference_label == "label"
 
     write_table(store=store, table=table, backend=backend)
 

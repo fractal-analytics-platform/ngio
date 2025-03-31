@@ -110,21 +110,54 @@ class OmeZarrPlate:
         """Return the acquisitions ids in the plate."""
         return self.meta.acquisitions_ids
 
-    @property
-    def wells_paths(self) -> list[str]:
-        """Return the wells paths in the plate."""
-        return self.meta.wells_paths
-
-    def get_well_path(self, row: str, column: int | str) -> str:
+    def _well_path(self, row: str, column: int | str) -> str:
         """Return the well path in the plate."""
         return self.meta.get_well_path(row=row, column=column)
 
-    def get_image_path(self, row: str, column: int | str, path: str) -> str:
+    def _image_path(self, row: str, column: int | str, path: str) -> str:
         """Return the image path in the plate."""
         well = self.get_well(row, column)
         if path not in well.paths():
             raise ValueError(f"Image {path} does not exist in well {row}{column}")
-        return f"{self.get_well_path(row, column)}/{path}"
+        return f"{self._well_path(row, column)}/{path}"
+
+    def wells_paths(self) -> list[str]:
+        """Return the wells paths in the plate."""
+        return self.meta.wells_paths
+
+    def images_paths(self, acquisition: int | None = None) -> list[str]:
+        """Return the images paths in the plate.
+
+        If acquisition is None, return all images paths in the plate.
+        Else, return the images paths in the plate for the given acquisition.
+
+        Args:
+            acquisition (int | None): The acquisition id to filter the images.
+        """
+        images = []
+        for well_path, wells in self.get_wells().items():
+            for img_path in wells.paths(acquisition):
+                images.append(f"{well_path}/{img_path}")
+        return images
+
+    def well_images_paths(
+        self, row: str, column: int | str, acquisition: int | None = None
+    ) -> list[str]:
+        """Return the images paths in a well.
+
+        If acquisition is None, return all images paths in the well.
+        Else, return the images paths in the well for the given acquisition.
+
+        Args:
+            row (str): The row of the well.
+            column (int | str): The column of the well.
+            acquisition (int | None): The acquisition id to filter the images.
+        """
+        images = []
+        well = self.get_well(row=row, column=column)
+        for path in well.paths(acquisition):
+            images.append(self._image_path(row=row, column=column, path=path))
+        return images
 
     def get_well(self, row: str, column: int | str) -> OmeZarrWell:
         """Get a well from the plate.
@@ -136,36 +169,56 @@ class OmeZarrPlate:
         Returns:
             OmeZarrWell: The well.
         """
-        well_path = self.meta.get_well_path(row=row, column=column)
+        well_path = self._well_path(row=row, column=column)
         group_handler = self._group_handler.derive_handler(well_path)
         return OmeZarrWell(group_handler)
 
     def get_wells(self) -> dict[str, OmeZarrWell]:
-        """Get all wells in the plate."""
+        """Get all wells in the plate.
+
+        Returns:
+            dict[str, OmeZarrWell]: A dictionary of wells, where the key is the well
+                path and the value is the well object.
+        """
         wells = {}
-        for well_path in self.wells_paths:
+        for well_path in self.wells_paths():
             group_handler = self._group_handler.derive_handler(well_path)
             well = OmeZarrWell(group_handler)
             wells[well_path] = well
         return wells
 
-    def get_images(self, acquisition: int | None = None) -> list[OmeZarrContainer]:
+    def get_images(self, acquisition: int | None = None) -> dict[str, OmeZarrContainer]:
         """Get all images in the plate.
 
         Args:
             acquisition: The acquisition id to filter the images.
         """
-        images = []
-        for well_path, well in self.get_wells().items():
-            for img_path in well.paths(acquisition):
-                full_path = f"{well_path}/{img_path}"
-                img_group_handler = self._group_handler.derive_handler(full_path)
-                images.append(OmeZarrContainer(img_group_handler))
+        images = {}
+        for image_path in self.images_paths(acquisition):
+            img_group_handler = self._group_handler.derive_handler(image_path)
+            images[image_path] = OmeZarrContainer(img_group_handler)
         return images
+
+    def get_image(
+        self, row: str, column: int | str, image_path: str
+    ) -> OmeZarrContainer:
+        """Get an image from the plate.
+
+        Args:
+            row (str): The row of the well.
+            column (int | str): The column of the well.
+            image_path (str): The path of the image.
+
+        Returns:
+            OmeZarrContainer: The image.
+        """
+        image_path = self._image_path(row=row, column=column, path=image_path)
+        group_handler = self._group_handler.derive_handler(image_path)
+        return OmeZarrContainer(group_handler)
 
     def get_well_images(
         self, row: str, column: str | int, acquisition: int | None = None
-    ) -> list[OmeZarrContainer]:
+    ) -> dict[str, OmeZarrContainer]:
         """Get all images in a well.
 
         Args:
@@ -173,16 +226,12 @@ class OmeZarrPlate:
             column: The column of the well.
             acquisition: The acquisition id to filter the images.
         """
-        well_path = self.meta.get_well_path(row=row, column=column)
-        group_handler = self._group_handler.derive_handler(well_path)
-        well = OmeZarrWell(group_handler)
-
-        images = []
-        for path in well.paths(acquisition):
-            image_path = f"{well_path}/{path}"
-            group_handler = self._group_handler.derive_handler(image_path)
-            images.append(OmeZarrContainer(group_handler))
-
+        images = {}
+        for image_paths in self.well_images_paths(
+            row=row, column=column, acquisition=acquisition
+        ):
+            group_handler = self._group_handler.derive_handler(image_paths)
+            images[image_paths] = OmeZarrContainer(group_handler)
         return images
 
     def _add_image(
@@ -339,7 +388,7 @@ class OmeZarrPlate:
         )
 
 
-def open_omezarr_plate(
+def open_ome_zarr_plate(
     store: StoreOrGroup,
     cache: bool = False,
     mode: AccessModeLiteral = "r+",
@@ -391,7 +440,7 @@ def create_empty_plate(
                 acquisition_id=image.acquisition_id,
                 acquisition_name=image.acquisition_name,
             )
-    return open_omezarr_plate(
+    return open_ome_zarr_plate(
         store=store,
         cache=cache,
         mode="r+",

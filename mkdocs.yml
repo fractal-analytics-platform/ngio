@@ -1,6 +1,6 @@
 site_name: "NGIO: Next Generation File Format I/O"
 site_url: "https://github.com/fractal-analytics-platform/ngio.git"
-site_description: "A Python library for processing Next Generation File Formats (NGFF) images"
+site_description: "A Python library for processing OME-Zarr images"
 repo_name: "ngio"
 repo_url: "https://github.com/fractal-analytics-platform/ngio"
 copyright: "Copyright &copy; 2024-, BioVisionCenter UZH"
@@ -28,6 +28,7 @@ theme:
         name: Switch to light mode
   features:
     - content.tooltips
+    - content.tabs.link
     - content.code.annotate
     - navigation.instant
     - navigation.instant.progress
@@ -50,6 +51,7 @@ extra:
 plugins: 
   - search
   - autorefs
+  - markdown-exec
   - mkdocstrings:
       handlers:
         python:
@@ -77,13 +79,33 @@ markdown_extensions:
   - admonition
   - pymdownx.details
   - pymdownx.superfences
+  - md_in_html
+  - pymdownx.tabbed:
+      alternate_style: true
 
 nav:
-  - Home: index.md
-  - Getting Started: getting-started.md
-  - Examples:
-    - notebooks/basic_usage.ipynb
-    - notebooks/image.ipynb
-    - notebooks/processing.ipynb
+  - "NGIO: Streamlined OME-Zarr Image Analysis": index.md
+  - Getting Started:
+    - getting_started/0_quickstart.md
+    - getting_started/1_ome_zarr_containers.md
+    - getting_started/2_images.md
+    - getting_started/3_tables.md
+    - getting_started/4_masked_images.md
+    - getting_started/5_hcs.md
+
+  - Tutorials:
+    - tutorials/image_processing.ipynb
+    - tutorials/image_segmentation.ipynb
+    - tutorials/feature_extraction.ipynb
+    - tutorials/hcs_processing.ipynb
+
   - API Reference:
-    - core: api/core.md
+    - "ngio": api/ngio.md
+    - "ngio.images": api/images.md
+    - "ngio.tables": api/tables.md
+    - "ngio.hcs": api/hcs.md
+    - "ngio.utils": api/utils.md
+    - "ngio.common": api/common.md
+  - Contributing:
+    - "Contributing Guide": contributing.md
+    - "Code of Conduct": code_of_conduct.md

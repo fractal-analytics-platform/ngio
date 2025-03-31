@@ -49,7 +49,6 @@ class FeatureTableV1:
             path = f"../labels/{reference_label}"
             self._meta = FeatureTableMeta(region=RegionMeta(path=path))
 
-        self._reference_label = reference_label
         self._instance_key = "label"
         if dataframe is None:
             self._dataframe = None
@@ -58,6 +57,15 @@ class FeatureTableV1:
                 dataframe, self._instance_key, overwrite=True
             )
         self._table_backend = None
+
+    def __repr__(self) -> str:
+        """Return a string representation of the table."""
+        num_rows = len(self.dataframe) if self.dataframe is not None else 0
+        num_columns = len(self.dataframe.columns) if self.dataframe is not None else 0
+        properties = f"num_rows={num_rows}, num_columns={num_columns}"
+        if self.reference_label is not None:
+            properties += f", reference_label={self.reference_label}"
+        return f"FeatureTableV1({properties})"
 
     @staticmethod
     def type() -> str:
@@ -78,6 +86,17 @@ class FeatureTableV1:
         if self._table_backend is None:
             return None
         return self._table_backend.backend_name()
+
+    @property
+    def reference_label(self) -> str | None:
+        """Return the reference label."""
+        path = self._meta.region
+        if path is None:
+            return None
+
+        path = path.path
+        path = path.split("/")[-1]
+        return path
 
     @property
     def dataframe(self) -> pd.DataFrame:

@@ -7,7 +7,7 @@ from ngio.common import ArrayLike, get_masked_pipe, roi_to_slice_kwargs, set_mas
 from ngio.images.image import Image
 from ngio.images.label import Label
 from ngio.ome_zarr_meta import ImageMetaHandler, LabelMetaHandler
-from ngio.tables import MaskingROITable
+from ngio.tables import MaskingRoiTable
 from ngio.utils import (
     ZarrGroupHandler,
 )
@@ -22,13 +22,13 @@ class MaskedImage(Image):
         path: str,
         meta_handler: ImageMetaHandler | None,
         label: Label,
-        masking_roi_table: MaskingROITable,
+        masking_roi_table: MaskingRoiTable,
     ) -> None:
         """Initialize the Image at a single level.
 
         Args:
             group_handler: The Zarr group handler.
-            path: The path to the image in the omezarr file.
+            path: The path to the image in the ome_zarr file.
             meta_handler: The image metadata handler.
             label: The label image.
             masking_roi_table: The masking ROI table.
@@ -39,6 +39,13 @@ class MaskedImage(Image):
         )
         self._label = label
         self._masking_roi_table = masking_roi_table
+
+    def __repr__(self) -> str:
+        """Return a string representation of the object."""
+        label_name = self._label.meta.name
+        if label_name is None:
+            label_name = self._masking_roi_table.reference_label
+        return f"MaskedImage(path={self.path}, {self.dimensions}, {label_name})"
 
     def get_roi(
         self,
@@ -116,13 +123,13 @@ class MaskedLabel(Label):
         path: str,
         meta_handler: LabelMetaHandler | None,
         label: Label,
-        masking_roi_table: MaskingROITable,
+        masking_roi_table: MaskingRoiTable,
     ) -> None:
         """Initialize the Image at a single level.
 
         Args:
             group_handler: The Zarr group handler.
-            path: The path to the image in the omezarr file.
+            path: The path to the image in the ome_zarr file.
             meta_handler: The image metadata handler.
             label: The label image.
             masking_roi_table: The masking ROI table.
@@ -133,6 +140,13 @@ class MaskedLabel(Label):
         )
         self._label = label
         self._masking_roi_table = masking_roi_table
+
+    def __repr__(self) -> str:
+        """Return a string representation of the object."""
+        label_name = self._label.meta.name
+        if label_name is None:
+            label_name = self._masking_roi_table.reference_label
+        return f"MaskedLabel(path={self.path}, {self.dimensions}, {label_name})"
 
     def get_roi(
         self,

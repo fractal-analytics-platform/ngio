@@ -124,7 +124,7 @@ def get_pipe(
         case "dask":
             return _dask_get_pipe(array, slices, transformations)
 
-        case "delayed_numpy":
+        case "delayed":
             return _delayed_numpy_get_pipe(array, slices, transformations)
 
         case _:
@@ -178,6 +178,12 @@ def _mask_pipe_common(
         mode=mode,
         **slice_kwargs,
     )
+
+    if not dimensions_label.has_axis("c"):
+        # Remove the 'c' from the slice_kwargs
+        # This will not work if the query uses non-default
+        # axes names for channel
+        slice_kwargs = {k: v for k, v in slice_kwargs.items() if k != "c"}
 
     label_patch = get_pipe(
         label_array,

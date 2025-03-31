@@ -14,6 +14,7 @@ def test_generic_df_table(tmp_path: Path, backend: str):
     store = tmp_path / "test.zarr"
     test_df = pd.DataFrame({"a": [1, 2, 3], "b": [4, 5, 6]})
     table = GenericTable(dataframe=test_df)
+    assert isinstance(table.__repr__(), str)
 
     write_table(store=store, table=table, backend=backend)
 

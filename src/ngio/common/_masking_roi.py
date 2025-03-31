@@ -8,7 +8,7 @@ import dask.delayed
 import numpy as np
 import scipy.ndimage as ndi
 
-from ngio.common._roi import RasterCooROI, WorldCooROI
+from ngio.common._roi import Roi, RoiPixels
 from ngio.ome_zarr_meta import PixelSize
 from ngio.utils import NgioValueError
 
@@ -117,7 +117,7 @@ def lazy_compute_slices(segmentation: da.Array) -> dict[int, tuple[slice, ...]]:
 
 def compute_masking_roi(
     segmentation: np.ndarray | da.Array, pixel_size: PixelSize
-) -> list[WorldCooROI]:
+) -> list[Roi]:
     """Compute a ROIs for each label in a segmentation.
 
     This function expects a 2D or 3D segmentation array.
@@ -143,7 +143,7 @@ def compute_masking_roi(
             max_z, max_y, max_x = slice_[0].stop, slice_[1].stop, slice_[2].stop
         else:
             raise ValueError("Invalid slice length.")
-        roi = RasterCooROI(
+        roi = RoiPixels(
             name=str(label),
             x_length=max_x - min_x,
             y_length=max_y - min_y,
@@ -153,6 +153,6 @@ def compute_masking_roi(
             z=min_z,
         )
 
-        roi = roi.to_world_coo_roi(pixel_size)
+        roi = roi.to_roi(pixel_size)
         rois.append(roi)
     return rois
