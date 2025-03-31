@@ -1,8 +1,8 @@
 # 4. Masked Images and Labels
 
-Masked images (or labels) are image that are masked by an instance segmentation mask.
+Masked images (or labels) are images that are masked by an instance segmentation mask.
 
-In this section we will show how to create a masked image and how to use it to get the data of the image.
+In this section we will show how to create a `MaskedImage` object and how to use it to get the data of the image.
 
 ```python exec="true" session="masked_images"
 from pathlib import Path
@@ -18,7 +18,7 @@ image_path = hcs_path / "B" / "03" / "0"
 ome_zarr_container = open_ome_zarr_container(image_path)
 ```
 
-Similar to the `Image` and `Label` objects, the `MaskedImage` can be initialized from an `OmeZarrContainer` object using the `get_masked_image` method.
+Similar to the `Image` and `Label` objects, the `MaskedImage` can be initialized from an `OME-Zarr Container` object using the `get_masked_image` method.
 
 Let's create a masked image from the `nuclei` label:
 
@@ -139,7 +139,7 @@ print(buffer.getvalue())
 
 The `MaskedLabel` class is a subclass of `Label` and provides the same functionality as the `MaskedImage` class.
 
-The `MaskedLabel` class can be used to create a masked label from an `OmeZarrContainer` object using the `get_masked_label` method.
+The `MaskedLabel` class can be used to create a masked label from an `OME-Zarr Container` object using the `get_masked_label` method.
 
 ```pycon exec="true" source="console" session="masked_images"
 >>> masked_label = ome_zarr_container.get_masked_label(label_name = "wf_2_labels", masking_label_name = "nuclei")

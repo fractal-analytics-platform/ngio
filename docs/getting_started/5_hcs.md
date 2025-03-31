@@ -1,10 +1,10 @@
 # 5. HCS Plates
 
-Ngio provides a simple interface for HCS plates. An HCS plate is a collection of OME-Zarr images organized in a grid-like structure. Each plates contains columns and rows, and each well in the plate is identified by its row and column indices. Each well can contain multiple images, and each image can belong to a different acquisition.
+Ngio provides a simple interface for high-content screening (HCS) plates. An HCS plate is a collection of OME-Zarr images organized in a grid-like structure. Each plates contains columns and rows, and each well in the plate is identified by its row and column indices. Each well can contain multiple images, and each image can belong to a different acquisition.
 
 The HCS plate is represented by the `OmeZarrPlate` class.
 
-Let's not open an `OmeZarrPlate` object.
+Let's open an `OmeZarrPlate` object.
 
 ```pycon exec="true" source="console" session="hcs_plate"
 >>> from pathlib import Path # markdown-exec: hide
@@ -17,7 +17,7 @@ Let's not open an `OmeZarrPlate` object.
 >>> print(ome_zarr_plate) # markdown-exec: hide
 ```
 
-This example plates is very small and contains only a single well.
+This example plate is very small and contains only a single well.
 
 ## Plate overview
 
@@ -44,7 +44,7 @@ The `OmeZarrPlate` object provides a high-level overview of the plate, including
 
 ## Retrieving the path to the images
 
-The `OmeZarrPlate` object provides a multiple methods to retrieve the path to the in the plate.
+The `OmeZarrPlate` object provides multiple methods to retrieve the path to the images in the plate.
 
 === "All Images Paths"
     This will return the paths to all images in the plate:
@@ -69,12 +69,13 @@ The `OmeZarrPlate` object provides a multiple methods to retrieve the path to th
 
 ## Getting the images
 
-The `OmeZarrPlate` object provides a method to get the images in a well. The method `get_well_images` takes the row and column indices of the well and returns a list of `OmeZarrContainer` objects.
+The `OmeZarrPlate` object provides a method to get the image objects in a well. The method `get_well_images` takes the row and column indices of the well and returns a list of `OmeZarrContainer` objects.
 
 === "All Images"
-    Get all images in a well:
+    Get all images in the plate:
     ```pycon exec="true" source="console" session="hcs_plate"
     >>> ome_zarr_plate.get_images()
+    >>> ome_zarr_plate
     >>> print(ome_zarr_plate.get_images()) # markdown-exec: hide
     ```
     This dictionary contains the path to the images and the corresponding `OmeZarrContainer` object.
@@ -156,7 +157,7 @@ You can add images or remove images
     >>> plate.remove_image(row="D", column=0, image_path="0")
     >>> print(f"After removing images: {plate.wells_paths()} wells")
     ```
-    This will remove the image from the plate and well metadata.
+    This will remove the image metadata from the plate and well metadata.
     !!! warning
         No data will be removed from the store. If an image is saved in the store it will remain there.
         Also the metadata will only be removed from the plate.well metadata. The number of columns and rows will not be updated.

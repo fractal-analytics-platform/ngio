@@ -1,6 +1,6 @@
 # 3. Tables
 
-Tables are not part of the OME-Zarr specification but can be used in ngio to store measurements, features, regions of interest (ROIs), and other tabular data.
+Tables are not part of the core OME-Zarr specification but can be used in ngio to store measurements, features, regions of interest (ROIs), and other tabular data. Ngio follows the [Fractal's Table Spec](https://fractal-analytics-platform.github.io/fractal-tasks-core/tables/).
 
 ## Getting a table
 
@@ -13,7 +13,7 @@ We can list all available tables and load a specific table:
 >>> print(list_tables) # markdown-exec: hide
 ```
 
-Ngio supports tree types of tables: `roi_table`, `feature_table`, and `mask_table`.
+Ngio supports three types of tables: `roi_table`, `feature_table`, and `masking_roi_table`, as well as untyped `generic_table`.
 
 === "ROI Table"
     ROI tables can be used to store arbitrary regions of interest (ROIs) in the image.
@@ -94,7 +94,7 @@ Ngio supports tree types of tables: `roi_table`, `feature_table`, and `mask_tabl
     ```
 
 === "Masking ROI Table"
-    Masking ROIs are a special type of ROIs that can be used to store masks for objects in the image.
+    Masking ROIs are a special type of ROIs that can be used to store ROIs for masked objects in the image.
     The `nuclei_ROI_table` contains the masks for the `nuclei` label in the image, and is indexed by the label id.
     ```pycon exec="true" source="console" session="get_started"
     >>> masking_table = ome_zarr_container.get_table("nuclei_ROI_table") # Get a mask table
@@ -138,6 +138,7 @@ Ngio supports tree types of tables: `roi_table`, `feature_table`, and `mask_tabl
     plt.savefig(buffer, format="svg")
     print(buffer.getvalue())
     ```
+    See [4. Masked Images and Labels](./4_masked_images.md) for more details on how to use the masking ROIs to load masked data.
 
 === "Features Table"
     Features tables are used to store measurements and are indexed by the label id
@@ -174,9 +175,9 @@ Tables (differently from Images and Labels) can be purely in memory objects, and
     >>> print(roi_table) # markdown-exec: hide
     ```
 
-=== "Creating a Mask Table"
-    Similarly to the ROI table, we can create a mask table on-the-fly:
-    Let's for example create a mask table for the `nuclei` label:
+=== "Creating a Masking ROI Table"
+    Similarly to the ROI table, we can create a masking ROI table on-the-fly:
+    Let's for example create a masking ROI table for the `nuclei` label:
     ```pycon exec="true" source="console" session="get_started"
     >>> masking_table = ome_zarr_container.build_masking_roi_table("nuclei")
     >>> masking_table
@@ -195,7 +196,7 @@ Tables (differently from Images and Labels) can be purely in memory objects, and
     ```
 
 === "Creating a Generic Table"
-    Sometimes you might want to create a table that doesn't fit into the `ROI`, `Masking`, or `Feature` categories.
+    Sometimes you might want to create a table that doesn't fit into the `ROI`, `Masking ROI`, or `Feature` categories.
     In this case, you can use the `GenericTable` class, which allows you to store any tabular data.
     It can be created from a pandas `Dataframe`:
     ```pycon exec="true" source="console" session="get_started"
