@@ -95,12 +95,7 @@ class FeatureTableV1:
             return None
 
         path = path.path
-
-        if path.startswith("../"):
-            path = path[3:]
-
-        if path.endswith("/"):
-            path = path[:-1]
+        path = path.split("/")[-1]
         return path
 
     @property

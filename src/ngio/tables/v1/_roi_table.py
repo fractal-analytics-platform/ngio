@@ -354,14 +354,8 @@ class MaskingRoiTableV1(_GenericRoiTableV1[MaskingRoiTableV1Meta]):
         path = self._meta.region
         if path is None:
             return None
-
         path = path.path
-
-        if path.startswith("../"):
-            path = path[3:]
-
-        if path.endswith("/"):
-            path = path[:-1]
+        path = path.split("/")[-1]
         return path
 
     def get(self, label: int) -> Roi:

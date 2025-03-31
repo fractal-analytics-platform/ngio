@@ -43,6 +43,7 @@ def test_masking(tmp_path: Path, array_mode: str, shape: tuple[int, ...]):
 
     # Masking image test
     masked_image = ome_zarr.get_masked_image("label")
+    assert isinstance(masked_image.__repr__(), str)
     _roi_array = masked_image.get_roi(label=1, zoom_factor=1.123, mode=array_mode)
     masked_image.set_roi_masked(
         label=1, patch=np.ones_like(_roi_array), zoom_factor=1.123
@@ -60,6 +61,7 @@ def test_masking(tmp_path: Path, array_mode: str, shape: tuple[int, ...]):
     masked_new_label = ome_zarr.get_masked_label(
         "empty_label", masking_label_name="label"
     )
+    assert isinstance(masked_new_label.__repr__(), str)
 
     for label_id in labels_stats.keys():
         label_mask = masked_new_label.get_roi(label_id, mode=array_mode)

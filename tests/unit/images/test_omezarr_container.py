@@ -27,9 +27,11 @@ def test_open_ome_zarr_container(images_v04: dict[str, Path], zarr_name: str):
 
     whole_image_roi = ome_zarr.build_image_roi_table().get("image")
     image = ome_zarr.get_image()
+    assert isinstance(image.__repr__(), str)
     assert image.get_roi(whole_image_roi).shape == image.shape
 
     label = ome_zarr.get_label("label")
+    assert isinstance(label.__repr__(), str)
     roi = image.build_image_roi_table().get("image")
     image.get_roi(roi)
     label.get_roi(roi)

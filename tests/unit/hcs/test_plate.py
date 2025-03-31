@@ -51,7 +51,7 @@ def test_create_and_edit_plate(tmp_path: Path):
     assert test_plate.rows == ["B", "C"]
     assert test_plate.acquisitions_ids == [0, 1]
 
-    assert len(test_plate.wells_paths) == 2
+    assert len(test_plate.wells_paths()) == 2
 
     test_plate.remove_image(row="C", column="02", image_path="1")
-    assert len(test_plate.wells_paths) == 1
+    assert len(test_plate.wells_paths()) == 1

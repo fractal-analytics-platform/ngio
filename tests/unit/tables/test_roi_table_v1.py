@@ -22,6 +22,7 @@ def test_roi_table_v1(tmp_path: Path):
     }
 
     table = RoiTableV1(rois=rois.values())
+    assert isinstance(table.__repr__(), str)
 
     table.add(
         roi=Roi(
