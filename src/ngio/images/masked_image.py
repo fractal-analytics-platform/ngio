@@ -40,6 +40,13 @@ class MaskedImage(Image):
         self._label = label
         self._masking_roi_table = masking_roi_table
 
+    def __repr__(self) -> str:
+        """Return a string representation of the object."""
+        label_name = self._label.meta.name
+        if label_name is None:
+            label_name = self._masking_roi_table.reference_label
+        return f"MaskedImage(path={self.path}, {self.dimensions}, {label_name})"
+
     def get_roi(
         self,
         label: int,
@@ -133,6 +140,13 @@ class MaskedLabel(Label):
         )
         self._label = label
         self._masking_roi_table = masking_roi_table
+
+    def __repr__(self) -> str:
+        """Return a string representation of the object."""
+        label_name = self._label.meta.name
+        if label_name is None:
+            label_name = self._masking_roi_table.reference_label
+        return f"MaskedLabel(path={self.path}, {self.dimensions}, {label_name})"
 
     def get_roi(
         self,
