@@ -108,7 +108,7 @@ class AbstractNgioImageMeta:
     @property
     def version(self) -> NgffVersion:
         """Version of the OME-NFF metadata used to build the object."""
-        return self._version
+        return self._version  # type: ignore[return-value]
 
     @property
     def name(self) -> str | None:
