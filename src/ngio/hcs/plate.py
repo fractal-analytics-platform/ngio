@@ -3,6 +3,7 @@
 from ngio.images import OmeZarrContainer
 from ngio.ome_zarr_meta import (
     ImageInWellPath,
+    NgffVersion,
     NgioPlateMeta,
     NgioWellMeta,
     find_plate_meta_handler,
@@ -269,7 +270,9 @@ class OmeZarrPlate:
                 # Initialize the well metadata
                 # if the group is empty
                 well_meta = NgioWellMeta.default_init()
-                meta_handler = get_well_meta_handler(group_handler, version="0.4")
+                version = self.meta.plate.version
+                version = version if version is not None else "0.4"
+                meta_handler = get_well_meta_handler(group_handler, version=version)
             else:
                 meta_handler = find_well_meta_handler(group_handler)
                 well_meta = meta_handler.meta
@@ -413,7 +416,7 @@ def create_empty_plate(
     store: StoreOrGroup,
     name: str,
     images: list[ImageInWellPath] | None = None,
-    version: str = "0.4",
+    version: NgffVersion = "0.4",
     cache: bool = False,
     overwrite: bool = False,
     parallel_safe: bool = True,
