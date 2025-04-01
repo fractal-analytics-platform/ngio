@@ -43,7 +43,7 @@ ngio provides a high-level API to access the image data at different resolution 
     ```
     This will return the image with the nearest resolution to the requested pixel size.
 
-Similarly to the `OmeZarr Container`, the `Image` object provides a high-level API to access the image metadata.
+Similarly to the `OME-Zarr Container`, the `Image` object provides a high-level API to access the image metadata.
 
 === "Dimensions"
     ```pycon exec="true" source="console" session="get_started"
@@ -196,5 +196,5 @@ Often, you might want to create a new label based on an existing image. You can 
 >>> print(new_label) # markdown-exec: hide
 ```
 
-This will create a new label with the same dimensions as the original label (without channels) and compatible metadata.
-If you want to create a new label with slightly different metadata see [API Reference](https://fractal-analytics-platform.github.io/ngio/api/).
+This will create a new label with the same dimensions as the original image (without channels) and compatible metadata.
+If you want to create a new label with slightly different metadata see [API Reference](../api/images.md).

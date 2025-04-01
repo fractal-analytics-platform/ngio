@@ -1,4 +1,4 @@
-# 1. OmeZarr Container
+# 1. OME-Zarr Container
 
 Let's see how to open and explore an OME-Zarr image using `ngio`:
 
@@ -17,37 +17,36 @@ image_path = hcs_path / "B" / "03" / "0"
 ome_zarr_container = open_ome_zarr_container(image_path)
 ```
 
-The `ome_zarr_container` in is your entry point to working with OME-Zarr images. It provides high-level access to the image metadata, images, labels, and tables.
+The `OME-Zarr Container` in is your entry point to working with OME-Zarr images. It provides high-level access to the image metadata, images, labels, and tables.
 
 ```pycon exec="true" source="console" session="get_started"
 >>> ome_zarr_container
 >>> print(ome_zarr_container) # markdown-exec: hide
 ```
 
-The `ome_zarr_container` will be the starting point for all your image processing tasks.
+The `OME-Zarr Container` will be the starting point for all your image processing tasks.
 
 ## Main concepts
 
-### What is the OmeZarr container?
+### What is the OME-Zarr container?
 
-The `OmeZarr Container` in ngio is your entry point to working with OME-Zarr images.
+The `OME-Zarr Container` in ngio is your entry point to working with OME-Zarr images.
 
 It provides:
 
-- **OME-Zarr overview** it can be used to get an overview of the OME-Zarr file, including the number of image metadata, list
-of labels, and tables available.
-- **Image access** allow to access the images at different resolution levels and pixel sizes
-- **Label management** allow to check which labels are available, access them, and create new labels
-- **Table management** allow to check which tables are available, access them, and create new tables
-- **Derive new OME-Zarr images** allow to create new images based on the original one, with the same or similar metadata
+- **OME-Zarr overview**: get an overview of the OME-Zarr file, including the number of image levels, list of labels, and tables available.
+- **Image access**: get access to the images at different resolution levels and pixel sizes.
+- **Label management**: check which labels are available, access them, and create new labels.
+- **Table management**: check which tables are available, access them, and create new tables.
+- **Derive new OME-Zarr images**: create new images based on the original one, with the same or similar metadata.
 
-### What is the OmeZarr container not?
+### What is the OME-Zarr container not?
 
-The `OmeZarr Container` object does not allow the user to interact with the image data directly. For that, we need to use the `Image`, `Label`, and `Table` objects.
+The `OME-Zarr Container` object does not allow the user to interact with the image data directly. For that, we need to use the `Image`, `Label`, and `Table` objects.
 
 ## OME-Zarr overview
 
-For example:
+Examples of the OME-Zarr metadata access:
 
 === "Number of Resolution Levels"
     Show the number of resolution levels:
@@ -88,9 +87,9 @@ For example:
 
 ## Accessing images / labels / tables
 
-To access images, labels, and tables, you can use the `get_image`, `get_label`, and `get_table` methods of the `OmeZarrContainer` object.
+To access images, labels, and tables, you can use the `get_image`, `get_label`, and `get_table` methods of the `OME-Zarr Container` object.
 
-A variety of examples and additional information can be found in the [Images/Lables](./2_images.md), and [Tables](../3_tables.md) sections.
+A variety of examples and additional information can be found in the [Images and Labels](./2_images.md), and [Tables](../3_tables.md) sections.
 
 ## Creating derived images
 
@@ -126,7 +125,7 @@ from ngio import create_ome_zarr_from_array
 # Create a random 3D array
 x = np.random.randint(0, 255, (16, 128, 128), dtype=np.uint8)
 
-# Convert to OME-NGFF
+# Save as OME-Zarr
 new_ome_zarr_image = create_ome_zarr_from_array(
     store="random_ome.zarr", 
     array=x, 
@@ -177,6 +176,6 @@ In this case we need to provide a `fractal_token` to authenticate the user.
 ```python
 from ngio.utils import fractal_fsspec_store
  
-store = fractal_fsspec_store(url="https://fracral_url...", fractal_token="**your_secret_token**")
+store = fractal_fsspec_store(url="https://fractal_url...", fractal_token="**your_secret_token**")
 ome_zarr_container = open_ome_zarr_container(store)
 ```

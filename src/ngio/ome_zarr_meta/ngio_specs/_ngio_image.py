@@ -7,8 +7,7 @@ can be converted to the OME standard.
 """
 
 from collections.abc import Collection
-from enum import Enum
-from typing import Any, TypeVar
+from typing import Any, Literal, TypeVar
 
 import numpy as np
 from pydantic import BaseModel
@@ -22,12 +21,7 @@ from ngio.ome_zarr_meta.ngio_specs._pixel_size import PixelSize
 from ngio.utils import NgioValidationError, NgioValueError
 
 T = TypeVar("T")
-
-
-class NgffVersion(str, Enum):
-    """Allowed NGFF versions."""
-
-    v04 = "0.4"
+NgffVersion = Literal["0.4"]
 
 
 class ImageLabelSource(BaseModel):
@@ -45,9 +39,11 @@ class ImageLabelSource(BaseModel):
 class AbstractNgioImageMeta:
     """Base class for ImageMeta and LabelMeta."""
 
-    def __init__(self, version: str, name: str | None, datasets: list[Dataset]) -> None:
+    def __init__(
+        self, version: NgffVersion, name: str | None, datasets: list[Dataset]
+    ) -> None:
         """Initialize the ImageMeta object."""
-        self._version = NgffVersion(version)
+        self._version = version
         self._name = name
 
         if len(datasets) == 0:
@@ -70,7 +66,7 @@ class AbstractNgioImageMeta:
         pixel_size: PixelSize,
         scaling_factors: Collection[float] | None = None,
         name: str | None = None,
-        version: str = "0.4",
+        version: NgffVersion = "0.4",
     ):
         """Initialize the ImageMeta object."""
         axes = canonical_axes(
@@ -335,7 +331,7 @@ class NgioLabelMeta(AbstractNgioImageMeta):
 
     def __init__(
         self,
-        version: str,
+        version: NgffVersion,
         name: str | None,
         datasets: list[Dataset],
         image_label: ImageLabelSource | None = None,
@@ -374,7 +370,7 @@ class NgioImageMeta(AbstractNgioImageMeta):
 
     def __init__(
         self,
-        version: str,
+        version: NgffVersion,
         name: str | None,
         datasets: list[Dataset],
         channels: ChannelsMeta | None = None,

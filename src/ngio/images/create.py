@@ -12,6 +12,7 @@ from ngio.ome_zarr_meta import (
     get_label_meta_handler,
 )
 from ngio.ome_zarr_meta.ngio_specs import (
+    NgffVersion,
     SpaceUnits,
     TimeUnits,
     canonical_axes_order,
@@ -34,7 +35,7 @@ def _init_generic_meta(
     space_unit: SpaceUnits | str | None = None,
     time_unit: TimeUnits | str | None = None,
     name: str | None = None,
-    version: str = "0.4",
+    version: NgffVersion = "0.4",
 ) -> tuple[_image_or_label_meta, list[float]]:
     """Initialize the metadata for an image or label."""
     scaling_factors = []
@@ -104,7 +105,7 @@ def _create_empty_label(
     chunks: Collection[int] | None = None,
     dtype: str = "uint16",
     overwrite: bool = False,
-    version: str = "0.4",
+    version: NgffVersion = "0.4",
 ) -> ZarrGroupHandler:
     """Create an empty label with the given shape and metadata.
 
@@ -195,7 +196,7 @@ def _create_empty_image(
     chunks: Collection[int] | None = None,
     dtype: str = "uint16",
     overwrite: bool = False,
-    version: str = "0.4",
+    version: NgffVersion = "0.4",
 ) -> ZarrGroupHandler:
     """Create an empty OME-Zarr image with the given shape and metadata.
 
