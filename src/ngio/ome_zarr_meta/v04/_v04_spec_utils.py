@@ -23,7 +23,6 @@ from ome_zarr_models.v04.multiscales import Multiscale as MultiscaleV04
 from ome_zarr_models.v04.omero import Channel as ChannelV04
 from ome_zarr_models.v04.omero import Omero as OmeroV04
 from ome_zarr_models.v04.omero import Window as WindowV04
-from ome_zarr_models.v04.well import WellAttrs as WellAttrsV04
 from pydantic import ValidationError
 
 from ngio.ome_zarr_meta.ngio_specs import (
@@ -41,6 +40,7 @@ from ngio.ome_zarr_meta.ngio_specs import (
     NgioWellMeta,
     default_channel_name,
 )
+from ngio.ome_zarr_meta.v04._custom_models import CustomWellAttrs as WellAttrsV04
 
 
 def _is_v04_image_meta(metadata: dict) -> ImageAttrsV04 | ValidationError:

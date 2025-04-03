@@ -1,5 +1,7 @@
 """HCS (High Content Screening) specific metadata classes for NGIO."""
 
+from typing import Annotated
+
 from ome_zarr_models.v04.hcs import HCSAttrs
 from ome_zarr_models.v04.plate import (
     Acquisition,
@@ -8,12 +10,13 @@ from ome_zarr_models.v04.plate import (
     Row,
     WellInPlate,
 )
-from ome_zarr_models.v04.well import WellAttrs
-from ome_zarr_models.v04.well_types import WellImage, WellMeta
-from pydantic import BaseModel
+from ome_zarr_models.v04.well import WellAttrs as WellAttrs04
+from ome_zarr_models.v04.well_types import WellImage as WellImage04
+from ome_zarr_models.v04.well_types import WellMeta as WellMeta04
+from pydantic import BaseModel, SkipValidation, field_serializer
 
 from ngio.ome_zarr_meta.ngio_specs._ngio_image import NgffVersion
-from ngio.utils import NgioValueError
+from ngio.utils import NgioValueError, ngio_logger
 
 
 class ImageInWellPath(BaseModel):
@@ -26,7 +29,39 @@ class ImageInWellPath(BaseModel):
     acquisition_name: str | None = None
 
 
-class NgioWellMeta(WellAttrs):
+class CustomWellImage(WellImage04):
+    path: Annotated[str, SkipValidation]
+
+    @field_serializer("path")
+    def serialize_path(self, value: str) -> str:
+        if value.find("_") != -1:
+            # Remove underscores from the path
+            # This is a custom serialization step
+            old_value = value
+            value = value.replace("_", "")
+            ngio_logger.warning(
+                f"Underscores in well-paths are not allowed. "
+                f"Path '{old_value}' was changed to '{value}'"
+                f" to comply with the specification."
+            )
+        # Check if the value contains only alphanumeric characters
+        if not value.isalnum():
+            raise NgioValueError(
+                f"Path '{value}' contains non-alphanumeric characters. "
+                f"Only alphanumeric characters are allowed."
+            )
+        return value
+
+
+class CustomWellMeta(WellMeta04):
+    images: list[CustomWellImage]  # type: ignore[valid-type]
+
+
+class CustomWellAttrs(WellAttrs04):
+    well: CustomWellMeta  # type: ignore[valid-type]
+
+
+class NgioWellMeta(CustomWellAttrs):
     """HCS well metadata."""
 
     @classmethod
@@ -37,7 +72,7 @@ class NgioWellMeta(WellAttrs):
     ) -> "NgioWellMeta":
         if version is None:
             version = "0.4"
-        well = cls(well=WellMeta(images=[], version=version))
+        well = cls(well=CustomWellMeta(images=[], version=version))
         if images is None:
             return well
 
@@ -76,10 +111,10 @@ class NgioWellMeta(WellAttrs):
                     f"Image at path {path} already exists in the well."
                 )
 
-        new_image = WellImage(path=path, acquisition=acquisition)
+        new_image = CustomWellImage(path=path, acquisition=acquisition)
         list_of_images.append(new_image)
         return NgioWellMeta(
-            well=WellMeta(images=list_of_images, version=self.well.version)
+            well=CustomWellMeta(images=list_of_images, version=self.well.version)
         )
 
     def remove_image(self, path: str) -> "NgioWellMeta":
@@ -93,7 +128,9 @@ class NgioWellMeta(WellAttrs):
             if image.path == path:
                 list_of_images.remove(image)
                 return NgioWellMeta(
-                    well=WellMeta(images=list_of_images, version=self.well.version)
+                    well=CustomWellMeta(
+                        images=list_of_images, version=self.well.version
+                    )
                 )
         raise NgioValueError(f"Image at path {path} not found in the well.")
 
