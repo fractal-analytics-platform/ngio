@@ -55,10 +55,12 @@ def test_create_and_edit_plate(tmp_path: Path):
 
     test_plate.remove_image(row="C", column="02", image_path="1")
     assert len(test_plate.wells_paths()) == 1
-    
-    
+
+
 def test_create_and_edit_plate_path_normalization(tmp_path: Path):
     test_plate = create_empty_plate(tmp_path / "test_plate.zarr", name="test_plate")
     test_plate.add_image(row="B", column="03", image_path="0_mip", acquisition_id=0)
-    test_plate.add_image(row="B", column="03", image_path="1_illumination_correction", acquisition_id=0)
+    test_plate.add_image(
+        row="B", column="03", image_path="1_illumination_correction", acquisition_id=0
+    )
     assert test_plate.images_paths() == ["B/03/0mip", "B/03/1illuminationcorrection"]

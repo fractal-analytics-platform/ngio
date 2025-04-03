@@ -68,5 +68,5 @@ def test_well_meta_path_normalization():
     output_metadata = ngio_to_v04_well_meta(ngio_well)
     assert isinstance(output_metadata, dict)
 
-    images = [image['path'] for image in output_metadata["well"]["images"]]
+    images = [image["path"] for image in output_metadata["well"]["images"]]
     assert images == ["0", "0mip"]
