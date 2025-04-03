@@ -32,6 +32,7 @@ from ngio.ome_zarr_meta.ngio_specs._ngio_hcs import (
     ImageInWellPath,
     NgioPlateMeta,
     NgioWellMeta,
+    path_in_well_validation,
 )
 from ngio.ome_zarr_meta.ngio_specs._ngio_image import (
     ImageLabelSource,
@@ -70,4 +71,5 @@ __all__ = [
     "canonical_axes_order",
     "canonical_label_axes_order",
     "default_channel_name",
+    "path_in_well_validation",
 ]

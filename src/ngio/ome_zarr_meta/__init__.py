@@ -22,6 +22,7 @@ from ngio.ome_zarr_meta.ngio_specs import (
     NgioPlateMeta,
     NgioWellMeta,
     PixelSize,
+    path_in_well_validation,
 )
 
 __all__ = [
@@ -47,4 +48,5 @@ __all__ = [
     "get_label_meta_handler",
     "get_plate_meta_handler",
     "get_well_meta_handler",
+    "path_in_well_validation",
 ]

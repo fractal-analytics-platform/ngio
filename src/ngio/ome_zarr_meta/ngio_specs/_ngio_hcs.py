@@ -19,6 +19,27 @@ from ngio.ome_zarr_meta.ngio_specs._ngio_image import NgffVersion
 from ngio.utils import NgioValueError, ngio_logger
 
 
+def path_in_well_validation(path: str) -> str:
+    """Validate the path in the well."""
+    if path.find("_") != -1:
+        # Remove underscores from the path
+        # This is a custom serialization step
+        old_value = path
+        path = path.replace("_", "")
+        ngio_logger.warning(
+            f"Underscores in well-paths are not allowed. "
+            f"Path '{old_value}' was changed to '{path}'"
+            f" to comply with the specification."
+        )
+    # Check if the value contains only alphanumeric characters
+    if not path.isalnum():
+        raise NgioValueError(
+            f"Path '{path}' contains non-alphanumeric characters. "
+            f"Only alphanumeric characters are allowed."
+        )
+    return path
+
+
 class ImageInWellPath(BaseModel):
     """Image in a well."""
 
@@ -34,23 +55,8 @@ class CustomWellImage(WellImage04):
 
     @field_serializer("path")
     def serialize_path(self, value: str) -> str:
-        if value.find("_") != -1:
-            # Remove underscores from the path
-            # This is a custom serialization step
-            old_value = value
-            value = value.replace("_", "")
-            ngio_logger.warning(
-                f"Underscores in well-paths are not allowed. "
-                f"Path '{old_value}' was changed to '{value}'"
-                f" to comply with the specification."
-            )
-        # Check if the value contains only alphanumeric characters
-        if not value.isalnum():
-            raise NgioValueError(
-                f"Path '{value}' contains non-alphanumeric characters. "
-                f"Only alphanumeric characters are allowed."
-            )
-        return value
+        """Custom serialization for the path."""
+        return path_in_well_validation(value)
 
 
 class CustomWellMeta(WellMeta04):

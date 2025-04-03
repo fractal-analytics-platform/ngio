@@ -10,6 +10,7 @@ from ngio.ome_zarr_meta import (
     find_well_meta_handler,
     get_plate_meta_handler,
     get_well_meta_handler,
+    path_in_well_validation,
 )
 from ngio.utils import (
     AccessModeLiteral,
@@ -245,6 +246,8 @@ class OmeZarrPlate:
         atomic: bool = False,
     ) -> StoreOrGroup:
         """Add an image to an ome-zarr plate."""
+        image_path = path_in_well_validation(path=image_path)
+
         if atomic:
             plate_lock = self._group_handler.lock
         else:
