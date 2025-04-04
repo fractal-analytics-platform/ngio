@@ -55,9 +55,9 @@ class OmeZarrWell:
         return self._meta_handler.meta
 
     @property
-    def acquisitions_ids(self) -> list[int]:
+    def acquisition_ids(self) -> list[int]:
         """Return the acquisitions ids in the well."""
-        return self.meta.acquisitions_ids
+        return self.meta.acquisition_ids
 
     def paths(self, acquisition: int | None = None) -> list[str]:
         """Return the images paths in the well.
@@ -69,6 +69,14 @@ class OmeZarrWell:
             acquisition (int | None): The acquisition id to filter the images.
         """
         return self.meta.paths(acquisition)
+
+    def get_image_store(self, image_path: str) -> StoreOrGroup:
+        """Get the image store from the well.
+
+        Args:
+            image_path (str): The path of the image.
+        """
+        return self._group_handler.get_group(image_path, create_mode=True)
 
     def _add_image(
         self,
@@ -173,9 +181,9 @@ class OmeZarrPlate:
         return self.meta.acquisitions_names
 
     @property
-    def acquisitions_ids(self) -> list[int]:
+    def acquisition_ids(self) -> list[int]:
         """Return the acquisitions ids in the plate."""
-        return self.meta.acquisitions_ids
+        return self.meta.acquisition_ids
 
     def _well_path(self, row: str, column: int | str) -> str:
         """Return the well path in the plate."""
@@ -282,6 +290,19 @@ class OmeZarrPlate:
         image_path = self._image_path(row=row, column=column, path=image_path)
         group_handler = self._group_handler.derive_handler(image_path)
         return OmeZarrContainer(group_handler)
+
+    def get_image_store(
+        self, row: str, column: int | str, image_path: str
+    ) -> StoreOrGroup:
+        """Get the image store from the plate.
+
+        Args:
+            row (str): The row of the well.
+            column (int | str): The column of the well.
+            image_path (str): The path of the image.
+        """
+        well = self.get_well(row=row, column=column)
+        return well.get_image_store(image_path=image_path)
 
     def get_well_images(
         self, row: str, column: str | int, acquisition: int | None = None

@@ -73,23 +73,15 @@ class NgioWellMeta(CustomWellAttrs):
     @classmethod
     def default_init(
         cls,
-        images: list[ImageInWellPath] | None = None,
         version: NgffVersion | None = None,
     ) -> "NgioWellMeta":
         if version is None:
             version = "0.4"
         well = cls(well=CustomWellMeta(images=[], version=version))
-        if images is None:
-            return well
-
-        for image in images:
-            well = well.add_image(
-                path=image.path, acquisition=image.acquisition_id, strict=False
-            )
         return well
 
     @property
-    def acquisitions_ids(self) -> list[int]:
+    def acquisition_ids(self) -> list[int]:
         """Return the acquisition ids in the well."""
         acquisitions = []
         for images in self.well.images:
@@ -138,7 +130,7 @@ class NgioWellMeta(CustomWellAttrs):
         if (
             strict
             and (acquisition is not None)
-            and (acquisition not in self.acquisitions_ids)
+            and (acquisition not in self.acquisition_ids)
         ):
             raise NgioValueError(
                 f"Acquisition ID {acquisition} not found in well. "
@@ -283,7 +275,7 @@ class NgioPlateMeta(HCSAttrs):
         return [acquisitions.name for acquisitions in self.plate.acquisitions]
 
     @property
-    def acquisitions_ids(self) -> list[int]:
+    def acquisition_ids(self) -> list[int]:
         """Return the acquisitions ids in the plate."""
         if self.plate.acquisitions is None:
             return []
