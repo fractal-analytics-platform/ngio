@@ -92,6 +92,13 @@ class NgioWellMeta(CustomWellAttrs):
                 acquisitions.append(images.acquisition)
         return acquisitions
 
+    def get_image_acquisition_id(self, image_path: str) -> int | None:
+        """Return the acquisition id for the given image path."""
+        for images in self.well.images:
+            if images.path == image_path:
+                return images.acquisition
+        raise NgioValueError(f"Image at path {image_path} not found in the well.")
+
     def paths(self, acquisition: int | None = None) -> list[str]:
         """Return the images paths in the well.
 

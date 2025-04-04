@@ -78,6 +78,29 @@ class OmeZarrWell:
         """
         return self._group_handler.get_group(image_path, create_mode=True)
 
+    def get_image_acquisition_id(self, image_path: str) -> int | None:
+        """Get the acquisition id of an image in the well.
+
+        Args:
+            image_path (str): The path of the image.
+
+        Returns:
+            int | None: The acquisition id of the image.
+        """
+        return self.meta.get_image_acquisition_id(image_path=image_path)
+
+    def get_image(self, image_path: str) -> OmeZarrContainer:
+        """Get an image from the well.
+
+        Args:
+            image_path (str): The path of the image.
+
+        Returns:
+            OmeZarrContainer: The image.
+        """
+        handler = self._group_handler.derive_handler(image_path)
+        return OmeZarrContainer(handler)
+
     def _add_image(
         self,
         image_path: str,
@@ -233,6 +256,22 @@ class OmeZarrPlate:
         for path in well.paths(acquisition):
             images.append(self._image_path(row=row, column=column, path=path))
         return images
+
+    def get_image_acquisition_id(
+        self, row: str, column: int | str, image_path: str
+    ) -> int | None:
+        """Get the acquisition id of an image in a well.
+
+        Args:
+            row (str): The row of the well.
+            column (int | str): The column of the well.
+            image_path (str): The path of the image.
+
+        Returns:
+            int | None: The acquisition id of the image.
+        """
+        well = self.get_well(row=row, column=column)
+        return well.get_image_acquisition_id(image_path=image_path)
 
     def get_well(self, row: str, column: int | str) -> OmeZarrWell:
         """Get a well from the plate.
@@ -572,7 +611,7 @@ class OmeZarrPlate:
         store: StoreOrGroup,
         plate_name: str | None = None,
         version: NgffVersion = "0.4",
-        keep_acquisitions: bool = True,
+        keep_acquisitions: bool = False,
         cache: bool = False,
         overwrite: bool = False,
         parallel_safe: bool = True,
@@ -681,7 +720,7 @@ def derive_ome_zarr_plate(
     store: StoreOrGroup,
     plate_name: str | None = None,
     version: NgffVersion = "0.4",
-    keep_acquisitions: bool = True,
+    keep_acquisitions: bool = False,
     cache: bool = False,
     overwrite: bool = False,
     parallel_safe: bool = True,

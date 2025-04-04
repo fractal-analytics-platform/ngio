@@ -3,7 +3,13 @@ from pathlib import Path
 import pytest
 import zarr
 
-from ngio import ImageInWellPath, OmeZarrWell, create_empty_plate, open_ome_zarr_plate
+from ngio import (
+    ImageInWellPath,
+    OmeZarrContainer,
+    OmeZarrWell,
+    create_empty_plate,
+    open_ome_zarr_plate,
+)
 from ngio.utils import NgioValueError
 
 
@@ -33,6 +39,14 @@ def test_open_real_ome_zarr_plate(cardiomyocyte_tiny_path: Path):
     assert len(images_plate) == 1
     assert len(images_well) == 1
 
+    well = ome_zarr_plate.get_well("B", "03")
+    assert isinstance(well, OmeZarrWell)
+    assert well.paths() == ["0"]
+
+    image = well.get_image("0")
+    assert isinstance(image, OmeZarrContainer)
+    assert well.get_image_acquisition_id("0") is None
+
 
 def test_create_and_edit_plate(tmp_path: Path):
     test_plate = create_empty_plate(tmp_path / "test_plate.zarr", name="test_plate")
@@ -51,6 +65,9 @@ def test_create_and_edit_plate(tmp_path: Path):
     assert test_plate.columns == ["02", "03"]
     assert test_plate.rows == ["B", "C"]
     assert test_plate.acquisition_ids == [0, 1]
+    assert (
+        test_plate.get_image_acquisition_id(row="B", column="03", image_path="0") == 0
+    )
 
     assert len(test_plate.wells_paths()) == 2
 
@@ -69,7 +86,9 @@ def test_create_and_edit_plate_path_normalization(tmp_path: Path):
 
 def test_derive_plate_from_ome_zarr(cardiomyocyte_tiny_path: Path, tmp_path: Path):
     ome_zarr_plate = open_ome_zarr_plate(cardiomyocyte_tiny_path)
-    test_plate = ome_zarr_plate.derive_plate(tmp_path / "test_plate.zarr")
+    test_plate = ome_zarr_plate.derive_plate(
+        tmp_path / "test_plate.zarr", keep_acquisitions=True
+    )
     assert test_plate.columns == ["03"]
     assert test_plate.rows == ["B"]
     assert test_plate.acquisition_ids == [0]
@@ -117,6 +136,11 @@ def test_create_plate_with_wells(tmp_path: Path):
     assert test_plate.images_paths() == ["B/03/0", "B/03/1", "C/02/0"]
     assert test_plate.get_well("B", "03").acquisition_ids == [0, 1]
     assert test_plate.get_well("C", "02").acquisition_ids == []
+    well = test_plate.get_well("B", "03")
+    assert isinstance(well, OmeZarrWell)
+    assert well.paths() == ["0", "1"]
+    assert well.get_image_acquisition_id("0") == 0
+    assert well.get_image_acquisition_id("1") == 1
 
     store = test_plate.get_image_store(row="B", column="03", image_path="0")
     assert isinstance(store, zarr.Group)
