@@ -417,5 +417,39 @@ class NgioPlateMeta(HCSAttrs):
         )
         return NgioPlateMeta(plate=new_plate)
 
+    def derive(
+        self,
+        name: str | None = None,
+        version: NgffVersion | None = None,
+        keep_acquisitions: bool = True,
+    ) -> "NgioPlateMeta":
+        """Derive the plate metadata.
 
-# %%
+        Args:
+            name (str): The name of the derived plate.
+            version (NgffVersion | None): The version of the derived plate.
+                If None, use the version of the original plate.
+            keep_acquisitions (bool): If True, keep the acquisitions in the plate.
+        """
+        columns = self.plate.columns
+        rows = self.plate.rows
+
+        if keep_acquisitions:
+            acquisitions = self.plate.acquisitions
+        else:
+            acquisitions = None
+
+        if version is None:
+            version = self.plate.version  # type: ignore[assignment]
+
+        return NgioPlateMeta(
+            plate=Plate(
+                rows=rows,
+                columns=columns,
+                acquisitions=acquisitions,
+                wells=[],
+                field_count=self.plate.field_count,
+                version=version,
+                name=name,
+            )
+        )

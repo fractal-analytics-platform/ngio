@@ -64,3 +64,11 @@ def test_create_and_edit_plate_path_normalization(tmp_path: Path):
         row="B", column="03", image_path="1_illumination_correction", acquisition_id=0
     )
     assert test_plate.images_paths() == ["B/03/0mip", "B/03/1illuminationcorrection"]
+
+
+def test_derive_plate_from_ome_zarr(cardiomyocyte_tiny_path: Path, tmp_path: Path):
+    ome_zarr_plate = open_ome_zarr_plate(cardiomyocyte_tiny_path)
+    test_plate = ome_zarr_plate.derive_plate(tmp_path / "test_plate.zarr")
+    assert test_plate.columns == ["03"]
+    assert test_plate.rows == ["B"]
+    assert test_plate.acquisitions_ids == [0]

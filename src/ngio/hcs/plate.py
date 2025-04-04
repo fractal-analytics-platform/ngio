@@ -393,6 +393,38 @@ class OmeZarrPlate:
             atomic=False,
         )
 
+    def derive_plate(
+        self,
+        store: StoreOrGroup,
+        plate_name: str | None = None,
+        version: NgffVersion = "0.4",
+        keep_acquisitions: bool = True,
+        cache: bool = False,
+        overwrite: bool = False,
+        parallel_safe: bool = True,
+    ) -> "OmeZarrPlate":
+        """Derive a new OME-Zarr plate from an existing one.
+
+        Args:
+            store (StoreOrGroup): The Zarr store or group that stores the plate.
+            plate_name (str | None): The name of the new plate.
+            version (NgffVersion): The version of the new plate.
+            keep_acquisitions (bool): Whether to keep the acquisitions in the new plate.
+            cache (bool): Whether to use a cache for the zarr group metadata.
+            overwrite (bool): Whether to overwrite the existing plate.
+            parallel_safe (bool): Whether the group handler is parallel safe.
+        """
+        return derive_ome_zarr_plate(
+            ome_zarr_plate=self,
+            store=store,
+            plate_name=plate_name,
+            version=version,
+            keep_acquisitions=keep_acquisitions,
+            cache=cache,
+            overwrite=overwrite,
+            parallel_safe=parallel_safe,
+        )
+
 
 def open_ome_zarr_plate(
     store: StoreOrGroup,
@@ -415,6 +447,22 @@ def open_ome_zarr_plate(
     return OmeZarrPlate(group_handler)
 
 
+def _create_empty_plate_from_meta(
+    store: StoreOrGroup,
+    meta: NgioPlateMeta,
+    version: NgffVersion = "0.4",
+    overwrite: bool = False,
+) -> ZarrGroupHandler:
+    """Create an empty OME-Zarr plate from metadata."""
+    mode = "w" if overwrite else "w-"
+    group_handler = ZarrGroupHandler(
+        store=store, cache=True, mode=mode, parallel_safe=False
+    )
+    meta_handler = get_plate_meta_handler(group_handler, version=version)
+    meta_handler.write_meta(meta)
+    return group_handler
+
+
 def create_empty_plate(
     store: StoreOrGroup,
     name: str,
@@ -425,16 +473,16 @@ def create_empty_plate(
     parallel_safe: bool = True,
 ) -> OmeZarrPlate:
     """Initialize and create an empty OME-Zarr plate."""
-    mode = "w" if overwrite else "w-"
-    group_handler = ZarrGroupHandler(
-        store=store, cache=True, mode=mode, parallel_safe=False
-    )
-    meta_handler = get_plate_meta_handler(group_handler, version=version)
     plate_meta = NgioPlateMeta.default_init(
         name=name,
         version=version,
     )
-    meta_handler.write_meta(plate_meta)
+    group_handler = _create_empty_plate_from_meta(
+        store=store,
+        meta=plate_meta,
+        version=version,
+        overwrite=overwrite,
+    )
 
     if images is not None:
         plate = OmeZarrPlate(group_handler)
@@ -446,6 +494,51 @@ def create_empty_plate(
                 acquisition_id=image.acquisition_id,
                 acquisition_name=image.acquisition_name,
             )
+    return open_ome_zarr_plate(
+        store=store,
+        cache=cache,
+        mode="r+",
+        parallel_safe=parallel_safe,
+    )
+
+
+def derive_ome_zarr_plate(
+    ome_zarr_plate: OmeZarrPlate,
+    store: StoreOrGroup,
+    plate_name: str | None = None,
+    version: NgffVersion = "0.4",
+    keep_acquisitions: bool = True,
+    cache: bool = False,
+    overwrite: bool = False,
+    parallel_safe: bool = True,
+) -> OmeZarrPlate:
+    """Derive a new OME-Zarr plate from an existing one.
+
+    Args:
+        ome_zarr_plate (OmeZarrPlate): The existing OME-Zarr plate.
+        store (StoreOrGroup): The Zarr store or group that stores the plate.
+        plate_name (str | None): The name of the new plate.
+        version (NgffVersion): The version of the new plate.
+        keep_acquisitions (bool): Whether to keep the acquisitions in the new plate.
+        cache (bool): Whether to use a cache for the zarr group metadata.
+        overwrite (bool): Whether to overwrite the existing plate.
+        parallel_safe (bool): Whether the group handler is parallel safe.
+    """
+
+    if plate_name is None:
+        plate_name = ome_zarr_plate.meta.plate.name
+
+    new_meta = ome_zarr_plate.meta.derive(
+        name=plate_name,
+        version=version,
+        keep_acquisitions=keep_acquisitions,
+    )
+    _ = _create_empty_plate_from_meta(
+        store=store,
+        meta=new_meta,
+        overwrite=overwrite,
+        version=version,
+    )
     return open_ome_zarr_plate(
         store=store,
         cache=cache,
