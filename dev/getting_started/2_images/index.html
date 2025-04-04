@@ -20,7 +20,7 @@
       
       
       <link rel="icon" href="../../images/favicon.ico">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.10">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.11">
     
     
       
@@ -160,11 +160,13 @@
     
     
     
-      <label class="md-header__button md-icon" for="__search">
-        
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
-      </label>
-      <div class="md-search" data-md-component="search" role="dialog">
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
   <label class="md-search__overlay" for="__search"></label>
   <div class="md-search__inner" role="search">
     <form class="md-search__form" name="search">
@@ -203,6 +205,7 @@
     </div>
   </div>
 </div>
+      
     
     
       <div class="md-header__source">
@@ -381,7 +384,7 @@
   
   
   <span class="md-ellipsis">
-    1. OmeZarr Container
+    1. OME-Zarr Container
     
   </span>
   
@@ -1223,7 +1226,7 @@ This will return the image with the nearest resolution to the requested pixel si
 </div>
 </div>
 </div>
-<p>Similarly to the <code>OmeZarr Container</code>, the <code>Image</code> object provides a high-level API to access the image metadata.</p>
+<p>Similarly to the <code>OME-Zarr Container</code>, the <code>Image</code> object provides a high-level API to access the image metadata.</p>
 <div class="tabbed-set tabbed-alternate" data-tabs="2:3"><input checked="checked" id="__tabbed_2_1" name="__tabbed_2" type="radio" /><input id="__tabbed_2_2" name="__tabbed_2" type="radio" /><input id="__tabbed_2_3" name="__tabbed_2" type="radio" /><div class="tabbed-labels"><label for="__tabbed_2_1">Dimensions</label><label for="__tabbed_2_2">Pixel Size</label><label for="__tabbed_2_3">On disk array infos</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
@@ -1265,7 +1268,7 @@ The <code>axes</code> attribute returns the order of the axes in the image.</p>
 <div class="tabbed-block">
 <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">dask_delayed</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">get_array</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;delayed&quot;</span><span class="p">)</span> <span class="c1"># Get the image as a dask delayed object</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">dask_delayed</span>
-<span class="go">Delayed(&#39;transform_numpy_array-3e1c57fe-4f29-4234-97a0-e6b55fd8652a&#39;)</span>
+<span class="go">Delayed(&#39;transform_numpy_array-7e383a39-d90b-4c1c-90cf-9fad4807b3aa&#39;)</span>
 </code></pre></div>
 </div>
 </div>
@@ -1348,8 +1351,8 @@ This will return the label with the nearest resolution to the requested pixel si
 <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">new_label</span> <span class="o">=</span> <span class="n">ome_zarr_container</span><span class="o">.</span><span class="n">derive_label</span><span class="p">(</span><span class="s2">&quot;new_label&quot;</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="c1"># Derive a new label</span>
 <span class="go">Label(path=0, Dimensions(z: 1, y: 4320, x: 5120))</span>
 </code></pre></div>
-<p>This will create a new label with the same dimensions as the original label (without channels) and compatible metadata.
-If you want to create a new label with slightly different metadata see <a href="https://fractal-analytics-platform.github.io/ngio/api/">API Reference</a>.</p>
+<p>This will create a new label with the same dimensions as the original image (without channels) and compatible metadata.
+If you want to create a new label with slightly different metadata see <a href="../../api/images/">API Reference</a>.</p>
 
 
 
@@ -1372,7 +1375,7 @@ If you want to create a new label with slightly different metadata see <a href="
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 31, 2025 12:37:48">March 31, 2025</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 31, 2025 16:17:59">March 31, 2025</span>
   </span>
 
     
@@ -1399,6 +1402,11 @@ If you want to create a new label with slightly different metadata see <a href="
 
     
     <nav>
+      
+        <a href="https://github.com/jluethi" class="md-author" title="@jluethi">
+          
+          <img src="https://avatars.githubusercontent.com/u/18033446?v=4&size=72" alt="jluethi">
+        </a>
       
         <a href="https://github.com/lorenzocerrone" class="md-author" title="@lorenzocerrone">
           
@@ -1441,7 +1449,7 @@ If you want to create a new label with slightly different metadata see <a href="
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../1_ome_zarr_containers/" class="md-footer__link md-footer__link--prev" aria-label="Previous: 1. OmeZarr Container">
+          <a href="../1_ome_zarr_containers/" class="md-footer__link md-footer__link--prev" aria-label="Previous: 1. OME-Zarr Container">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -1451,7 +1459,7 @@ If you want to create a new label with slightly different metadata see <a href="
                 Previous
               </span>
               <div class="md-ellipsis">
-                1. OmeZarr Container
+                1. OME-Zarr Container
               </div>
             </div>
           </a>
