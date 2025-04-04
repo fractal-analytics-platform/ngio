@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from ngio import create_empty_plate, open_ome_zarr_plate
+from ngio import OmeZarrWell, create_empty_plate, open_ome_zarr_plate
 from ngio.utils import NgioValueError
 
 
@@ -76,10 +76,18 @@ def test_derive_plate_from_ome_zarr(cardiomyocyte_tiny_path: Path, tmp_path: Pat
 
 def test_add_well(tmp_path: Path):
     test_plate = create_empty_plate(tmp_path / "test_plate.zarr", name="test_plate")
-    test_plate.add_well(row="B", column="03")
+    well = test_plate.add_well(row="B", column="03")
+    assert isinstance(well, OmeZarrWell)
     assert test_plate.columns == ["03"]
     assert test_plate.rows == ["B"]
     assert test_plate.acquisitions_ids == []
+    assert test_plate.wells_paths() == ["B/03"]
+
+    test_plate.add_column("04")
+    test_plate.add_row("C")
+    assert test_plate.columns == ["03", "04"]
+    assert test_plate.rows == ["B", "C"]
+    # No well added in this step
     assert test_plate.wells_paths() == ["B/03"]
 
 

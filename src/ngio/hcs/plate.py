@@ -425,7 +425,7 @@ class OmeZarrPlate:
         self,
         row: str,
         column: int | str,
-    ) -> "OmeZarrPlate":
+    ) -> OmeZarrWell:
         """Add a well to an ome-zarr plate."""
         _ = self._add_image(
             row=row,
@@ -435,6 +435,26 @@ class OmeZarrPlate:
             acquisition_name=None,
             atomic=False,
         )
+        return self.get_well(row=row, column=column)
+
+    def add_column(
+        self,
+        column: int | str,
+    ) -> "OmeZarrPlate":
+        """Add a column to an ome-zarr plate."""
+        meta, _ = self.meta.add_column(column)
+        self.meta_handler.write_meta(meta)
+        self.meta_handler._group_handler.clean_cache()
+        return self
+
+    def add_row(
+        self,
+        row: str,
+    ) -> "OmeZarrPlate":
+        """Add a row to an ome-zarr plate."""
+        meta, _ = self.meta.add_row(row)
+        self.meta_handler.write_meta(meta)
+        self.meta_handler._group_handler.clean_cache()
         return self
 
     def add_acquisition(

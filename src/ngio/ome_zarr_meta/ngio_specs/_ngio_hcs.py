@@ -330,6 +330,79 @@ class NgioPlateMeta(HCSAttrs):
             f"Well at row {row} and column {column} not found in the plate."
         )
 
+    def add_row(self, row: str) -> "tuple[NgioPlateMeta, int]":
+        """Add a row to the plate.
+
+        Args:
+            row (str): The row to add.
+        """
+        relabel_wells = False
+
+        row_names = self.rows
+        row_idx = _find_row_index(row_names, row)
+        if row_idx is not None:
+            # Nothing to do
+            return self, row_idx
+
+        row_names.append(row)
+        row_names.sort()
+        row_idx = row_names.index(row)
+        relabel_wells = True
+
+        rows = [Row(name=row) for row in row_names]
+
+        if relabel_wells:
+            wells = _relabel_wells(self.plate.wells, rows, self.plate.columns)
+        else:
+            wells = self.plate.wells
+
+        new_plate = Plate(
+            rows=rows,
+            columns=self.plate.columns,
+            acquisitions=self.plate.acquisitions,
+            wells=wells,
+            field_count=self.plate.field_count,
+            version=self.plate.version,
+        )
+        return NgioPlateMeta(plate=new_plate), row_idx
+
+    def add_column(self, column: str | int) -> "tuple[NgioPlateMeta, int]":
+        """Add a column to the plate.
+
+        Args:
+            column (str | int): The column to add.
+        """
+        relabel_wells = False
+
+        columns_names = self.columns
+        column_idx = _find_column_index(columns_names, column)
+        if column_idx is not None:
+            # Nothing to do
+            return self, column_idx
+
+        columns_names.append(_stringify_column(column))
+        # sort as numbers
+        columns_names.sort(key=lambda x: int(x))
+        column_idx = columns_names.index(_stringify_column(column))
+        relabel_wells = True
+
+        columns = [Column(name=column) for column in columns_names]
+
+        if relabel_wells:
+            wells = _relabel_wells(self.plate.wells, self.plate.rows, columns)
+        else:
+            wells = self.plate.wells
+
+        new_plate = Plate(
+            rows=self.plate.rows,
+            columns=columns,
+            acquisitions=self.plate.acquisitions,
+            wells=wells,
+            field_count=self.plate.field_count,
+            version=self.plate.version,
+        )
+        return NgioPlateMeta(plate=new_plate), column_idx
+
     def add_well(
         self,
         row: str,
@@ -341,33 +414,10 @@ class NgioPlateMeta(HCSAttrs):
             row (str): The row of the well.
             column (str | int): The column of the well.
         """
-        relabel_wells = False
+        plate, row_idx = self.add_row(row=row)
+        plate, column_idx = plate.add_column(column=column)
 
-        row_names = self.rows
-        row_idx = _find_row_index(row_names, row)
-        if row_idx is None:
-            row_names.append(row)
-            row_names.sort()
-            row_idx = row_names.index(row)
-            relabel_wells = True
-
-        rows = [Row(name=row) for row in row_names]
-
-        columns_names = self.columns
-        column_idx = _find_column_index(columns_names, column)
-        if column_idx is None:
-            columns_names.append(_stringify_column(column))
-            # sort as numbers
-            columns_names.sort(key=lambda x: int(x))
-            column_idx = columns_names.index(_stringify_column(column))
-            relabel_wells = True
-
-        columns = [Column(name=column) for column in columns_names]
-
-        wells = self.plate.wells
-        if relabel_wells:
-            wells = _relabel_wells(wells, rows, columns)
-
+        wells = plate.plate.wells
         for well_obj in wells:
             if well_obj.rowIndex == row_idx and well_obj.columnIndex == column_idx:
                 break
@@ -381,12 +431,12 @@ class NgioPlateMeta(HCSAttrs):
             )
 
         new_plate = Plate(
-            rows=rows,
-            columns=columns,
-            acquisitions=self.plate.acquisitions,
+            rows=plate.plate.rows,
+            columns=plate.plate.columns,
+            acquisitions=plate.plate.acquisitions,
             wells=wells,
-            field_count=self.plate.field_count,
-            version=self.plate.version,
+            field_count=plate.plate.field_count,
+            version=plate.plate.version,
         )
         return NgioPlateMeta(plate=new_plate)
 
@@ -411,14 +461,12 @@ class NgioPlateMeta(HCSAttrs):
             if acquisition_obj.id == acquisition_id:
                 # If the acquisition already exists
                 # Nothing to do
-                break
-        else:
-            # Only if the break was not hit
-            acquisitions.append(
-                Acquisition(
-                    id=acquisition_id, name=acquisition_name, **acquisition_kwargs
-                )
-            )
+                # Maybe we should update the acquisition name and kwargs
+                return self
+
+        acquisitions.append(
+            Acquisition(id=acquisition_id, name=acquisition_name, **acquisition_kwargs)
+        )
 
         new_plate = Plate(
             rows=self.plate.rows,
@@ -469,7 +517,7 @@ class NgioPlateMeta(HCSAttrs):
         self,
         name: str | None = None,
         version: NgffVersion | None = None,
-        keep_acquisitions: bool = True,
+        keep_acquisitions: bool = False,
     ) -> "NgioPlateMeta":
         """Derive the plate metadata.
 
