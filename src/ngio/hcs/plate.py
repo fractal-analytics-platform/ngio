@@ -12,11 +12,7 @@ from ngio.ome_zarr_meta import (
     get_well_meta_handler,
     path_in_well_validation,
 )
-from ngio.utils import (
-    AccessModeLiteral,
-    StoreOrGroup,
-    ZarrGroupHandler,
-)
+from ngio.utils import AccessModeLiteral, StoreOrGroup, ZarrGroupHandler
 
 
 # Mock lock class that does nothing
@@ -44,6 +40,10 @@ class OmeZarrWell:
         self._group_handler = group_handler
         self._meta_handler = find_well_meta_handler(group_handler)
 
+    def __repr__(self) -> str:
+        """Return a string representation of the well."""
+        return f"Well(#images: {len(self.paths())})"
+
     @property
     def meta_handler(self):
         """Return the metadata handler."""
@@ -53,6 +53,11 @@ class OmeZarrWell:
     def meta(self):
         """Return the metadata."""
         return self._meta_handler.meta
+
+    @property
+    def acquisitions_ids(self) -> list[int]:
+        """Return the acquisitions ids in the well."""
+        return self.meta.acquisitions_ids
 
     def paths(self, acquisition: int | None = None) -> list[str]:
         """Return the images paths in the well.
@@ -64,6 +69,66 @@ class OmeZarrWell:
             acquisition (int | None): The acquisition id to filter the images.
         """
         return self.meta.paths(acquisition)
+
+    def _add_image(
+        self,
+        image_path: str,
+        acquisition_id: int | None = None,
+        strict: bool = True,
+        atomic: bool = False,
+    ) -> StoreOrGroup:
+        """Add an image to an ome-zarr well."""
+        image_path = path_in_well_validation(path=image_path)
+
+        if atomic:
+            well_lock = self._group_handler.lock
+        else:
+            well_lock = MockLock()
+
+        with well_lock:
+            meta = self.meta.add_image(
+                path=image_path, acquisition=acquisition_id, strict=strict
+            )
+            self.meta_handler.write_meta(meta)
+            self.meta_handler._group_handler.clean_cache()
+
+        return self._group_handler.get_group(image_path, create_mode=True)
+
+    def atomic_add_image(
+        self,
+        image_path: str,
+        acquisition_id: int | None = None,
+        strict: bool = True,
+    ) -> StoreOrGroup:
+        """Parallel safe version of add_image."""
+        return self._add_image(
+            image_path=image_path,
+            acquisition_id=acquisition_id,
+            atomic=True,
+            strict=strict,
+        )
+
+    def add_image(
+        self,
+        image_path: str,
+        acquisition_id: int | None = None,
+        strict: bool = True,
+    ) -> StoreOrGroup:
+        """Add an image to an ome-zarr well.
+
+        Args:
+            image_path (str): The path of the image.
+            acquisition_id (int | None): The acquisition id to filter the images.
+            strict (bool): Whether to check if the acquisition id is already exists
+                in the well. Defaults to True. If False this might lead to
+                acquision in a well that does not exist at the plate level.
+        """
+        return self._add_image(
+            image_path=image_path,
+            acquisition_id=acquisition_id,
+            atomic=False,
+            strict=strict,
+        )
 
 
 class OmeZarrPlate:
@@ -240,13 +305,14 @@ class OmeZarrPlate:
         self,
         row: str,
         column: int | str,
-        image_path: str,
+        image_path: str | None = None,
         acquisition_id: int | None = None,
         acquisition_name: str | None = None,
         atomic: bool = False,
-    ) -> StoreOrGroup:
+    ) -> StoreOrGroup | None:
         """Add an image to an ome-zarr plate."""
-        image_path = path_in_well_validation(path=image_path)
+        if image_path is not None:
+            image_path = path_in_well_validation(path=image_path)
 
         if atomic:
             plate_lock = self._group_handler.lock
@@ -255,7 +321,11 @@ class OmeZarrPlate:
 
         with plate_lock:
             meta = self.meta
-            meta = meta.add_well(row, column, acquisition_id, acquisition_name)
+            meta = meta.add_well(row=row, column=column)
+            if acquisition_id is not None:
+                meta = meta.add_acquisition(
+                    acquisition_id=acquisition_id, acquisition_name=acquisition_name
+                )
             self.meta_handler.write_meta(meta)
             self.meta_handler._group_handler.clean_cache()
 
@@ -282,11 +352,16 @@ class OmeZarrPlate:
 
             group_handler = self._group_handler.derive_handler(well_path)
 
-            well_meta = well_meta.add_image(path=image_path, acquisition=acquisition_id)
+            if image_path is not None:
+                well_meta = well_meta.add_image(
+                    path=image_path, acquisition=acquisition_id, strict=False
+                )
             meta_handler.write_meta(well_meta)
             meta_handler._group_handler.clean_cache()
 
-        return group_handler.get_group(image_path, create_mode=True)
+        if image_path is not None:
+            return group_handler.get_group(image_path, create_mode=True)
+        return None
 
     def atomic_add_image(
         self,
@@ -297,7 +372,12 @@ class OmeZarrPlate:
         acquisition_name: str | None = None,
     ) -> StoreOrGroup:
         """Parallel safe version of add_image."""
-        return self._add_image(
+        if image_path is None:
+            raise ValueError(
+                "Image path cannot be None for atomic add_image. "
+                "If your intent is to add a well, use add_well instead."
+            )
+        group = self._add_image(
             row=row,
             column=column,
             image_path=image_path,
@@ -305,6 +385,12 @@ class OmeZarrPlate:
             acquisition_name=acquisition_name,
             atomic=True,
         )
+        if group is None:
+            raise ValueError(
+                f"Some error occurred while adding image {image_path} "
+                f"to well {row}{column}."
+            )
+        return group
 
     def add_image(
         self,
@@ -315,7 +401,12 @@ class OmeZarrPlate:
         acquisition_name: str | None = None,
     ) -> StoreOrGroup:
         """Add an image to an ome-zarr plate."""
-        return self._add_image(
+        if image_path is None:
+            raise ValueError(
+                "Image path cannot be None for atomic add_image. "
+                "If your intent is to add a well, use add_well instead."
+            )
+        group = self._add_image(
             row=row,
             column=column,
             image_path=image_path,
@@ -323,6 +414,48 @@ class OmeZarrPlate:
             acquisition_name=acquisition_name,
             atomic=False,
         )
+        if group is None:
+            raise ValueError(
+                f"Some error occurred while adding image {image_path} "
+                f"to well {row}{column}."
+            )
+        return group
+
+    def add_well(
+        self,
+        row: str,
+        column: int | str,
+    ) -> "OmeZarrPlate":
+        """Add a well to an ome-zarr plate."""
+        _ = self._add_image(
+            row=row,
+            column=column,
+            image_path=None,
+            acquisition_id=None,
+            acquisition_name=None,
+            atomic=False,
+        )
+        return self
+
+    def add_acquisition(
+        self,
+        acquisition_id: int,
+        acquisition_name: str,
+    ) -> "OmeZarrPlate":
+        """Add an acquisition to an ome-zarr plate.
+
+        Be aware that this is not a parallel safe operation.
+
+        Args:
+            acquisition_id (int): The acquisition id.
+            acquisition_name (str): The acquisition name.
+        """
+        meta = self.meta.add_acquisition(
+            acquisition_id=acquisition_id, acquisition_name=acquisition_name
+        )
+        self.meta_handler.write_meta(meta)
+        self.meta_handler._group_handler.clean_cache()
+        return self
 
     def _remove_well(
         self,
@@ -524,7 +657,6 @@ def derive_ome_zarr_plate(
         overwrite (bool): Whether to overwrite the existing plate.
         parallel_safe (bool): Whether the group handler is parallel safe.
     """
-
     if plate_name is None:
         plate_name = ome_zarr_plate.meta.plate.name
 
@@ -540,6 +672,57 @@ def derive_ome_zarr_plate(
         version=version,
     )
     return open_ome_zarr_plate(
+        store=store,
+        cache=cache,
+        mode="r+",
+        parallel_safe=parallel_safe,
+    )
+
+
+def open_ome_zarr_well(
+    store: StoreOrGroup,
+    cache: bool = False,
+    mode: AccessModeLiteral = "r+",
+    parallel_safe: bool = True,
+) -> OmeZarrWell:
+    """Open an OME-Zarr well.
+
+    Args:
+        store (StoreOrGroup): The Zarr store or group that stores the plate.
+        cache (bool): Whether to use a cache for the zarr group metadata.
+        mode (AccessModeLiteral): The access mode for the image. Defaults to "r+".
+        parallel_safe (bool): Whether the group handler is parallel safe.
+    """
+    group_handler = ZarrGroupHandler(
+        store=store, cache=cache, mode=mode, parallel_safe=parallel_safe
+    )
+    return OmeZarrWell(group_handler)
+
+
+def create_empty_well(
+    store: StoreOrGroup,
+    version: NgffVersion = "0.4",
+    cache: bool = False,
+    overwrite: bool = False,
+    parallel_safe: bool = True,
+) -> OmeZarrWell:
+    """Create an empty OME-Zarr well.
+
+    Args:
+        store (StoreOrGroup): The Zarr store or group that stores the well.
+        version (NgffVersion): The version of the new well.
+        cache (bool): Whether to use a cache for the zarr group metadata.
+        overwrite (bool): Whether to overwrite the existing well.
+        parallel_safe (bool): Whether the group handler is parallel safe.
+    """
+    group_handler = ZarrGroupHandler(
+        store=store, cache=True, mode="w" if overwrite else "w-", parallel_safe=False
+    )
+    meta_handler = get_well_meta_handler(group_handler, version=version)
+    meta = NgioWellMeta.default_init()
+    meta_handler.write_meta(meta)
+
+    return open_ome_zarr_well(
         store=store,
         cache=cache,
         mode="r+",

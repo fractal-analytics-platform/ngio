@@ -83,8 +83,22 @@ class NgioWellMeta(CustomWellAttrs):
             return well
 
         for image in images:
-            well = well.add_image(path=image.path, acquisition=image.acquisition_id)
+            well = well.add_image(
+                path=image.path, acquisition=image.acquisition_id, strict=False
+            )
         return well
+
+    @property
+    def acquisitions_ids(self) -> list[int]:
+        """Return the acquisition ids in the well."""
+        acquisitions = []
+        for images in self.well.images:
+            if (
+                images.acquisition is not None
+                and images.acquisition not in acquisitions
+            ):
+                acquisitions.append(images.acquisition)
+        return acquisitions
 
     def paths(self, acquisition: int | None = None) -> list[str]:
         """Return the images paths in the well.
@@ -103,12 +117,16 @@ class NgioWellMeta(CustomWellAttrs):
             if images.acquisition == acquisition
         ]
 
-    def add_image(self, path: str, acquisition: int | None = None) -> "NgioWellMeta":
+    def add_image(
+        self, path: str, acquisition: int | None = None, strict: bool = True
+    ) -> "NgioWellMeta":
         """Add an image to the well.
 
         Args:
             path (str): The path of the image.
             acquisition (int | None): The acquisition id of the image.
+            strict (bool): If True, check if the image already exists in the well.
+                If False, do not check if the image already exists in the well.
         """
         list_of_images = self.well.images
         for image in list_of_images:
@@ -116,6 +134,16 @@ class NgioWellMeta(CustomWellAttrs):
                 raise NgioValueError(
                     f"Image at path {path} already exists in the well."
                 )
+
+        if (
+            strict
+            and (acquisition is not None)
+            and (acquisition not in self.acquisitions_ids)
+        ):
+            raise NgioValueError(
+                f"Acquisition ID {acquisition} not found in well. "
+                "Please add it to the plate metadata first."
+            )
 
         new_image = CustomWellImage(path=path, acquisition=acquisition)
         list_of_images.append(new_image)
@@ -229,9 +257,12 @@ class NgioPlateMeta(HCSAttrs):
             plate = plate.add_well(
                 row=image.row,
                 column=image.column,
-                acquisition_id=image.acquisition_id,
-                acquisition_name=image.acquisition_name,
             )
+            if image.acquisition_id is not None:
+                plate = plate.add_acquisition(
+                    acquisition_id=image.acquisition_id,
+                    acquisition_name=image.acquisition_name,
+                )
         return plate
 
     @property
@@ -303,18 +334,12 @@ class NgioPlateMeta(HCSAttrs):
         self,
         row: str,
         column: str | int,
-        acquisition_id: int | None = None,
-        acquisition_name: str | None = None,
-        **acquisition_kwargs,
     ) -> "NgioPlateMeta":
         """Add an image to the well.
 
         Args:
             row (str): The row of the well.
             column (str | int): The column of the well.
-            acquisition_id (int | None): The acquisition id of the well.
-            acquisition_name (str | None): The acquisition name of the well.
-            **acquisition_kwargs: Additional acquisition metadata.
         """
         relabel_wells = False
 
@@ -355,28 +380,51 @@ class NgioPlateMeta(HCSAttrs):
                 )
             )
 
-        acquisitions = self.plate.acquisitions
-        if acquisition_id is not None:
-            if acquisitions is None and len(wells) > 0:
-                acquisitions = [Acquisition(id=0, name=acquisition_name)]
-            elif acquisitions is None:
-                acquisitions = []
-
-            for acquisition_obj in acquisitions:
-                if acquisition_obj.id == acquisition_id:
-                    break
-            else:
-                acquisitions.append(
-                    Acquisition(
-                        id=acquisition_id, name=acquisition_name, **acquisition_kwargs
-                    )
-                )
-
         new_plate = Plate(
             rows=rows,
             columns=columns,
-            acquisitions=acquisitions,
+            acquisitions=self.plate.acquisitions,
             wells=wells,
+            field_count=self.plate.field_count,
+            version=self.plate.version,
+        )
+        return NgioPlateMeta(plate=new_plate)
+
+    def add_acquisition(
+        self,
+        acquisition_id: int,
+        acquisition_name: str | None = None,
+        **acquisition_kwargs,
+    ) -> "NgioPlateMeta":
+        """Add an acquisition to the plate.
+
+        Args:
+            acquisition_id (int): The acquisition id of the well.
+            acquisition_name (str | None): The acquisition name of the well.
+            **acquisition_kwargs: Additional acquisition metadata.
+        """
+        acquisitions = self.plate.acquisitions
+        if acquisitions is None:
+            acquisitions = []
+
+        for acquisition_obj in acquisitions:
+            if acquisition_obj.id == acquisition_id:
+                # If the acquisition already exists
+                # Nothing to do
+                break
+        else:
+            # Only if the break was not hit
+            acquisitions.append(
+                Acquisition(
+                    id=acquisition_id, name=acquisition_name, **acquisition_kwargs
+                )
+            )
+
+        new_plate = Plate(
+            rows=self.plate.rows,
+            columns=self.plate.columns,
+            acquisitions=acquisitions,
+            wells=self.plate.wells,
             field_count=self.plate.field_count,
             version=self.plate.version,
         )

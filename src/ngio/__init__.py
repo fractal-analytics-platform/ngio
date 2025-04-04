@@ -10,7 +10,14 @@ __author__ = "Lorenzo Cerrone"
 __email__ = "lorenzo.cerrone@uzh.ch"
 
 from ngio.common import ArrayLike, Dimensions, Roi, RoiPixels
-from ngio.hcs import OmeZarrPlate, create_empty_plate, open_ome_zarr_plate
+from ngio.hcs import (
+    OmeZarrPlate,
+    OmeZarrWell,
+    create_empty_plate,
+    create_empty_well,
+    open_ome_zarr_plate,
+    open_ome_zarr_well,
+)
 from ngio.images import (
     Image,
     Label,
@@ -31,13 +38,16 @@ __all__ = [
     "Label",
     "OmeZarrContainer",
     "OmeZarrPlate",
+    "OmeZarrWell",
     "PixelSize",
     "Roi",
     "RoiPixels",
     "create_empty_ome_zarr",
     "create_empty_plate",
+    "create_empty_well",
     "create_ome_zarr_from_array",
     "open_image",
     "open_ome_zarr_container",
     "open_ome_zarr_plate",
+    "open_ome_zarr_well",
 ]

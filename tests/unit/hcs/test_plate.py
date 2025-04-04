@@ -72,3 +72,20 @@ def test_derive_plate_from_ome_zarr(cardiomyocyte_tiny_path: Path, tmp_path: Pat
     assert test_plate.columns == ["03"]
     assert test_plate.rows == ["B"]
     assert test_plate.acquisitions_ids == [0]
+
+
+def test_add_well(tmp_path: Path):
+    test_plate = create_empty_plate(tmp_path / "test_plate.zarr", name="test_plate")
+    test_plate.add_well(row="B", column="03")
+    assert test_plate.columns == ["03"]
+    assert test_plate.rows == ["B"]
+    assert test_plate.acquisitions_ids == []
+    assert test_plate.wells_paths() == ["B/03"]
+
+
+def test_add_well_with_acquisition(tmp_path: Path):
+    test_plate = create_empty_plate(tmp_path / "test_plate.zarr", name="test_plate")
+    test_plate.add_acquisition(acquisition_id=0, acquisition_name="test_acquisition")
+    test_plate.add_acquisition(acquisition_id=1, acquisition_name="test_acquisition1")
+    assert test_plate.acquisitions_ids == [0, 1]
+    assert test_plate.acquisitions_names == ["test_acquisition", "test_acquisition1"]
