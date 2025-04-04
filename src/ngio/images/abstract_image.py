@@ -136,6 +136,16 @@ class AbstractImage(Generic[_image_handler]):
         return self.dimensions.is_multi_channels
 
     @property
+    def space_unit(self) -> str | None:
+        """Return the space unit of the image."""
+        return self.meta_handler.meta.space_unit
+
+    @property
+    def time_unit(self) -> str | None:
+        """Return the time unit of the image."""
+        return self.meta_handler.meta.time_unit
+
+    @property
     def pixel_size(self) -> PixelSize:
         """Return the pixel size of the image."""
         return self._pixel_size

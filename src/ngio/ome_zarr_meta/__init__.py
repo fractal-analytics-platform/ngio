@@ -16,12 +16,13 @@ from ngio.ome_zarr_meta.ngio_specs import (
     AxesMapper,
     Dataset,
     ImageInWellPath,
-    NgffVersion,
+    NgffVersions,
     NgioImageMeta,
     NgioLabelMeta,
     NgioPlateMeta,
     NgioWellMeta,
     PixelSize,
+    path_in_well_validation,
 )
 
 __all__ = [
@@ -32,8 +33,8 @@ __all__ = [
     "ImageMetaHandler",
     "LabelMetaHandler",
     "LabelMetaHandler",
-    "NgffVersion",
-    "NgffVersion",
+    "NgffVersions",
+    "NgffVersions",
     "NgioImageMeta",
     "NgioLabelMeta",
     "NgioPlateMeta",
@@ -47,4 +48,5 @@ __all__ = [
     "get_label_meta_handler",
     "get_plate_meta_handler",
     "get_well_meta_handler",
+    "path_in_well_validation",
 ]

@@ -3,7 +3,7 @@
 from collections.abc import Collection
 from enum import Enum
 from logging import Logger
-from typing import TypeVar
+from typing import Literal, TypeVar
 
 import numpy as np
 from pydantic import BaseModel, ConfigDict, Field
@@ -32,98 +32,108 @@ class AxisType(str, Enum):
     space = "space"
 
 
-class SpaceUnits(str, Enum):
-    """Allowed space units."""
+SpaceUnits = Literal[
+    "micrometer",
+    "nanometer",
+    "angstrom",
+    "picometer",
+    "millimeter",
+    "centimeter",
+    "decimeter",
+    "meter",
+    "inch",
+    "foot",
+    "yard",
+    "mile",
+    "kilometer",
+    "hectometer",
+    "megameter",
+    "gigameter",
+    "terameter",
+    "petameter",
+    "exameter",
+    "parsec",
+    "femtometer",
+    "attometer",
+    "zeptometer",
+    "yoctometer",
+    "zettameter",
+    "yottameter",
+]
+DefaultSpaceUnit = "micrometer"
 
-    nanometer = "nanometer"
-    nm = "nm"
-    micrometer = "micrometer"
-    um = "um"
-    millimeter = "millimeter"
-    mm = "mm"
-    centimeter = "centimeter"
-    cm = "cm"
-
-    @classmethod
-    def default(cls) -> "SpaceUnits":
-        return SpaceUnits.um
-
-
-class TimeUnits(str, Enum):
-    """Allowed time units."""
-
-    seconds = "seconds"
-    s = "s"
-
-    @classmethod
-    def default(cls) -> "TimeUnits":
-        return TimeUnits.s
+TimeUnits = Literal[
+    "attosecond",
+    "centisecond",
+    "day",
+    "decisecond",
+    "exasecond",
+    "femtosecond",
+    "gigasecond",
+    "hectosecond",
+    "hour",
+    "kilosecond",
+    "megasecond",
+    "microsecond",
+    "millisecond",
+    "minute",
+    "nanosecond",
+    "petasecond",
+    "picosecond",
+    "second",
+    "terasecond",
+    "yoctosecond",
+    "yottasecond",
+    "zeptosecond",
+    "zettasecond",
+]
+DefaultTimeUnit = "second"
 
 
 class Axis(BaseModel):
     """Axis infos model."""
 
     on_disk_name: str
-    unit: SpaceUnits | TimeUnits | None = None
+    unit: str | None = None
     axis_type: AxisType | None = None
 
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     def implicit_type_cast(self, cast_type: AxisType) -> "Axis":
+        unit = self.unit
         if self.axis_type != cast_type:
             logger.warning(
                 f"Axis {self.on_disk_name} has type {self.axis_type}. "
                 f"Casting to {cast_type}."
             )
-        new_axis = Axis(
-            on_disk_name=self.on_disk_name, axis_type=cast_type, unit=self.unit
-        )
-        if cast_type == AxisType.time and not isinstance(self.unit, TimeUnits):
+
+        if cast_type == AxisType.time and unit is None:
             logger.warning(
                 f"Time axis {self.on_disk_name} has unit {self.unit}. "
-                f"Casting to {TimeUnits.default()}."
+                f"Casting to {DefaultSpaceUnit}."
             )
-            new_axis = Axis(
-                on_disk_name=self.on_disk_name,
-                axis_type=AxisType.time,
-                unit=TimeUnits.default(),
-            )
-        elif cast_type == AxisType.space and not isinstance(self.unit, SpaceUnits):
+            unit = DefaultTimeUnit
+
+        if cast_type == AxisType.space and unit is None:
             logger.warning(
-                f"Space axis {self.on_disk_name} has unit {self.unit}. "
-                f"Casting to {SpaceUnits.default()}."
+                f"Space axis {self.on_disk_name} has unit {unit}. "
+                f"Casting to {DefaultSpaceUnit}."
             )
-            new_axis = Axis(
-                on_disk_name=self.on_disk_name,
-                axis_type=AxisType.space,
-                unit=SpaceUnits.default(),
-            )
-        elif cast_type == AxisType.channel and self.unit is not None:
-            logger.warning(
-                f"Channel axis {self.on_disk_name} has unit {self.unit}. Removing unit."
-            )
-            new_axis = Axis(
-                on_disk_name=self.on_disk_name,
-                axis_type=AxisType.channel,
-                unit=None,
-            )
-        return new_axis
+            unit = DefaultSpaceUnit
+
+        return Axis(on_disk_name=self.on_disk_name, axis_type=cast_type, unit=unit)
 
     def canonical_axis_cast(self, canonical_name: str) -> "Axis":
         """Cast the implicit axis to the correct type."""
         match canonical_name:
             case "t":
-                if self.axis_type != AxisType.time or not isinstance(
-                    self.unit, TimeUnits
-                ):
+                if self.axis_type != AxisType.time or self.unit is None:
                     return self.implicit_type_cast(AxisType.time)
             case "c":
-                if self.axis_type != AxisType.channel or self.unit is not None:
+                if self.axis_type != AxisType.channel:
                     return self.implicit_type_cast(AxisType.channel)
             case "z" | "y" | "x":
-                if self.axis_type != AxisType.space or not isinstance(
-                    self.unit, SpaceUnits
-                ):
+                if self.axis_type != AxisType.space or self.unit is None:
                     return self.implicit_type_cast(AxisType.space)
         return self
 
@@ -346,12 +356,27 @@ class AxesMapper:
         return _index_mapping
 
     @property
+    def axes_setup(self) -> AxesSetup:
+        """Return the axes setup."""
+        return self._axes_setup
+
+    @property
     def on_disk_axes(self) -> list[Axis]:
         return list(self._on_disk_axes)
 
     @property
     def on_disk_axes_names(self) -> list[str]:
         return [ax.on_disk_name for ax in self._on_disk_axes]
+
+    @property
+    def allow_non_canonical_axes(self) -> bool:
+        """Return if non canonical axes are allowed."""
+        return self._allow_non_canonical_axes
+
+    @property
+    def strict_canonical_order(self) -> bool:
+        """Return if strict canonical order is enforced."""
+        return self._strict_canonical_order
 
     def get_index(self, name: str) -> int | None:
         """Get the index of the axis by name."""
@@ -443,8 +468,8 @@ class AxesMapper:
 
 def canonical_axes(
     axes_names: Collection[str],
-    space_units: SpaceUnits | None = None,
-    time_units: TimeUnits | None = None,
+    space_units: SpaceUnits | None = DefaultSpaceUnit,
+    time_units: TimeUnits | None = DefaultTimeUnit,
 ) -> list[Axis]:
     """Create a new canonical axes mapper.
 

@@ -11,12 +11,12 @@ from ngio.ome_zarr_meta.ngio_specs import (
     ChannelsMeta,
     ChannelVisualisation,
     Dataset,
+    DefaultSpaceUnit,
+    DefaultTimeUnit,
     NgioColors,
     NgioImageMeta,
     NgioLabelMeta,
     PixelSize,
-    SpaceUnits,
-    TimeUnits,
 )
 from ngio.ome_zarr_meta.ngio_specs._channels import valid_hex_color
 
@@ -107,11 +107,10 @@ def test_axes_base(
 @pytest.mark.parametrize(
     "canonical_name, axis_type, unit, expected_type, expected_unit",
     [
-        ("x", AxisType.space, SpaceUnits.cm, AxisType.space, SpaceUnits.cm),
-        ("x", AxisType.time, SpaceUnits.cm, AxisType.space, SpaceUnits.cm),
+        ("x", AxisType.space, None, AxisType.space, "micrometer"),
+        ("x", AxisType.time, "second", AxisType.space, "second"),
+        ("t", AxisType.time, None, AxisType.time, "second"),
         ("c", AxisType.channel, None, AxisType.channel, None),
-        ("c", AxisType.channel, SpaceUnits.cm, AxisType.channel, None),
-        ("t", AxisType.time, TimeUnits.s, AxisType.time, TimeUnits.s),
     ],
 )
 def test_axis_cast(canonical_name, axis_type, unit, expected_type, expected_unit):
@@ -198,7 +197,7 @@ def test_axes_fail():
 
 def test_pixel_size():
     ps_dict = {"x": 0.5, "y": 0.5, "z": 1.0, "t": 1.0}
-    ps_1 = PixelSize(**ps_dict, space_unit=SpaceUnits.um, time_unit=TimeUnits.s)
+    ps_1 = PixelSize(**ps_dict, space_unit=DefaultSpaceUnit, time_unit=DefaultTimeUnit)
     assert ps_1.as_dict() == ps_dict
     assert ps_1.zyx == (1.0, 0.5, 0.5)
     assert ps_1.yx == (0.5, 0.5)
@@ -223,7 +222,7 @@ def test_pixel_size():
 
 def test_dataset():
     on_disk_axes = [
-        Axis(on_disk_name="t", axis_type=AxisType.time, unit=TimeUnits.s),
+        Axis(on_disk_name="t", axis_type=AxisType.time, unit=DefaultTimeUnit),
         Axis(on_disk_name="c", axis_type=AxisType.channel),
         Axis(on_disk_name="z"),
         Axis(on_disk_name="y"),
@@ -246,8 +245,8 @@ def test_dataset():
     assert ds.get_scale("x") == 0.5
     assert ds.axes_mapper.get_index("x") == 4
     assert ds.get_translation("x") == 0.0
-    assert ds.space_unit == SpaceUnits.um
-    assert ds.time_unit == TimeUnits.s
+    assert ds.space_unit == DefaultSpaceUnit
+    assert ds.time_unit == DefaultTimeUnit, ds.time_unit
 
     ps = ds.pixel_size
     assert ps.x == 0.5
@@ -258,8 +257,8 @@ def test_dataset():
 
 def test_dataset_fail():
     on_disk_axes = [
-        Axis(on_disk_name="y", unit=SpaceUnits.cm),
-        Axis(on_disk_name="x", unit=SpaceUnits.um),
+        Axis(on_disk_name="y", unit="centimeter"),
+        Axis(on_disk_name="x", unit="micrometer"),
     ]
     ds = Dataset(
         path="0",
@@ -273,7 +272,7 @@ def test_dataset_fail():
     assert ds.time_unit is None
 
     with pytest.raises(ValueError):
-        assert ds.space_unit == SpaceUnits.um
+        assert ds.space_unit == "micrometer"
 
 
 def test_channels():
@@ -353,7 +352,7 @@ def test_ngio_colors():
 
 def test_image_meta():
     on_disk_axes = [
-        Axis(on_disk_name="t", axis_type=AxisType.time, unit=TimeUnits.s),
+        Axis(on_disk_name="t", axis_type=AxisType.time, unit=DefaultSpaceUnit),
         Axis(on_disk_name="c", axis_type=AxisType.channel),
         Axis(on_disk_name="z"),
         Axis(on_disk_name="y"),
@@ -398,7 +397,7 @@ def test_image_meta():
 
 def test_label_meta():
     on_disk_axes = [
-        Axis(on_disk_name="t", axis_type=AxisType.time, unit=TimeUnits.s),
+        Axis(on_disk_name="t", axis_type=AxisType.time, unit=DefaultSpaceUnit),
         Axis(on_disk_name="z"),
         Axis(on_disk_name="y"),
         Axis(on_disk_name="x"),
@@ -440,7 +439,7 @@ def test_label_meta():
 
 def test_channels_label_meta():
     on_disk_axes = [
-        Axis(on_disk_name="t", axis_type=AxisType.time, unit=TimeUnits.s),
+        Axis(on_disk_name="t", axis_type=AxisType.time, unit=DefaultSpaceUnit),
         Axis(on_disk_name="c"),
         Axis(on_disk_name="z"),
         Axis(on_disk_name="y"),

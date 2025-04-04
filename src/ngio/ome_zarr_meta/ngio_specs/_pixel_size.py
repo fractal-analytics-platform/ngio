@@ -5,7 +5,12 @@ from functools import total_ordering
 
 import numpy as np
 
-from ngio.ome_zarr_meta.ngio_specs import SpaceUnits, TimeUnits
+from ngio.ome_zarr_meta.ngio_specs import (
+    DefaultSpaceUnit,
+    DefaultTimeUnit,
+    SpaceUnits,
+    TimeUnits,
+)
 
 ################################################################################################
 #
@@ -33,8 +38,8 @@ class PixelSize:
         y: float,
         z: float,
         t: float = 1,
-        space_unit: SpaceUnits = SpaceUnits.micrometer,
-        time_unit: TimeUnits | None = TimeUnits.s,
+        space_unit: SpaceUnits | str | None = DefaultSpaceUnit,
+        time_unit: TimeUnits | str | None = DefaultTimeUnit,
     ):
         """Initialize the pixel size."""
         self.x = _validate_type(x, "x")
@@ -42,13 +47,8 @@ class PixelSize:
         self.z = _validate_type(z, "z")
         self.t = _validate_type(t, "t")
 
-        if not isinstance(space_unit, SpaceUnits):
-            raise TypeError("space_unit must be of type SpaceUnits.")
-        self.space_unit = space_unit
-
-        if time_unit is not None and not isinstance(time_unit, TimeUnits):
-            raise TypeError("time_unit must be of type TimeUnits.")
-        self.time_unit = time_unit
+        self._space_unit = space_unit
+        self._time_unit = time_unit
 
     def __repr__(self) -> str:
         """Return a string representation of the pixel size."""
@@ -74,12 +74,29 @@ class PixelSize:
         """Check if one pixel size is less than the other."""
         if not isinstance(other, PixelSize):
             raise TypeError("Can only compare PixelSize with PixelSize.")
-        ref = PixelSize(0, 0, 0, 0, self.space_unit, self.time_unit)
+        ref = PixelSize(
+            0,
+            0,
+            0,
+            0,
+            space_unit=self.space_unit,
+            time_unit=self.time_unit,  # type: ignore
+        )
         return self.distance(ref) < other.distance(ref)
 
     def as_dict(self) -> dict:
         """Return the pixel size as a dictionary."""
         return {"t": self.t, "z": self.z, "y": self.y, "x": self.x}
+
+    @property
+    def space_unit(self) -> SpaceUnits | str | None:
+        """Return the space unit."""
+        return self._space_unit
+
+    @property
+    def time_unit(self) -> TimeUnits | str | None:
+        """Return the time unit."""
+        return self._time_unit
 
     @property
     def tzyx(self) -> tuple[float, float, float, float]:

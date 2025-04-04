@@ -13,6 +13,10 @@ import numpy as np
 from pydantic import BaseModel
 
 from ngio.ome_zarr_meta.ngio_specs._axes import (
+    DefaultSpaceUnit,
+    DefaultTimeUnit,
+    SpaceUnits,
+    TimeUnits,
     canonical_axes,
 )
 from ngio.ome_zarr_meta.ngio_specs._channels import Channel, ChannelsMeta
@@ -21,17 +25,18 @@ from ngio.ome_zarr_meta.ngio_specs._pixel_size import PixelSize
 from ngio.utils import NgioValidationError, NgioValueError
 
 T = TypeVar("T")
-NgffVersion = Literal["0.4"]
+NgffVersions = Literal["0.4"]
+DefaultNgffVersion: Literal["0.4"] = "0.4"
 
 
 class ImageLabelSource(BaseModel):
     """Image label source model."""
 
-    version: NgffVersion
+    version: NgffVersions
     source: dict[str, str | None]
 
     @classmethod
-    def default_init(cls, version: NgffVersion) -> "ImageLabelSource":
+    def default_init(cls, version: NgffVersions) -> "ImageLabelSource":
         """Initialize the ImageLabelSource object."""
         return cls(version=version, source={"image": "../../"})
 
@@ -40,7 +45,7 @@ class AbstractNgioImageMeta:
     """Base class for ImageMeta and LabelMeta."""
 
     def __init__(
-        self, version: NgffVersion, name: str | None, datasets: list[Dataset]
+        self, version: NgffVersions, name: str | None, datasets: list[Dataset]
     ) -> None:
         """Initialize the ImageMeta object."""
         self._version = version
@@ -66,13 +71,13 @@ class AbstractNgioImageMeta:
         pixel_size: PixelSize,
         scaling_factors: Collection[float] | None = None,
         name: str | None = None,
-        version: NgffVersion = "0.4",
+        version: NgffVersions = DefaultNgffVersion,
     ):
         """Initialize the ImageMeta object."""
         axes = canonical_axes(
             axes_names,
-            space_units=pixel_size.space_unit,
-            time_units=pixel_size.time_unit,
+            space_units=pixel_size.space_unit,  # type: ignore[arg-type]
+            time_units=pixel_size.time_unit,  # type: ignore[arg-type]
         )
 
         px_size_dict = pixel_size.as_dict()
@@ -105,10 +110,33 @@ class AbstractNgioImageMeta:
             datasets=datasets,
         )
 
+    def to_units(
+        self,
+        *,
+        space_unit: SpaceUnits = DefaultSpaceUnit,
+        time_unit: TimeUnits = DefaultTimeUnit,
+    ):
+        """Convert the pixel size to the given units.
+
+        Args:
+            space_unit(str): The space unit to convert to.
+            time_unit(str): The time unit to convert to.
+        """
+        new_datasets = []
+        for dataset in self.datasets:
+            new_dataset = dataset.to_units(space_unit=space_unit, time_unit=time_unit)
+            new_datasets.append(new_dataset)
+
+        return type(self)(
+            version=self.version,
+            name=self.name,
+            datasets=new_datasets,
+        )
+
     @property
-    def version(self) -> NgffVersion:
+    def version(self) -> NgffVersions:
         """Version of the OME-NFF metadata used to build the object."""
-        return self._version
+        return self._version  # type: ignore[return-value]
 
     @property
     def name(self) -> str | None:
@@ -134,6 +162,16 @@ class AbstractNgioImageMeta:
     def paths(self) -> list[str]:
         """List of paths of the datasets."""
         return [dataset.path for dataset in self.datasets]
+
+    @property
+    def space_unit(self) -> str | None:
+        """Get the space unit of the pixel size."""
+        return self.datasets[0].pixel_size.space_unit
+
+    @property
+    def time_unit(self) -> str | None:
+        """Get the time unit of the pixel size."""
+        return self.datasets[0].pixel_size.time_unit
 
     def _get_dataset_by_path(self, path: str) -> Dataset:
         """Get a dataset by its path."""
@@ -331,7 +369,7 @@ class NgioLabelMeta(AbstractNgioImageMeta):
 
     def __init__(
         self,
-        version: NgffVersion,
+        version: NgffVersions,
         name: str | None,
         datasets: list[Dataset],
         image_label: ImageLabelSource | None = None,
@@ -370,7 +408,7 @@ class NgioImageMeta(AbstractNgioImageMeta):
 
     def __init__(
         self,
-        version: NgffVersion,
+        version: NgffVersions,
         name: str | None,
         datasets: list[Dataset],
         channels: ChannelsMeta | None = None,

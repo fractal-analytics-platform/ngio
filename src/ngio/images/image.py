@@ -7,14 +7,22 @@ from dask import array as da
 
 from ngio.common import Dimensions
 from ngio.images.abstract_image import AbstractImage, consolidate_image
-from ngio.images.create import _create_empty_image
+from ngio.images.create import create_empty_image_container
 from ngio.ome_zarr_meta import (
     ImageMetaHandler,
     NgioImageMeta,
     PixelSize,
     find_image_meta_handler,
 )
-from ngio.ome_zarr_meta.ngio_specs import Channel, ChannelsMeta, ChannelVisualisation
+from ngio.ome_zarr_meta.ngio_specs import (
+    Channel,
+    ChannelsMeta,
+    ChannelVisualisation,
+    DefaultSpaceUnit,
+    DefaultTimeUnit,
+    SpaceUnits,
+    TimeUnits,
+)
 from ngio.utils import (
     NgioValidationError,
     StoreOrGroup,
@@ -142,7 +150,7 @@ class ImagesContainer:
         image = self.get()
         return image.wavelength_ids
 
-    def initialize_channel_meta(
+    def set_channel_meta(
         self,
         labels: Collection[str] | int | None = None,
         wavelength_id: Collection[str] | None = None,
@@ -196,7 +204,7 @@ class ImagesContainer:
         meta.set_channels_meta(channel_meta)
         self._meta_handler.write_meta(meta)
 
-    def update_percentiles(
+    def set_channel_percentiles(
         self,
         start_percentile: float = 0.1,
         end_percentile: float = 99.9,
@@ -230,6 +238,21 @@ class ImagesContainer:
         meta.set_channels_meta(new_meta)
         self._meta_handler.write_meta(meta)
 
+    def set_axes_unit(
+        self,
+        space_unit: SpaceUnits = DefaultSpaceUnit,
+        time_unit: TimeUnits = DefaultTimeUnit,
+    ) -> None:
+        """Set the axes unit of the image.
+
+        Args:
+            space_unit (SpaceUnits): The space unit of the image.
+            time_unit (TimeUnits): The time unit of the image.
+        """
+        meta = self.meta
+        meta = meta.to_units(space_unit=space_unit, time_unit=time_unit)
+        self._meta_handler.write_meta(meta)
+
     def derive(
         self,
         store: StoreOrGroup,
@@ -238,6 +261,7 @@ class ImagesContainer:
         labels: Collection[str] | None = None,
         pixel_size: PixelSize | None = None,
         axes_names: Collection[str] | None = None,
+        name: str | None = None,
         chunks: Collection[int] | None = None,
         dtype: str | None = None,
         overwrite: bool = False,
@@ -252,6 +276,7 @@ class ImagesContainer:
             labels (Collection[str] | None): The labels of the new image.
             pixel_size (PixelSize | None): The pixel size of the new image.
             axes_names (Collection[str] | None): The axes names of the new image.
+            name (str | None): The name of the new image.
             chunks (Collection[int] | None): The chunk shape of the new image.
             dtype (str | None): The data type of the new image.
             overwrite (bool): Whether to overwrite an existing image.
@@ -267,6 +292,7 @@ class ImagesContainer:
             labels=labels,
             pixel_size=pixel_size,
             axes_names=axes_names,
+            name=name,
             chunks=chunks,
             dtype=dtype,
             overwrite=overwrite,
@@ -346,6 +372,7 @@ def derive_image_container(
     labels: Collection[str] | None = None,
     pixel_size: PixelSize | None = None,
     axes_names: Collection[str] | None = None,
+    name: str | None = None,
     chunks: Collection[int] | None = None,
     dtype: str | None = None,
     overwrite: bool = False,
@@ -360,6 +387,7 @@ def derive_image_container(
         labels (Collection[str] | None): The labels of the new image.
         pixel_size (PixelSize | None): The pixel size of the new image.
         axes_names (Collection[str] | None): The axes names of the new image.
+        name (str | None): The name of the new image.
         chunks (Collection[int] | None): The chunk shape of the new image.
         dtype (str | None): The data type of the new image.
         overwrite (bool): Whether to overwrite an existing image.
@@ -399,9 +427,12 @@ def derive_image_container(
             f"Got {chunks} for shape {shape}."
         )
 
+    if name is None:
+        name = ref_meta.name
+
     if dtype is None:
         dtype = ref_image.dtype
-    handler = _create_empty_image(
+    handler = create_empty_image_container(
         store=store,
         shape=shape,
         pixelsize=pixel_size.x,
@@ -413,6 +444,7 @@ def derive_image_container(
         time_unit=pixel_size.time_unit,
         space_unit=pixel_size.space_unit,
         axes_names=axes_names,
+        name=name,
         chunks=chunks,
         dtype=dtype,
         overwrite=overwrite,
@@ -443,7 +475,7 @@ def derive_image_container(
             )
         _labels = labels
 
-    image_container.initialize_channel_meta(
+    image_container.set_channel_meta(
         labels=_labels,
         wavelength_id=wavelength_id,
         percentiles=None,

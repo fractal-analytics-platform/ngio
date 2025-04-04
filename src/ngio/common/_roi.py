@@ -10,7 +10,7 @@ import numpy as np
 from pydantic import BaseModel, ConfigDict, Field
 
 from ngio.common._dimensions import Dimensions
-from ngio.ome_zarr_meta.ngio_specs import PixelSize, SpaceUnits
+from ngio.ome_zarr_meta.ngio_specs import DefaultSpaceUnit, PixelSize, SpaceUnits
 from ngio.utils import NgioValueError
 
 
@@ -36,7 +36,7 @@ class Roi(BaseModel):
     x: float = 0.0
     y: float = 0.0
     z: float = 0.0
-    unit: SpaceUnits = Field(SpaceUnits.micrometer, repr=False)
+    unit: SpaceUnits | str | None = Field(DefaultSpaceUnit, repr=False)
 
     model_config = ConfigDict(extra="allow")
 

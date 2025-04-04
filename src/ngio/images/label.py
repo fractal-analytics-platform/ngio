@@ -5,13 +5,19 @@ from typing import Literal
 
 from ngio.common import compute_masking_roi
 from ngio.images.abstract_image import AbstractImage, consolidate_image
-from ngio.images.create import _create_empty_label
+from ngio.images.create import create_empty_label_container
 from ngio.images.image import Image
 from ngio.ome_zarr_meta import (
     LabelMetaHandler,
     NgioLabelMeta,
     PixelSize,
     find_label_meta_handler,
+)
+from ngio.ome_zarr_meta.ngio_specs import (
+    DefaultSpaceUnit,
+    DefaultTimeUnit,
+    SpaceUnits,
+    TimeUnits,
 )
 from ngio.tables import MaskingRoiTable
 from ngio.utils import (
@@ -53,6 +59,21 @@ class Label(AbstractImage[LabelMetaHandler]):
     def meta(self) -> NgioLabelMeta:
         """Return the metadata."""
         return self._meta_handler.meta
+
+    def set_axes_unit(
+        self,
+        space_unit: SpaceUnits = DefaultSpaceUnit,
+        time_unit: TimeUnits = DefaultTimeUnit,
+    ) -> None:
+        """Set the axes unit of the image.
+
+        Args:
+            space_unit (SpaceUnits): The space unit of the image.
+            time_unit (TimeUnits): The time unit of the image.
+        """
+        meta = self.meta
+        meta = meta.to_units(space_unit=space_unit, time_unit=time_unit)
+        self._meta_handler.write_meta(meta)
 
     def build_masking_roi_table(self) -> MaskingRoiTable:
         """Compute the masking ROI table."""
@@ -253,7 +274,7 @@ def _derive_label(
         axes_names = list(axes_names)
         axes_names = axes_names[:c_axis] + axes_names[c_axis + 1 :]
 
-    _ = _create_empty_label(
+    _ = create_empty_label_container(
         store=store,
         shape=shape,
         pixelsize=ref_image.pixel_size.x,

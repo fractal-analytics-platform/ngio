@@ -86,7 +86,13 @@ def test_create_ome_zarr_container(tmp_path: Path, array_mode: str):
     assert not ome_zarr.is_multi_channels
     assert not ome_zarr.is_2d_time_series
     assert not ome_zarr.is_3d_time_series
-
+    assert ome_zarr.space_unit == "micrometer"
+    assert ome_zarr.time_unit is None
+    
+    ome_zarr.set_axes_units(space_unit="yoctometer", time_unit="yoctosecond")
+    assert ome_zarr.space_unit == "yoctometer"
+    assert ome_zarr.time_unit is None
+    
     image = ome_zarr.get_image()
 
     assert image.shape == (10, 20, 30)
@@ -108,10 +114,10 @@ def test_create_ome_zarr_container(tmp_path: Path, array_mode: str):
     image.consolidate(mode=array_mode)
 
     # Omemeta
-    ome_zarr.initialize_channel_meta(labels=["channel_x"])
+    ome_zarr.set_channel_meta(labels=["channel_x"])
     image = ome_zarr.get_image()
     assert image.channel_labels == ["channel_x"]
-    ome_zarr.update_percentiles()
+    ome_zarr.set_channel_percentiles()
 
     image = ome_zarr.get_image(path="2")
     assert np.mean(image.get_array()) == 1

@@ -1,5 +1,7 @@
 """HCS (High Content Screening) specific metadata classes for NGIO."""
 
+from typing import Annotated
+
 from ome_zarr_models.v04.hcs import HCSAttrs
 from ome_zarr_models.v04.plate import (
     Acquisition,
@@ -8,12 +10,34 @@ from ome_zarr_models.v04.plate import (
     Row,
     WellInPlate,
 )
-from ome_zarr_models.v04.well import WellAttrs
-from ome_zarr_models.v04.well_types import WellImage, WellMeta
-from pydantic import BaseModel
+from ome_zarr_models.v04.well import WellAttrs as WellAttrs04
+from ome_zarr_models.v04.well_types import WellImage as WellImage04
+from ome_zarr_models.v04.well_types import WellMeta as WellMeta04
+from pydantic import BaseModel, SkipValidation, field_serializer
 
-from ngio.ome_zarr_meta.ngio_specs._ngio_image import NgffVersion
-from ngio.utils import NgioValueError
+from ngio.ome_zarr_meta.ngio_specs._ngio_image import DefaultNgffVersion, NgffVersions
+from ngio.utils import NgioValueError, ngio_logger
+
+
+def path_in_well_validation(path: str) -> str:
+    """Validate the path in the well."""
+    if path.find("_") != -1:
+        # Remove underscores from the path
+        # This is a custom serialization step
+        old_value = path
+        path = path.replace("_", "")
+        ngio_logger.warning(
+            f"Underscores in well-paths are not allowed. "
+            f"Path '{old_value}' was changed to '{path}'"
+            f" to comply with the specification."
+        )
+    # Check if the value contains only alphanumeric characters
+    if not path.isalnum():
+        raise NgioValueError(
+            f"Path '{path}' contains non-alphanumeric characters. "
+            f"Only alphanumeric characters are allowed."
+        )
+    return path
 
 
 class ImageInWellPath(BaseModel):
@@ -26,24 +50,54 @@ class ImageInWellPath(BaseModel):
     acquisition_name: str | None = None
 
 
-class NgioWellMeta(WellAttrs):
+class CustomWellImage(WellImage04):
+    path: Annotated[str, SkipValidation]
+
+    @field_serializer("path")
+    def serialize_path(self, value: str) -> str:
+        """Custom serialization for the path."""
+        return path_in_well_validation(value)
+
+
+class CustomWellMeta(WellMeta04):
+    images: list[CustomWellImage]  # type: ignore[valid-type]
+
+
+class CustomWellAttrs(WellAttrs04):
+    well: CustomWellMeta  # type: ignore[valid-type]
+
+
+class NgioWellMeta(CustomWellAttrs):
     """HCS well metadata."""
 
     @classmethod
     def default_init(
         cls,
-        images: list[ImageInWellPath] | None = None,
-        version: NgffVersion | None = None,
+        version: NgffVersions | None = None,
     ) -> "NgioWellMeta":
         if version is None:
-            version = "0.4"
-        well = cls(well=WellMeta(images=[], version=version))
-        if images is None:
-            return well
-
-        for image in images:
-            well = well.add_image(path=image.path, acquisition=image.acquisition_id)
+            version = DefaultNgffVersion
+        well = cls(well=CustomWellMeta(images=[], version=version))
         return well
+
+    @property
+    def acquisition_ids(self) -> list[int]:
+        """Return the acquisition ids in the well."""
+        acquisitions = []
+        for images in self.well.images:
+            if (
+                images.acquisition is not None
+                and images.acquisition not in acquisitions
+            ):
+                acquisitions.append(images.acquisition)
+        return acquisitions
+
+    def get_image_acquisition_id(self, image_path: str) -> int | None:
+        """Return the acquisition id for the given image path."""
+        for images in self.well.images:
+            if images.path == image_path:
+                return images.acquisition
+        raise NgioValueError(f"Image at path {image_path} not found in the well.")
 
     def paths(self, acquisition: int | None = None) -> list[str]:
         """Return the images paths in the well.
@@ -62,12 +116,16 @@ class NgioWellMeta(WellAttrs):
             if images.acquisition == acquisition
         ]
 
-    def add_image(self, path: str, acquisition: int | None = None) -> "NgioWellMeta":
+    def add_image(
+        self, path: str, acquisition: int | None = None, strict: bool = True
+    ) -> "NgioWellMeta":
         """Add an image to the well.
 
         Args:
             path (str): The path of the image.
             acquisition (int | None): The acquisition id of the image.
+            strict (bool): If True, check if the image already exists in the well.
+                If False, do not check if the image already exists in the well.
         """
         list_of_images = self.well.images
         for image in list_of_images:
@@ -76,10 +134,20 @@ class NgioWellMeta(WellAttrs):
                     f"Image at path {path} already exists in the well."
                 )
 
-        new_image = WellImage(path=path, acquisition=acquisition)
+        if (
+            strict
+            and (acquisition is not None)
+            and (acquisition not in self.acquisition_ids)
+        ):
+            raise NgioValueError(
+                f"Acquisition ID {acquisition} not found in well. "
+                "Please add it to the plate metadata first."
+            )
+
+        new_image = CustomWellImage(path=path, acquisition=acquisition)
         list_of_images.append(new_image)
         return NgioWellMeta(
-            well=WellMeta(images=list_of_images, version=self.well.version)
+            well=CustomWellMeta(images=list_of_images, version=self.well.version)
         )
 
     def remove_image(self, path: str) -> "NgioWellMeta":
@@ -93,7 +161,9 @@ class NgioWellMeta(WellAttrs):
             if image.path == path:
                 list_of_images.remove(image)
                 return NgioWellMeta(
-                    well=WellMeta(images=list_of_images, version=self.well.version)
+                    well=CustomWellMeta(
+                        images=list_of_images, version=self.well.version
+                    )
                 )
         raise NgioValueError(f"Image at path {path} not found in the well.")
 
@@ -165,7 +235,7 @@ class NgioPlateMeta(HCSAttrs):
         cls,
         images: list[ImageInWellPath] | None = None,
         name: str | None = None,
-        version: NgffVersion | None = None,
+        version: NgffVersions | None = None,
     ) -> "NgioPlateMeta":
         plate = cls(
             plate=Plate(
@@ -186,9 +256,12 @@ class NgioPlateMeta(HCSAttrs):
             plate = plate.add_well(
                 row=image.row,
                 column=image.column,
-                acquisition_id=image.acquisition_id,
-                acquisition_name=image.acquisition_name,
             )
+            if image.acquisition_id is not None:
+                plate = plate.add_acquisition(
+                    acquisition_id=image.acquisition_id,
+                    acquisition_name=image.acquisition_name,
+                )
         return plate
 
     @property
@@ -209,7 +282,7 @@ class NgioPlateMeta(HCSAttrs):
         return [acquisitions.name for acquisitions in self.plate.acquisitions]
 
     @property
-    def acquisitions_ids(self) -> list[int]:
+    def acquisition_ids(self) -> list[int]:
         """Return the acquisitions ids in the plate."""
         if self.plate.acquisitions is None:
             return []
@@ -256,50 +329,94 @@ class NgioPlateMeta(HCSAttrs):
             f"Well at row {row} and column {column} not found in the plate."
         )
 
+    def add_row(self, row: str) -> "tuple[NgioPlateMeta, int]":
+        """Add a row to the plate.
+
+        Args:
+            row (str): The row to add.
+        """
+        relabel_wells = False
+
+        row_names = self.rows
+        row_idx = _find_row_index(row_names, row)
+        if row_idx is not None:
+            # Nothing to do
+            return self, row_idx
+
+        row_names.append(row)
+        row_names.sort()
+        row_idx = row_names.index(row)
+        relabel_wells = True
+
+        rows = [Row(name=row) for row in row_names]
+
+        if relabel_wells:
+            wells = _relabel_wells(self.plate.wells, rows, self.plate.columns)
+        else:
+            wells = self.plate.wells
+
+        new_plate = Plate(
+            rows=rows,
+            columns=self.plate.columns,
+            acquisitions=self.plate.acquisitions,
+            wells=wells,
+            field_count=self.plate.field_count,
+            version=self.plate.version,
+        )
+        return NgioPlateMeta(plate=new_plate), row_idx
+
+    def add_column(self, column: str | int) -> "tuple[NgioPlateMeta, int]":
+        """Add a column to the plate.
+
+        Args:
+            column (str | int): The column to add.
+        """
+        relabel_wells = False
+
+        columns_names = self.columns
+        column_idx = _find_column_index(columns_names, column)
+        if column_idx is not None:
+            # Nothing to do
+            return self, column_idx
+
+        columns_names.append(_stringify_column(column))
+        # sort as numbers
+        columns_names.sort(key=lambda x: int(x))
+        column_idx = columns_names.index(_stringify_column(column))
+        relabel_wells = True
+
+        columns = [Column(name=column) for column in columns_names]
+
+        if relabel_wells:
+            wells = _relabel_wells(self.plate.wells, self.plate.rows, columns)
+        else:
+            wells = self.plate.wells
+
+        new_plate = Plate(
+            rows=self.plate.rows,
+            columns=columns,
+            acquisitions=self.plate.acquisitions,
+            wells=wells,
+            field_count=self.plate.field_count,
+            version=self.plate.version,
+        )
+        return NgioPlateMeta(plate=new_plate), column_idx
+
     def add_well(
         self,
         row: str,
         column: str | int,
-        acquisition_id: int | None = None,
-        acquisition_name: str | None = None,
-        **acquisition_kwargs,
     ) -> "NgioPlateMeta":
         """Add an image to the well.
 
         Args:
             row (str): The row of the well.
             column (str | int): The column of the well.
-            acquisition_id (int | None): The acquisition id of the well.
-            acquisition_name (str | None): The acquisition name of the well.
-            **acquisition_kwargs: Additional acquisition metadata.
         """
-        relabel_wells = False
+        plate, row_idx = self.add_row(row=row)
+        plate, column_idx = plate.add_column(column=column)
 
-        row_names = self.rows
-        row_idx = _find_row_index(row_names, row)
-        if row_idx is None:
-            row_names.append(row)
-            row_names.sort()
-            row_idx = row_names.index(row)
-            relabel_wells = True
-
-        rows = [Row(name=row) for row in row_names]
-
-        columns_names = self.columns
-        column_idx = _find_column_index(columns_names, column)
-        if column_idx is None:
-            columns_names.append(_stringify_column(column))
-            # sort as numbers
-            columns_names.sort(key=lambda x: int(x))
-            column_idx = columns_names.index(_stringify_column(column))
-            relabel_wells = True
-
-        columns = [Column(name=column) for column in columns_names]
-
-        wells = self.plate.wells
-        if relabel_wells:
-            wells = _relabel_wells(wells, rows, columns)
-
+        wells = plate.plate.wells
         for well_obj in wells:
             if well_obj.rowIndex == row_idx and well_obj.columnIndex == column_idx:
                 break
@@ -312,28 +429,49 @@ class NgioPlateMeta(HCSAttrs):
                 )
             )
 
-        acquisitions = self.plate.acquisitions
-        if acquisition_id is not None:
-            if acquisitions is None and len(wells) > 0:
-                acquisitions = [Acquisition(id=0, name=acquisition_name)]
-            elif acquisitions is None:
-                acquisitions = []
+        new_plate = Plate(
+            rows=plate.plate.rows,
+            columns=plate.plate.columns,
+            acquisitions=plate.plate.acquisitions,
+            wells=wells,
+            field_count=plate.plate.field_count,
+            version=plate.plate.version,
+        )
+        return NgioPlateMeta(plate=new_plate)
 
-            for acquisition_obj in acquisitions:
-                if acquisition_obj.id == acquisition_id:
-                    break
-            else:
-                acquisitions.append(
-                    Acquisition(
-                        id=acquisition_id, name=acquisition_name, **acquisition_kwargs
-                    )
-                )
+    def add_acquisition(
+        self,
+        acquisition_id: int,
+        acquisition_name: str | None = None,
+        **acquisition_kwargs,
+    ) -> "NgioPlateMeta":
+        """Add an acquisition to the plate.
+
+        Args:
+            acquisition_id (int): The acquisition id of the well.
+            acquisition_name (str | None): The acquisition name of the well.
+            **acquisition_kwargs: Additional acquisition metadata.
+        """
+        acquisitions = self.plate.acquisitions
+        if acquisitions is None:
+            acquisitions = []
+
+        for acquisition_obj in acquisitions:
+            if acquisition_obj.id == acquisition_id:
+                # If the acquisition already exists
+                # Nothing to do
+                # Maybe we should update the acquisition name and kwargs
+                return self
+
+        acquisitions.append(
+            Acquisition(id=acquisition_id, name=acquisition_name, **acquisition_kwargs)
+        )
 
         new_plate = Plate(
-            rows=rows,
-            columns=columns,
+            rows=self.plate.rows,
+            columns=self.plate.columns,
             acquisitions=acquisitions,
-            wells=wells,
+            wells=self.plate.wells,
             field_count=self.plate.field_count,
             version=self.plate.version,
         )
@@ -374,5 +512,39 @@ class NgioPlateMeta(HCSAttrs):
         )
         return NgioPlateMeta(plate=new_plate)
 
+    def derive(
+        self,
+        name: str | None = None,
+        version: NgffVersions | None = None,
+        keep_acquisitions: bool = False,
+    ) -> "NgioPlateMeta":
+        """Derive the plate metadata.
 
-# %%
+        Args:
+            name (str): The name of the derived plate.
+            version (NgffVersion | None): The version of the derived plate.
+                If None, use the version of the original plate.
+            keep_acquisitions (bool): If True, keep the acquisitions in the plate.
+        """
+        columns = self.plate.columns
+        rows = self.plate.rows
+
+        if keep_acquisitions:
+            acquisitions = self.plate.acquisitions
+        else:
+            acquisitions = None
+
+        if version is None:
+            version = self.plate.version  # type: ignore[assignment]
+
+        return NgioPlateMeta(
+            plate=Plate(
+                rows=rows,
+                columns=columns,
+                acquisitions=acquisitions,
+                wells=[],
+                field_count=self.plate.field_count,
+                version=version,
+                name=name,
+            )
+        )
