@@ -38,8 +38,8 @@ The `OmeZarrPlate` object provides a high-level overview of the plate, including
 === "Acquisitions"
     Show the acquisitions ids:
     ```pycon exec="true" source="console" session="hcs_plate"
-    >>> ome_zarr_plate.acquisitions_ids
-    >>> print(ome_zarr_plate.acquisitions_ids) # markdown-exec: hide
+    >>> ome_zarr_plate.acquisition_ids
+    >>> print(ome_zarr_plate.acquisition_ids) # markdown-exec: hide
     ```
 
 ## Retrieving the path to the images
