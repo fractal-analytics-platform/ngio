@@ -247,6 +247,7 @@ class OmeZarrContainer:
         labels: Collection[str] | None = None,
         pixel_size: PixelSize | None = None,
         axes_names: Collection[str] | None = None,
+        name: str | None = None,
         chunks: Collection[int] | None = None,
         dtype: str | None = None,
         copy_labels: bool = False,
@@ -265,6 +266,7 @@ class OmeZarrContainer:
             axes_names (Collection[str] | None): The axes names of the new image.
             chunks (Collection[int] | None): The chunk shape of the new image.
             dtype (str | None): The data type of the new image.
+            name (str | None): The name of the new image.
             copy_labels (bool): Whether to copy the labels from the reference image.
             copy_tables (bool): Whether to copy the tables from the reference image.
             overwrite (bool): Whether to overwrite an existing image.
@@ -280,6 +282,7 @@ class OmeZarrContainer:
             labels=labels,
             pixel_size=pixel_size,
             axes_names=axes_names,
+            name=name,
             chunks=chunks,
             dtype=dtype,
             overwrite=overwrite,

@@ -238,6 +238,7 @@ class ImagesContainer:
         labels: Collection[str] | None = None,
         pixel_size: PixelSize | None = None,
         axes_names: Collection[str] | None = None,
+        name: str | None = None,
         chunks: Collection[int] | None = None,
         dtype: str | None = None,
         overwrite: bool = False,
@@ -252,6 +253,7 @@ class ImagesContainer:
             labels (Collection[str] | None): The labels of the new image.
             pixel_size (PixelSize | None): The pixel size of the new image.
             axes_names (Collection[str] | None): The axes names of the new image.
+            name (str | None): The name of the new image.
             chunks (Collection[int] | None): The chunk shape of the new image.
             dtype (str | None): The data type of the new image.
             overwrite (bool): Whether to overwrite an existing image.
@@ -267,6 +269,7 @@ class ImagesContainer:
             labels=labels,
             pixel_size=pixel_size,
             axes_names=axes_names,
+            name=name,
             chunks=chunks,
             dtype=dtype,
             overwrite=overwrite,
@@ -346,6 +349,7 @@ def derive_image_container(
     labels: Collection[str] | None = None,
     pixel_size: PixelSize | None = None,
     axes_names: Collection[str] | None = None,
+    name: str | None = None,
     chunks: Collection[int] | None = None,
     dtype: str | None = None,
     overwrite: bool = False,
@@ -360,6 +364,7 @@ def derive_image_container(
         labels (Collection[str] | None): The labels of the new image.
         pixel_size (PixelSize | None): The pixel size of the new image.
         axes_names (Collection[str] | None): The axes names of the new image.
+        name (str | None): The name of the new image.
         chunks (Collection[int] | None): The chunk shape of the new image.
         dtype (str | None): The data type of the new image.
         overwrite (bool): Whether to overwrite an existing image.
@@ -399,6 +404,9 @@ def derive_image_container(
             f"Got {chunks} for shape {shape}."
         )
 
+    if name is None:
+        name = ref_meta.name
+
     if dtype is None:
         dtype = ref_image.dtype
     handler = _create_empty_image(
@@ -413,6 +421,7 @@ def derive_image_container(
         time_unit=pixel_size.time_unit,
         space_unit=pixel_size.space_unit,
         axes_names=axes_names,
+        name=name,
         chunks=chunks,
         dtype=dtype,
         overwrite=overwrite,
