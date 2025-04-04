@@ -15,7 +15,7 @@ from ome_zarr_models.v04.well_types import WellImage as WellImage04
 from ome_zarr_models.v04.well_types import WellMeta as WellMeta04
 from pydantic import BaseModel, SkipValidation, field_serializer
 
-from ngio.ome_zarr_meta.ngio_specs._ngio_image import NgffVersion
+from ngio.ome_zarr_meta.ngio_specs._ngio_image import DefaultNgffVersion, NgffVersions
 from ngio.utils import NgioValueError, ngio_logger
 
 
@@ -73,10 +73,10 @@ class NgioWellMeta(CustomWellAttrs):
     @classmethod
     def default_init(
         cls,
-        version: NgffVersion | None = None,
+        version: NgffVersions | None = None,
     ) -> "NgioWellMeta":
         if version is None:
-            version = "0.4"
+            version = DefaultNgffVersion
         well = cls(well=CustomWellMeta(images=[], version=version))
         return well
 
@@ -235,7 +235,7 @@ class NgioPlateMeta(HCSAttrs):
         cls,
         images: list[ImageInWellPath] | None = None,
         name: str | None = None,
-        version: NgffVersion | None = None,
+        version: NgffVersions | None = None,
     ) -> "NgioPlateMeta":
         plate = cls(
             plate=Plate(
@@ -515,7 +515,7 @@ class NgioPlateMeta(HCSAttrs):
     def derive(
         self,
         name: str | None = None,
-        version: NgffVersion | None = None,
+        version: NgffVersions | None = None,
         keep_acquisitions: bool = False,
     ) -> "NgioPlateMeta":
         """Derive the plate metadata.

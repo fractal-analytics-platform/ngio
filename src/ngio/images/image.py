@@ -7,14 +7,22 @@ from dask import array as da
 
 from ngio.common import Dimensions
 from ngio.images.abstract_image import AbstractImage, consolidate_image
-from ngio.images.create import _create_empty_image
+from ngio.images.create import create_empty_image_container
 from ngio.ome_zarr_meta import (
     ImageMetaHandler,
     NgioImageMeta,
     PixelSize,
     find_image_meta_handler,
 )
-from ngio.ome_zarr_meta.ngio_specs import Channel, ChannelsMeta, ChannelVisualisation
+from ngio.ome_zarr_meta.ngio_specs import (
+    Channel,
+    ChannelsMeta,
+    ChannelVisualisation,
+    DefaultSpaceUnit,
+    DefaultTimeUnit,
+    SpaceUnits,
+    TimeUnits,
+)
 from ngio.utils import (
     NgioValidationError,
     StoreOrGroup,
@@ -142,7 +150,7 @@ class ImagesContainer:
         image = self.get()
         return image.wavelength_ids
 
-    def initialize_channel_meta(
+    def set_channel_meta(
         self,
         labels: Collection[str] | int | None = None,
         wavelength_id: Collection[str] | None = None,
@@ -196,7 +204,7 @@ class ImagesContainer:
         meta.set_channels_meta(channel_meta)
         self._meta_handler.write_meta(meta)
 
-    def update_percentiles(
+    def set_channel_percentiles(
         self,
         start_percentile: float = 0.1,
         end_percentile: float = 99.9,
@@ -228,6 +236,21 @@ class ImagesContainer:
 
         meta = self.meta
         meta.set_channels_meta(new_meta)
+        self._meta_handler.write_meta(meta)
+
+    def set_axes_unit(
+        self,
+        space_unit: SpaceUnits = DefaultSpaceUnit,
+        time_unit: TimeUnits = DefaultTimeUnit,
+    ) -> None:
+        """Set the axes unit of the image.
+
+        Args:
+            space_unit (SpaceUnits): The space unit of the image.
+            time_unit (TimeUnits): The time unit of the image.
+        """
+        meta = self.meta
+        meta = meta.to_units(space_unit=space_unit, time_unit=time_unit)
         self._meta_handler.write_meta(meta)
 
     def derive(
@@ -409,7 +432,7 @@ def derive_image_container(
 
     if dtype is None:
         dtype = ref_image.dtype
-    handler = _create_empty_image(
+    handler = create_empty_image_container(
         store=store,
         shape=shape,
         pixelsize=pixel_size.x,
@@ -452,7 +475,7 @@ def derive_image_container(
             )
         _labels = labels
 
-    image_container.initialize_channel_meta(
+    image_container.set_channel_meta(
         labels=_labels,
         wavelength_id=wavelength_id,
         percentiles=None,

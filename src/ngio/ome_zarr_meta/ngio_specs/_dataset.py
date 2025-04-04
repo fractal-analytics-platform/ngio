@@ -6,6 +6,9 @@ from ngio.ome_zarr_meta.ngio_specs._axes import (
     AxesMapper,
     AxesSetup,
     Axis,
+    AxisType,
+    DefaultSpaceUnit,
+    DefaultTimeUnit,
     SpaceUnits,
     TimeUnits,
 )
@@ -86,7 +89,7 @@ class Dataset:
         return self._path
 
     @property
-    def space_unit(self) -> SpaceUnits:
+    def space_unit(self) -> str | None:
         """Return the space unit for a given axis."""
         x_axis = self._axes_mapper.get_axis("x")
         y_axis = self._axes_mapper.get_axis("y")
@@ -97,8 +100,6 @@ class Dataset:
             )
 
         if x_axis.unit == y_axis.unit:
-            if not isinstance(x_axis.unit, SpaceUnits):
-                raise NgioValidationError("The space unit must be of type SpaceUnits.")
             return x_axis.unit
         else:
             raise NgioValidationError(
@@ -107,13 +108,11 @@ class Dataset:
             )
 
     @property
-    def time_unit(self) -> TimeUnits | None:
+    def time_unit(self) -> str | None:
         """Return the time unit for a given axis."""
         t_axis = self._axes_mapper.get_axis("t")
         if t_axis is None:
             return None
-        if not isinstance(t_axis.unit, TimeUnits):
-            raise NgioValidationError("The time unit must be of type TimeUnits.")
         return t_axis.unit
 
     @property
@@ -124,11 +123,50 @@ class Dataset:
             y=self.get_scale("y"),
             z=self.get_scale("z"),
             t=self.get_scale("t"),
-            space_unit=self.space_unit,
-            time_unit=self.time_unit,
+            space_unit=self.space_unit,  # type: ignore
+            time_unit=self.time_unit,  # type: ignore
         )
 
     @property
     def axes_mapper(self) -> AxesMapper:
         """Return the axes mapper object."""
         return self._axes_mapper
+
+    def to_units(
+        self,
+        *,
+        space_unit: SpaceUnits = DefaultSpaceUnit,
+        time_unit: TimeUnits = DefaultTimeUnit,
+    ) -> "Dataset":
+        """Convert the pixel size to the given units.
+
+        Args:
+            space_unit(str): The space unit to convert to.
+            time_unit(str): The time unit to convert to.
+        """
+        new_axes = []
+        for ax in self.axes_mapper.on_disk_axes:
+            if ax.axis_type == AxisType.space:
+                new_ax = Axis(
+                    on_disk_name=ax.on_disk_name,
+                    axis_type=ax.axis_type,
+                    unit=space_unit,
+                )
+                new_axes.append(new_ax)
+            elif ax.axis_type == AxisType.time:
+                new_ax = Axis(
+                    on_disk_name=ax.on_disk_name, axis_type=ax.axis_type, unit=time_unit
+                )
+                new_axes.append(new_ax)
+            else:
+                new_axes.append(ax)
+
+        return Dataset(
+            path=self.path,
+            on_disk_axes=new_axes,
+            on_disk_scale=self._on_disk_scale,
+            on_disk_translation=self._on_disk_translation,
+            axes_setup=self.axes_mapper.axes_setup,
+            allow_non_canonical_axes=self.axes_mapper.allow_non_canonical_axes,
+            strict_canonical_order=self.axes_mapper.strict_canonical_order,
+        )

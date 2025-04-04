@@ -5,7 +5,7 @@ from typing import Literal, overload
 
 import numpy as np
 
-from ngio.images.create import _create_empty_image
+from ngio.images.create import create_empty_image_container
 from ngio.images.image import Image, ImagesContainer
 from ngio.images.label import Label, LabelsContainer
 from ngio.images.masked_image import MaskedImage, MaskedLabel
@@ -13,7 +13,14 @@ from ngio.ome_zarr_meta import (
     NgioImageMeta,
     PixelSize,
 )
-from ngio.ome_zarr_meta.ngio_specs import NgffVersion, SpaceUnits, TimeUnits
+from ngio.ome_zarr_meta.ngio_specs import (
+    DefaultNgffVersion,
+    DefaultSpaceUnit,
+    DefaultTimeUnit,
+    NgffVersions,
+    SpaceUnits,
+    TimeUnits,
+)
 from ngio.tables import (
     FeatureTable,
     GenericRoiTable,
@@ -152,7 +159,17 @@ class OmeZarrContainer:
         """Return True if the image is multichannel."""
         return self.get_image().is_multi_channels
 
-    def initialize_channel_meta(
+    @property
+    def space_unit(self) -> str | None:
+        """Return the space unit of the image."""
+        return self.image_meta.space_unit
+
+    @property
+    def time_unit(self) -> str | None:
+        """Return the time unit of the image."""
+        return self.image_meta.time_unit
+
+    def set_channel_meta(
         self,
         labels: Collection[str] | int | None = None,
         wavelength_id: Collection[str] | None = None,
@@ -162,7 +179,7 @@ class OmeZarrContainer:
         **omero_kwargs: dict,
     ) -> None:
         """Create a ChannelsMeta object with the default unit."""
-        self._images_container.initialize_channel_meta(
+        self._images_container.set_channel_meta(
             labels=labels,
             wavelength_id=wavelength_id,
             percentiles=percentiles,
@@ -171,15 +188,35 @@ class OmeZarrContainer:
             **omero_kwargs,
         )
 
-    def update_percentiles(
+    def set_channel_percentiles(
         self,
         start_percentile: float = 0.1,
         end_percentile: float = 99.9,
     ) -> None:
         """Update the percentiles of the image."""
-        self._images_container.update_percentiles(
+        self._images_container.set_channel_percentiles(
             start_percentile=start_percentile, end_percentile=end_percentile
         )
+
+    def set_axes_units(
+        self,
+        space_unit: SpaceUnits = DefaultSpaceUnit,
+        time_unit: TimeUnits = DefaultTimeUnit,
+        set_labels: bool = True,
+    ) -> None:
+        """Set the units of the image.
+
+        Args:
+            space_unit (SpaceUnits): The unit of space.
+            time_unit (TimeUnits): The unit of time.
+            set_labels (bool): Whether to set the units for the labels as well.
+        """
+        self._images_container.set_axes_unit(space_unit=space_unit, time_unit=time_unit)
+        if not set_labels:
+            return
+        for label_name in self.list_labels():
+            label = self.get_label(label_name)
+            label.set_axes_unit(space_unit=space_unit, time_unit=time_unit)
 
     def get_image(
         self,
@@ -560,8 +597,8 @@ def create_empty_ome_zarr(
     levels: int | list[str] = 5,
     xy_scaling_factor: float = 2,
     z_scaling_factor: float = 1.0,
-    space_unit: SpaceUnits | str | None = None,
-    time_unit: TimeUnits | str | None = None,
+    space_unit: SpaceUnits = DefaultSpaceUnit,
+    time_unit: TimeUnits = DefaultTimeUnit,
     axes_names: Collection[str] | None = None,
     name: str | None = None,
     chunks: Collection[int] | None = None,
@@ -572,7 +609,7 @@ def create_empty_ome_zarr(
     channel_colors: Collection[str] | None = None,
     channel_active: Collection[bool] | None = None,
     overwrite: bool = False,
-    version: NgffVersion = "0.4",
+    version: NgffVersions = DefaultNgffVersion,
 ) -> OmeZarrContainer:
     """Create an empty OME-Zarr image with the given shape and metadata.
 
@@ -589,10 +626,10 @@ def create_empty_ome_zarr(
             dimensions. Defaults to 2.0.
         z_scaling_factor (float, optional): The down-scaling factor in z dimension.
             Defaults to 1.0.
-        space_unit (SpaceUnits | str | None, optional): The unit of space. Defaults to
-            None.
-        time_unit (TimeUnits | str | None, optional): The unit of time. Defaults to
-            None.
+        space_unit (SpaceUnits, optional): The unit of space. Defaults to
+            DefaultSpaceUnit.
+        time_unit (TimeUnits, optional): The unit of time. Defaults to
+            DefaultTimeUnit.
         axes_names (Collection[str] | None, optional): The names of the axes.
             If None the canonical names are used. Defaults to None.
         name (str | None, optional): The name of the image. Defaults to None.
@@ -612,9 +649,9 @@ def create_empty_ome_zarr(
         overwrite (bool, optional): Whether to overwrite an existing image.
             Defaults to True.
         version (NgffVersion, optional): The version of the OME-Zarr specification.
-            Defaults to "0.4".
+            Defaults to DefaultNgffVersion.
     """
-    handler = _create_empty_image(
+    handler = create_empty_image_container(
         store=store,
         shape=shape,
         pixelsize=xy_pixelsize,
@@ -634,7 +671,7 @@ def create_empty_ome_zarr(
     )
 
     ome_zarr = OmeZarrContainer(group_handler=handler)
-    ome_zarr.initialize_channel_meta(
+    ome_zarr.set_channel_meta(
         labels=channel_labels,
         wavelength_id=channel_wavelengths,
         percentiles=percentiles,
@@ -653,8 +690,8 @@ def create_ome_zarr_from_array(
     levels: int | list[str] = 5,
     xy_scaling_factor: float = 2.0,
     z_scaling_factor: float = 1.0,
-    space_unit: SpaceUnits | str | None = None,
-    time_unit: TimeUnits | str | None = None,
+    space_unit: SpaceUnits = DefaultSpaceUnit,
+    time_unit: TimeUnits = DefaultTimeUnit,
     axes_names: Collection[str] | None = None,
     channel_labels: list[str] | None = None,
     channel_wavelengths: list[str] | None = None,
@@ -664,7 +701,7 @@ def create_ome_zarr_from_array(
     name: str | None = None,
     chunks: Collection[int] | None = None,
     overwrite: bool = False,
-    version: NgffVersion = "0.4",
+    version: NgffVersions = DefaultNgffVersion,
 ) -> OmeZarrContainer:
     """Create an OME-Zarr image from a numpy array.
 
@@ -681,10 +718,10 @@ def create_ome_zarr_from_array(
             dimensions. Defaults to 2.0.
         z_scaling_factor (float, optional): The down-scaling factor in z dimension.
             Defaults to 1.0.
-        space_unit (SpaceUnits | str | None, optional): The unit of space. Defaults to
-            None.
-        time_unit (TimeUnits | str | None, optional): The unit of time. Defaults to
-            None.
+        space_unit (SpaceUnits, optional): The unit of space. Defaults to
+            DefaultSpaceUnit.
+        time_unit (TimeUnits, optional): The unit of time. Defaults to
+            DefaultTimeUnit.
         axes_names (Collection[str] | None, optional): The names of the axes.
             If None the canonical names are used. Defaults to None.
         name (str | None, optional): The name of the image. Defaults to None.
@@ -703,9 +740,9 @@ def create_ome_zarr_from_array(
         overwrite (bool, optional): Whether to overwrite an existing image.
             Defaults to True.
         version (str, optional): The version of the OME-Zarr specification.
-            Defaults to "0.4".
+            Defaults to DefaultNgffVersion.
     """
-    handler = _create_empty_image(
+    handler = create_empty_image_container(
         store=store,
         shape=array.shape,
         pixelsize=xy_pixelsize,
@@ -728,7 +765,7 @@ def create_ome_zarr_from_array(
     image = ome_zarr.get_image()
     image.set_array(array)
     image.consolidate()
-    ome_zarr.initialize_channel_meta(
+    ome_zarr.set_channel_meta(
         labels=channel_labels,
         wavelength_id=channel_wavelengths,
         percentiles=percentiles,

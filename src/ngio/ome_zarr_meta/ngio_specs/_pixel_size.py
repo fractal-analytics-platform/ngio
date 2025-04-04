@@ -38,8 +38,8 @@ class PixelSize:
         y: float,
         z: float,
         t: float = 1,
-        space_unit: SpaceUnits | None = DefaultSpaceUnit,
-        time_unit: TimeUnits | None = DefaultTimeUnit,
+        space_unit: SpaceUnits | str | None = DefaultSpaceUnit,
+        time_unit: TimeUnits | str | None = DefaultTimeUnit,
     ):
         """Initialize the pixel size."""
         self.x = _validate_type(x, "x")
@@ -75,7 +75,12 @@ class PixelSize:
         if not isinstance(other, PixelSize):
             raise TypeError("Can only compare PixelSize with PixelSize.")
         ref = PixelSize(
-            0, 0, 0, 0, space_unit=self.space_unit, time_unit=self.time_unit
+            0,
+            0,
+            0,
+            0,
+            space_unit=self.space_unit,
+            time_unit=self.time_unit,  # type: ignore
         )
         return self.distance(ref) < other.distance(ref)
 
@@ -84,14 +89,14 @@ class PixelSize:
         return {"t": self.t, "z": self.z, "y": self.y, "x": self.x}
 
     @property
-    def space_unit(self) -> SpaceUnits | None:
+    def space_unit(self) -> SpaceUnits | str | None:
         """Return the space unit."""
-        return self._space_unit  # type: ignore[return-value]
+        return self._space_unit
 
     @property
-    def time_unit(self) -> TimeUnits | None:
+    def time_unit(self) -> TimeUnits | str | None:
         """Return the time unit."""
-        return self._time_unit  # type: ignore[return-value]
+        return self._time_unit
 
     @property
     def tzyx(self) -> tuple[float, float, float, float]:

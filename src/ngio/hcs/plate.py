@@ -3,7 +3,7 @@
 from ngio.images import OmeZarrContainer
 from ngio.ome_zarr_meta import (
     ImageInWellPath,
-    NgffVersion,
+    NgffVersions,
     NgioPlateMeta,
     NgioWellMeta,
     find_plate_meta_handler,
@@ -610,7 +610,7 @@ class OmeZarrPlate:
         self,
         store: StoreOrGroup,
         plate_name: str | None = None,
-        version: NgffVersion = "0.4",
+        version: NgffVersions = "0.4",
         keep_acquisitions: bool = False,
         cache: bool = False,
         overwrite: bool = False,
@@ -663,7 +663,7 @@ def open_ome_zarr_plate(
 def _create_empty_plate_from_meta(
     store: StoreOrGroup,
     meta: NgioPlateMeta,
-    version: NgffVersion = "0.4",
+    version: NgffVersions = "0.4",
     overwrite: bool = False,
 ) -> ZarrGroupHandler:
     """Create an empty OME-Zarr plate from metadata."""
@@ -680,7 +680,7 @@ def create_empty_plate(
     store: StoreOrGroup,
     name: str,
     images: list[ImageInWellPath] | None = None,
-    version: NgffVersion = "0.4",
+    version: NgffVersions = "0.4",
     cache: bool = False,
     overwrite: bool = False,
     parallel_safe: bool = True,
@@ -719,7 +719,7 @@ def derive_ome_zarr_plate(
     ome_zarr_plate: OmeZarrPlate,
     store: StoreOrGroup,
     plate_name: str | None = None,
-    version: NgffVersion = "0.4",
+    version: NgffVersions = "0.4",
     keep_acquisitions: bool = False,
     cache: bool = False,
     overwrite: bool = False,
@@ -781,7 +781,7 @@ def open_ome_zarr_well(
 
 def create_empty_well(
     store: StoreOrGroup,
-    version: NgffVersion = "0.4",
+    version: NgffVersions = "0.4",
     cache: bool = False,
     overwrite: bool = False,
     parallel_safe: bool = True,

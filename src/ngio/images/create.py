@@ -12,7 +12,10 @@ from ngio.ome_zarr_meta import (
     get_label_meta_handler,
 )
 from ngio.ome_zarr_meta.ngio_specs import (
-    NgffVersion,
+    DefaultNgffVersion,
+    DefaultSpaceUnit,
+    DefaultTimeUnit,
+    NgffVersions,
     SpaceUnits,
     TimeUnits,
     canonical_axes_order,
@@ -32,10 +35,10 @@ def _init_generic_meta(
     levels: int | list[str] = 5,
     yx_scaling_factor: float | tuple[float, float] = 2.0,
     z_scaling_factor: float = 1.0,
-    space_unit: SpaceUnits | str | None = None,
-    time_unit: TimeUnits | str | None = None,
+    space_unit: SpaceUnits | str | None = DefaultSpaceUnit,
+    time_unit: TimeUnits | str | None = DefaultTimeUnit,
     name: str | None = None,
-    version: NgffVersion = "0.4",
+    version: NgffVersions = DefaultNgffVersion,
 ) -> tuple[_image_or_label_meta, list[float]]:
     """Initialize the metadata for an image or label."""
     scaling_factors = []
@@ -54,20 +57,6 @@ def _init_generic_meta(
                 scaling_factors.append(yx_scaling_factor)
         else:
             scaling_factors.append(1.0)
-
-    if space_unit is None:
-        space_unit = SpaceUnits.micrometer
-    elif isinstance(space_unit, str):
-        space_unit = SpaceUnits(space_unit)
-    elif not isinstance(space_unit, SpaceUnits):
-        raise NgioValueError(f"space_unit can not be {type(space_unit)}.")
-
-    if time_unit is None:
-        time_unit = TimeUnits.seconds
-    elif isinstance(time_unit, str):
-        time_unit = TimeUnits(time_unit)
-    elif not isinstance(time_unit, TimeUnits):
-        raise NgioValueError(f"time_units can not be {type(time_unit)}.")
 
     pixel_sizes = PixelSize(
         x=pixelsize,
@@ -89,7 +78,7 @@ def _init_generic_meta(
     return meta, scaling_factors
 
 
-def _create_empty_label(
+def create_empty_label_container(
     store: StoreOrGroup,
     shape: Collection[int],
     pixelsize: float,
@@ -98,14 +87,14 @@ def _create_empty_label(
     levels: int | list[str] = 5,
     yx_scaling_factor: float | tuple[float, float] = 2.0,
     z_scaling_factor: float = 1.0,
-    space_unit: SpaceUnits | str | None = None,
-    time_unit: TimeUnits | str | None = None,
+    space_unit: SpaceUnits | str | None = DefaultSpaceUnit,
+    time_unit: TimeUnits | str | None = DefaultTimeUnit,
     axes_names: Collection[str] | None = None,
     name: str | None = None,
     chunks: Collection[int] | None = None,
     dtype: str = "uint16",
     overwrite: bool = False,
-    version: NgffVersion = "0.4",
+    version: NgffVersions = DefaultNgffVersion,
 ) -> ZarrGroupHandler:
     """Create an empty label with the given shape and metadata.
 
@@ -122,10 +111,10 @@ def _create_empty_label(
             dimensions. Defaults to 2.0.
         z_scaling_factor (float, optional): The down-scaling factor in z dimension.
             Defaults to 1.0.
-        space_unit (SpaceUnits | str | None, optional): The unit of space. Defaults to
-            None.
-        time_unit (TimeUnits | str | None, optional): The unit of time. Defaults to
-            None.
+        space_unit (SpaceUnits, optional): The unit of space. Defaults to
+            DefaultSpaceUnit.
+        time_unit (TimeUnits, optional): The unit of time. Defaults to
+            DefaultTimeUnit.
         axes_names (Collection[str] | None, optional): The names of the axes.
             If None the canonical names are used. Defaults to None.
         name (str | None, optional): The name of the image. Defaults to None.
@@ -135,7 +124,7 @@ def _create_empty_label(
         overwrite (bool, optional): Whether to overwrite an existing image.
             Defaults to True.
         version (str, optional): The version of the OME-Zarr specification.
-            Defaults to "0.4".
+            Defaults to DefaultVersion.
 
     """
     if axes_names is None:
@@ -180,7 +169,7 @@ def _create_empty_label(
     return group_handler
 
 
-def _create_empty_image(
+def create_empty_image_container(
     store: StoreOrGroup,
     shape: Collection[int],
     pixelsize: float,
@@ -189,14 +178,14 @@ def _create_empty_image(
     levels: int | list[str] = 5,
     yx_scaling_factor: float | tuple[float, float] = 2,
     z_scaling_factor: float = 1.0,
-    space_unit: SpaceUnits | str | None = None,
-    time_unit: TimeUnits | str | None = None,
+    space_unit: SpaceUnits | str | None = DefaultSpaceUnit,
+    time_unit: TimeUnits | str | None = DefaultTimeUnit,
     axes_names: Collection[str] | None = None,
     name: str | None = None,
     chunks: Collection[int] | None = None,
     dtype: str = "uint16",
     overwrite: bool = False,
-    version: NgffVersion = "0.4",
+    version: NgffVersions = DefaultNgffVersion,
 ) -> ZarrGroupHandler:
     """Create an empty OME-Zarr image with the given shape and metadata.
 
@@ -213,10 +202,10 @@ def _create_empty_image(
             dimensions. Defaults to 2.0.
         z_scaling_factor (float, optional): The down-scaling factor in z dimension.
             Defaults to 1.0.
-        space_unit (SpaceUnits | str | None, optional): The unit of space. Defaults to
-            None.
-        time_unit (TimeUnits | str | None, optional): The unit of time. Defaults to
-            None.
+        space_unit (SpaceUnits, optional): The unit of space. Defaults to
+            DefaultSpaceUnit.
+        time_unit (TimeUnits, optional): The unit of time. Defaults to
+            DefaultTimeUnit.
         axes_names (Collection[str] | None, optional): The names of the axes.
             If None the canonical names are used. Defaults to None.
         name (str | None, optional): The name of the image. Defaults to None.
@@ -226,7 +215,7 @@ def _create_empty_image(
         overwrite (bool, optional): Whether to overwrite an existing image.
             Defaults to True.
         version (str, optional): The version of the OME-Zarr specification.
-            Defaults to "0.4".
+            Defaults to DefaultVersion.
 
     """
     if axes_names is None:

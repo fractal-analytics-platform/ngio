@@ -321,7 +321,7 @@ def _ngio_to_v04_multiscale(name: str | None, datasets: list[Dataset]) -> Multis
             AxisV04(
                 name=axis.on_disk_name,
                 type=axis.axis_type.value if axis.axis_type is not None else None,
-                unit=axis.unit.value if axis.unit is not None else None,
+                unit=axis.unit if axis.unit is not None else None,
             )
         )
 

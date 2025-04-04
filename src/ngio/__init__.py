@@ -27,15 +27,23 @@ from ngio.images import (
     open_image,
     open_ome_zarr_container,
 )
-from ngio.ome_zarr_meta.ngio_specs import AxesSetup, ImageInWellPath, PixelSize
+from ngio.ome_zarr_meta.ngio_specs import (
+    AxesSetup,
+    DefaultNgffVersion,
+    ImageInWellPath,
+    NgffVersions,
+    PixelSize,
+)
 
 __all__ = [
     "ArrayLike",
     "AxesSetup",
+    "DefaultNgffVersion",
     "Dimensions",
     "Image",
     "ImageInWellPath",
     "Label",
+    "NgffVersions",
     "OmeZarrContainer",
     "OmeZarrPlate",
     "OmeZarrWell",

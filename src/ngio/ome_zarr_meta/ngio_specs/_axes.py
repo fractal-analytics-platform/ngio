@@ -32,18 +32,69 @@ class AxisType(str, Enum):
     space = "space"
 
 
-SpaceUnits = Literal["micrometer", "nanometer", "millimeter", "centimeter"]
-DefaultSpaceUnit: Literal["micrometer"] = "micrometer"
+SpaceUnits = Literal[
+    "micrometer",
+    "nanometer",
+    "angstrom",
+    "picometer",
+    "millimeter",
+    "centimeter",
+    "decimeter",
+    "meter",
+    "inch",
+    "foot",
+    "yard",
+    "mile",
+    "kilometer",
+    "hectometer",
+    "megameter",
+    "gigameter",
+    "terameter",
+    "petameter",
+    "exameter",
+    "parsec",
+    "femtometer",
+    "attometer",
+    "zeptometer",
+    "yoctometer",
+    "zettameter",
+    "yottameter",
+]
+DefaultSpaceUnit = "micrometer"
 
-TimeUnits = Literal["second"]
-DefaultTimeUnit: Literal["second"] = "second"
+TimeUnits = Literal[
+    "attosecond",
+    "centisecond",
+    "day",
+    "decisecond",
+    "exasecond",
+    "femtosecond",
+    "gigasecond",
+    "hectosecond",
+    "hour",
+    "kilosecond",
+    "megasecond",
+    "microsecond",
+    "millisecond",
+    "minute",
+    "nanosecond",
+    "petasecond",
+    "picosecond",
+    "second",
+    "terasecond",
+    "yoctosecond",
+    "yottasecond",
+    "zeptosecond",
+    "zettasecond",
+]
+DefaultTimeUnit = "second"
 
 
 class Axis(BaseModel):
     """Axis infos model."""
 
     on_disk_name: str
-    unit: SpaceUnits | TimeUnits | None = None
+    unit: str | None = None
     axis_type: AxisType | None = None
 
     model_config = ConfigDict(extra="forbid", frozen=True)
@@ -305,12 +356,27 @@ class AxesMapper:
         return _index_mapping
 
     @property
+    def axes_setup(self) -> AxesSetup:
+        """Return the axes setup."""
+        return self._axes_setup
+
+    @property
     def on_disk_axes(self) -> list[Axis]:
         return list(self._on_disk_axes)
 
     @property
     def on_disk_axes_names(self) -> list[str]:
         return [ax.on_disk_name for ax in self._on_disk_axes]
+
+    @property
+    def allow_non_canonical_axes(self) -> bool:
+        """Return if non canonical axes are allowed."""
+        return self._allow_non_canonical_axes
+
+    @property
+    def strict_canonical_order(self) -> bool:
+        """Return if strict canonical order is enforced."""
+        return self._strict_canonical_order
 
     def get_index(self, name: str) -> int | None:
         """Get the index of the axis by name."""
@@ -402,8 +468,8 @@ class AxesMapper:
 
 def canonical_axes(
     axes_names: Collection[str],
-    space_units: SpaceUnits | None = None,
-    time_units: TimeUnits | None = None,
+    space_units: SpaceUnits | None = DefaultSpaceUnit,
+    time_units: TimeUnits | None = DefaultTimeUnit,
 ) -> list[Axis]:
     """Create a new canonical axes mapper.
 
