@@ -1,5 +1,7 @@
 """A module for handling the Plate Collection in an OME-Zarr file."""
 
+from typing import Literal, overload
+
 from ngio.images import OmeZarrContainer
 from ngio.ome_zarr_meta import (
     ImageInWellPath,
@@ -12,7 +14,29 @@ from ngio.ome_zarr_meta import (
     get_well_meta_handler,
     path_in_well_validation,
 )
-from ngio.utils import AccessModeLiteral, StoreOrGroup, ZarrGroupHandler
+from ngio.tables import (
+    FeatureTable,
+    GenericRoiTable,
+    MaskingRoiTable,
+    RoiTable,
+    Table,
+    TablesContainer,
+    TypedTable,
+)
+from ngio.utils import (
+    AccessModeLiteral,
+    NgioValidationError,
+    NgioValueError,
+    StoreOrGroup,
+    ZarrGroupHandler,
+)
+
+
+def _default_table_container(handler: ZarrGroupHandler) -> TablesContainer | None:
+    """Return a default table container."""
+    success, table_handler = handler.safe_derive_handler("tables")
+    if success and isinstance(table_handler, ZarrGroupHandler):
+        return TablesContainer(table_handler)
 
 
 # Mock lock class that does nothing
@@ -165,14 +189,20 @@ class OmeZarrWell:
 class OmeZarrPlate:
     """A class to handle the Plate Collection in an OME-Zarr file."""
 
-    def __init__(self, group_handler: ZarrGroupHandler) -> None:
+    def __init__(
+        self,
+        group_handler: ZarrGroupHandler,
+        table_container: TablesContainer | None = None,
+    ) -> None:
         """Initialize the LabelGroupHandler.
 
         Args:
             group_handler: The Zarr group handler that contains the Plate.
+            table_container: The tables container that contains plate level tables.
         """
         self._group_handler = group_handler
         self._meta_handler = find_plate_meta_handler(group_handler)
+        self._tables_container = table_container
 
     def __repr__(self) -> str:
         """Return a string representation of the plate."""
@@ -636,6 +666,95 @@ class OmeZarrPlate:
             cache=cache,
             overwrite=overwrite,
             parallel_safe=parallel_safe,
+        )
+
+    @property
+    def tables_container(self) -> TablesContainer:
+        """Return the tables container."""
+        if self._tables_container is None:
+            self._tables_container = _default_table_container(self._group_handler)
+            if self._tables_container is None:
+                raise NgioValidationError("No tables found in the image.")
+        return self._tables_container
+
+    @property
+    def list_tables(self) -> list[str]:
+        """List all tables in the image."""
+        return self.tables_container.list()
+
+    def list_roi_tables(self) -> list[str]:
+        """List all ROI tables in the image."""
+        return self.tables_container.list_roi_tables()
+
+    @overload
+    def get_table(self, name: str, check_type: None) -> Table: ...
+
+    @overload
+    def get_table(self, name: str, check_type: Literal["roi_table"]) -> RoiTable: ...
+
+    @overload
+    def get_table(
+        self, name: str, check_type: Literal["masking_roi_table"]
+    ) -> MaskingRoiTable: ...
+
+    @overload
+    def get_table(
+        self, name: str, check_type: Literal["feature_table"]
+    ) -> FeatureTable: ...
+
+    @overload
+    def get_table(
+        self, name: str, check_type: Literal["generic_roi_table"]
+    ) -> GenericRoiTable: ...
+
+    def get_table(self, name: str, check_type: TypedTable | None = None) -> Table:
+        """Get a table from the image."""
+        table = self.tables_container.get(name)
+        match check_type:
+            case "roi_table":
+                if not isinstance(table, RoiTable):
+                    raise NgioValueError(
+                        f"Table '{name}' is not a ROI table. Found type: {table.type()}"
+                    )
+                return table
+            case "masking_roi_table":
+                if not isinstance(table, MaskingRoiTable):
+                    raise NgioValueError(
+                        f"Table '{name}' is not a masking ROI table. "
+                        f"Found type: {table.type()}"
+                    )
+                return table
+
+            case "generic_roi_table":
+                if not isinstance(table, GenericRoiTable):
+                    raise NgioValueError(
+                        f"Table '{name}' is not a generic ROI table. "
+                        f"Found type: {table.type()}"
+                    )
+                return table
+
+            case "feature_table":
+                if not isinstance(table, FeatureTable):
+                    raise NgioValueError(
+                        f"Table '{name}' is not a feature table. "
+                        f"Found type: {table.type()}"
+                    )
+                return table
+            case None:
+                return table
+            case _:
+                raise NgioValueError(f"Unknown check_type: {check_type}")
+
+    def add_table(
+        self,
+        name: str,
+        table: Table,
+        backend: str | None = None,
+        overwrite: bool = False,
+    ) -> None:
+        """Add a table to the image."""
+        self.tables_container.add(
+            name=name, table=table, backend=backend, overwrite=overwrite
         )
 
 

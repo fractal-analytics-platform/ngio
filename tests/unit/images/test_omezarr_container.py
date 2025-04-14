@@ -88,11 +88,11 @@ def test_create_ome_zarr_container(tmp_path: Path, array_mode: str):
     assert not ome_zarr.is_3d_time_series
     assert ome_zarr.space_unit == "micrometer"
     assert ome_zarr.time_unit is None
-    
+
     ome_zarr.set_axes_units(space_unit="yoctometer", time_unit="yoctosecond")
     assert ome_zarr.space_unit == "yoctometer"
     assert ome_zarr.time_unit is None
-    
+
     image = ome_zarr.get_image()
 
     assert image.shape == (10, 20, 30)
