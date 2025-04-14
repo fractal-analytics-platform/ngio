@@ -20,12 +20,24 @@ from ngio.utils import NgioValueError, ZarrGroupHandler
 def test_backend_manager(tmp_path: Path):
     manager = ImplementedTableBackends()
 
-    assert set(manager.available_backends) == {"experimental_json_v1", "anndata_v1"}
+    assert set(manager.available_backends) == {
+        "experimental_json_v1",
+        "anndata_v1",
+        "experimental_csv_v1",
+    }
     manager.add_backend(JsonTableBackend, overwrite=True)
 
     manager2 = ImplementedTableBackends()
-    assert set(manager2.available_backends) == {"experimental_json_v1", "anndata_v1"}
-    assert set(manager.available_backends) == {"experimental_json_v1", "anndata_v1"}
+    assert set(manager2.available_backends) == {
+        "experimental_json_v1",
+        "anndata_v1",
+        "experimental_csv_v1",
+    }
+    assert set(manager.available_backends) == {
+        "experimental_json_v1",
+        "anndata_v1",
+        "experimental_csv_v1",
+    }
 
     store = tmp_path / "test_backend_manager.zarr"
     handler = ZarrGroupHandler(store=store, cache=True, mode="a")
@@ -51,7 +63,7 @@ def test_json_backend(tmp_path: Path):
 
     assert backend.backend_name() == "experimental_json_v1"
     assert not backend.implements_anndata()
-    assert backend.implements_dataframe()
+    assert backend.implements_pandas()
 
     test_table = pd.DataFrame(
         {"a": [1, 2, 3], "b": [4.0, 5.0, 6.0], "c": ["a", "b", "c"]}
@@ -74,7 +86,7 @@ def test_csv_backend(tmp_path: Path):
 
     assert backend.backend_name() == "experimental_csv_v1"
     assert not backend.implements_anndata()
-    assert backend.implements_dataframe()
+    assert backend.implements_pandas()
 
     test_table = pd.DataFrame(
         {"a": [1, 2, 3], "b": [4.0, 5.0, 6.0], "c": ["a", "b", "c"]}
@@ -96,7 +108,7 @@ def test_anndata_backend(tmp_path: Path):
 
     assert backend.backend_name() == "anndata_v1"
     assert backend.implements_anndata()
-    assert backend.implements_dataframe()
+    assert backend.implements_pandas()
 
     test_table = pd.DataFrame(
         {"a": [1, 2, 3], "b": [4.0, 5.0, 6.0], "c": ["a", "b", "c"]}

@@ -138,7 +138,7 @@ class GenericTable:
             anndata = backend.load_as_anndata()
             table = cls(anndata=anndata)
 
-        elif backend.implements_dataframe():
+        elif backend.implements_pandas():
             dataframe = backend.load_as_dataframe()
             table = cls(dataframe=dataframe)
         else:

@@ -21,9 +21,14 @@ class JsonTableBackend(AbstractTableBackend):
         return False
 
     @staticmethod
-    def implements_dataframe() -> bool:
+    def implements_pandas() -> bool:
         """Whether the handler implements the dataframe protocol."""
         return True
+
+    @staticmethod
+    def implements_polars() -> bool:
+        """Whether the handler implements the polars protocol."""
+        return False
 
     def load_columns(self) -> list[str]:
         """List all labels in the group."""

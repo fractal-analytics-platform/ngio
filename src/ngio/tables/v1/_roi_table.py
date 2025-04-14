@@ -191,7 +191,7 @@ class _GenericRoiTableV1(Generic[_roi_meta]):
             )
             meta.backend = backend_name
 
-        if not backend.implements_dataframe:
+        if not backend.implements_pandas:
             raise NgioValueError(
                 "The backend does not implement the dataframe protocol."
             )

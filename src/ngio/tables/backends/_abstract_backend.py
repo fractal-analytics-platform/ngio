@@ -4,6 +4,8 @@ from typing import Literal
 
 from anndata import AnnData
 from pandas import DataFrame
+from polars import DataFrame as PolarsDataFrame
+from polars import LazyFrame
 
 from ngio.utils import ZarrGroupHandler
 
@@ -43,7 +45,13 @@ class AbstractTableBackend(ABC):
 
     @staticmethod
     @abstractmethod
-    def implements_dataframe() -> bool:
+    def implements_polars() -> bool:
+        """Whether the handler implements the polars protocol."""
+        raise NotImplementedError
+
+    @staticmethod
+    @abstractmethod
+    def implements_pandas() -> bool:
         """Whether the handler implements the dataframe protocol."""
         raise NotImplementedError
 
@@ -60,6 +68,10 @@ class AbstractTableBackend(ABC):
         """List all labels in the group."""
         raise NotImplementedError
 
+    def load_as_lazyframe(self, columns: Collection[str] | None = None) -> LazyFrame:
+        """List all labels in the group."""
+        raise NotImplementedError
+
     def write_from_dataframe(
         self, table: DataFrame, metadata: dict | None = None
     ) -> None:
@@ -67,5 +79,11 @@ class AbstractTableBackend(ABC):
         raise NotImplementedError
 
     def write_from_anndata(self, table: AnnData, metadata: dict | None = None) -> None:
+        """Consolidate the metadata in the store."""
+        raise NotImplementedError
+
+    def write_from_polars(
+        self, table: PolarsDataFrame | LazyFrame, metadata: dict | None = None
+    ) -> None:
         """Consolidate the metadata in the store."""
         raise NotImplementedError
