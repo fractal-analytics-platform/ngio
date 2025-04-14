@@ -8,7 +8,7 @@ import fsspec
 import zarr
 from filelock import BaseFileLock, FileLock
 from zarr.errors import ContainsGroupError, GroupNotFoundError
-from zarr.storage import DirectoryStore, FSStore, Store
+from zarr.storage import DirectoryStore, FSStore, MemoryStore, Store, StoreLike
 
 from ngio.utils import NgioFileExistsError, NgioFileNotFoundError, NgioValueError
 from ngio.utils._errors import NgioError
@@ -17,7 +17,9 @@ AccessModeLiteral = Literal["r", "r+", "w", "w-", "a"]
 # StoreLike is more restrictive than it could be
 # but to make sure we can handle the store correctly
 # we need to be more restrictive
-NgioSupportedStore = str | Path | fsspec.mapping.FSMap | FSStore | DirectoryStore
+NgioSupportedStore = (
+    str | Path | fsspec.mapping.FSMap | FSStore | DirectoryStore | MemoryStore
+)
 GenericStore = Store | NgioSupportedStore
 StoreOrGroup = GenericStore | zarr.Group
 
@@ -48,9 +50,7 @@ def _check_group(group: zarr.Group, mode: AccessModeLiteral) -> zarr.Group:
     return group
 
 
-def open_group_wrapper(
-    store: StoreOrGroup, mode: AccessModeLiteral
-) -> tuple[zarr.Group, NgioSupportedStore]:
+def open_group_wrapper(store: StoreOrGroup, mode: AccessModeLiteral) -> zarr.Group:
     """Wrapper around zarr.open_group with some additional checks.
 
     Args:
@@ -62,18 +62,11 @@ def open_group_wrapper(
     """
     if isinstance(store, zarr.Group):
         group = _check_group(store, mode)
-        if hasattr(group, "store_path"):
-            _store = group.store_path
-        if isinstance(group.store, DirectoryStore):
-            _store = group.store.path
-        else:
-            _store = group.store
-
-        _store = _check_store(_store)
-        return group, _store
+        _check_store(group.store)
+        return group
 
     try:
-        store = _check_store(store)
+        _check_store(store)
         group = zarr.open_group(store=store, mode=mode)
 
     except ContainsGroupError as e:
@@ -84,7 +77,7 @@ def open_group_wrapper(
     except GroupNotFoundError as e:
         raise NgioFileNotFoundError(f"No Zarr group found at {store}") from e
 
-    return group, store
+    return group
 
 
 class ZarrGroupHandler:
@@ -119,27 +112,29 @@ class ZarrGroupHandler:
                 "If you want to use the lock mechanism, you should not use the cache."
             )
 
-        _group, _store = open_group_wrapper(store, mode)
+        group = open_group_wrapper(store, mode)
+        _store = group.store
 
         # Make sure the cache is set in the attrs
         # in the same way as the cache in the handler
-        _group.attrs.cache = cache
+        group.attrs.cache = cache
 
         if parallel_safe:
-            if not isinstance(_store, str | Path):
+            if not isinstance(_store, DirectoryStore):
                 raise NgioValueError(
-                    "The store needs to be a path to use the lock mechanism."
+                    "The store needs to be a DirectoryStore to use the lock mechanism. "
+                    f"Instead, got {_store.__class__.__name__}."
                 )
-            self._lock_path = f"{_store}.lock"
+            store_path = Path(_store.path) / group.path
+            self._lock_path = store_path.with_suffix(".lock")
             self._lock = FileLock(self._lock_path, timeout=10)
 
         else:
             self._lock_path = None
             self._lock = None
 
-        self._group = _group
+        self._group = group
         self._mode = mode
-        self._store = _store
         self.use_cache = cache
         self._parallel_safe = parallel_safe
         self._cache = {}
@@ -148,19 +143,23 @@ class ZarrGroupHandler:
     def __repr__(self) -> str:
         """Return a string representation of the handler."""
         return (
-            f"ZarrGroupHandler(full_path={self.full_path}, mode={self.mode}, "
+            f"ZarrGroupHandler(full_url={self.full_url}, mode={self.mode}, "
             f"cache={self.use_cache}"
         )
 
     @property
-    def store(self) -> NgioSupportedStore:
+    def store(self) -> StoreLike:
         """Return the store of the group."""
-        return self._store
+        return self.group.store
 
     @property
-    def full_path(self) -> str:
+    def full_url(self) -> str | None:
         """Return the store path."""
-        return f"{self._store}/{self._group.path}"
+        if isinstance(self.store, DirectoryStore | FSStore):
+            _store_path = str(self.store.path)
+            _store_path = _store_path.rstrip("/")
+            return f"{self.store.path}/{self._group.path}"
+        return None
 
     @property
     def mode(self) -> AccessModeLiteral:
@@ -393,7 +392,7 @@ class ZarrGroupHandler:
         )
         if n_skipped > 0:
             raise NgioValueError(
-                f"Error copying group to {handler.full_path}, "
+                f"Error copying group to {handler.full_url}, "
                 f"#{n_skipped} files where skipped."
             )
 

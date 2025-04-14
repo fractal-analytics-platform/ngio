@@ -39,7 +39,7 @@ def custom_read_zarr(
         store (StoreOrGroup): A store or group to read the AnnData from.
         elem_to_read (Collection[str] | None): The elements to read from the store.
     """
-    group, _ = open_group_wrapper(store=store, mode="r")
+    group = open_group_wrapper(store=store, mode="r")
 
     if not isinstance(group.store, zarr.DirectoryStore):
         elem_to_read = ["X", "obs", "var"]

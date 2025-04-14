@@ -1,5 +1,4 @@
 from collections.abc import Collection
-from pathlib import Path
 
 from anndata import AnnData
 from pandas import DataFrame
@@ -64,13 +63,13 @@ class AnnDataBackend(AbstractTableBackend):
 
     def write_from_anndata(self, table: AnnData, metadata: dict | None = None) -> None:
         """Consolidate the metadata in the store."""
-        store = self._group_handler.store
-        if not isinstance(store, str | Path):
+        full_url = self._group_handler.full_url
+        if full_url is None:
             raise NgioValueError(
-                "To write an AnnData object the store must be a local path/str."
+                f"Ngio does not support writing to a store of type "
+                f"{type(table)}. Please make sure to use a compatible "
+                "store like a zarr.DirectoryStore."
             )
-
-        store = Path(store) / self._group_handler.group.path
-        table.write_zarr(store)
+        table.write_zarr(full_url)  # type: ignore
         if metadata is not None:
             self._group_handler.write_attrs(metadata)
