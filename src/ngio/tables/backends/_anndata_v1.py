@@ -66,8 +66,9 @@ class AnnDataBackend(AbstractTableBackend):
         full_url = self._group_handler.full_url
         if full_url is None:
             raise NgioValueError(
-                f"Ngio does not support writing to a store of type "
-                f"{type(table)}. Please make sure to use a compatible "
+                f"Ngio does not support writing file from a "
+                f"store of type {type(self._group_handler)}. "
+                "Please make sure to use a compatible "
                 "store like a zarr.DirectoryStore."
             )
         table.write_zarr(full_url)  # type: ignore

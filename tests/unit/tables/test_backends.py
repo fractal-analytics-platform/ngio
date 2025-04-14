@@ -12,6 +12,7 @@ from ngio.tables.backends._anndata_utils import (
     dataframe_to_anndata,
 )
 from ngio.tables.backends._anndata_v1 import AnnDataBackend
+from ngio.tables.backends._csv_v1 import CsvTableBackend
 from ngio.tables.backends._json_v1 import JsonTableBackend
 from ngio.utils import NgioValueError, ZarrGroupHandler
 
@@ -60,6 +61,28 @@ def test_json_backend(tmp_path: Path):
     backend.write_from_dataframe(test_table, metadata={"test": "test"})
     loaded_table = backend.load_as_dataframe()
     assert loaded_table.equals(test_table)
+    assert backend.load_columns() == ["a", "b", "c"]
+    assert backend._group_handler.load_attrs() == {"test": "test"}
+
+    assert backend.load_as_dataframe(columns=["a"]).equals(test_table[["a"]])
+
+
+def test_csv_backend(tmp_path: Path):
+    store = tmp_path / "test_csv_backend.zarr"
+    handler = ZarrGroupHandler(store=store, cache=True, mode="a")
+    backend = CsvTableBackend(handler)
+
+    assert backend.backend_name() == "experimental_csv_v1"
+    assert not backend.implements_anndata()
+    assert backend.implements_dataframe()
+
+    test_table = pd.DataFrame(
+        {"a": [1, 2, 3], "b": [4.0, 5.0, 6.0], "c": ["a", "b", "c"]}
+    )
+
+    backend.write_from_dataframe(test_table, metadata={"test": "test"})
+    loaded_table = backend.load_as_dataframe()
+    assert loaded_table.equals(test_table), loaded_table
     assert backend.load_columns() == ["a", "b", "c"]
     assert backend._group_handler.load_attrs() == {"test": "test"}
 

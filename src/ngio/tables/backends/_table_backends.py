@@ -7,6 +7,7 @@ from anndata import AnnData
 from pandas import DataFrame
 
 from ngio.tables.backends._anndata_v1 import AnnDataBackend
+from ngio.tables.backends._csv_v1 import CsvTableBackend
 from ngio.tables.backends._json_v1 import JsonTableBackend
 from ngio.utils import NgioValueError, ZarrGroupHandler
 
@@ -100,3 +101,4 @@ class ImplementedTableBackends:
 
 ImplementedTableBackends().add_backend(AnnDataBackend)
 ImplementedTableBackends().add_backend(JsonTableBackend)
+ImplementedTableBackends().add_backend(CsvTableBackend)
