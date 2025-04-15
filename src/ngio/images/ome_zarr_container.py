@@ -502,7 +502,7 @@ class OmeZarrContainer:
     def derive_label(
         self,
         name: str,
-        ref_image: Image | None = None,
+        ref_image: Image | Label | None = None,
         shape: Collection[int] | None = None,
         pixel_size: PixelSize | None = None,
         axes_names: Collection[str] | None = None,
@@ -515,9 +515,9 @@ class OmeZarrContainer:
         And add the label to the /labels group.
 
         Args:
-            store (StoreOrGroup): The Zarr store or group to create the image in.
-            ref_image (Image): The reference image.
             name (str): The name of the new image.
+            ref_image (Image | Label | None): A reference image that will be used
+                to create the new image.
             shape (Collection[int] | None): The shape of the new image.
             pixel_size (PixelSize | None): The pixel size of the new image.
             axes_names (Collection[str] | None): The axes names of the new image.

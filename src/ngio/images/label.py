@@ -143,7 +143,7 @@ class LabelsContainer:
     def derive(
         self,
         name: str,
-        ref_image: Image,
+        ref_image: Image | Label,
         shape: Collection[int] | None = None,
         pixel_size: PixelSize | None = None,
         axes_names: Collection[str] | None = None,
@@ -157,7 +157,8 @@ class LabelsContainer:
 
         Args:
             store (StoreOrGroup): The Zarr store or group to create the image in.
-            ref_image (Image): The reference image.
+            ref_image (Image | Label): A reference image that will be used to create
+                the new image.
             name (str): The name of the new image.
             shape (Collection[int] | None): The shape of the new image.
             pixel_size (PixelSize | None): The pixel size of the new image.
@@ -180,7 +181,7 @@ class LabelsContainer:
 
         label_group = self._group_handler.get_group(name, create_mode=True)
 
-        _derive_label(
+        derive_label(
             store=label_group,
             ref_image=ref_image,
             name=name,
@@ -199,9 +200,9 @@ class LabelsContainer:
         return self.get(name)
 
 
-def _derive_label(
+def derive_label(
     store: StoreOrGroup,
-    ref_image: Image,
+    ref_image: Image | Label,
     name: str,
     shape: Collection[int] | None = None,
     pixel_size: PixelSize | None = None,
@@ -214,7 +215,8 @@ def _derive_label(
 
     Args:
         store (StoreOrGroup): The Zarr store or group to create the image in.
-        ref_image (Image): The reference image.
+        ref_image (Image | Label): A reference image that will be used to
+            create the new image.
         name (str): The name of the new image.
         shape (Collection[int] | None): The shape of the new image.
         pixel_size (PixelSize | None): The pixel size of the new image.
