@@ -237,7 +237,9 @@ class TablesContainer:
                 "Use overwrite=True to replace it."
             )
 
-        table_handler = self._group_handler.derive_handler(path=name)
+        table_handler = self._group_handler.derive_handler(
+            path=name, overwrite=overwrite
+        )
 
         if backend is None:
             backend = table.backend_name

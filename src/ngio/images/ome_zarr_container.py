@@ -502,7 +502,7 @@ class OmeZarrContainer:
     def derive_label(
         self,
         name: str,
-        ref_image: Image | None = None,
+        ref_image: Image | Label | None = None,
         shape: Collection[int] | None = None,
         pixel_size: PixelSize | None = None,
         axes_names: Collection[str] | None = None,
@@ -515,9 +515,9 @@ class OmeZarrContainer:
         And add the label to the /labels group.
 
         Args:
-            store (StoreOrGroup): The Zarr store or group to create the image in.
-            ref_image (Image): The reference image.
             name (str): The name of the new image.
+            ref_image (Image | Label | None): A reference image that will be used
+                to create the new image.
             shape (Collection[int] | None): The shape of the new image.
             pixel_size (PixelSize | None): The pixel size of the new image.
             axes_names (Collection[str] | None): The axes names of the new image.
@@ -605,7 +605,6 @@ def create_empty_ome_zarr(
     dtype: str = "uint16",
     channel_labels: list[str] | None = None,
     channel_wavelengths: list[str] | None = None,
-    percentiles: tuple[float, float] | None = None,
     channel_colors: Collection[str] | None = None,
     channel_active: Collection[bool] | None = None,
     overwrite: bool = False,
@@ -640,8 +639,6 @@ def create_empty_ome_zarr(
             Defaults to None.
         channel_wavelengths (list[str] | None, optional): The wavelengths of the
             channels. Defaults to None.
-        percentiles (tuple[float, float] | None, optional): The percentiles of the
-            channels. Defaults to None.
         channel_colors (Collection[str] | None, optional): The colors of the channels.
             Defaults to None.
         channel_active (Collection[bool] | None, optional): Whether the channels are
@@ -674,7 +671,7 @@ def create_empty_ome_zarr(
     ome_zarr.set_channel_meta(
         labels=channel_labels,
         wavelength_id=channel_wavelengths,
-        percentiles=percentiles,
+        percentiles=None,
         colors=channel_colors,
         active=channel_active,
     )

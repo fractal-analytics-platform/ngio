@@ -21,7 +21,10 @@ from ngio.utils import (
 def test_group_handler_creation(tmp_path: Path, cache: bool):
     store = tmp_path / "test_group_handler_creation.zarr"
     handler = ZarrGroupHandler(store=store, cache=cache, mode="a")
-    assert handler.store == store
+
+    _store = handler.group.store
+    assert isinstance(_store, zarr.DirectoryStore)
+    assert Path(_store.path) == store
     assert handler.use_cache == cache
 
     attrs = handler.load_attrs()
@@ -96,7 +99,7 @@ def test_open_fail(tmp_path: Path):
     store = tmp_path / "test_open_fail.zarr"
     group = zarr.group(store=store, overwrite=True)
 
-    read_only_group, _ = open_group_wrapper(store=group, mode="r")
+    read_only_group = open_group_wrapper(store=group, mode="r")
     assert read_only_group._read_only
 
     with pytest.raises(NgioFileExistsError):

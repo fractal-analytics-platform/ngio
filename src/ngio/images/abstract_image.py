@@ -162,6 +162,7 @@ class AbstractImage(Generic[_image_handler]):
 
     def has_axis(self, axis: str) -> bool:
         """Return True if the image has the given axis."""
+        self.axes_mapper.get_index("x")
         return self.dimensions.has_axis(axis)
 
     def get_array(
