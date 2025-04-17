@@ -1,9 +1,13 @@
-from collections.abc import Collection
-
 import pandas as pd
 from pandas import DataFrame
+from polars import DataFrame as PolarsDataFrame
+from polars import LazyFrame
 
 from ngio.tables.backends._abstract_backend import AbstractTableBackend
+from ngio.tables.backends._utils import (
+    normalize_pandas_df,
+    normalize_polars_lf,
+)
 from ngio.utils import NgioFileNotFoundError
 
 
@@ -12,7 +16,7 @@ class JsonTableBackend(AbstractTableBackend):
 
     @staticmethod
     def backend_name() -> str:
-        """The name of the backend."""
+        """Return the name of the backend."""
         return "experimental_json_v1"
 
     @staticmethod
@@ -28,34 +32,62 @@ class JsonTableBackend(AbstractTableBackend):
     @staticmethod
     def implements_polars() -> bool:
         """Whether the handler implements the polars protocol."""
-        return False
-
-    def load_columns(self) -> list[str]:
-        """List all labels in the group."""
-        return list(self.load_as_dataframe().columns)
+        return True
 
     def _get_table_group(self):
+        """Get the table group, creating it if it doesn't exist."""
         try:
             table_group = self._group_handler.get_group(path="table")
         except NgioFileNotFoundError:
             table_group = self._group_handler.group.create_group("table")
         return table_group
 
-    def load_as_dataframe(self, columns: Collection[str] | None = None) -> DataFrame:
-        """List all labels in the group."""
+    def _load_as_pandas_df(self) -> DataFrame:
+        """Load the table as a pandas DataFrame."""
         table_group = self._get_table_group()
         table_dict = dict(table_group.attrs)
+
         data_frame = pd.DataFrame.from_dict(table_dict)
-        if columns is not None:
-            data_frame = data_frame[columns]
         return data_frame
 
-    def write_from_dataframe(
-        self, table: DataFrame, metadata: dict | None = None
-    ) -> None:
-        """Consolidate the metadata in the store."""
+    def load_as_pandas_df(self) -> DataFrame:
+        """Load the table as a pandas DataFrame."""
+        data_frame = self._load_as_pandas_df()
+        data_frame = normalize_pandas_df(
+            data_frame,
+            index_key=self.index_key,
+            index_type=self.index_type,
+            reset_index=False,
+        )
+        return data_frame
+
+    def _write_from_dict(self, table: dict) -> None:
+        """Write the table from a dictionary to the store."""
         table_group = self._get_table_group()
         table_group.attrs.clear()
-        table_group.attrs.update(table.to_dict())
-        if metadata is not None:
-            self._group_handler.write_attrs(metadata)
+        table_group.attrs.update(table)
+
+    def write_from_pandas(self, table: DataFrame) -> None:
+        """Write the table from a pandas DataFrame."""
+        table = normalize_pandas_df(
+            table,
+            index_key=self.index_key,
+            index_type=self.index_type,
+            reset_index=True,
+        )
+        print(table.index)
+        table_dict = table.to_dict(orient="list")
+        self._write_from_dict(table=table_dict)
+
+    def write_from_polars(self, table: PolarsDataFrame | LazyFrame) -> None:
+        """Write the table from a polars DataFrame or LazyFrame."""
+        table = normalize_polars_lf(
+            table,
+            index_key=self.index_key,
+            index_type=self.index_type,
+        )
+        if isinstance(table, LazyFrame):
+            table = table.collect()
+
+        table_dict = table.to_dict(as_series=False)
+        self._write_from_dict(table=table_dict)

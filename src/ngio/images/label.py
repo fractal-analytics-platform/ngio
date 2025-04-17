@@ -133,6 +133,12 @@ class LabelsContainer:
                 closest pixel size level will be returned.
 
         """
+        if name not in self.list():
+            raise NgioValueError(
+                f"Label '{name}' not found in the Labels group. "
+                f"Available labels: {self.list()}"
+            )
+
         group_handler = self._group_handler.derive_handler(name)
         label_meta_handler = find_label_meta_handler(group_handler)
         path = label_meta_handler.meta.get_dataset(
@@ -175,7 +181,7 @@ class LabelsContainer:
         existing_labels = self.list()
         if name in existing_labels and not overwrite:
             raise NgioValueError(
-                f"Table '{name}' already exists in the group. "
+                f"Label '{name}' already exists in the group. "
                 "Use overwrite=True to replace it."
             )
 

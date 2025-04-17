@@ -10,7 +10,7 @@ import pandas as pd
 from pydantic import BaseModel
 
 from ngio.tables._validators import validate_index_key
-from ngio.tables.backends import ImplementedTableBackends
+from ngio.tables.backends import BackendMeta, ImplementedTableBackends
 from ngio.utils import NgioValueError, ZarrGroupHandler
 
 
@@ -20,12 +20,11 @@ class RegionMeta(BaseModel):
     path: str
 
 
-class FeatureTableMeta(BaseModel):
+class FeatureTableMeta(BackendMeta):
     """Metadata for the ROI table."""
 
     fractal_table_version: Literal["1"] = "1"
     type: Literal["feature_table"] = "feature_table"
-    backend: str | None = None
     region: RegionMeta | None = None
     instance_key: str = "label"
 
@@ -107,7 +106,7 @@ class FeatureTableV1:
             )
 
         if self._dataframe is None and self._table_backend is not None:
-            self._dataframe = self._table_backend.load_as_dataframe()
+            self._dataframe = self._table_backend.load_as_pandas_df()
 
         if self._dataframe is None:
             raise NgioValueError(
@@ -177,6 +176,8 @@ class FeatureTableV1:
                 "Please add the table to a OME-Zarr Image before calling consolidate."
             )
 
-        self._table_backend.write_from_dataframe(
-            self.dataframe, metadata=self._meta.model_dump(exclude_none=True)
+        self._table_backend.write(
+            self.dataframe,
+            metadata=self._meta.model_dump(exclude_none=True),
+            mode="pandas",
         )

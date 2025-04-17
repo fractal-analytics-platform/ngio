@@ -2,9 +2,8 @@
 
 import pandas as pd
 from anndata import AnnData
-from pydantic import BaseModel
 
-from ngio.tables.backends import ImplementedTableBackends
+from ngio.tables.backends import BackendMeta, ImplementedTableBackends
 from ngio.tables.backends._anndata_utils import (
     anndata_to_dataframe,
     dataframe_to_anndata,
@@ -12,12 +11,11 @@ from ngio.tables.backends._anndata_utils import (
 from ngio.utils import NgioValueError, ZarrGroupHandler
 
 
-class GenericTableMeta(BaseModel):
+class GenericTableMeta(BackendMeta):
     """Metadata for the ROI table."""
 
     fractal_table_version: str | None = None
     type: str | None = None
-    backend: str | None = None
 
 
 class GenericTable:
@@ -139,7 +137,7 @@ class GenericTable:
             table = cls(anndata=anndata)
 
         elif backend.implements_pandas():
-            dataframe = backend.load_as_dataframe()
+            dataframe = backend.load_as_pandas_df()
             table = cls(dataframe=dataframe)
         else:
             raise NgioValueError(
@@ -173,10 +171,14 @@ class GenericTable:
             )
 
         if self.anndata_native:
-            self._table_backend.write_from_anndata(
-                self.anndata, metadata=self._meta.model_dump(exclude_none=True)
+            self._table_backend.write(
+                self.anndata,
+                metadata=self._meta.model_dump(exclude_none=True),
+                mode="anndata",
             )
         else:
-            self._table_backend.write_from_dataframe(
-                self.dataframe, metadata=self._meta.model_dump(exclude_none=True)
+            self._table_backend.write(
+                self.dataframe,
+                metadata=self._meta.model_dump(exclude_none=True),
+                mode="pandas",
             )

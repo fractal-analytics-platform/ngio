@@ -59,7 +59,7 @@ def test_backend_manager(tmp_path: Path):
 def test_json_backend(tmp_path: Path):
     store = tmp_path / "test_json_backend.zarr"
     handler = ZarrGroupHandler(store=store, cache=True, mode="a")
-    backend = JsonTableBackend(handler)
+    backend = JsonTableBackend(handler, index_type="str")
 
     assert backend.backend_name() == "experimental_json_v1"
     assert not backend.implements_anndata()
@@ -70,13 +70,14 @@ def test_json_backend(tmp_path: Path):
     )
     test_table.index = test_table.index.astype(str)
 
-    backend.write_from_dataframe(test_table, metadata={"test": "test"})
-    loaded_table = backend.load_as_dataframe()
+    backend.write(test_table, metadata={"test": "test"})
+    loaded_table = backend.load_as_pandas_df()
+    
     assert loaded_table.equals(test_table)
-    assert backend.load_columns() == ["a", "b", "c"]
-    assert backend._group_handler.load_attrs() == {"test": "test"}
 
-    assert backend.load_as_dataframe(columns=["a"]).equals(test_table[["a"]])
+    meta = backend._group_handler.load_attrs()
+    assert meta["test"] == "test"
+    assert meta["backend"] == "experimental_json_v1"
 
 
 def test_csv_backend(tmp_path: Path):
@@ -92,13 +93,12 @@ def test_csv_backend(tmp_path: Path):
         {"a": [1, 2, 3], "b": [4.0, 5.0, 6.0], "c": ["a", "b", "c"]}
     )
 
-    backend.write_from_dataframe(test_table, metadata={"test": "test"})
-    loaded_table = backend.load_as_dataframe()
+    backend.write(test_table, metadata={"test": "test"})
+    loaded_table = backend.load_as_pandas_df()
     assert loaded_table.equals(test_table), loaded_table
-    assert backend.load_columns() == ["a", "b", "c"]
-    assert backend._group_handler.load_attrs() == {"test": "test"}
-
-    assert backend.load_as_dataframe(columns=["a"]).equals(test_table[["a"]])
+    meta = backend._group_handler.load_attrs()
+    assert meta["test"] == "test"
+    assert meta["backend"] == "experimental_csv_v1"
 
 
 def test_anndata_backend(tmp_path: Path):
@@ -114,22 +114,17 @@ def test_anndata_backend(tmp_path: Path):
         {"a": [1, 2, 3], "b": [4.0, 5.0, 6.0], "c": ["a", "b", "c"]}
     )
 
-    backend.write_from_dataframe(test_table, metadata={"test": "test"})
-    loaded_table = backend.load_as_dataframe()
-    assert set(backend.load_columns()) == {"a", "b", "c"}
-    columns = backend.load_columns()
+    backend.write(test_table, metadata={"test": "test"})
+    loaded_table = backend.load_as_pandas_df()
 
-    for column in columns:
+    for column in loaded_table.columns:
         # Since the transformation from anndata to dataframe is not perfect
         # We can only compare the columns
         pd.testing.assert_series_equal(loaded_table[column], test_table[column])
 
-    assert backend._group_handler.load_attrs()["test"] == "test"
-
-    assert backend.load_as_dataframe(columns=["a"]).equals(test_table[["a"]])
-
-    with pytest.raises(NotImplementedError):
-        backend.load_as_anndata(columns=["a"])
+    meta = backend._group_handler.load_attrs()
+    assert meta["test"] == "test"
+    assert meta["backend"] == "anndata_v1"
 
 
 @pytest.mark.parametrize(

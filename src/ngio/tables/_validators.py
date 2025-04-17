@@ -100,7 +100,9 @@ def validate_index_key(
         )
 
 
-def validate_index_dtype(dataframe: pd.DataFrame, index_type: str) -> pd.DataFrame:
+def validate_index_dtype(
+    dataframe: pd.DataFrame, index_type: str | None
+) -> pd.DataFrame:
     """Check if the index of the DataFrame has the correct dtype."""
     match index_type:
         case "str":
@@ -131,6 +133,22 @@ def validate_index_dtype(dataframe: pd.DataFrame, index_type: str) -> pd.DataFra
                 raise NgioTableValidationError(
                     f"Table index must be of integer type, got {dataframe.index.dtype}"
                 )
+        case None:
+            if ptypes.is_string_dtype(dataframe.index):
+                return dataframe
+
+            try:
+                dataframe = dataframe.set_index(dataframe.index.astype(str))
+            except ValueError as e:
+                if "invalid literal for int() with base 10" in str(e):
+                    raise NgioTableValidationError(
+                        "Table index must be of integer type, got str."
+                        f" We tried implicit conversion and failed: {e}"
+                    ) from None
+                else:
+                    raise e from e
+
+            return dataframe
         case _:
             raise NgioValueError(f"index_type {index_type} not recognized")
 

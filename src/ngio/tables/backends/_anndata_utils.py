@@ -26,7 +26,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Collection
 
 
-def custom_read_zarr(
+def custom_anndata_read_zarr(
     store: StoreOrGroup, elem_to_read: Collection[str] | None = None
 ) -> AnnData:
     """Read from a hierarchical Zarr array store.
@@ -177,7 +177,7 @@ def dataframe_to_anndata(
 def anndata_to_dataframe(
     anndata: ad.AnnData,
     index_key: str | None = "label",
-    index_type: str = "int",
+    index_type: str | None = "int",
     overwrite: bool = False,
 ) -> pd.DataFrame:
     """Convert a AnnData object representing a fractal table to a pandas DataFrame.

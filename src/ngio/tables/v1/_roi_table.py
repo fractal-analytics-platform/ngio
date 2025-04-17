@@ -14,7 +14,7 @@ from pydantic import BaseModel
 
 from ngio.common import Roi
 from ngio.tables._validators import validate_columns
-from ngio.tables.backends import ImplementedTableBackends
+from ngio.tables.backends import BackendMeta, ImplementedTableBackends
 from ngio.utils import NgioValueError, ZarrGroupHandler
 
 REQUIRED_COLUMNS = [
@@ -91,12 +91,11 @@ def _rois_to_dataframe(rois: dict[str, Roi], index_key: str) -> pd.DataFrame:
     return dataframe
 
 
-class RoiTableV1Meta(BaseModel):
+class RoiTableV1Meta(BackendMeta):
     """Metadata for the ROI table."""
 
     fractal_table_version: Literal["1"] = "1"
     type: Literal["roi_table"] = "roi_table"
-    backend: str | None = None
 
 
 class RegionMeta(BaseModel):
@@ -105,12 +104,11 @@ class RegionMeta(BaseModel):
     path: str
 
 
-class MaskingRoiTableV1Meta(BaseModel):
+class MaskingRoiTableV1Meta(BackendMeta):
     """Metadata for the ROI table."""
 
     fractal_table_version: Literal["1"] = "1"
     type: Literal["masking_roi_table"] = "masking_roi_table"
-    backend: str | None = None
     region: RegionMeta | None = None
     instance_key: str = "label"
 
@@ -201,7 +199,7 @@ class _GenericRoiTableV1(Generic[_roi_meta]):
         table._meta = meta
         table._table_backend = backend
 
-        dataframe = backend.load_as_dataframe()
+        dataframe = backend.load_as_pandas_df()
         dataframe = validate_columns(
             dataframe,
             required_columns=REQUIRED_COLUMNS,
@@ -253,8 +251,8 @@ class _GenericRoiTableV1(Generic[_roi_meta]):
             required_columns=REQUIRED_COLUMNS,
             optional_columns=OPTIONAL_COLUMNS,
         )
-        self._table_backend.write_from_dataframe(
-            dataframe, metadata=self._meta.model_dump(exclude_none=True)
+        self._table_backend.write(
+            dataframe, metadata=self._meta.model_dump(exclude_none=True), mode="pandas"
         )
 
 
