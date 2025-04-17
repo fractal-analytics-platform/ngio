@@ -605,7 +605,6 @@ def create_empty_ome_zarr(
     dtype: str = "uint16",
     channel_labels: list[str] | None = None,
     channel_wavelengths: list[str] | None = None,
-    percentiles: tuple[float, float] | None = None,
     channel_colors: Collection[str] | None = None,
     channel_active: Collection[bool] | None = None,
     overwrite: bool = False,
@@ -640,8 +639,6 @@ def create_empty_ome_zarr(
             Defaults to None.
         channel_wavelengths (list[str] | None, optional): The wavelengths of the
             channels. Defaults to None.
-        percentiles (tuple[float, float] | None, optional): The percentiles of the
-            channels. Defaults to None.
         channel_colors (Collection[str] | None, optional): The colors of the channels.
             Defaults to None.
         channel_active (Collection[bool] | None, optional): Whether the channels are
@@ -674,7 +671,7 @@ def create_empty_ome_zarr(
     ome_zarr.set_channel_meta(
         labels=channel_labels,
         wavelength_id=channel_wavelengths,
-        percentiles=percentiles,
+        percentiles=None,
         colors=channel_colors,
         active=channel_active,
     )

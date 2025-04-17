@@ -75,7 +75,6 @@ class JsonTableBackend(AbstractTableBackend):
             index_type=self.index_type,
             reset_index=True,
         )
-        print(table.index)
         table_dict = table.to_dict(orient="list")
         self._write_from_dict(table=table_dict)
 
