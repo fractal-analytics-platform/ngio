@@ -72,7 +72,7 @@ def test_json_backend(tmp_path: Path):
 
     backend.write(test_table, metadata={"test": "test"})
     loaded_table = backend.load_as_pandas_df()
-    
+
     assert loaded_table.equals(test_table)
 
     meta = backend._group_handler.load_attrs()

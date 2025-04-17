@@ -154,6 +154,8 @@ class ImagesContainer:
         self,
         labels: Collection[str] | int | None = None,
         wavelength_id: Collection[str] | None = None,
+        start: Collection[float] | None = None,
+        end: Collection[float] | None = None,
         percentiles: tuple[float, float] | None = None,
         colors: Collection[str] | None = None,
         active: Collection[bool] | None = None,
@@ -166,6 +168,10 @@ class ImagesContainer:
                 If an integer is provided, the channels will be named "channel_i".
             wavelength_id(Collection[str] | None): The wavelength ID of the channel.
                 If None, the wavelength ID will be the same as the channel name.
+            start(Collection[float] | None): The start value for each channel.
+                If None, the start value will be computed from the image.
+            end(Collection[float] | None): The end value for each channel.
+                If None, the end value will be computed from the image.
             percentiles(tuple[float, float] | None): The start and end percentiles
                 for each channel. If None, the percentiles will not be computed.
             colors(Collection[str, NgioColors] | None): The list of colors for the
@@ -177,12 +183,40 @@ class ImagesContainer:
         low_res_dataset = self.meta.get_lowest_resolution_dataset()
         ref_image = self.get(path=low_res_dataset.path)
 
+        if start is not None and end is None:
+            raise NgioValidationError(
+                "If start is provided, end must be provided as well."
+            )
+        if end is not None and start is None:
+            raise NgioValidationError(
+                "If end is provided, start must be provided as well."
+            )
+
+        if start is not None and percentiles is not None:
+            raise NgioValidationError(
+                "If start and end are provided, percentiles must be None."
+            )
+
         if percentiles is not None:
             start, end = compute_image_percentile(
                 ref_image,
                 start_percentile=percentiles[0],
                 end_percentile=percentiles[1],
             )
+        elif start is not None and end is not None:
+            if len(start) != len(end):
+                raise NgioValidationError(
+                    "The start and end lists must have the same length."
+                )
+            if len(start) != self.num_channels:
+                raise NgioValidationError(
+                    "The start and end lists must have the same length as "
+                    "the number of channels."
+                )
+
+            start = list(start)
+            end = list(end)
+
         else:
             start, end = None, None
 
@@ -462,11 +496,19 @@ def derive_image_container(
         active = [
             c.channel_visualisation.active for c in ref_image._channels_meta.channels
         ]
+        start = [
+            c.channel_visualisation.start for c in ref_image._channels_meta.channels
+        ]
+        end = [
+            c.channel_visualisation.end for c in ref_image._channels_meta.channels
+        ]
     else:
         _labels = None
         wavelength_id = None
         colors = None
         active = None
+        start = None
+        end = None
 
     if labels is not None:
         if len(labels) != image_container.num_channels:
@@ -481,5 +523,7 @@ def derive_image_container(
         percentiles=None,
         colors=colors,
         active=active,
+        start=start,
+        end=end,
     )
     return image_container

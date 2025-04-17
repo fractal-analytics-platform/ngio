@@ -182,7 +182,7 @@ def normalize_pandas_df(
     pandas_df = _validate_cast_index_dtype_df(pandas_df, index_type)
     if pandas_df.index.name is not None:
         index_key = pandas_df.index.name
-        
+
     if reset_index and pandas_df.index.name is not None:
         pandas_df = pandas_df.reset_index()
     return pandas_df
