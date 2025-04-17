@@ -274,17 +274,25 @@ class ZarrGroupHandler:
         self,
         path: str,
         create_mode: bool = False,
+        overwrite: bool = False,
     ) -> zarr.Group:
         """Get a group from the group.
 
         Args:
             path (str): The path to the group.
             create_mode (bool): If True, create the group if it does not exist.
+            overwrite (bool): If True, overwrite the group if it exists.
 
         Returns:
             zarr.Group: The Zarr group.
 
         """
+        if overwrite and not create_mode:
+            raise NgioValueError("Cannot overwrite a group without create_mode=True.")
+
+        if overwrite:
+            return self.create_group(path, overwrite=overwrite)
+
         group = self._obj_get(path)
         if isinstance(group, zarr.Group):
             return group
@@ -360,9 +368,15 @@ class ZarrGroupHandler:
     def derive_handler(
         self,
         path: str,
+        overwrite: bool = False,
     ) -> "ZarrGroupHandler":
-        """Derive a new handler from the current handler."""
-        group = self.get_group(path, create_mode=True)
+        """Derive a new handler from the current handler.
+
+        Args:
+            path (str): The path to the group.
+            overwrite (bool): If True, overwrite the group if it exists.
+        """
+        group = self.get_group(path, create_mode=True, overwrite=overwrite)
         return ZarrGroupHandler(
             store=group,
             cache=self.use_cache,
@@ -374,10 +388,11 @@ class ZarrGroupHandler:
     def safe_derive_handler(
         self,
         path: str,
+        overwrite: bool = False,
     ) -> tuple[bool, "ZarrGroupHandler | NgioError"]:
         """Derive a new handler from the current handler."""
         try:
-            return True, self.derive_handler(path)
+            return True, self.derive_handler(path, overwrite=overwrite)
         except NgioError as e:
             return False, e
 

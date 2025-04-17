@@ -499,9 +499,7 @@ def derive_image_container(
         start = [
             c.channel_visualisation.start for c in ref_image._channels_meta.channels
         ]
-        end = [
-            c.channel_visualisation.end for c in ref_image._channels_meta.channels
-        ]
+        end = [c.channel_visualisation.end for c in ref_image._channels_meta.channels]
     else:
         _labels = None
         wavelength_id = None
