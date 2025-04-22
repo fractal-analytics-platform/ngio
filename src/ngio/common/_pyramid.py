@@ -190,12 +190,16 @@ def init_empty_pyramid(
             "The shape and chunks must have the same number of dimensions."
         )
 
+    if chunks is not None:
+        chunks = [min(c, s) for c, s in zip(chunks, ref_shape, strict=True)]
+
     if len(ref_shape) != len(scaling_factors):
         raise NgioValueError(
             "The shape and scaling factor must have the same number of dimensions."
         )
 
-    root_group, _ = open_group_wrapper(store, mode=mode)
+    root_group = open_group_wrapper(store, mode=mode)
+
     for path in paths:
         if any(s < 1 for s in ref_shape):
             raise NgioValueError(

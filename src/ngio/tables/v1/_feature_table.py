@@ -9,8 +9,8 @@ from typing import Literal
 import pandas as pd
 from pydantic import BaseModel
 
-from ngio.tables._validators import validate_index_key
-from ngio.tables.backends import ImplementedTableBackends
+from ngio.tables.backends import BackendMeta, ImplementedTableBackends
+from ngio.tables.backends._utils import normalize_pandas_df
 from ngio.utils import NgioValueError, ZarrGroupHandler
 
 
@@ -20,12 +20,11 @@ class RegionMeta(BaseModel):
     path: str
 
 
-class FeatureTableMeta(BaseModel):
+class FeatureTableMeta(BackendMeta):
     """Metadata for the ROI table."""
 
     fractal_table_version: Literal["1"] = "1"
     type: Literal["feature_table"] = "feature_table"
-    backend: str | None = None
     region: RegionMeta | None = None
     instance_key: str = "label"
 
@@ -53,8 +52,11 @@ class FeatureTableV1:
         if dataframe is None:
             self._dataframe = None
         else:
-            self._dataframe = validate_index_key(
-                dataframe, self._instance_key, overwrite=True
+            self._dataframe = normalize_pandas_df(
+                dataframe,
+                index_key=self._instance_key,
+                index_type="int",
+                reset_index=False,
             )
         self._table_backend = None
 
@@ -107,7 +109,7 @@ class FeatureTableV1:
             )
 
         if self._dataframe is None and self._table_backend is not None:
-            self._dataframe = self._table_backend.load_as_dataframe()
+            self._dataframe = self._table_backend.load_as_pandas_df()
 
         if self._dataframe is None:
             raise NgioValueError(
@@ -118,7 +120,12 @@ class FeatureTableV1:
     @dataframe.setter
     def dataframe(self, dataframe: pd.DataFrame) -> None:
         """Set the table as a DataFrame."""
-        self._dataframe = dataframe
+        self._dataframe = normalize_pandas_df(
+            dataframe,
+            index_key=self._instance_key,
+            index_type="int",
+            reset_index=False,
+        )
 
     @classmethod
     def _from_handler(
@@ -143,7 +150,7 @@ class FeatureTableV1:
             )
             meta.backend = backend_name
 
-        if not backend.implements_dataframe:
+        if not backend.implements_pandas:
             raise NgioValueError(
                 "The backend does not implement the dataframe protocol."
             )
@@ -177,6 +184,8 @@ class FeatureTableV1:
                 "Please add the table to a OME-Zarr Image before calling consolidate."
             )
 
-        self._table_backend.write_from_dataframe(
-            self.dataframe, metadata=self._meta.model_dump(exclude_none=True)
+        self._table_backend.write(
+            self.dataframe,
+            metadata=self._meta.model_dump(exclude_none=True),
+            mode="pandas",
         )

@@ -6,12 +6,13 @@ import pandas as pd
 import pandas.api.types as ptypes
 import pytest
 
-from ngio.tables.backends import ImplementedTableBackends
-from ngio.tables.backends._anndata_utils import (
-    anndata_to_dataframe,
-    dataframe_to_anndata,
+from ngio.tables.backends import (
+    ImplementedTableBackends,
+    convert_anndata_to_pandas,
+    convert_pandas_to_anndata,
 )
 from ngio.tables.backends._anndata_v1 import AnnDataBackend
+from ngio.tables.backends._csv_v1 import CsvTableBackend
 from ngio.tables.backends._json_v1 import JsonTableBackend
 from ngio.utils import NgioValueError, ZarrGroupHandler
 
@@ -19,12 +20,24 @@ from ngio.utils import NgioValueError, ZarrGroupHandler
 def test_backend_manager(tmp_path: Path):
     manager = ImplementedTableBackends()
 
-    assert set(manager.available_backends) == {"experimental_json_v1", "anndata_v1"}
+    assert set(manager.available_backends) == {
+        "experimental_json_v1",
+        "anndata_v1",
+        "experimental_csv_v1",
+    }
     manager.add_backend(JsonTableBackend, overwrite=True)
 
     manager2 = ImplementedTableBackends()
-    assert set(manager2.available_backends) == {"experimental_json_v1", "anndata_v1"}
-    assert set(manager.available_backends) == {"experimental_json_v1", "anndata_v1"}
+    assert set(manager2.available_backends) == {
+        "experimental_json_v1",
+        "anndata_v1",
+        "experimental_csv_v1",
+    }
+    assert set(manager.available_backends) == {
+        "experimental_json_v1",
+        "anndata_v1",
+        "experimental_csv_v1",
+    }
 
     store = tmp_path / "test_backend_manager.zarr"
     handler = ZarrGroupHandler(store=store, cache=True, mode="a")
@@ -46,24 +59,61 @@ def test_backend_manager(tmp_path: Path):
 def test_json_backend(tmp_path: Path):
     store = tmp_path / "test_json_backend.zarr"
     handler = ZarrGroupHandler(store=store, cache=True, mode="a")
-    backend = JsonTableBackend(handler)
+    backend = JsonTableBackend(handler, index_type="str")
 
     assert backend.backend_name() == "experimental_json_v1"
     assert not backend.implements_anndata()
-    assert backend.implements_dataframe()
+    assert backend.implements_pandas()
 
     test_table = pd.DataFrame(
         {"a": [1, 2, 3], "b": [4.0, 5.0, 6.0], "c": ["a", "b", "c"]}
     )
     test_table.index = test_table.index.astype(str)
 
-    backend.write_from_dataframe(test_table, metadata={"test": "test"})
-    loaded_table = backend.load_as_dataframe()
-    assert loaded_table.equals(test_table)
-    assert backend.load_columns() == ["a", "b", "c"]
-    assert backend._group_handler.load_attrs() == {"test": "test"}
+    backend.write(test_table, metadata={"test": "test"})
+    loaded_table = backend.load_as_pandas_df()
 
-    assert backend.load_as_dataframe(columns=["a"]).equals(test_table[["a"]])
+    assert loaded_table.equals(test_table)
+
+    meta = backend._group_handler.load_attrs()
+    assert meta["test"] == "test"
+    assert meta["backend"] == "experimental_json_v1"
+
+    a_data = backend.load_as_anndata()
+
+    with pytest.raises(NotImplementedError):
+        backend.write(a_data, metadata={"test": "test"})
+
+    lf_data = backend.load_as_polars_lf()
+    backend.write(lf_data, metadata={"test": "test"})
+
+
+def test_csv_backend(tmp_path: Path):
+    store = tmp_path / "test_csv_backend.zarr"
+    handler = ZarrGroupHandler(store=store, cache=True, mode="a")
+    backend = CsvTableBackend(handler)
+
+    assert backend.backend_name() == "experimental_csv_v1"
+    assert not backend.implements_anndata()
+    assert backend.implements_pandas()
+
+    test_table = pd.DataFrame(
+        {"a": [1, 2, 3], "b": [4.0, 5.0, 6.0], "c": ["a", "b", "c"]}
+    )
+
+    backend.write(test_table, metadata={"test": "test"})
+    loaded_table = backend.load_as_pandas_df()
+    assert loaded_table.equals(test_table), loaded_table
+    meta = backend._group_handler.load_attrs()
+    assert meta["test"] == "test"
+    assert meta["backend"] == "experimental_csv_v1"
+
+    a_data = backend.load_as_anndata()
+    with pytest.raises(NotImplementedError):
+        backend.write(a_data, metadata={"test": "test"})
+
+    lf_data = backend.load_as_polars_lf()
+    backend.write(lf_data, metadata={"test": "test"})
 
 
 def test_anndata_backend(tmp_path: Path):
@@ -73,28 +123,29 @@ def test_anndata_backend(tmp_path: Path):
 
     assert backend.backend_name() == "anndata_v1"
     assert backend.implements_anndata()
-    assert backend.implements_dataframe()
+    assert backend.implements_pandas()
 
     test_table = pd.DataFrame(
         {"a": [1, 2, 3], "b": [4.0, 5.0, 6.0], "c": ["a", "b", "c"]}
     )
 
-    backend.write_from_dataframe(test_table, metadata={"test": "test"})
-    loaded_table = backend.load_as_dataframe()
-    assert set(backend.load_columns()) == {"a", "b", "c"}
-    columns = backend.load_columns()
+    backend.write(test_table, metadata={"test": "test"})
+    loaded_table = backend.load_as_pandas_df()
 
-    for column in columns:
+    for column in loaded_table.columns:
         # Since the transformation from anndata to dataframe is not perfect
         # We can only compare the columns
         pd.testing.assert_series_equal(loaded_table[column], test_table[column])
 
-    assert backend._group_handler.load_attrs()["test"] == "test"
+    meta = backend._group_handler.load_attrs()
+    assert meta["test"] == "test"
+    assert meta["backend"] == "anndata_v1"
 
-    assert backend.load_as_dataframe(columns=["a"]).equals(test_table[["a"]])
+    a_data = backend.load_as_anndata()
+    backend.write(a_data, metadata={"test": "test"})
 
-    with pytest.raises(NotImplementedError):
-        backend.load_as_anndata(columns=["a"])
+    lf_data = backend.load_as_polars_lf()
+    backend.write(lf_data, metadata={"test": "test"})
 
 
 @pytest.mark.parametrize(
@@ -112,10 +163,10 @@ def test_anndata_to_dataframe(index_label: str | None, index_type: str):
 
     anndata = ad.AnnData(obs=test_obs, X=test_x)
 
-    dataframe = anndata_to_dataframe(
+    dataframe = convert_anndata_to_pandas(
         anndata,
         index_key=index_label,
-        index_type=index_type,
+        index_type=index_type,  # type: ignore[arg-type]
     )
 
     for column in test_obs.columns:
@@ -155,7 +206,10 @@ def test_dataframe_to_anndata(index_label: str | None, index_type: str):
     elif index_label is not None and index_type == "str":
         test_table.index = pd.Index(["a", "b", "c"], name=index_label)
 
-    anndata = dataframe_to_anndata(test_table, index_key=index_label)
+    anndata = convert_pandas_to_anndata(
+        test_table,
+        index_key=index_label,
+    )
 
     for column in anndata.obs.columns:
         pd.testing.assert_series_equal(
@@ -188,9 +242,14 @@ def test_round_trip(index_label: str | None, index_type: str):
     elif index_label is not None and index_type == "str":
         test_table.index = pd.Index(["a", "b", "c"], name=index_label)
 
-    anndata = dataframe_to_anndata(test_table, index_key=index_label)
-    datafame = anndata_to_dataframe(
-        anndata, index_key=index_label, index_type=index_type
+    anndata = convert_pandas_to_anndata(
+        test_table,
+        index_key=index_label,
+    )
+    datafame = convert_anndata_to_pandas(
+        anndata,
+        index_key=index_label,
+        index_type=index_type,  # type: ignore[arg-type]
     )
 
     for column in datafame.columns:

@@ -1,12 +1,14 @@
 """Protocol for table backends handlers."""
 
-from collections.abc import Collection
 from typing import Literal, Protocol
 
 from anndata import AnnData
 from pandas import DataFrame
+from polars import DataFrame as PolarsDataFrame
+from polars import LazyFrame
 
 from ngio.tables.backends._anndata_v1 import AnnDataBackend
+from ngio.tables.backends._csv_v1 import CsvTableBackend
 from ngio.tables.backends._json_v1 import JsonTableBackend
 from ngio.utils import NgioValueError, ZarrGroupHandler
 
@@ -16,33 +18,110 @@ class TableBackendProtocol(Protocol):
         self,
         group_handler: ZarrGroupHandler,
         index_key: str | None = None,
-        index_type: Literal["int", "str"] = "int",
-    ): ...
+        index_type: Literal["int", "str"] | None = None,
+    ):
+        """Backend constructor.
+
+        Index keys and index types are used to ensure that the
+        serialization and deserialization of the table
+        is consistent across different backends.
+
+        Making sure that this is consistent is
+        a duty of the backend implementations.
+        """
+        ...
 
     @staticmethod
-    def backend_name() -> str: ...
+    def backend_name() -> str:
+        """Return the name of the backend.
+
+        As a convention we set name as:
+            {backend_name}_v{version}
+
+        Where the version is a integer.
+        """
+        ...
 
     @staticmethod
-    def implements_anndata() -> bool: ...
+    def implements_anndata() -> bool:
+        """Check if the backend implements the anndata protocol.
+
+        If this is True, the backend should implement the
+        `load_as_anndata` and `write_from_anndata` methods.
+
+        If this is False, these methods should raise a
+        `NotImplementedError`.
+        """
+        ...
 
     @staticmethod
-    def implements_dataframe() -> bool: ...
+    def implements_pandas() -> bool:
+        """Check if the backend implements the pandas protocol.
 
-    def load_columns(self) -> list[str]: ...
+        If this is True, the backend should implement the
+        `load_as_dataframe` and `write_from_dataframe` methods.
 
-    def load_as_anndata(self, columns: Collection[str] | None = None) -> AnnData: ...
+        If this is False, these methods should raise a
+        `NotImplementedError`.
+        """
+        ...
 
-    def load_as_dataframe(
-        self, columns: Collection[str] | None = None
-    ) -> DataFrame: ...
+    @staticmethod
+    def implements_polars() -> bool:
+        """Check if the backend implements the polars protocol.
 
-    def write_from_dataframe(
-        self, table: DataFrame, metadata: dict | None = None
-    ) -> None: ...
+        If this is True, the backend should implement the
+        `load_as_polars` and `write_from_polars` methods.
 
-    def write_from_anndata(
-        self, table: AnnData, metadata: dict | None = None
-    ) -> None: ...
+        If this is False, these methods should raise a
+        `NotImplementedError`.
+        """
+        ...
+
+    def load_as_anndata(self) -> AnnData:
+        """Load the table as an AnnData object."""
+        ...
+
+    def load_as_pandas_df(self) -> DataFrame:
+        """Load the table as a pandas DataFrame."""
+        ...
+
+    def load_as_polars_lf(self) -> LazyFrame:
+        """Load the table as a polars LazyFrame."""
+        ...
+
+    def write_from_pandas(self, table: DataFrame) -> None:
+        """Serialize the table from a pandas DataFrame."""
+        ...
+
+    def write_from_anndata(self, table: AnnData) -> None:
+        """Serialize the table from an AnnData object."""
+        ...
+
+    def write_from_polars(self, table: LazyFrame | PolarsDataFrame) -> None:
+        """Serialize the table from a polars DataFrame or LazyFrame."""
+        ...
+
+    def write(
+        self,
+        table: DataFrame | AnnData | PolarsDataFrame | LazyFrame,
+        metadata: dict[str, str] | None = None,
+        mode: Literal["pandas", "anndata", "polars"] | None = None,
+    ) -> None:
+        """This is a generic write method.
+
+        Will call the appropriate write method
+        depending on the type of the table.
+
+        Moreover it will also write the metadata
+        if provided, and the backend methadata
+
+        the backend should write in the zarr group attributes
+            - backend: the backend name (self.backend_name())
+            - index_key: the index key
+            - index_type: the index type
+
+        """
 
 
 class ImplementedTableBackends:
@@ -68,7 +147,7 @@ class ImplementedTableBackends:
         backend_name: str | None,
         group_handler: ZarrGroupHandler,
         index_key: str | None = None,
-        index_type: Literal["int", "str"] = "int",
+        index_type: Literal["int", "str"] | None = None,
     ) -> TableBackendProtocol:
         """Try to get a handler for the given store based on the metadata version."""
         if backend_name is None:
@@ -100,3 +179,4 @@ class ImplementedTableBackends:
 
 ImplementedTableBackends().add_backend(AnnDataBackend)
 ImplementedTableBackends().add_backend(JsonTableBackend)
+ImplementedTableBackends().add_backend(CsvTableBackend)

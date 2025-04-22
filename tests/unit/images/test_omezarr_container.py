@@ -88,11 +88,11 @@ def test_create_ome_zarr_container(tmp_path: Path, array_mode: str):
     assert not ome_zarr.is_3d_time_series
     assert ome_zarr.space_unit == "micrometer"
     assert ome_zarr.time_unit is None
-    
+
     ome_zarr.set_axes_units(space_unit="yoctometer", time_unit="yoctosecond")
     assert ome_zarr.space_unit == "yoctometer"
     assert ome_zarr.time_unit is None
-    
+
     image = ome_zarr.get_image()
 
     assert image.shape == (10, 20, 30)
@@ -103,15 +103,17 @@ def test_create_ome_zarr_container(tmp_path: Path, array_mode: str):
     assert image.meta.get_lowest_resolution_dataset().path == "2"
 
     array = image.get_array(
-        x=slice(None), axes_order=["c", "z", "y", "x"], mode=array_mode
+        x=slice(None),
+        axes_order=["c", "z", "y", "x"],
+        mode=array_mode,  # type: ignore
     )
 
     assert array.shape == (1, 10, 20, 30)
 
-    array = array + 1
+    array = array + 1  # type: ignore
 
     image.set_array(array, x=slice(None), axes_order=["c", "z", "y", "x"])
-    image.consolidate(mode=array_mode)
+    image.consolidate(mode=array_mode)  # type: ignore
 
     # Omemeta
     ome_zarr.set_channel_meta(labels=["channel_x"])

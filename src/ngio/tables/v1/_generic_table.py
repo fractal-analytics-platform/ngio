@@ -2,22 +2,21 @@
 
 import pandas as pd
 from anndata import AnnData
-from pydantic import BaseModel
 
-from ngio.tables.backends import ImplementedTableBackends
-from ngio.tables.backends._anndata_utils import (
-    anndata_to_dataframe,
-    dataframe_to_anndata,
+from ngio.tables.backends import (
+    BackendMeta,
+    ImplementedTableBackends,
+    convert_anndata_to_pandas,
+    convert_pandas_to_anndata,
 )
 from ngio.utils import NgioValueError, ZarrGroupHandler
 
 
-class GenericTableMeta(BaseModel):
+class GenericTableMeta(BackendMeta):
     """Metadata for the ROI table."""
 
     fractal_table_version: str | None = None
     type: str | None = None
-    backend: str | None = None
 
 
 class GenericTable:
@@ -88,7 +87,7 @@ class GenericTable:
             return self._dataframe
 
         if self._anndata is not None:
-            return anndata_to_dataframe(self._anndata)
+            return convert_anndata_to_pandas(self._anndata)
 
         raise NgioValueError("No table loaded.")
 
@@ -105,7 +104,9 @@ class GenericTable:
             return self._anndata
 
         if self._dataframe is not None:
-            return dataframe_to_anndata(self._dataframe)
+            return convert_pandas_to_anndata(
+                self._dataframe,
+            )
         raise NgioValueError("No table loaded.")
 
     @anndata.setter
@@ -138,8 +139,8 @@ class GenericTable:
             anndata = backend.load_as_anndata()
             table = cls(anndata=anndata)
 
-        elif backend.implements_dataframe():
-            dataframe = backend.load_as_dataframe()
+        elif backend.implements_pandas():
+            dataframe = backend.load_as_pandas_df()
             table = cls(dataframe=dataframe)
         else:
             raise NgioValueError(
@@ -173,10 +174,14 @@ class GenericTable:
             )
 
         if self.anndata_native:
-            self._table_backend.write_from_anndata(
-                self.anndata, metadata=self._meta.model_dump(exclude_none=True)
+            self._table_backend.write(
+                self.anndata,
+                metadata=self._meta.model_dump(exclude_none=True),
+                mode="anndata",
             )
         else:
-            self._table_backend.write_from_dataframe(
-                self.dataframe, metadata=self._meta.model_dump(exclude_none=True)
+            self._table_backend.write(
+                self.dataframe,
+                metadata=self._meta.model_dump(exclude_none=True),
+                mode="pandas",
             )

@@ -1,15 +1,19 @@
 from pathlib import Path
 
+import pandas.testing as pdt
 import pytest
 import zarr
+from pandas import DataFrame
 
 from ngio import (
     ImageInWellPath,
     OmeZarrContainer,
     OmeZarrWell,
+    Roi,
     create_empty_plate,
     open_ome_zarr_plate,
 )
+from ngio.tables import GenericTable, RoiTable
 from ngio.utils import NgioValueError
 
 
@@ -144,3 +148,25 @@ def test_create_plate_with_wells(tmp_path: Path):
 
     store = test_plate.get_image_store(row="B", column="03", image_path="0")
     assert isinstance(store, zarr.Group)
+
+
+def test_tables_api(tmp_path: Path):
+    test_plate = create_empty_plate(tmp_path / "test_plate.zarr", name="test_plate")
+
+    test_df = DataFrame({"a": [1, 2], "b": [3, 4]})
+    test_table = GenericTable(test_df)
+
+    test_plate.add_table("test_table", test_table, backend="experimental_csv_v1")
+
+    test_roi_table = RoiTable(
+        rois=[Roi(name="roi_1", x_length=10, y_length=10, z_length=10)]  # type: ignore
+    )
+    test_plate.add_table("test_roi_table", test_roi_table)
+    assert test_plate.list_tables == ["test_table", "test_roi_table"]
+    assert test_plate.list_roi_tables() == ["test_roi_table"]
+
+    pdt.assert_frame_equal(
+        test_plate.get_table("test_table").dataframe,  # type: ignore
+        test_df,
+        check_names=False,
+    )
