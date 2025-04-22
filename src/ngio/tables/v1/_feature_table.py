@@ -9,8 +9,8 @@ from typing import Literal
 import pandas as pd
 from pydantic import BaseModel
 
-from ngio.tables._validators import validate_index_key
 from ngio.tables.backends import BackendMeta, ImplementedTableBackends
+from ngio.tables.backends._utils import normalize_pandas_df
 from ngio.utils import NgioValueError, ZarrGroupHandler
 
 
@@ -52,8 +52,11 @@ class FeatureTableV1:
         if dataframe is None:
             self._dataframe = None
         else:
-            self._dataframe = validate_index_key(
-                dataframe, self._instance_key, overwrite=True
+            self._dataframe = normalize_pandas_df(
+                dataframe,
+                index_key=self._instance_key,
+                index_type="int",
+                reset_index=False,
             )
         self._table_backend = None
 
@@ -117,7 +120,12 @@ class FeatureTableV1:
     @dataframe.setter
     def dataframe(self, dataframe: pd.DataFrame) -> None:
         """Set the table as a DataFrame."""
-        self._dataframe = dataframe
+        self._dataframe = normalize_pandas_df(
+            dataframe,
+            index_key=self._instance_key,
+            index_type="int",
+            reset_index=False,
+        )
 
     @classmethod
     def _from_handler(

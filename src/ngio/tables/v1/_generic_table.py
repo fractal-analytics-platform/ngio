@@ -3,10 +3,11 @@
 import pandas as pd
 from anndata import AnnData
 
-from ngio.tables.backends import BackendMeta, ImplementedTableBackends
-from ngio.tables.backends._anndata_utils import (
-    anndata_to_dataframe,
-    dataframe_to_anndata,
+from ngio.tables.backends import (
+    BackendMeta,
+    ImplementedTableBackends,
+    convert_anndata_to_pandas,
+    convert_pandas_to_anndata,
 )
 from ngio.utils import NgioValueError, ZarrGroupHandler
 
@@ -86,7 +87,7 @@ class GenericTable:
             return self._dataframe
 
         if self._anndata is not None:
-            return anndata_to_dataframe(self._anndata)
+            return convert_anndata_to_pandas(self._anndata)
 
         raise NgioValueError("No table loaded.")
 
@@ -103,7 +104,9 @@ class GenericTable:
             return self._anndata
 
         if self._dataframe is not None:
-            return dataframe_to_anndata(self._dataframe)
+            return convert_pandas_to_anndata(
+                self._dataframe,
+            )
         raise NgioValueError("No table loaded.")
 
     @anndata.setter

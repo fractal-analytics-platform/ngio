@@ -4,17 +4,11 @@ import numpy as np
 import pandas as pd
 import pandas.testing as pdt
 import polars as pl
+import polars.testing as pl_testing
 import pytest
 from anndata import AnnData
-from pandas import DataFrame
-from polars import DataFrame as PolarsDataFrame
-from polars import LazyFrame
 
 from ngio.tables.backends._utils import (
-    _check_for_mixed_types,
-    _check_for_supported_types,
-    _validate_cast_index_dtype_df,
-    _validate_index_key_df,
     convert_anndata_to_pandas,
     convert_anndata_to_polars,
     convert_pandas_to_anndata,
@@ -25,11 +19,7 @@ from ngio.tables.backends._utils import (
     normalize_pandas_df,
     normalize_polars_lf,
 )
-from ngio.utils import NgioTableValidationError, NgioValidationError, NgioValueError
-
-# -----------------
-# Test fixtures
-# -----------------
+from ngio.utils import NgioTableValidationError, NgioValueError
 
 
 def sample_pandas_df_no_index():
@@ -158,17 +148,47 @@ def test_fail_normalize_pandas_df():
 def test_normalize_polars_lf():
     """Test the conversion of an AnnData object to a pandas DataFrame."""
     lf = sample_polars_lf()
-    normalized_lf = normalize_polars_lf(lf, index_key="id", index_type="str").collect()
-    normalized_lf_int = normalize_polars_lf(
-        lf, index_key="id", index_type="int"
-    ).collect()
+    _ = normalize_polars_lf(lf, index_key="id", index_type="str").collect()
+    _ = normalize_polars_lf(lf, index_key="id", index_type="int").collect()
 
 
 def test_normalize_anndata():
     """Test the conversion of an AnnData object to a pandas DataFrame."""
     adata = sample_anndata()
-    normalized_adata = normalize_anndata(adata, index_key="str_col")
-    normalized_adata = normalize_anndata(adata, index_key="id")
+    _ = normalize_anndata(adata, index_key="str_col")
+    _ = normalize_anndata(adata, index_key="id")
 
     with pytest.raises(NgioTableValidationError):
         normalize_anndata(adata, index_key="not_exist")
+
+
+def test_convert_pandas_to_anndata_roundtrip():
+    """Test the conversion of an AnnData object to a pandas DataFrame."""
+    df = sample_pandas_df_no_index()
+    adata = convert_pandas_to_anndata(df, index_key="id")
+    df_back = convert_anndata_to_pandas(adata, index_key="id", reset_index=True)
+
+    for column in df.columns:
+        pdt.assert_series_equal(df[column], df_back[column], check_index=False)
+
+
+def test_convert_pandas_to_polars_roundtrip():
+    """Test the conversion of a pandas DataFrame to an AnnData object."""
+    df = sample_pandas_df_no_index()
+    lf = convert_pandas_to_polars(df, index_key="id")
+    df_back = convert_polars_to_pandas(lf, index_key="id", reset_index=True)
+
+    for column in df.columns:
+        pdt.assert_series_equal(df[column], df_back[column], check_index=False)
+
+
+def test_other_conversions():
+    """Test the conversion of a polars DataFrame to an AnnData object."""
+    lf = sample_polars_lf().collect()
+    adata = convert_polars_to_anndata(lf, index_key="id")
+    lf_back = convert_anndata_to_polars(adata, index_key="id").collect()
+    pl_testing.assert_frame_equal(
+        lf,
+        lf_back,
+        check_column_order=False,
+    )

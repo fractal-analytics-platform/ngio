@@ -6,10 +6,10 @@ import pandas as pd
 import pandas.api.types as ptypes
 import pytest
 
-from ngio.tables.backends import ImplementedTableBackends
-from ngio.tables.backends._anndata_utils import (
-    anndata_to_dataframe,
-    dataframe_to_anndata,
+from ngio.tables.backends import (
+    ImplementedTableBackends,
+    convert_anndata_to_pandas,
+    convert_pandas_to_anndata,
 )
 from ngio.tables.backends._anndata_v1 import AnnDataBackend
 from ngio.tables.backends._csv_v1 import CsvTableBackend
@@ -163,10 +163,10 @@ def test_anndata_to_dataframe(index_label: str | None, index_type: str):
 
     anndata = ad.AnnData(obs=test_obs, X=test_x)
 
-    dataframe = anndata_to_dataframe(
+    dataframe = convert_anndata_to_pandas(
         anndata,
         index_key=index_label,
-        index_type=index_type,
+        index_type=index_type,  # type: ignore[arg-type]
     )
 
     for column in test_obs.columns:
@@ -206,7 +206,10 @@ def test_dataframe_to_anndata(index_label: str | None, index_type: str):
     elif index_label is not None and index_type == "str":
         test_table.index = pd.Index(["a", "b", "c"], name=index_label)
 
-    anndata = dataframe_to_anndata(test_table, index_key=index_label)
+    anndata = convert_pandas_to_anndata(
+        test_table,
+        index_key=index_label,
+    )
 
     for column in anndata.obs.columns:
         pd.testing.assert_series_equal(
@@ -239,9 +242,14 @@ def test_round_trip(index_label: str | None, index_type: str):
     elif index_label is not None and index_type == "str":
         test_table.index = pd.Index(["a", "b", "c"], name=index_label)
 
-    anndata = dataframe_to_anndata(test_table, index_key=index_label)
-    datafame = anndata_to_dataframe(
-        anndata, index_key=index_label, index_type=index_type
+    anndata = convert_pandas_to_anndata(
+        test_table,
+        index_key=index_label,
+    )
+    datafame = convert_anndata_to_pandas(
+        anndata,
+        index_key=index_label,
+        index_type=index_type,  # type: ignore[arg-type]
     )
 
     for column in datafame.columns:

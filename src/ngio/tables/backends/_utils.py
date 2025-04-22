@@ -292,6 +292,7 @@ def convert_polars_to_pandas(
     polars_df: PolarsDataFrame | LazyFrame,
     index_key: str | None = None,
     index_type: Literal["int", "str"] | None = None,
+    reset_index: bool = False,
 ) -> DataFrame:
     """Convert a polars DataFrame or LazyFrame to a pandas DataFrame.
 
@@ -302,6 +303,8 @@ def convert_polars_to_pandas(
             Default is None.
         index_type (str | None): The type of the index column in the DataFrame.
             Either 'str' or 'int'. Default is None.
+        reset_index (bool): If True the index will be reset (i.e., the index will be
+            converted to a column). If False, the index will be kept as is.
 
     Returns:
         DataFrame: Converted and normalized pandas DataFrame.
@@ -314,7 +317,7 @@ def convert_polars_to_pandas(
         pandas_df,
         index_key=index_key,
         index_type=index_type,
-        reset_index=False,
+        reset_index=reset_index,
     )
     return pandas_df
 

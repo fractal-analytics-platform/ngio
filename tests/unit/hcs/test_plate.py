@@ -156,7 +156,7 @@ def test_tables_api(tmp_path: Path):
     test_df = DataFrame({"a": [1, 2], "b": [3, 4]})
     test_table = GenericTable(test_df)
 
-    test_plate.add_table("test_table", test_table)
+    test_plate.add_table("test_table", test_table, backend="experimental_csv_v1")
 
     test_roi_table = RoiTable(
         rois=[Roi(name="roi_1", x_length=10, y_length=10, z_length=10)]  # type: ignore
