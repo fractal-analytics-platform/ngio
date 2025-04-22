@@ -79,6 +79,14 @@ def test_json_backend(tmp_path: Path):
     assert meta["test"] == "test"
     assert meta["backend"] == "experimental_json_v1"
 
+    a_data = backend.load_as_anndata()
+
+    with pytest.raises(NotImplementedError):
+        backend.write(a_data, metadata={"test": "test"})
+
+    lf_data = backend.load_as_polars_lf()
+    backend.write(lf_data, metadata={"test": "test"})
+
 
 def test_csv_backend(tmp_path: Path):
     store = tmp_path / "test_csv_backend.zarr"
@@ -99,6 +107,13 @@ def test_csv_backend(tmp_path: Path):
     meta = backend._group_handler.load_attrs()
     assert meta["test"] == "test"
     assert meta["backend"] == "experimental_csv_v1"
+
+    a_data = backend.load_as_anndata()
+    with pytest.raises(NotImplementedError):
+        backend.write(a_data, metadata={"test": "test"})
+
+    lf_data = backend.load_as_polars_lf()
+    backend.write(lf_data, metadata={"test": "test"})
 
 
 def test_anndata_backend(tmp_path: Path):
@@ -125,6 +140,12 @@ def test_anndata_backend(tmp_path: Path):
     meta = backend._group_handler.load_attrs()
     assert meta["test"] == "test"
     assert meta["backend"] == "anndata_v1"
+
+    a_data = backend.load_as_anndata()
+    backend.write(a_data, metadata={"test": "test"})
+
+    lf_data = backend.load_as_polars_lf()
+    backend.write(lf_data, metadata={"test": "test"})
 
 
 @pytest.mark.parametrize(

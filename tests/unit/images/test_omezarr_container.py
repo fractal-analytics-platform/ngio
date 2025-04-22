@@ -103,15 +103,17 @@ def test_create_ome_zarr_container(tmp_path: Path, array_mode: str):
     assert image.meta.get_lowest_resolution_dataset().path == "2"
 
     array = image.get_array(
-        x=slice(None), axes_order=["c", "z", "y", "x"], mode=array_mode
+        x=slice(None),
+        axes_order=["c", "z", "y", "x"],
+        mode=array_mode,  # type: ignore
     )
 
     assert array.shape == (1, 10, 20, 30)
 
-    array = array + 1
+    array = array + 1  # type: ignore
 
     image.set_array(array, x=slice(None), axes_order=["c", "z", "y", "x"])
-    image.consolidate(mode=array_mode)
+    image.consolidate(mode=array_mode)  # type: ignore
 
     # Omemeta
     ome_zarr.set_channel_meta(labels=["channel_x"])
