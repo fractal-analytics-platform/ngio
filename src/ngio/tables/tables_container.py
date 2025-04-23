@@ -90,6 +90,7 @@ class ImplementedTables:
         version: str,
         handler: ZarrGroupHandler,
         backend_name: str | None = None,
+        strict: bool = True,
     ) -> Table:
         """Try to get a handler for the given store based on the metadata version."""
         _errors = {}
@@ -102,7 +103,12 @@ class ImplementedTables:
                 )
                 return table
             except Exception as e:
-                _errors[name] = e
+                if strict:
+                    raise NgioValidationError(
+                        f"Could not load table {name} from handler. Error: {e}"
+                    ) from e
+                else:
+                    _errors[name] = e
         # If no table was found, we can try to load the table from a generic table
         try:
             table = GenericTable._from_handler(
@@ -207,7 +213,9 @@ class TablesContainer:
                 filtered_tables.append(table_name)
         return filtered_tables
 
-    def get(self, name: str, backend_name: str | None = None) -> Table:
+    def get(
+        self, name: str, backend_name: str | None = None, strict: bool = True
+    ) -> Table:
         """Get a label from the group."""
         if name not in self.list():
             raise KeyError(f"Table '{name}' not found in the group.")
@@ -220,6 +228,7 @@ class TablesContainer:
             version=table_version,
             handler=table_handler,
             backend_name=backend_name,
+            strict=strict,
         )
 
     def add(

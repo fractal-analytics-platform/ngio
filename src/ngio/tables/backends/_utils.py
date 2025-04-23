@@ -53,6 +53,10 @@ def _validate_index_key_df(pandas_df: DataFrame, index_key: str | None) -> DataF
         pandas_df.index.name = index_key
         return pandas_df
 
+    if pandas_df.index.name is None:
+        pandas_df.index.name = index_key
+        return pandas_df
+
     raise NgioTableValidationError(f"Index key '{index_key}' is not found in DataFrame")
 
 

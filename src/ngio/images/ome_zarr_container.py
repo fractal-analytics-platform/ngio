@@ -354,6 +354,9 @@ class OmeZarrContainer:
         return self.tables_container.list_roi_tables()
 
     @overload
+    def get_table(self, name: str) -> Table: ...
+
+    @overload
     def get_table(self, name: str, check_type: None) -> Table: ...
 
     @overload
@@ -375,8 +378,19 @@ class OmeZarrContainer:
     ) -> GenericRoiTable: ...
 
     def get_table(self, name: str, check_type: TypedTable | None = None) -> Table:
-        """Get a table from the image."""
-        table = self.tables_container.get(name)
+        """Get a table from the image.
+
+        Args:
+            name (str): The name of the table.
+            check_type (TypedTable | None): The type of the table. If None, the
+                type is not checked. If a type is provided, the table must be of that
+                type.
+        """
+        if check_type is None:
+            table = self.tables_container.get(name, strict=False)
+            return table
+
+        table = self.tables_container.get(name, strict=True)
         match check_type:
             case "roi_table":
                 if not isinstance(table, RoiTable):
@@ -406,8 +420,6 @@ class OmeZarrContainer:
                         f"Table '{name}' is not a feature table. "
                         f"Found type: {table.type()}"
                     )
-                return table
-            case None:
                 return table
             case _:
                 raise NgioValueError(f"Unknown check_type: {check_type}")
