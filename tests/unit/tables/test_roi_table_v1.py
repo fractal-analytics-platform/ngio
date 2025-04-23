@@ -1,10 +1,13 @@
 from pathlib import Path
 
+import pandas as pd
 import pytest
 
+from ngio.tables import RoiTable
+from ngio.tables.backends._anndata_v1 import AnnDataBackend
 from ngio.tables.tables_container import open_table, write_table
-from ngio.tables.v1._roi_table import Roi, RoiTableV1
-from ngio.utils import NgioValueError
+from ngio.tables.v1._roi_table import Roi, RoiTableV1, RoiTableV1Meta
+from ngio.utils import NgioValueError, ZarrGroupHandler
 
 
 def test_roi_table_v1(tmp_path: Path):
@@ -66,3 +69,32 @@ def test_roi_table_v1(tmp_path: Path):
     assert loaded_table._meta.backend == "anndata_v1"
     assert loaded_table._meta.fractal_table_version == loaded_table.version()
     assert loaded_table._meta.type == loaded_table.type()
+
+
+def test_roi_no_index(tmp_path: Path):
+    """ngio needs to support reading a table without an index. for legacy reasons"""
+    handler = ZarrGroupHandler(tmp_path / "roi_table.zarr")
+    backend = AnnDataBackend(
+        group_handler=handler,
+    )
+
+    roi_table = pd.DataFrame(
+        {
+            "x_micrometer": [0.0, 1.0],
+            "y_micrometer": [0.0, 1.0],
+            "z_micrometer": [0.0, 1.0],
+            "len_x_micrometer": [1.0, 1.0],
+            "len_y_micrometer": [1.0, 1.0],
+            "len_z_micrometer": [1.0, 1.0],
+        }
+    )
+    roi_table.index = pd.Index(["roi_1", "roi_2"])
+
+    backend.write(
+        roi_table,
+        metadata=RoiTableV1Meta().model_dump(exclude_none=True),
+    )
+
+    roi_table = RoiTable._from_handler(handler=handler)
+    assert isinstance(roi_table, RoiTable)
+    assert len(roi_table.rois()) == 2
