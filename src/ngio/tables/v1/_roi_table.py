@@ -227,13 +227,18 @@ class _GenericRoiTableV1(Generic[_roi_meta]):
         """List all ROIs in the table."""
         return list(self._rois.values())
 
-    def add(self, roi: Roi | Iterable[Roi]) -> None:
-        """Append ROIs to the current table."""
+    def add(self, roi: Roi | Iterable[Roi], overwrite: bool = False) -> None:
+        """Append ROIs to the current table.
+
+        Args:
+            roi: A single ROI or a list of ROIs to add to the table.
+            overwrite: If True, overwrite existing ROIs with the same name.
+        """
         if isinstance(roi, Roi):
             roi = [roi]
 
         for _roi in roi:
-            if _roi.name in self._rois:
+            if not overwrite and _roi.name in self._rois:
                 raise NgioValueError(f"ROI {_roi.name} already exists in the table.")
             self._rois[_roi.name] = _roi
 

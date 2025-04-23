@@ -41,6 +41,7 @@ def test_roi_table_v1(tmp_path: Path):
     )
 
     with pytest.raises(NgioValueError):
+        # ROI name already exists
         table.add(
             roi=Roi(
                 name="roi2",
@@ -53,6 +54,20 @@ def test_roi_table_v1(tmp_path: Path):
                 unit="micrometer",  # type: ignore
             )
         )
+
+    table.add(
+        roi=Roi(
+            name="roi2",
+            x=0.0,
+            y=0.0,
+            z=0.0,
+            x_length=1.0,
+            y_length=1.0,
+            z_length=1.0,
+            unit="micrometer",  # type: ignore
+        ),
+        overwrite=True,
+    )
 
     write_table(store=tmp_path / "roi_table.zarr", table=table, backend="anndata_v1")
 
