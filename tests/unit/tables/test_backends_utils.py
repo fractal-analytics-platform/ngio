@@ -118,6 +118,17 @@ def test_normalize_pandas_df(in_df, out_df, index_key, index_type, reset_index):
     )
 
 
+def test_normalize_pandas_df_index_none():
+    """Test the normalization of a pandas DataFrame."""
+    df = normalize_pandas_df(
+        sample_pandas_df_no_index(),
+        index_key="new_index_name",
+        index_type="str",
+        reset_index=False,
+    )
+    assert df.index.name == "new_index_name"
+
+
 def test_fail_normalize_pandas_df():
     """Test the normalization of a pandas DataFrame."""
     with pytest.raises(NgioTableValidationError):
@@ -130,7 +141,7 @@ def test_fail_normalize_pandas_df():
 
     with pytest.raises(NgioTableValidationError):
         normalize_pandas_df(
-            sample_pandas_df_no_index(),
+            sample_pandas_df_str_index(),
             index_key="not_exist",
             index_type="str",
             reset_index=False,
