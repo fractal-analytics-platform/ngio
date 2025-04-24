@@ -10,6 +10,7 @@ from polars import LazyFrame
 from ngio.tables.backends._anndata_v1 import AnnDataBackend
 from ngio.tables.backends._csv_v1 import CsvTableBackend
 from ngio.tables.backends._json_v1 import JsonTableBackend
+from ngio.tables.backends._utils import SupportedTables
 from ngio.utils import NgioValueError, ZarrGroupHandler
 
 
@@ -42,12 +43,21 @@ class TableBackendProtocol(Protocol):
         """
         ...
 
+    @property
+    def group_handler(self) -> ZarrGroupHandler:
+        """Return the group handler."""
+        ...
+
     @staticmethod
     def implements_anndata() -> bool:
         """Check if the backend implements the anndata protocol.
 
         If this is True, the backend should implement the
-        `load_as_anndata` and `write_from_anndata` methods.
+        `write_from_anndata` method.
+
+        AnnData objects are more complex than DataFrames,
+        so if this is true the backend should implement the
+        full serialization of the AnnData object.
 
         If this is False, these methods should raise a
         `NotImplementedError`.
@@ -59,7 +69,7 @@ class TableBackendProtocol(Protocol):
         """Check if the backend implements the pandas protocol.
 
         If this is True, the backend should implement the
-        `load_as_dataframe` and `write_from_dataframe` methods.
+        `write_from_dataframe` methods.
 
         If this is False, these methods should raise a
         `NotImplementedError`.
@@ -71,7 +81,7 @@ class TableBackendProtocol(Protocol):
         """Check if the backend implements the polars protocol.
 
         If this is True, the backend should implement the
-        `load_as_polars` and `write_from_polars` methods.
+        `write_from_polars` methods.
 
         If this is False, these methods should raise a
         `NotImplementedError`.
@@ -88,6 +98,16 @@ class TableBackendProtocol(Protocol):
 
     def load_as_polars_lf(self) -> LazyFrame:
         """Load the table as a polars LazyFrame."""
+        ...
+
+    def load(self) -> SupportedTables:
+        """The default load method.
+
+        This method will be default way to load the table
+        from the backend. This method should wrap one of the
+        `load_as_anndata`, `load_as_dataframe` or `load_as_polars`
+        methods depending on the backend implementation.
+        """
         ...
 
     def write_from_pandas(self, table: DataFrame) -> None:

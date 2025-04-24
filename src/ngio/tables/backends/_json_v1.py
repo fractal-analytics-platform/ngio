@@ -61,6 +61,9 @@ class JsonTableBackend(AbstractTableBackend):
         )
         return data_frame
 
+    def load(self) -> DataFrame:
+        return self.load_as_pandas_df()
+
     def _write_from_dict(self, table: dict) -> None:
         """Write the table from a dictionary to the store."""
         table_group = self._get_table_group()

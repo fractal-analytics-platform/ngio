@@ -6,21 +6,27 @@ from ngio.tables.backends._table_backends import (
     TableBackendProtocol,
 )
 from ngio.tables.backends._utils import (
+    SupportedTables,
     convert_anndata_to_pandas,
     convert_anndata_to_polars,
     convert_pandas_to_anndata,
     convert_pandas_to_polars,
     convert_polars_to_anndata,
     convert_polars_to_pandas,
+    convert_to_anndata,
+    convert_to_pandas,
+    convert_to_polars,
     normalize_anndata,
     normalize_pandas_df,
     normalize_polars_lf,
+    normalize_table,
 )
 
 __all__ = [
     "AbstractTableBackend",
     "BackendMeta",
     "ImplementedTableBackends",
+    "SupportedTables",
     "TableBackendProtocol",
     "convert_anndata_to_pandas",
     "convert_anndata_to_polars",
@@ -28,7 +34,11 @@ __all__ = [
     "convert_pandas_to_polars",
     "convert_polars_to_anndata",
     "convert_polars_to_pandas",
+    "convert_to_anndata",
+    "convert_to_pandas",
+    "convert_to_polars",
     "normalize_anndata",
     "normalize_pandas_df",
     "normalize_polars_lf",
+    "normalize_table",
 ]

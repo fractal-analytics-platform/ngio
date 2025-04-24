@@ -83,6 +83,10 @@ class CsvTableBackend(AbstractTableBackend):
         )
         return dataframe
 
+    def load(self) -> DataFrame:
+        """Load the table as a pandas DataFrame."""
+        return self.load_as_pandas_df()
+
     def load_as_polars_lf(self) -> LazyFrame:
         """Load the table as a polars LazyFrame."""
         store = self._group_handler.store
