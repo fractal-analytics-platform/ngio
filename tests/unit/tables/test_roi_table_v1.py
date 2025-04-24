@@ -110,6 +110,6 @@ def test_roi_no_index(tmp_path: Path):
         metadata=RoiTableV1Meta().model_dump(exclude_none=True),
     )
 
-    roi_table = RoiTable._from_handler(handler=handler)
+    roi_table = RoiTable.from_handler(handler=handler)
     assert isinstance(roi_table, RoiTable)
     assert len(roi_table.rois()) == 2

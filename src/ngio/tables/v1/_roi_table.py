@@ -5,17 +5,19 @@ https://fractal-analytics-platform.github.io/fractal-tasks-core/tables/
 """
 
 # Import _type to avoid name conflict with table.type
-from builtins import type as _type
 from collections.abc import Iterable
-from typing import Generic, Literal, TypeVar
+from typing import Literal
 
 import pandas as pd
 from pydantic import BaseModel
 
 from ngio.common import Roi
-from ngio.tables._validators import validate_columns
-from ngio.tables.backends import BackendMeta, ImplementedTableBackends
-from ngio.utils import NgioValueError, ZarrGroupHandler
+from ngio.tables.abstract_table import (
+    AbstractBaseTable,
+    SupportedTables,
+)
+from ngio.tables.backends import BackendMeta, convert_to_pandas, normalize_pandas_df
+from ngio.utils import NgioTableValidationError, NgioValueError, ZarrGroupHandler
 
 REQUIRED_COLUMNS = [
     "x_micrometer",
@@ -35,6 +37,47 @@ ORIGIN_COLUMNS = [
 TRANSLATION_COLUMNS = ["translation_x", "translation_y", "translation_z"]
 
 OPTIONAL_COLUMNS = ORIGIN_COLUMNS + TRANSLATION_COLUMNS
+
+
+def validate_columns(
+    table_df: pd.DataFrame,
+    required_columns: list[str],
+    optional_columns: list[str] | None = None,
+) -> pd.DataFrame:
+    """Validate the columns headers of the table.
+
+    If a required column is missing, a TableValidationError is raised.
+    If a list of optional columns is provided, only required and optional columns are
+        allowed in the table.
+
+    Args:
+        table_df (pd.DataFrame): The DataFrame to validate.
+        required_columns (list[str]): A list of required columns.
+        optional_columns (list[str] | None): A list of optional columns.
+            Default is None.
+
+    Returns:
+        pd.DataFrame: The validated DataFrame.
+    """
+    table_header = table_df.columns
+    for column in required_columns:
+        if column not in table_header:
+            raise NgioTableValidationError(
+                f"Could not find required column: {column} in the table"
+            )
+
+    if optional_columns is None:
+        return table_df
+
+    possible_columns = [*required_columns, *optional_columns]
+    for column in table_header:
+        if column not in possible_columns:
+            raise NgioTableValidationError(
+                f"Could not find column: {column} in the list of possible columns. ",
+                f"Possible columns are: {possible_columns}",
+            )
+
+    return table_df
 
 
 def _dataframe_to_rois(dataframe: pd.DataFrame) -> dict[str, Roi]:
@@ -63,7 +106,39 @@ def _dataframe_to_rois(dataframe: pd.DataFrame) -> dict[str, Roi]:
     return rois
 
 
-def _rois_to_dataframe(rois: dict[str, Roi], index_key: str) -> pd.DataFrame:
+def _table_to_rois(
+    table: SupportedTables,
+    index_key: str | None = None,
+    index_type: Literal["int", "str"] | None = None,
+    required_columns: list[str] | None = None,
+    optional_columns: list[str] | None = None,
+) -> tuple[pd.DataFrame, dict[str, Roi]]:
+    """Convert a table to a dictionary of ROIs.
+
+    Args:
+        table: The table to convert.
+        index_key: The column name to use as the index of the DataFrame.
+        index_type: The type of the index column in the DataFrame.
+        required_columns: The required columns in the DataFrame.
+        optional_columns: The optional columns in the DataFrame.
+
+    Returns:
+        A dictionary of ROIs.
+    """
+    if required_columns is None:
+        required_columns = REQUIRED_COLUMNS
+    if optional_columns is None:
+        optional_columns = OPTIONAL_COLUMNS
+
+    dataframe = convert_to_pandas(
+        table,
+        index_key=index_key,
+        index_type=index_type,
+    )
+    return dataframe, _dataframe_to_rois(dataframe)
+
+
+def _rois_to_dataframe(rois: dict[str, Roi], index_key: str | None) -> pd.DataFrame:
     """Convert a list of WorldCooROI objects to a DataFrame."""
     data = []
     for roi in rois.values():
@@ -87,52 +162,23 @@ def _rois_to_dataframe(rois: dict[str, Roi], index_key: str) -> pd.DataFrame:
                 row[col] = extra[col]
         data.append(row)
     dataframe = pd.DataFrame(data)
-    dataframe = dataframe.set_index(index_key)
+    dataframe = normalize_pandas_df(dataframe, index_key=index_key)
     return dataframe
 
 
-class RoiTableV1Meta(BackendMeta):
-    """Metadata for the ROI table."""
-
-    fractal_table_version: Literal["1"] = "1"
-    type: Literal["roi_table"] = "roi_table"
-
-
-class RegionMeta(BaseModel):
-    """Metadata for the region."""
-
-    path: str
-
-
-class MaskingRoiTableV1Meta(BackendMeta):
-    """Metadata for the ROI table."""
-
-    fractal_table_version: Literal["1"] = "1"
-    type: Literal["masking_roi_table"] = "masking_roi_table"
-    region: RegionMeta | None = None
-    instance_key: str = "label"
-
-
-_roi_meta = TypeVar("_roi_meta", RoiTableV1Meta, MaskingRoiTableV1Meta)
-
-
-class _GenericRoiTableV1(Generic[_roi_meta]):
-    """Class to a non-specific table."""
-
-    _meta: _roi_meta
-
+class _GenericRoiTableV1(AbstractBaseTable):
     def __init__(
-        self, meta: _roi_meta | None = None, rois: Iterable[Roi] | None = None
+        self,
+        meta: BackendMeta,
+        rois: Iterable[Roi] | None = None,
     ) -> None:
-        """Create a new ROI table."""
-        if meta is None:
-            raise NgioValueError("Metadata must be provided.")
-        self._meta = meta
-        self._table_backend = None
-
+        table = None
         self._rois = {}
         if rois is not None:
             self.add(rois)
+            table = _rois_to_dataframe(self._rois, index_key=meta.index_key)
+
+        super().__init__(meta, table)
 
     @staticmethod
     def type() -> str:
@@ -144,84 +190,52 @@ class _GenericRoiTableV1(Generic[_roi_meta]):
         """Return the version of the fractal table."""
         return "1"
 
-    @staticmethod
-    def _index_key() -> str:
-        """Return the index key of the table."""
-        raise NotImplementedError
-
-    @staticmethod
-    def _index_type() -> Literal["int", "str"]:
-        """Return the index type of the table."""
-        raise NotImplementedError
-
-    @staticmethod
-    def _meta_type() -> _type[_roi_meta]:
-        """Return the metadata type of the table."""
-        raise NotImplementedError
-
     @property
-    def backend_name(self) -> str | None:
-        """Return the name of the backend."""
-        if self._table_backend is None:
+    def table(self) -> SupportedTables:
+        """Return the table."""
+        if len(self._rois) > 0:
+            self._table = _rois_to_dataframe(self._rois, index_key=self.index_key)
+
+        return super().table
+
+    def set_table(
+        self, table: SupportedTables | None = None, refresh: bool = False
+    ) -> None:
+        if table is not None:
+            if not isinstance(table, SupportedTables):
+                raise NgioValueError(
+                    "The table must be a pandas DataFrame, polars LazyFrame, "
+                    " or AnnData object."
+                )
+
+            table, rois = _table_to_rois(
+                table,
+                index_key=self.index_key,
+                index_type=self.index_type,
+                required_columns=REQUIRED_COLUMNS,
+                optional_columns=OPTIONAL_COLUMNS,
+            )
+            self._table = table
+            self._rois = rois
             return None
-        return self._table_backend.backend_name()
 
-    @classmethod
-    def _from_handler(
-        cls, handler: ZarrGroupHandler, backend_name: str | None = None
-    ) -> "_GenericRoiTableV1":
-        """Create a new ROI table from a Zarr store."""
-        meta = cls._meta_type()(**handler.load_attrs())
+        if self._table is not None and not refresh:
+            return None
 
-        if backend_name is None:
-            backend = ImplementedTableBackends().get_backend(
-                backend_name=meta.backend,
-                group_handler=handler,
-                index_key=cls._index_key(),
-                index_type=cls._index_type(),
-            )
-        else:
-            backend = ImplementedTableBackends().get_backend(
-                backend_name=backend_name,
-                group_handler=handler,
-                index_key=cls._index_key(),
-                index_type=cls._index_type(),
-            )
-            meta.backend = backend_name
-
-        if not backend.implements_pandas:
+        if self._table_backend is None:
             raise NgioValueError(
-                "The backend does not implement the dataframe protocol."
+                "The table does not have a DataFrame in memory nor a backend."
             )
 
-        # This will be implemented in the child classes
-        table = cls()
-        table._meta = meta
-        table._table_backend = backend
-
-        dataframe = backend.load_as_pandas_df()
-        dataframe = validate_columns(
-            dataframe,
+        table, rois = _table_to_rois(
+            self._table_backend.load(),
+            index_key=self.index_key,
+            index_type=self.index_type,
             required_columns=REQUIRED_COLUMNS,
             optional_columns=OPTIONAL_COLUMNS,
         )
-        table._rois = _dataframe_to_rois(dataframe)
-        return table
-
-    def _set_backend(
-        self,
-        handler: ZarrGroupHandler,
-        backend_name: str | None = None,
-    ) -> None:
-        """Set the backend of the table."""
-        backend = ImplementedTableBackends().get_backend(
-            backend_name=backend_name,
-            group_handler=handler,
-            index_key=self._index_key(),
-            index_type=self._index_type(),
-        )
-        self._meta.backend = backend_name
-        self._table_backend = backend
+        self._table = table
+        self._rois = rois
 
     def rois(self) -> list[Roi]:
         """List all ROIs in the table."""
@@ -242,26 +256,17 @@ class _GenericRoiTableV1(Generic[_roi_meta]):
                 raise NgioValueError(f"ROI {_roi.name} already exists in the table.")
             self._rois[_roi.name] = _roi
 
-    def consolidate(self) -> None:
-        """Write the current state of the table to the Zarr file."""
-        if self._table_backend is None:
-            raise NgioValueError(
-                "No backend set for the table. "
-                "Please add the table to a OME-Zarr Image before calling consolidate."
-            )
 
-        dataframe = _rois_to_dataframe(self._rois, index_key=self._index_key())
-        dataframe = validate_columns(
-            dataframe,
-            required_columns=REQUIRED_COLUMNS,
-            optional_columns=OPTIONAL_COLUMNS,
-        )
-        self._table_backend.write(
-            dataframe, metadata=self._meta.model_dump(exclude_none=True), mode="pandas"
-        )
+class RoiTableV1Meta(BackendMeta):
+    """Metadata for the ROI table."""
+
+    fractal_table_version: Literal["1"] = "1"
+    type: Literal["roi_table"] = "roi_table"
+    index_key: str | None = "FieldIndex"
+    index_type: Literal["str", "int"] | None = "str"
 
 
-class RoiTableV1(_GenericRoiTableV1[RoiTableV1Meta]):
+class RoiTableV1(_GenericRoiTableV1):
     """Class to handle fractal ROI tables.
 
     To know more about the ROI table format, please refer to the
@@ -269,34 +274,38 @@ class RoiTableV1(_GenericRoiTableV1[RoiTableV1Meta]):
     https://fractal-analytics-platform.github.io/fractal-tasks-core/tables/
     """
 
-    def __init__(self, rois: Iterable[Roi] | None = None) -> None:
+    def __init__(
+        self, rois: Iterable[Roi] | None = None, *, meta: RoiTableV1Meta | None = None
+    ) -> None:
         """Create a new ROI table."""
-        super().__init__(RoiTableV1Meta(), rois)
+        if meta is None:
+            meta = RoiTableV1Meta()
+
+        meta.index_key = "FieldIndex"
+        meta.index_type = "str"
+        super().__init__(meta=meta, rois=rois)
 
     def __repr__(self) -> str:
         """Return a string representation of the table."""
         prop = f"num_rois={len(self._rois)}"
         return f"RoiTableV1({prop})"
 
+    @classmethod
+    def from_handler(
+        cls, handler: ZarrGroupHandler, backend_name: str | None = None
+    ) -> "RoiTableV1":
+        table = cls._from_handler(
+            handler=handler,
+            backend_name=backend_name,
+            meta_model=RoiTableV1Meta,
+        )
+        table._rois = _dataframe_to_rois(table.dataframe)
+        return table
+
     @staticmethod
     def type() -> Literal["roi_table"]:
         """Return the type of the table."""
         return "roi_table"
-
-    @staticmethod
-    def _index_key() -> str:
-        """Return the index key of the table."""
-        return "FieldIndex"
-
-    @staticmethod
-    def _index_type() -> Literal["int", "str"]:
-        """Return the index type of the table."""
-        return "str"
-
-    @staticmethod
-    def _meta_type() -> _type[RoiTableV1Meta]:
-        """Return the metadata type of the table."""
-        return RoiTableV1Meta
 
     def get(self, roi_name: str) -> Roi:
         """Get an ROI from the table."""
@@ -305,7 +314,24 @@ class RoiTableV1(_GenericRoiTableV1[RoiTableV1Meta]):
         return self._rois[roi_name]
 
 
-class MaskingRoiTableV1(_GenericRoiTableV1[MaskingRoiTableV1Meta]):
+class RegionMeta(BaseModel):
+    """Metadata for the region."""
+
+    path: str
+
+
+class MaskingRoiTableV1Meta(BackendMeta):
+    """Metadata for the ROI table."""
+
+    fractal_table_version: Literal["1"] = "1"
+    type: Literal["masking_roi_table"] = "masking_roi_table"
+    region: RegionMeta | None = None
+    instance_key: str = "label"
+    index_key: str | None = "label"
+    index_type: Literal["int", "str"] | None = "int"
+
+
+class MaskingRoiTableV1(_GenericRoiTableV1):
     """Class to handle fractal ROI tables.
 
     To know more about the ROI table format, please refer to the
@@ -316,47 +342,62 @@ class MaskingRoiTableV1(_GenericRoiTableV1[MaskingRoiTableV1Meta]):
     def __init__(
         self,
         rois: Iterable[Roi] | None = None,
+        *,
         reference_label: str | None = None,
+        meta: MaskingRoiTableV1Meta | None = None,
     ) -> None:
         """Create a new ROI table."""
-        meta = MaskingRoiTableV1Meta()
+        if meta is None:
+            meta = MaskingRoiTableV1Meta()
+
         if reference_label is not None:
             meta.region = RegionMeta(path=reference_label)
-        super().__init__(meta, rois)
+
+        meta.index_key = "label"
+        meta.index_type = "int"
+        super().__init__(meta=meta, rois=rois)
 
     def __repr__(self) -> str:
         """Return a string representation of the table."""
-        prop = f"num_rois={len(self._rois)}"
         if self.reference_label is not None:
-            prop += f", reference_label={self.reference_label}"
+            prop = f"num_rois={len(self._rois)}, reference_label={self.reference_label}"
+        else:
+            prop = f"num_rois={len(self._rois)}"
         return f"MaskingRoiTableV1({prop})"
+
+    @classmethod
+    def from_handler(
+        cls, handler: ZarrGroupHandler, backend_name: str | None = None
+    ) -> "MaskingRoiTableV1":
+        table = cls._from_handler(
+            handler=handler,
+            backend_name=backend_name,
+            meta_model=MaskingRoiTableV1Meta,
+        )
+        table._rois = _dataframe_to_rois(table.dataframe)
+        return table
 
     @staticmethod
     def type() -> Literal["masking_roi_table"]:
         """Return the type of the table."""
         return "masking_roi_table"
 
-    @staticmethod
-    def _index_key() -> str:
-        """Return the index key of the table."""
-        return "label"
-
-    @staticmethod
-    def _index_type() -> Literal["int", "str"]:
-        """Return the index type of the table."""
-        return "int"
-
-    @staticmethod
-    def _meta_type() -> _type[MaskingRoiTableV1Meta]:
-        """Return the metadata type of the table."""
-        return MaskingRoiTableV1Meta
+    @property
+    def meta(self) -> MaskingRoiTableV1Meta:
+        """Return the metadata of the table."""
+        if not isinstance(self._meta, MaskingRoiTableV1Meta):
+            raise NgioValueError(
+                "The metadata of the table is not of type MaskingRoiTableV1Meta."
+            )
+        return self._meta
 
     @property
     def reference_label(self) -> str | None:
         """Return the reference label."""
-        path = self._meta.region
+        path = self.meta.region
         if path is None:
             return None
+
         path = path.path
         path = path.split("/")[-1]
         return path

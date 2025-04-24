@@ -2,6 +2,9 @@
 
 from typing import Literal, Protocol
 
+import pandas as pd
+
+from ngio.tables.backends import SupportedTables
 from ngio.tables.v1 import FeatureTableV1, MaskingRoiTableV1, RoiTableV1
 from ngio.tables.v1._generic_table import GenericTable
 from ngio.tables.v1._roi_table import _GenericRoiTableV1
@@ -37,19 +40,45 @@ class Table(Protocol):
         """The name of the backend."""
         ...
 
+    @property
+    def table(self) -> SupportedTables:
+        """Return the table."""
+        ...
+
+    @property
+    def dataframe(self) -> pd.DataFrame:
+        """Return the table as a DataFrame."""
+        ...
+
+    def set_table(
+        self,
+        table: SupportedTables | None = None,
+        refresh: bool = False,
+    ) -> None:
+        """Set the table.
+
+        If an object is passed, it will be used as the table.
+        If None is passed, the table will be loaded from the backend.
+
+        If refresh is True, the table will be reloaded from the backend.
+            If table is not None, this will be ignored.
+        """
+
+    def set_backend(
+        self,
+        handler: ZarrGroupHandler | None = None,
+        backend_name: str | None = None,
+        index_key: str | None = None,
+        index_type: Literal["int", "str"] | None = None,
+    ) -> None:
+        """Set the backend store and path for the table."""
+        ...
+
     @classmethod
-    def _from_handler(
+    def from_handler(
         cls, handler: ZarrGroupHandler, backend_name: str | None = None
     ) -> "Table":
         """Create a new table from a Zarr group handler."""
-        ...
-
-    def _set_backend(
-        self,
-        handler: ZarrGroupHandler,
-        backend_name: str | None = None,
-    ) -> None:
-        """Set the backend store and path for the table."""
         ...
 
     def consolidate(self) -> None:
@@ -98,7 +127,7 @@ class ImplementedTables:
             if name != _unique_table_name(type, version):
                 continue
             try:
-                table = table_cls._from_handler(
+                table = table_cls.from_handler(
                     handler=handler, backend_name=backend_name
                 )
                 return table
@@ -111,7 +140,7 @@ class ImplementedTables:
                     _errors[name] = e
         # If no table was found, we can try to load the table from a generic table
         try:
-            table = GenericTable._from_handler(
+            table = GenericTable.from_handler(
                 handler=handler, backend_name=backend_name
             )
             return table
@@ -253,7 +282,8 @@ class TablesContainer:
         if backend is None:
             backend = table.backend_name
 
-        table._set_backend(
+        table.set_table()
+        table.set_backend(
             handler=table_handler,
             backend_name=backend,
         )
@@ -314,7 +344,7 @@ def write_table(
     handler = ZarrGroupHandler(
         store=store, cache=cache, mode=mode, parallel_safe=parallel_safe
     )
-    table._set_backend(
+    table.set_backend(
         handler=handler,
         backend_name=backend,
     )
