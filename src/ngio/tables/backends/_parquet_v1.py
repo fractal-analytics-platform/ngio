@@ -14,7 +14,7 @@ def write_lf_to_parquet(path: str, table: pl.DataFrame) -> None:
 
 def write_df_to_parquet(path: str, table: pd.DataFrame) -> None:
     """Write a pandas DataFrame to a Parquet file."""
-    table.to_parquet(path)
+    table.to_parquet(path, index=False)
 
 
 class ParquetTableBackend(NonZarrBaseBackend):

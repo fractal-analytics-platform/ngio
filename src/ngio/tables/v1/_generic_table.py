@@ -1,10 +1,7 @@
 """Implementation of a generic table class."""
 
 from ngio.tables.abstract_table import AbstractBaseTable
-from ngio.tables.backends import (
-    BackendMeta,
-    SupportedTables,
-)
+from ngio.tables.backends import BackendMeta
 from ngio.utils import ZarrGroupHandler
 
 
@@ -14,20 +11,6 @@ class GenericTable(AbstractBaseTable):
     This can be used to load any table that does not have
     a specific definition.
     """
-
-    def __init__(
-        self,
-        table: SupportedTables | None = None,
-        *,
-        meta: BackendMeta | None = None,
-    ) -> None:
-        """Initialize the GenericTable."""
-        if meta is None:
-            meta = BackendMeta()
-        super().__init__(
-            meta=meta,
-            table=table,
-        )
 
     @staticmethod
     def type() -> str:

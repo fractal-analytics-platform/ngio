@@ -169,8 +169,11 @@ def _rois_to_dataframe(rois: dict[str, Roi], index_key: str | None) -> pd.DataFr
 class _GenericRoiTableV1(AbstractBaseTable):
     def __init__(
         self,
+        *,
         meta: BackendMeta,
         rois: Iterable[Roi] | None = None,
+        index_key: str | None = None,
+        index_type: Literal["int", "str"] | None = None,
     ) -> None:
         table = None
         self._rois = {}
@@ -178,7 +181,9 @@ class _GenericRoiTableV1(AbstractBaseTable):
             self.add(rois)
             table = _rois_to_dataframe(self._rois, index_key=meta.index_key)
 
-        super().__init__(meta, table)
+        super().__init__(
+            table=table, meta=meta, index_key=index_key, index_type=index_type
+        )
 
     @staticmethod
     def type() -> str:
@@ -345,6 +350,8 @@ class MaskingRoiTableV1(_GenericRoiTableV1):
         *,
         reference_label: str | None = None,
         meta: MaskingRoiTableV1Meta | None = None,
+        index_key: str | None = None,
+        index_type: Literal["int", "str"] | None = None,
     ) -> None:
         """Create a new ROI table."""
         if meta is None:
@@ -353,9 +360,12 @@ class MaskingRoiTableV1(_GenericRoiTableV1):
         if reference_label is not None:
             meta.region = RegionMeta(path=reference_label)
 
-        meta.index_key = "label"
-        meta.index_type = "int"
-        super().__init__(meta=meta, rois=rois)
+        meta.index_key = "label" if index_key is None else index_key
+        meta.index_type = "int" if index_type is None else index_type
+        meta.instance_key = meta.index_key
+        super().__init__(
+            meta=meta, rois=rois, index_key=index_key, index_type=index_type
+        )
 
     def __repr__(self) -> str:
         """Return a string representation of the table."""

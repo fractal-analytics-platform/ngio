@@ -9,7 +9,7 @@ from typing import Literal
 from pydantic import BaseModel
 
 from ngio.tables.abstract_table import AbstractBaseTable
-from ngio.tables.backends import BackendMeta, SupportedTables, normalize_table
+from ngio.tables.backends import BackendMeta, SupportedTables
 from ngio.utils import NgioValueError
 from ngio.utils._zarr_utils import ZarrGroupHandler
 
@@ -45,6 +45,8 @@ class FeatureTableV1(AbstractBaseTable):
         *,
         reference_label: str | None = None,
         meta: FeatureTableMeta | None = None,
+        index_key: str | None = None,
+        index_type: Literal["int", "str"] | None = None,
     ) -> None:
         """Initialize the GenericTable."""
         if meta is None:
@@ -54,15 +56,18 @@ class FeatureTableV1(AbstractBaseTable):
             path = f"../labels/{reference_label}"
             meta = FeatureTableMeta(region=RegionMeta(path=path))
 
-        if table is not None:
-            if not isinstance(table, SupportedTables):
-                raise NgioValueError("The table is not of type SupportedTables.")
-            table = normalize_table(
-                table, index_key=meta.index_key, index_type=meta.index_type
+        if table is not None and not isinstance(table, SupportedTables):
+            raise NgioValueError(
+                f"The table is not of type SupportedTables. Got {type(table)}"
             )
+
+        if index_key is not None:
+            meta.instance_key = index_key
         super().__init__(
-            meta=meta,
             table=table,
+            meta=meta,
+            index_key=index_key,
+            index_type=index_type,
         )
 
     def __repr__(self) -> str:

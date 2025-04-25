@@ -19,13 +19,6 @@ from ngio.tables.backends import (
 from ngio.utils import NgioValueError, ZarrGroupHandler
 
 
-class GenericTableMeta(BackendMeta):
-    """Metadata for the ROI table."""
-
-    fractal_table_version: str | None = None
-    type: str | None = None
-
-
 class AbstractBaseTable(ABC):
     """Abstract base class for a table.
 
@@ -37,12 +30,23 @@ class AbstractBaseTable(ABC):
 
     def __init__(
         self,
-        meta: BackendMeta,
         table: SupportedTables | None = None,
+        *,
+        meta: BackendMeta | None = None,
+        index_key: str | None = None,
+        index_type: Literal["int", "str"] | None = None,
     ) -> None:
-        """Initialize the GenericTable."""
-        self._meta = meta
+        """Initialize the table."""
+        if meta is None:
+            meta = BackendMeta()
 
+        if index_key is not None:
+            meta.index_key = index_key
+
+        if index_type is not None:
+            meta.index_type = index_type
+
+        self._meta = meta
         if table is not None:
             table = normalize_table(
                 table,
@@ -255,3 +259,65 @@ class AbstractBaseTable(ABC):
             self.table,
             metadata=self._meta.model_dump(exclude_none=True),
         )
+
+    def _concatenate(
+        self,
+        table: Self,
+        src_columns: dict[str, str] | None = None,
+        dst_columns: dict[str, str] | None = None,
+        index_key: str = "index",
+    ) -> Self:
+        """Concatenate multiple tables into a single table."""
+        table1 = self.dataframe
+        table2 = table.dataframe
+
+        if src_columns is not None:
+            table1 = _reindex_dataframe(table1, src_columns, index_key)
+
+        if dst_columns is not None:
+            table2 = _reindex_dataframe(table2, dst_columns, index_key)
+
+        if table1.index.name != index_key:
+            raise NgioValueError(
+                f"Table 1 index name {table1.index.name} "
+                f"does not match the expected index key {index_key}"
+            )
+
+        if table2.index.name != index_key:
+            raise NgioValueError(
+                f"Table 2 index name {table2.index.name} "
+                f"does not match the expected index key {index_key}"
+            )
+
+        if len(table1.columns) != len(table2.columns) or any(
+            table1.columns != table2.columns
+        ):
+            raise NgioValueError(
+                "The columns of the two tables do not match. "
+                "Please make sure to use the same columns."
+                f" Got {table1.columns} and {table2.columns}"
+            )
+        concatenated_df = pd.concat([table1, table2])
+        return type(self)(
+            meta=self._meta,
+            table=concatenated_df,
+            index_key=index_key,
+            index_type="str",
+        )
+
+
+def _reindex_dataframe(
+    df, new_cols: dict[str, str], index_key: str = "index"
+) -> pd.DataFrame:
+    """Reindex a dataframe."""
+    old_index = df.index.name
+    df = df.reset_index()
+    for col, value in new_cols.items():
+        df[col] = value
+
+    index_cols = list(new_cols.keys())
+    if old_index is not None:
+        index_cols.append(old_index)
+    df.index = df[index_cols].astype(str).agg("_".join, axis=1)
+    df.index.name = index_key
+    return df
