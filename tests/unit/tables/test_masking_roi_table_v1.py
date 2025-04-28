@@ -59,4 +59,4 @@ def test_masking_roi_table_v1(tmp_path: Path):
 
     assert loaded_table._meta.backend == "anndata_v1"
     assert loaded_table._meta.fractal_table_version == loaded_table.version()
-    assert loaded_table._meta.type == loaded_table.type()
+    assert loaded_table._meta.type == loaded_table.table_type()
