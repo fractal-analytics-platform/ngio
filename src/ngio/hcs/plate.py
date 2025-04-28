@@ -769,6 +769,61 @@ class OmeZarrPlate:
             name=name, table=table, backend=backend, overwrite=overwrite
         )
 
+    def list_image_tables(
+        self, acquisition: int | None = None, only_common_tables: bool = True
+    ) -> list[str]:
+        """List all image tables in the image."""
+        images = self.get_images(acquisition=acquisition)
+        images_paths = []
+        # key table name, value list of paths
+        tables_dict = {}
+        for path, image in images.items():
+            images_paths.append(path)
+            tables = image.list_tables()
+            for table in tables:
+                if table not in tables_dict:
+                    tables_dict[table] = []
+                tables_dict[table].append(path)
+
+        if only_common_tables:
+            tables_list = []
+            for t_name, t_paths in tables_dict.items():
+                if len(t_paths) == len(images_paths):
+                    tables_list.append(t_name)
+        else:
+            tables_list = list(tables_dict.keys())
+        return tables_list
+
+    def concatenate_image_tables(
+        self,
+        table_name: str,
+        acquisition: int | None = None,
+    ) -> Table:
+        """Concatenate all image tables in the image."""
+
+        def _path_to_col(path: str) -> dict[str, str]:
+            """Convert a path to a column name."""
+            row, col, path = path.split("/")
+            return {"row": row, "column": col, "path": path}
+
+        image0, image1, *images = self.get_images(acquisition=acquisition).items()
+
+        table0 = image0[1].get_table(table_name)
+        table1 = image1[1].get_table(table_name)
+        table = table0.concatenate(
+            table1,
+            src_columns=_path_to_col(image0[0]),
+            dst_columns=_path_to_col(image1[0]),
+        )
+
+        for path, image in images:
+            table = table.concatenate(
+                image.get_table(table_name),
+                src_columns=None,
+                dst_columns=_path_to_col(path),
+            )
+        return table
+
 
 def open_ome_zarr_plate(
     store: StoreOrGroup,

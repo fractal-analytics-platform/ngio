@@ -6,7 +6,7 @@ https://fractal-analytics-platform.github.io/fractal-tasks-core/tables/
 
 # Import _type to avoid name conflict with table.type
 from collections.abc import Iterable
-from typing import Literal
+from typing import Literal, Self
 
 import pandas as pd
 from pydantic import BaseModel
@@ -36,7 +36,9 @@ ORIGIN_COLUMNS = [
 
 TRANSLATION_COLUMNS = ["translation_x", "translation_y", "translation_z"]
 
-OPTIONAL_COLUMNS = ORIGIN_COLUMNS + TRANSLATION_COLUMNS
+PLATE_COLUMNS = ["plate_name", "row", "column", "path", "acquisition"]
+
+OPTIONAL_COLUMNS = ORIGIN_COLUMNS + TRANSLATION_COLUMNS + PLATE_COLUMNS
 
 
 def validate_columns(
@@ -89,6 +91,8 @@ def _dataframe_to_rois(dataframe: pd.DataFrame) -> dict[str, Roi]:
         origin = dict(filter(lambda x: x[1] is not None, origin.items()))
         translation = {col: row.get(col, None) for col in TRANSLATION_COLUMNS}
         translation = dict(filter(lambda x: x[1] is not None, translation.items()))
+        plate = {col: row.get(col, None) for col in PLATE_COLUMNS}
+        plate = dict(filter(lambda x: x[1] is not None, plate.items()))
 
         roi = Roi(
             name=str(key),
@@ -101,6 +105,7 @@ def _dataframe_to_rois(dataframe: pd.DataFrame) -> dict[str, Roi]:
             unit="micrometer",  # type: ignore
             **origin,
             **translation,
+            **plate,
         )
         rois[roi.name] = roi
     return rois
@@ -260,6 +265,58 @@ class _GenericRoiTableV1(AbstractBaseTable):
             if not overwrite and _roi.name in self._rois:
                 raise NgioValueError(f"ROI {_roi.name} already exists in the table.")
             self._rois[_roi.name] = _roi
+
+    def concatenate(
+        self,
+        table: Self,
+        src_columns: dict[str, str] | None = None,
+        dst_columns: dict[str, str] | None = None,
+        index_key: str = "index",
+    ) -> Self:
+        """Concatenate multiple tables into a single table."""
+        if src_columns is None:
+            src_columns = {}
+        if dst_columns is None:
+            dst_columns = {}
+
+        src_prefix = "_".join(src_columns.keys())
+        dst_prefix = "_".join(dst_columns.keys())
+
+        concat_rois = {}
+        for roi in self._rois.values():
+            concat_name = f"{src_prefix}{roi.name}"
+            concat_rois[concat_name] = Roi(
+                name=concat_name,
+                x=roi.x,
+                y=roi.y,
+                z=roi.z,
+                x_length=roi.x_length,
+                y_length=roi.y_length,
+                z_length=roi.z_length,
+                unit=roi.unit,
+                **src_columns,
+            )
+
+        for roi in table._rois.values():
+            concat_name = f"{dst_prefix}{roi.name}"
+            concat_rois[concat_name] = Roi(
+                name=concat_name,
+                x=roi.x,
+                y=roi.y,
+                z=roi.z,
+                x_length=roi.x_length,
+                y_length=roi.y_length,
+                z_length=roi.z_length,
+                unit=roi.unit,
+                **dst_columns,
+            )
+
+        return type(self)(
+            meta=self._meta,
+            rois=concat_rois.values(),
+            index_key=index_key,
+            index_type="str",
+        )
 
 
 class RoiTableV1Meta(BackendMeta):
