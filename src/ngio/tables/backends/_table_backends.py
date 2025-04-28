@@ -10,6 +10,8 @@ from polars import LazyFrame
 from ngio.tables.backends._anndata_v1 import AnnDataBackend
 from ngio.tables.backends._csv_v1 import CsvTableBackend
 from ngio.tables.backends._json_v1 import JsonTableBackend
+from ngio.tables.backends._parquet_v1 import ParquetTableBackend
+from ngio.tables.backends._utils import TabularData
 from ngio.utils import NgioValueError, ZarrGroupHandler
 
 
@@ -42,12 +44,21 @@ class TableBackendProtocol(Protocol):
         """
         ...
 
+    @property
+    def group_handler(self) -> ZarrGroupHandler:
+        """Return the group handler."""
+        ...
+
     @staticmethod
     def implements_anndata() -> bool:
         """Check if the backend implements the anndata protocol.
 
         If this is True, the backend should implement the
-        `load_as_anndata` and `write_from_anndata` methods.
+        `write_from_anndata` method.
+
+        AnnData objects are more complex than DataFrames,
+        so if this is true the backend should implement the
+        full serialization of the AnnData object.
 
         If this is False, these methods should raise a
         `NotImplementedError`.
@@ -59,7 +70,7 @@ class TableBackendProtocol(Protocol):
         """Check if the backend implements the pandas protocol.
 
         If this is True, the backend should implement the
-        `load_as_dataframe` and `write_from_dataframe` methods.
+        `write_from_dataframe` methods.
 
         If this is False, these methods should raise a
         `NotImplementedError`.
@@ -71,7 +82,7 @@ class TableBackendProtocol(Protocol):
         """Check if the backend implements the polars protocol.
 
         If this is True, the backend should implement the
-        `load_as_polars` and `write_from_polars` methods.
+        `write_from_polars` methods.
 
         If this is False, these methods should raise a
         `NotImplementedError`.
@@ -90,6 +101,16 @@ class TableBackendProtocol(Protocol):
         """Load the table as a polars LazyFrame."""
         ...
 
+    def load(self) -> TabularData:
+        """The default load method.
+
+        This method will be default way to load the table
+        from the backend. This method should wrap one of the
+        `load_as_anndata`, `load_as_dataframe` or `load_as_polars`
+        methods depending on the backend implementation.
+        """
+        ...
+
     def write_from_pandas(self, table: DataFrame) -> None:
         """Serialize the table from a pandas DataFrame."""
         ...
@@ -104,7 +125,7 @@ class TableBackendProtocol(Protocol):
 
     def write(
         self,
-        table: DataFrame | AnnData | PolarsDataFrame | LazyFrame,
+        table_data: DataFrame | AnnData | PolarsDataFrame | LazyFrame,
         metadata: dict[str, str] | None = None,
         mode: Literal["pandas", "anndata", "polars"] | None = None,
     ) -> None:
@@ -144,23 +165,19 @@ class ImplementedTableBackends:
 
     def get_backend(
         self,
-        backend_name: str | None,
+        *,
         group_handler: ZarrGroupHandler,
+        backend_name: str = "anndata_v1",
         index_key: str | None = None,
         index_type: Literal["int", "str"] | None = None,
     ) -> TableBackendProtocol:
         """Try to get a handler for the given store based on the metadata version."""
-        if backend_name is None:
-            # Default to anndata since it is currently
-            # the only backend in use.
-            backend_name = "anndata_v1"
-
         if backend_name not in self._implemented_backends:
             raise NgioValueError(f"Table backend {backend_name} not implemented.")
-        handler = self._implemented_backends[backend_name](
+        backend = self._implemented_backends[backend_name](
             group_handler=group_handler, index_key=index_key, index_type=index_type
         )
-        return handler
+        return backend
 
     def add_backend(
         self,
@@ -180,3 +197,4 @@ class ImplementedTableBackends:
 ImplementedTableBackends().add_backend(AnnDataBackend)
 ImplementedTableBackends().add_backend(JsonTableBackend)
 ImplementedTableBackends().add_backend(CsvTableBackend)
+ImplementedTableBackends().add_backend(ParquetTableBackend)
