@@ -1,7 +1,7 @@
 """Implementation of a generic table class."""
 
 from ngio.tables.abstract_table import AbstractBaseTable
-from ngio.tables.backends import BackendMeta
+from ngio.tables.backends import BackendMeta, TableBackendProtocol
 from ngio.utils import ZarrGroupHandler
 
 
@@ -13,7 +13,7 @@ class GenericTable(AbstractBaseTable):
     """
 
     @staticmethod
-    def type() -> str:
+    def table_type() -> str:
         """Return the type of the table."""
         return "generic"
 
@@ -27,10 +27,12 @@ class GenericTable(AbstractBaseTable):
 
     @classmethod
     def from_handler(
-        cls, handler: ZarrGroupHandler, backend_name: str | None = None
+        cls,
+        handler: ZarrGroupHandler,
+        backend: str | TableBackendProtocol | None = None,
     ) -> "GenericTable":
         return cls._from_handler(
             handler=handler,
-            backend_name=backend_name,
+            backend=backend,
             meta_model=BackendMeta,
         )

@@ -6,7 +6,7 @@ https://fractal-analytics-platform.github.io/fractal-tasks-core/tables/
 
 # Import _type to avoid name conflict with table.type
 from collections.abc import Iterable
-from typing import Literal, Self
+from typing import Literal
 
 import pandas as pd
 from pydantic import BaseModel
@@ -14,7 +14,8 @@ from pydantic import BaseModel
 from ngio.common import Roi
 from ngio.tables.abstract_table import (
     AbstractBaseTable,
-    SupportedTables,
+    TableBackendProtocol,
+    TabularData,
 )
 from ngio.tables.backends import BackendMeta, convert_to_pandas, normalize_pandas_df
 from ngio.utils import NgioTableValidationError, NgioValueError, ZarrGroupHandler
@@ -112,7 +113,7 @@ def _dataframe_to_rois(dataframe: pd.DataFrame) -> dict[str, Roi]:
 
 
 def _table_to_rois(
-    table: SupportedTables,
+    table: TabularData,
     index_key: str | None = None,
     index_type: Literal["int", "str"] | None = None,
     required_columns: list[str] | None = None,
@@ -181,17 +182,19 @@ class _GenericRoiTableV1(AbstractBaseTable):
         index_type: Literal["int", "str"] | None = None,
     ) -> None:
         table = None
-        self._rois = {}
+
+        self._rois: dict[str, Roi] | None = None
         if rois is not None:
+            self._rois = {}
             self.add(rois)
             table = _rois_to_dataframe(self._rois, index_key=meta.index_key)
 
         super().__init__(
-            table=table, meta=meta, index_key=index_key, index_type=index_type
+            table_data=table, meta=meta, index_key=index_key, index_type=index_type
         )
 
     @staticmethod
-    def type() -> str:
+    def table_type() -> str:
         """Return the type of the table."""
         raise NotImplementedError
 
@@ -201,35 +204,37 @@ class _GenericRoiTableV1(AbstractBaseTable):
         return "1"
 
     @property
-    def table(self) -> SupportedTables:
+    def table_data(self) -> TabularData:
         """Return the table."""
-        if len(self._rois) > 0:
-            self._table = _rois_to_dataframe(self._rois, index_key=self.index_key)
+        if self._rois is None:
+            return super().table_data
 
-        return super().table
+        if len(self.rois()) > 0:
+            self._table_data = _rois_to_dataframe(self._rois, index_key=self.index_key)
+        return super().table_data
 
-    def set_table(
-        self, table: SupportedTables | None = None, refresh: bool = False
+    def set_table_data(
+        self, table_data: TabularData | None = None, refresh: bool = False
     ) -> None:
-        if table is not None:
-            if not isinstance(table, SupportedTables):
+        if table_data is not None:
+            if not isinstance(table_data, TabularData):
                 raise NgioValueError(
                     "The table must be a pandas DataFrame, polars LazyFrame, "
                     " or AnnData object."
                 )
 
-            table, rois = _table_to_rois(
-                table,
+            table_data, rois = _table_to_rois(
+                table_data,
                 index_key=self.index_key,
                 index_type=self.index_type,
                 required_columns=REQUIRED_COLUMNS,
                 optional_columns=OPTIONAL_COLUMNS,
             )
-            self._table = table
+            self._table_data = table_data
             self._rois = rois
             return None
 
-        if self._table is not None and not refresh:
+        if self._table_data is not None and not refresh:
             return None
 
         if self._table_backend is None:
@@ -237,18 +242,30 @@ class _GenericRoiTableV1(AbstractBaseTable):
                 "The table does not have a DataFrame in memory nor a backend."
             )
 
-        table, rois = _table_to_rois(
+        table_data, rois = _table_to_rois(
             self._table_backend.load(),
             index_key=self.index_key,
             index_type=self.index_type,
             required_columns=REQUIRED_COLUMNS,
             optional_columns=OPTIONAL_COLUMNS,
         )
-        self._table = table
+        self._table_data = table_data
         self._rois = rois
+
+    def _check_rois(self) -> None:
+        """Load the ROIs from the table.
+
+        If the ROIs are already loaded, do nothing.
+        If the ROIs are not loaded, load them from the table.
+        """
+        if self._rois is None:
+            self._rois = _dataframe_to_rois(self.dataframe)
 
     def rois(self) -> list[Roi]:
         """List all ROIs in the table."""
+        self._check_rois()
+        if self._rois is None:
+            return []
         return list(self._rois.values())
 
     def add(self, roi: Roi | Iterable[Roi], overwrite: bool = False) -> None:
@@ -261,62 +278,14 @@ class _GenericRoiTableV1(AbstractBaseTable):
         if isinstance(roi, Roi):
             roi = [roi]
 
+        self._check_rois()
+        if self._rois is None:
+            self._rois = {}
+
         for _roi in roi:
             if not overwrite and _roi.name in self._rois:
                 raise NgioValueError(f"ROI {_roi.name} already exists in the table.")
             self._rois[_roi.name] = _roi
-
-    def concatenate(
-        self,
-        table: Self,
-        src_columns: dict[str, str] | None = None,
-        dst_columns: dict[str, str] | None = None,
-        index_key: str = "index",
-    ) -> Self:
-        """Concatenate multiple tables into a single table."""
-        if src_columns is None:
-            src_columns = {}
-        if dst_columns is None:
-            dst_columns = {}
-
-        src_prefix = "_".join(src_columns.keys())
-        dst_prefix = "_".join(dst_columns.keys())
-
-        concat_rois = {}
-        for roi in self._rois.values():
-            concat_name = f"{src_prefix}{roi.name}"
-            concat_rois[concat_name] = Roi(
-                name=concat_name,
-                x=roi.x,
-                y=roi.y,
-                z=roi.z,
-                x_length=roi.x_length,
-                y_length=roi.y_length,
-                z_length=roi.z_length,
-                unit=roi.unit,
-                **src_columns,
-            )
-
-        for roi in table._rois.values():
-            concat_name = f"{dst_prefix}{roi.name}"
-            concat_rois[concat_name] = Roi(
-                name=concat_name,
-                x=roi.x,
-                y=roi.y,
-                z=roi.z,
-                x_length=roi.x_length,
-                y_length=roi.y_length,
-                z_length=roi.z_length,
-                unit=roi.unit,
-                **dst_columns,
-            )
-
-        return type(self)(
-            meta=self._meta,
-            rois=concat_rois.values(),
-            index_key=index_key,
-            index_type="str",
-        )
 
 
 class RoiTableV1Meta(BackendMeta):
@@ -349,28 +318,34 @@ class RoiTableV1(_GenericRoiTableV1):
 
     def __repr__(self) -> str:
         """Return a string representation of the table."""
-        prop = f"num_rois={len(self._rois)}"
+        rois = self.rois()
+        prop = f"num_rois={len(rois)}"
         return f"RoiTableV1({prop})"
 
     @classmethod
     def from_handler(
-        cls, handler: ZarrGroupHandler, backend_name: str | None = None
+        cls,
+        handler: ZarrGroupHandler,
+        backend: str | TableBackendProtocol | None = None,
     ) -> "RoiTableV1":
         table = cls._from_handler(
             handler=handler,
-            backend_name=backend_name,
+            backend=backend,
             meta_model=RoiTableV1Meta,
         )
-        table._rois = _dataframe_to_rois(table.dataframe)
         return table
 
     @staticmethod
-    def type() -> Literal["roi_table"]:
+    def table_type() -> Literal["roi_table"]:
         """Return the type of the table."""
         return "roi_table"
 
     def get(self, roi_name: str) -> Roi:
         """Get an ROI from the table."""
+        self._check_rois()
+        if self._rois is None:
+            self._rois = {}
+
         if roi_name not in self._rois:
             raise NgioValueError(f"ROI {roi_name} not found in the table.")
         return self._rois[roi_name]
@@ -426,26 +401,28 @@ class MaskingRoiTableV1(_GenericRoiTableV1):
 
     def __repr__(self) -> str:
         """Return a string representation of the table."""
+        rois = self.rois()
         if self.reference_label is not None:
-            prop = f"num_rois={len(self._rois)}, reference_label={self.reference_label}"
+            prop = f"num_rois={len(rois)}, reference_label={self.reference_label}"
         else:
-            prop = f"num_rois={len(self._rois)}"
+            prop = f"num_rois={len(rois)}"
         return f"MaskingRoiTableV1({prop})"
 
     @classmethod
     def from_handler(
-        cls, handler: ZarrGroupHandler, backend_name: str | None = None
+        cls,
+        handler: ZarrGroupHandler,
+        backend: str | TableBackendProtocol | None = None,
     ) -> "MaskingRoiTableV1":
         table = cls._from_handler(
             handler=handler,
-            backend_name=backend_name,
+            backend=backend,
             meta_model=MaskingRoiTableV1Meta,
         )
-        table._rois = _dataframe_to_rois(table.dataframe)
         return table
 
     @staticmethod
-    def type() -> Literal["masking_roi_table"]:
+    def table_type() -> Literal["masking_roi_table"]:
         """Return the type of the table."""
         return "masking_roi_table"
 
@@ -471,6 +448,10 @@ class MaskingRoiTableV1(_GenericRoiTableV1):
 
     def get(self, label: int) -> Roi:
         """Get an ROI from the table."""
+        self._check_rois()
+        if self._rois is None:
+            self._rois = {}
+
         _label = str(label)
         if _label not in self._rois:
             raise KeyError(f"ROI {_label} not found in the table.")

@@ -1,6 +1,6 @@
 """Ngio Tables implementations."""
 
-from ngio.tables.backends import ImplementedTableBackends
+from ngio.tables.backends import ImplementedTableBackends, TableBackendProtocol
 from ngio.tables.tables_container import (
     FeatureTable,
     GenericRoiTable,
@@ -8,6 +8,7 @@ from ngio.tables.tables_container import (
     RoiTable,
     Table,
     TablesContainer,
+    TableType,
     TypedTable,
     open_table,
     open_tables_container,
@@ -22,6 +23,8 @@ __all__ = [
     "MaskingRoiTable",
     "RoiTable",
     "Table",
+    "TableBackendProtocol",
+    "TableType",
     "TablesContainer",
     "TypedTable",
     "open_table",

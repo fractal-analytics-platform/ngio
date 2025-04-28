@@ -6,7 +6,7 @@ from ngio.tables.backends._table_backends import (
     TableBackendProtocol,
 )
 from ngio.tables.backends._utils import (
-    SupportedTables,
+    TabularData,
     convert_anndata_to_pandas,
     convert_anndata_to_polars,
     convert_pandas_to_anndata,
@@ -26,8 +26,8 @@ __all__ = [
     "AbstractTableBackend",
     "BackendMeta",
     "ImplementedTableBackends",
-    "SupportedTables",
     "TableBackendProtocol",
+    "TabularData",
     "convert_anndata_to_pandas",
     "convert_anndata_to_polars",
     "convert_pandas_to_anndata",

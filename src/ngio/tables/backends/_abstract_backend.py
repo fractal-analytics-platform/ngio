@@ -5,10 +5,10 @@ from anndata import AnnData
 from pandas import DataFrame
 from polars import DataFrame as PolarsDataFrame
 from polars import LazyFrame
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from ngio.tables.backends._utils import (
-    SupportedTables,
+    TabularData,
     convert_to_anndata,
     convert_to_pandas,
     convert_to_polars,
@@ -19,9 +19,11 @@ from ngio.utils import NgioValueError, ZarrGroupHandler
 class BackendMeta(BaseModel):
     """Metadata for the backend."""
 
-    backend: str | None = None
+    backend: str = "anndata_v1"
     index_key: str | None = None
     index_type: Literal["int", "str"] | None = None
+
+    model_config = ConfigDict(extra="allow")
 
 
 class AbstractTableBackend(ABC):
@@ -125,7 +127,7 @@ class AbstractTableBackend(ABC):
         return self._index_type  # type: ignore[return-value]
 
     @abstractmethod
-    def load(self) -> SupportedTables:
+    def load(self) -> TabularData:
         """Load the table from the store.
 
         This is a generic load method.
@@ -207,7 +209,7 @@ class AbstractTableBackend(ABC):
 
     def write(
         self,
-        table: SupportedTables,
+        table_data: TabularData,
         metadata: dict | None = None,
         mode: Literal["pandas", "anndata", "polars"] | None = None,
     ) -> None:
@@ -217,15 +219,15 @@ class AbstractTableBackend(ABC):
         Based on the explicit mode or the type of the table,
         it will call the appropriate write method.
         """
-        if mode == "pandas" or isinstance(table, DataFrame):
-            self.write_from_pandas(table)  # type: ignore[arg-type]
-        elif mode == "anndata" or isinstance(table, AnnData):
-            self.write_from_anndata(table)  # type: ignore[arg-type]
-        elif mode == "polars" or isinstance(table, PolarsDataFrame | LazyFrame):
-            self.write_from_polars(table)
+        if mode == "pandas" or isinstance(table_data, DataFrame):
+            self.write_from_pandas(table_data)  # type: ignore[arg-type]
+        elif mode == "anndata" or isinstance(table_data, AnnData):
+            self.write_from_anndata(table_data)  # type: ignore[arg-type]
+        elif mode == "polars" or isinstance(table_data, PolarsDataFrame | LazyFrame):
+            self.write_from_polars(table_data)
         else:
             raise NgioValueError(
-                f"Unsupported table type {type(table)}. "
+                f"Unsupported table type {type(table_data)}. "
                 "Please specify the mode explicitly. "
                 "Supported serialization modes are: "
                 "'pandas', 'anndata', 'polars'."

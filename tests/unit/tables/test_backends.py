@@ -50,11 +50,11 @@ def test_backend_manager(tmp_path: Path):
     )
     assert isinstance(backend, JsonTableBackend)
 
-    backend = manager.get_backend(None, handler)
+    backend = manager.get_backend(group_handler=handler)
     assert isinstance(backend, AnnDataBackend)
 
     with pytest.raises(NgioValueError):
-        manager.get_backend("non_existent", handler)
+        manager.get_backend(group_handler=handler, backend_name="non_existent_backend")
 
     with pytest.raises(NgioValueError):
         manager.add_backend(JsonTableBackend)

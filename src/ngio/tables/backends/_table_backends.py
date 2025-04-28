@@ -11,7 +11,7 @@ from ngio.tables.backends._anndata_v1 import AnnDataBackend
 from ngio.tables.backends._csv_v1 import CsvTableBackend
 from ngio.tables.backends._json_v1 import JsonTableBackend
 from ngio.tables.backends._parquet_v1 import ParquetTableBackend
-from ngio.tables.backends._utils import SupportedTables
+from ngio.tables.backends._utils import TabularData
 from ngio.utils import NgioValueError, ZarrGroupHandler
 
 
@@ -101,7 +101,7 @@ class TableBackendProtocol(Protocol):
         """Load the table as a polars LazyFrame."""
         ...
 
-    def load(self) -> SupportedTables:
+    def load(self) -> TabularData:
         """The default load method.
 
         This method will be default way to load the table
@@ -125,7 +125,7 @@ class TableBackendProtocol(Protocol):
 
     def write(
         self,
-        table: DataFrame | AnnData | PolarsDataFrame | LazyFrame,
+        table_data: DataFrame | AnnData | PolarsDataFrame | LazyFrame,
         metadata: dict[str, str] | None = None,
         mode: Literal["pandas", "anndata", "polars"] | None = None,
     ) -> None:
@@ -165,23 +165,19 @@ class ImplementedTableBackends:
 
     def get_backend(
         self,
-        backend_name: str | None,
+        *,
         group_handler: ZarrGroupHandler,
+        backend_name: str = "anndata_v1",
         index_key: str | None = None,
         index_type: Literal["int", "str"] | None = None,
     ) -> TableBackendProtocol:
         """Try to get a handler for the given store based on the metadata version."""
-        if backend_name is None:
-            # Default to anndata since it is currently
-            # the only backend in use.
-            backend_name = "anndata_v1"
-
         if backend_name not in self._implemented_backends:
             raise NgioValueError(f"Table backend {backend_name} not implemented.")
-        handler = self._implemented_backends[backend_name](
+        backend = self._implemented_backends[backend_name](
             group_handler=group_handler, index_key=index_key, index_type=index_type
         )
-        return handler
+        return backend
 
     def add_backend(
         self,

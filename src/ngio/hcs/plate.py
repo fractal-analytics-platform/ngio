@@ -1,6 +1,6 @@
 """A module for handling the Plate Collection in an OME-Zarr file."""
 
-from typing import Literal, overload
+import warnings
 
 from ngio.images import OmeZarrContainer
 from ngio.ome_zarr_meta import (
@@ -15,18 +15,15 @@ from ngio.ome_zarr_meta import (
     path_in_well_validation,
 )
 from ngio.tables import (
-    FeatureTable,
-    GenericRoiTable,
-    MaskingRoiTable,
-    RoiTable,
     Table,
+    TableBackendProtocol,
     TablesContainer,
+    TableType,
     TypedTable,
 )
 from ngio.utils import (
     AccessModeLiteral,
     NgioValidationError,
-    NgioValueError,
     StoreOrGroup,
     ZarrGroupHandler,
 )
@@ -686,82 +683,51 @@ class OmeZarrPlate:
         """List all ROI tables in the image."""
         return self.tables_container.list_roi_tables()
 
-    @overload
-    def get_table(self, name: str) -> Table: ...
-
-    @overload
-    def get_table(self, name: str, check_type: None) -> Table: ...
-
-    @overload
-    def get_table(self, name: str, check_type: Literal["roi_table"]) -> RoiTable: ...
-
-    @overload
-    def get_table(
-        self, name: str, check_type: Literal["masking_roi_table"]
-    ) -> MaskingRoiTable: ...
-
-    @overload
-    def get_table(
-        self, name: str, check_type: Literal["feature_table"]
-    ) -> FeatureTable: ...
-
-    @overload
-    def get_table(
-        self, name: str, check_type: Literal["generic_roi_table"]
-    ) -> GenericRoiTable: ...
-
     def get_table(self, name: str, check_type: TypedTable | None = None) -> Table:
         """Get a table from the image.
 
         Args:
             name (str): The name of the table.
-            check_type (TypedTable | None): The type of the table. If None, the
-                type is not checked. If a type is provided, the table must be of that
-                type.
+            check_type (TypedTable | None): Deprecated. Please use
+                'get_table_as' instead, or one of the type specific
+                get_*table() methods.
+
         """
-        if check_type is None:
-            table = self.tables_container.get(name, strict=False)
-            return table
+        if check_type is not None:
+            warnings.warn(
+                "The 'check_type' argument is deprecated, and will be removed in "
+                "ngio=0.3. Use 'get_table_as' instead or one of the "
+                "type specific get_*table() methods.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+        return self.tables_container.get(name=name, strict=False)
 
-        table = self.tables_container.get(name, strict=True)
-        match check_type:
-            case "roi_table":
-                if not isinstance(table, RoiTable):
-                    raise NgioValueError(
-                        f"Table '{name}' is not a ROI table. Found type: {table.type()}"
-                    )
-                return table
-            case "masking_roi_table":
-                if not isinstance(table, MaskingRoiTable):
-                    raise NgioValueError(
-                        f"Table '{name}' is not a masking ROI table. "
-                        f"Found type: {table.type()}"
-                    )
-                return table
+    def get_table_as(
+        self,
+        name: str,
+        table_cls: type[TableType],
+        backend: str | TableBackendProtocol | None = None,
+    ) -> TableType:
+        """Get a table from the image as a specific type.
 
-            case "generic_roi_table":
-                if not isinstance(table, GenericRoiTable):
-                    raise NgioValueError(
-                        f"Table '{name}' is not a generic ROI table. "
-                        f"Found type: {table.type()}"
-                    )
-                return table
-
-            case "feature_table":
-                if not isinstance(table, FeatureTable):
-                    raise NgioValueError(
-                        f"Table '{name}' is not a feature table. "
-                        f"Found type: {table.type()}"
-                    )
-                return table
-            case _:
-                raise NgioValueError(f"Unknown check_type: {check_type}")
+        Args:
+            name (str): The name of the table.
+            table_cls (type[TableType]): The type of the table.
+            backend (str | TableBackendProtocol | None): The backend to use. If None,
+                the default backend is used.
+        """
+        return self.tables_container.get_as(
+            name=name,
+            table_cls=table_cls,
+            backend=backend,
+        )
 
     def add_table(
         self,
         name: str,
         table: Table,
-        backend: str | None = None,
+        backend: str | TableBackendProtocol = "anndata_v1",
         overwrite: bool = False,
     ) -> None:
         """Add a table to the image."""

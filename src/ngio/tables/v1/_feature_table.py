@@ -9,7 +9,7 @@ from typing import Literal
 from pydantic import BaseModel
 
 from ngio.tables.abstract_table import AbstractBaseTable
-from ngio.tables.backends import BackendMeta, SupportedTables
+from ngio.tables.backends import BackendMeta, TableBackendProtocol, TabularData
 from ngio.utils import NgioValueError
 from ngio.utils._zarr_utils import ZarrGroupHandler
 
@@ -41,7 +41,7 @@ class FeatureTableMeta(BackendMeta):
 class FeatureTableV1(AbstractBaseTable):
     def __init__(
         self,
-        table: SupportedTables | None = None,
+        table: TabularData | None = None,
         *,
         reference_label: str | None = None,
         meta: FeatureTableMeta | None = None,
@@ -56,7 +56,7 @@ class FeatureTableV1(AbstractBaseTable):
             path = f"../labels/{reference_label}"
             meta = FeatureTableMeta(region=RegionMeta(path=path))
 
-        if table is not None and not isinstance(table, SupportedTables):
+        if table is not None and not isinstance(table, TabularData):
             raise NgioValueError(
                 f"The table is not of type SupportedTables. Got {type(table)}"
             )
@@ -64,7 +64,7 @@ class FeatureTableV1(AbstractBaseTable):
         if index_key is not None:
             meta.instance_key = index_key
         super().__init__(
-            table=table,
+            table_data=table,
             meta=meta,
             index_key=index_key,
             index_type=index_type,
@@ -81,12 +81,13 @@ class FeatureTableV1(AbstractBaseTable):
 
     @classmethod
     def from_handler(
-        cls, handler: ZarrGroupHandler, backend_name: str | None = None
+        cls,
+        handler: ZarrGroupHandler,
+        backend: str | TableBackendProtocol | None = None,
     ) -> "FeatureTableV1":
-        """Create a FeatureTableV1 from a ZarrGroupHandler."""
         return cls._from_handler(
             handler=handler,
-            backend_name=backend_name,
+            backend=backend,
             meta_model=FeatureTableMeta,
         )
 
@@ -100,7 +101,7 @@ class FeatureTableV1(AbstractBaseTable):
         return self._meta
 
     @staticmethod
-    def type() -> str:
+    def table_type() -> str:
         """Return the type of the table."""
         return "feature_table"
 

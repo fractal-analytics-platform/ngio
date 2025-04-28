@@ -13,7 +13,7 @@ from ngio.tables.v1 import GenericTable
 def test_generic_df_table(tmp_path: Path, backend: str):
     store = tmp_path / "test.zarr"
     test_df = pd.DataFrame({"a": [1, 2, 3], "b": [4, 5, 6]})
-    table = GenericTable(table=test_df)
+    table = GenericTable(table_data=test_df)
     assert isinstance(table.__repr__(), str)
 
     write_table(store=store, table=table, backend=backend)
@@ -38,9 +38,9 @@ def test_generic_anndata_table(tmp_path: Path, backend: str):
     anndata = AnnData(X=test_df, obs=test_obs)
     anndata.obsm["test"] = test_obsm
 
-    table = GenericTable(table=anndata)
+    table = GenericTable(table_data=anndata)
 
-    assert isinstance(table.table, AnnData)
+    assert isinstance(table.table_data, AnnData)
 
     write_table(store=store, table=table, backend=backend)
 

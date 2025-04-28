@@ -11,8 +11,8 @@ from anndata import AnnData
 from ngio.tables.backends import (
     BackendMeta,
     ImplementedTableBackends,
-    SupportedTables,
     TableBackendProtocol,
+    TabularData,
     convert_to_pandas,
     normalize_table,
 )
@@ -30,7 +30,7 @@ class AbstractBaseTable(ABC):
 
     def __init__(
         self,
-        table: SupportedTables | None = None,
+        table_data: TabularData | None = None,
         *,
         meta: BackendMeta | None = None,
         index_key: str | None = None,
@@ -47,13 +47,13 @@ class AbstractBaseTable(ABC):
             meta.index_type = index_type
 
         self._meta = meta
-        if table is not None:
-            table = normalize_table(
-                table,
+        if table_data is not None:
+            table_data = normalize_table(
+                table_data,
                 index_key=meta.index_key,
                 index_type=meta.index_type,
             )
-        self._table = table
+        self._table_data = table_data
         self._table_backend = None
 
     def __repr__(self) -> str:
@@ -62,7 +62,7 @@ class AbstractBaseTable(ABC):
 
     @staticmethod
     @abstractmethod
-    def type() -> str:
+    def table_type() -> str:
         """Return the type of the table."""
         ...
 
@@ -111,54 +111,45 @@ class AbstractBaseTable(ABC):
         return self._table_backend.load_as_polars_lf()
 
     @property
-    def table(self) -> SupportedTables:
+    def table_data(self) -> TabularData:
         """Return the table."""
-        if self._table is not None:
-            return self._table
+        if self._table_data is not None:
+            return self._table_data
 
         if self._table_backend is None:
             raise NgioValueError(
                 "The table does not have a DataFrame in memory nor a backend."
             )
 
-        if self._table_backend.implements_pandas():
-            self._table = self._table_backend.load_as_pandas_df()
-        elif self._table_backend.implements_polars():
-            self._table = self._table_backend.load_as_polars_lf()
-        elif self._table_backend.implements_anndata():
-            self._table = self._table_backend.load_as_anndata()
-        else:
-            raise NgioValueError(
-                "The backend does not implement any of the dataframe protocols."
-            )
-
-        return self._table
+        self._table_data = self._table_backend.load()
+        return self._table_data
 
     @property
     def dataframe(self) -> pd.DataFrame:
         """Return the table as a DataFrame."""
         return convert_to_pandas(
-            self.table, index_key=self.index_key, index_type=self.index_type
+            self.table_data, index_key=self.index_key, index_type=self.index_type
         )
 
     @staticmethod
     def _load_backend(
-        meta: BackendMeta, handler: ZarrGroupHandler, backend_name: str | None = None
+        meta: BackendMeta,
+        handler: ZarrGroupHandler,
+        backend: str | TableBackendProtocol,
     ) -> TableBackendProtocol:
         """Create a new ROI table from a Zarr group handler."""
-        backend_name = backend_name if backend_name else meta.backend
-
-        backend = ImplementedTableBackends().get_backend(
-            backend_name=backend_name,
-            group_handler=handler,
-            index_key=meta.index_key,
-            index_type=meta.index_type,
-        )
+        if isinstance(backend, str):
+            backend = ImplementedTableBackends().get_backend(
+                backend_name=backend,
+                group_handler=handler,
+                index_key=meta.index_key,
+                index_type=meta.index_type,
+            )
         return backend
 
-    def set_table(
+    def set_table_data(
         self,
-        table: SupportedTables | None = None,
+        table_data: TabularData | None = None,
         refresh: bool = False,
     ) -> None:
         """Set the table.
@@ -169,35 +160,33 @@ class AbstractBaseTable(ABC):
         If refresh is True, the table will be reloaded from the backend.
             If table is not None, this will be ignored.
         """
-        if table is not None:
-            if not isinstance(table, SupportedTables):
+        if table_data is not None:
+            if not isinstance(table_data, TabularData):
                 raise NgioValueError(
                     "The table must be a pandas DataFrame, polars LazyFrame, "
                     " or AnnData object."
                 )
 
-            self._table = normalize_table(
-                table,
+            self._table_data = normalize_table(
+                table_data,
                 index_key=self.index_key,
                 index_type=self.index_type,
             )
             return None
 
-        if self._table is not None and not refresh:
+        if self._table_data is not None and not refresh:
             return None
 
         if self._table_backend is None:
             raise NgioValueError(
                 "The table does not have a DataFrame in memory nor a backend."
             )
-        self._table = self._table_backend.load()
+        self._table_data = self._table_backend.load()
 
     def set_backend(
         self,
         handler: ZarrGroupHandler | None = None,
-        backend_name: str | None = None,
-        index_key: str | None = None,
-        index_type: Literal["int", "str"] | None = None,
+        backend: str | TableBackendProtocol = "anndata_v1",
     ) -> None:
         """Set the backend of the table."""
         if handler is None:
@@ -209,19 +198,11 @@ class AbstractBaseTable(ABC):
             handler = self._table_backend.group_handler
 
         meta = self._meta
-        if backend_name is not None:
-            meta.backend = backend_name
-        if index_key is not None:
-            meta.index_key = index_key
-        if index_type is not None:
-            meta.index_type = index_type
-
         backend = self._load_backend(
             meta=meta,
             handler=handler,
-            backend_name=backend_name,
+            backend=backend,
         )
-        self._meta = meta
         self._table_backend = backend
 
     @classmethod
@@ -229,12 +210,14 @@ class AbstractBaseTable(ABC):
         cls,
         handler: ZarrGroupHandler,
         meta_model: builtins.type[BackendMeta],
-        backend_name: str | None = None,
+        backend: str | TableBackendProtocol | None = None,
     ) -> Self:
         """Create a new ROI table from a Zarr group handler."""
         meta = meta_model(**handler.load_attrs())
         table = cls(meta=meta)
-        table.set_backend(handler=handler, backend_name=backend_name)
+        if backend is None:
+            backend = meta.backend
+        table.set_backend(handler=handler, backend=backend)
         return table
 
     @classmethod
@@ -242,7 +225,7 @@ class AbstractBaseTable(ABC):
     def from_handler(
         cls,
         handler: ZarrGroupHandler,
-        backend_name: str | None = None,
+        backend: str | TableBackendProtocol | None = None,
     ) -> Self:
         """Create a new ROI table from a Zarr group handler."""
         pass
@@ -256,48 +239,8 @@ class AbstractBaseTable(ABC):
             )
 
         self._table_backend.write(
-            self.table,
+            self.table_data,
             metadata=self._meta.model_dump(exclude_none=True),
-        )
-
-    def add_const_columns(
-        self,
-        columns: dict[str, str],
-        index_key: str | None = None,
-    ) -> Self:
-        """Add constant columns to the table."""
-        new_df = _add_const_columns(
-            dataframe=self.dataframe,
-            new_cols=columns,
-            index_key=index_key,
-        )
-        return type(self)(
-            meta=self._meta,
-            table=new_df,
-            index_key=index_key,
-            index_type="str",
-        )
-
-    def concatenate(
-        self,
-        table: Self,
-        src_columns: dict[str, str] | None = None,
-        dst_columns: dict[str, str] | None = None,
-        index_key: str = "index",
-    ) -> Self:
-        """Concatenate multiple tables into a single table."""
-        concatenated_df = dataframe_concatenate(
-            table1=self.dataframe,
-            table2=table.dataframe,
-            src_columns=src_columns,
-            dst_columns=dst_columns,
-            index_key=index_key,
-        )
-        return type(self)(
-            meta=self._meta,
-            table=concatenated_df,
-            index_key=index_key,
-            index_type="str",
         )
 
 
