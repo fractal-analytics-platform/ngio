@@ -9,6 +9,18 @@ from ngio.utils import ZarrGroupHandler
 
 def write_lf_to_parquet(path: str, table: pl.DataFrame) -> None:
     """Write a polars DataFrame to a Parquet file."""
+    # make categorical into string (for pandas compatibility)
+    schema = table.collect_schema()
+
+    categorical_columns = []
+    for name, dtype in zip(schema.names(), schema.dtypes(), strict=True):
+        if dtype == pl.Categorical:
+            categorical_columns.append(name)
+
+    for col in categorical_columns:
+        table = table.with_columns(pl.col(col).cast(pl.Utf8))
+
+    # write to parquet
     table.write_parquet(path)
 
 

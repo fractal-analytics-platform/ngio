@@ -33,18 +33,10 @@ class AbstractBaseTable(ABC):
         table_data: TabularData | None = None,
         *,
         meta: BackendMeta | None = None,
-        index_key: str | None = None,
-        index_type: Literal["int", "str"] | None = None,
     ) -> None:
         """Initialize the table."""
         if meta is None:
             meta = BackendMeta()
-
-        if index_key is not None:
-            meta.index_key = index_key
-
-        if index_type is not None:
-            meta.index_type = index_type
 
         self._meta = meta
         if table_data is not None:
@@ -81,6 +73,11 @@ class AbstractBaseTable(ABC):
         if self._table_backend is None:
             return None
         return self._table_backend.backend_name()
+
+    @property
+    def meta(self) -> BackendMeta:
+        """Return the metadata of the table."""
+        return self._meta
 
     @property
     def index_key(self) -> str | None:
@@ -135,17 +132,23 @@ class AbstractBaseTable(ABC):
     def _load_backend(
         meta: BackendMeta,
         handler: ZarrGroupHandler,
-        backend: str | TableBackendProtocol,
+        backend: str | type[TableBackendProtocol],
     ) -> TableBackendProtocol:
         """Create a new ROI table from a Zarr group handler."""
         if isinstance(backend, str):
-            backend = ImplementedTableBackends().get_backend(
+            _backend = ImplementedTableBackends().get_backend(
                 backend_name=backend,
                 group_handler=handler,
                 index_key=meta.index_key,
                 index_type=meta.index_type,
             )
-        return backend
+        else:
+            _backend = backend(
+                group_handler=handler,
+                index_key=meta.index_key,
+                index_type=meta.index_type,
+            )
+        return _backend
 
     def set_table_data(
         self,
@@ -186,7 +189,7 @@ class AbstractBaseTable(ABC):
     def set_backend(
         self,
         handler: ZarrGroupHandler | None = None,
-        backend: str | TableBackendProtocol = "anndata_v1",
+        backend: str | type[TableBackendProtocol] = "anndata_v1",
     ) -> None:
         """Set the backend of the table."""
         if handler is None:
@@ -198,19 +201,19 @@ class AbstractBaseTable(ABC):
             handler = self._table_backend.group_handler
 
         meta = self._meta
-        backend = self._load_backend(
+        _backend = self._load_backend(
             meta=meta,
             handler=handler,
             backend=backend,
         )
-        self._table_backend = backend
+        self._table_backend = _backend
 
     @classmethod
     def _from_handler(
         cls,
         handler: ZarrGroupHandler,
         meta_model: builtins.type[BackendMeta],
-        backend: str | TableBackendProtocol | None = None,
+        backend: str | type[TableBackendProtocol] | None = None,
     ) -> Self:
         """Create a new ROI table from a Zarr group handler."""
         meta = meta_model(**handler.load_attrs())
@@ -225,10 +228,18 @@ class AbstractBaseTable(ABC):
     def from_handler(
         cls,
         handler: ZarrGroupHandler,
-        backend: str | TableBackendProtocol | None = None,
+        backend: str | type[TableBackendProtocol] | None = None,
     ) -> Self:
         """Create a new ROI table from a Zarr group handler."""
         pass
+
+    @classmethod
+    def from_table_data(cls, table_data: TabularData, meta: BackendMeta) -> Self:
+        """Create a new ROI table from a Zarr group handler."""
+        return cls(
+            table_data=table_data,
+            meta=meta,
+        )
 
     def consolidate(self) -> None:
         """Write the current state of the table to the Zarr file."""

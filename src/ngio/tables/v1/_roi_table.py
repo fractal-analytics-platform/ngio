@@ -6,6 +6,7 @@ https://fractal-analytics-platform.github.io/fractal-tasks-core/tables/
 
 # Import _type to avoid name conflict with table.type
 from collections.abc import Iterable
+from functools import cache
 from typing import Literal
 
 import pandas as pd
@@ -18,7 +19,12 @@ from ngio.tables.abstract_table import (
     TabularData,
 )
 from ngio.tables.backends import BackendMeta, convert_to_pandas, normalize_pandas_df
-from ngio.utils import NgioTableValidationError, NgioValueError, ZarrGroupHandler
+from ngio.utils import (
+    NgioTableValidationError,
+    NgioValueError,
+    ZarrGroupHandler,
+    ngio_logger,
+)
 
 REQUIRED_COLUMNS = [
     "x_micrometer",
@@ -29,6 +35,10 @@ REQUIRED_COLUMNS = [
     "len_z_micrometer",
 ]
 
+#####################
+# Optional columns are not validated at the moment
+# only a warning is raised if non optional columns are present
+#####################
 
 ORIGIN_COLUMNS = [
     "x_micrometer_original",
@@ -39,74 +49,62 @@ TRANSLATION_COLUMNS = ["translation_x", "translation_y", "translation_z"]
 
 PLATE_COLUMNS = ["plate_name", "row", "column", "path", "acquisition"]
 
-OPTIONAL_COLUMNS = ORIGIN_COLUMNS + TRANSLATION_COLUMNS + PLATE_COLUMNS
+INDEX_COLUMNS = [
+    "FieldIndex",
+    "label",
+]
+
+OPTIONAL_COLUMNS = ORIGIN_COLUMNS + TRANSLATION_COLUMNS + PLATE_COLUMNS + INDEX_COLUMNS
 
 
-def validate_columns(
-    table_df: pd.DataFrame,
-    required_columns: list[str],
-    optional_columns: list[str] | None = None,
-) -> pd.DataFrame:
-    """Validate the columns headers of the table.
-
-    If a required column is missing, a TableValidationError is raised.
-    If a list of optional columns is provided, only required and optional columns are
-        allowed in the table.
-
-    Args:
-        table_df (pd.DataFrame): The DataFrame to validate.
-        required_columns (list[str]): A list of required columns.
-        optional_columns (list[str] | None): A list of optional columns.
-            Default is None.
-
-    Returns:
-        pd.DataFrame: The validated DataFrame.
-    """
-    table_header = table_df.columns
-    for column in required_columns:
-        if column not in table_header:
-            raise NgioTableValidationError(
-                f"Could not find required column: {column} in the table"
-            )
-
-    if optional_columns is None:
-        return table_df
-
-    possible_columns = [*required_columns, *optional_columns]
-    for column in table_header:
-        if column not in possible_columns:
-            raise NgioTableValidationError(
-                f"Could not find column: {column} in the list of possible columns. ",
-                f"Possible columns are: {possible_columns}",
-            )
-
-    return table_df
+@cache
+def _check_optional_columns(col_name: str) -> None:
+    """Check if the column name is in the optional columns."""
+    if col_name not in OPTIONAL_COLUMNS:
+        ngio_logger.warning(
+            f"Column {col_name} is not in the optional columns. "
+            f"Standard optional columns are: {OPTIONAL_COLUMNS}."
+        )
 
 
-def _dataframe_to_rois(dataframe: pd.DataFrame) -> dict[str, Roi]:
+def _dataframe_to_rois(
+    dataframe: pd.DataFrame,
+    required_columns: list[str] | None = None,
+) -> dict[str, Roi]:
     """Convert a DataFrame to a WorldCooROI object."""
+    if required_columns is None:
+        required_columns = REQUIRED_COLUMNS
+
+    # Validate the columns of the DataFrame
+    _required_columns = set(dataframe.columns).intersection(set(required_columns))
+    if len(_required_columns) != len(required_columns):
+        raise NgioTableValidationError(
+            f"Could not find required columns: {_required_columns} in the table."
+        )
+
+    extra_columns = set(dataframe.columns).difference(set(required_columns))
+
+    for col in extra_columns:
+        _check_optional_columns(col)
+
+    extras = {}
+
     rois = {}
-    for key, row in dataframe.iterrows():
+    for row in dataframe.itertuples(index=True):
         # check if optional columns are present
-        origin = {col: row.get(col, None) for col in ORIGIN_COLUMNS}
-        origin = dict(filter(lambda x: x[1] is not None, origin.items()))
-        translation = {col: row.get(col, None) for col in TRANSLATION_COLUMNS}
-        translation = dict(filter(lambda x: x[1] is not None, translation.items()))
-        plate = {col: row.get(col, None) for col in PLATE_COLUMNS}
-        plate = dict(filter(lambda x: x[1] is not None, plate.items()))
+        if len(extra_columns) > 0:
+            extras = {col: getattr(row, col, None) for col in extra_columns}
 
         roi = Roi(
-            name=str(key),
-            x=row["x_micrometer"],
-            y=row["y_micrometer"],
-            z=row["z_micrometer"],
-            x_length=row["len_x_micrometer"],
-            y_length=row["len_y_micrometer"],
-            z_length=row["len_z_micrometer"],
+            name=str(row.Index),
+            x=row.x_micrometer,  # type: ignore
+            y=row.y_micrometer,  # type: ignore
+            z=row.z_micrometer,  # type: ignore
+            x_length=row.len_x_micrometer,  # type: ignore
+            y_length=row.len_y_micrometer,  # type: ignore
+            z_length=row.len_z_micrometer,  # type: ignore
             unit="micrometer",  # type: ignore
-            **origin,
-            **translation,
-            **plate,
+            **extras,
         )
         rois[roi.name] = roi
     return rois
@@ -117,7 +115,6 @@ def _table_to_rois(
     index_key: str | None = None,
     index_type: Literal["int", "str"] | None = None,
     required_columns: list[str] | None = None,
-    optional_columns: list[str] | None = None,
 ) -> tuple[pd.DataFrame, dict[str, Roi]]:
     """Convert a table to a dictionary of ROIs.
 
@@ -126,22 +123,16 @@ def _table_to_rois(
         index_key: The column name to use as the index of the DataFrame.
         index_type: The type of the index column in the DataFrame.
         required_columns: The required columns in the DataFrame.
-        optional_columns: The optional columns in the DataFrame.
 
     Returns:
         A dictionary of ROIs.
     """
-    if required_columns is None:
-        required_columns = REQUIRED_COLUMNS
-    if optional_columns is None:
-        optional_columns = OPTIONAL_COLUMNS
-
     dataframe = convert_to_pandas(
         table,
         index_key=index_key,
         index_type=index_type,
     )
-    return dataframe, _dataframe_to_rois(dataframe)
+    return dataframe, _dataframe_to_rois(dataframe, required_columns=required_columns)
 
 
 def _rois_to_dataframe(rois: dict[str, Roi], index_key: str | None) -> pd.DataFrame:
@@ -159,27 +150,21 @@ def _rois_to_dataframe(rois: dict[str, Roi], index_key: str | None) -> pd.DataFr
         }
 
         extra = roi.model_extra or {}
-        for col in ORIGIN_COLUMNS:
-            if col in extra:
-                row[col] = extra[col]
-
-        for col in TRANSLATION_COLUMNS:
-            if col in extra:
-                row[col] = extra[col]
+        for col in extra:
+            _check_optional_columns(col)
+            row[col] = extra[col]
         data.append(row)
     dataframe = pd.DataFrame(data)
     dataframe = normalize_pandas_df(dataframe, index_key=index_key)
     return dataframe
 
 
-class _GenericRoiTableV1(AbstractBaseTable):
+class GenericRoiTableV1(AbstractBaseTable):
     def __init__(
         self,
         *,
-        meta: BackendMeta,
         rois: Iterable[Roi] | None = None,
-        index_key: str | None = None,
-        index_type: Literal["int", "str"] | None = None,
+        meta: BackendMeta,
     ) -> None:
         table = None
 
@@ -189,14 +174,19 @@ class _GenericRoiTableV1(AbstractBaseTable):
             self.add(rois)
             table = _rois_to_dataframe(self._rois, index_key=meta.index_key)
 
-        super().__init__(
-            table_data=table, meta=meta, index_key=index_key, index_type=index_type
-        )
+        super().__init__(table_data=table, meta=meta)
+
+    def __repr__(self) -> str:
+        """Return a string representation of the table."""
+        rois = self.rois()
+        prop = f"num_rois={len(rois)}"
+        class_name = self.__class__.__name__
+        return f"{class_name}({prop})"
 
     @staticmethod
     def table_type() -> str:
         """Return the type of the table."""
-        raise NotImplementedError
+        return "generic_roi_table"
 
     @staticmethod
     def version() -> Literal["1"]:
@@ -228,7 +218,6 @@ class _GenericRoiTableV1(AbstractBaseTable):
                 index_key=self.index_key,
                 index_type=self.index_type,
                 required_columns=REQUIRED_COLUMNS,
-                optional_columns=OPTIONAL_COLUMNS,
             )
             self._table_data = table_data
             self._rois = rois
@@ -247,7 +236,6 @@ class _GenericRoiTableV1(AbstractBaseTable):
             index_key=self.index_key,
             index_type=self.index_type,
             required_columns=REQUIRED_COLUMNS,
-            optional_columns=OPTIONAL_COLUMNS,
         )
         self._table_data = table_data
         self._rois = rois
@@ -287,6 +275,29 @@ class _GenericRoiTableV1(AbstractBaseTable):
                 raise NgioValueError(f"ROI {_roi.name} already exists in the table.")
             self._rois[_roi.name] = _roi
 
+    def get(self, roi_name: str) -> Roi:
+        """Get an ROI from the table."""
+        self._check_rois()
+        if self._rois is None:
+            self._rois = {}
+
+        if roi_name not in self._rois:
+            raise NgioValueError(f"ROI {roi_name} not found in the table.")
+        return self._rois[roi_name]
+
+    @classmethod
+    def from_table_data(
+        cls, table_data: TabularData, meta: BackendMeta
+    ) -> "GenericRoiTableV1":
+        """Create a new ROI table from a table data."""
+        _, rois = _table_to_rois(
+            table=table_data,
+            index_key=meta.index_key,
+            index_type=meta.index_type,
+            required_columns=REQUIRED_COLUMNS,
+        )
+        return cls(rois=rois.values(), meta=meta)
+
 
 class RoiTableV1Meta(BackendMeta):
     """Metadata for the ROI table."""
@@ -297,7 +308,7 @@ class RoiTableV1Meta(BackendMeta):
     index_type: Literal["str", "int"] | None = "str"
 
 
-class RoiTableV1(_GenericRoiTableV1):
+class RoiTableV1(GenericRoiTableV1):
     """Class to handle fractal ROI tables.
 
     To know more about the ROI table format, please refer to the
@@ -312,21 +323,18 @@ class RoiTableV1(_GenericRoiTableV1):
         if meta is None:
             meta = RoiTableV1Meta()
 
-        meta.index_key = "FieldIndex"
-        meta.index_type = "str"
-        super().__init__(meta=meta, rois=rois)
+        if meta.index_key is None:
+            meta.index_key = "FieldIndex"
 
-    def __repr__(self) -> str:
-        """Return a string representation of the table."""
-        rois = self.rois()
-        prop = f"num_rois={len(rois)}"
-        return f"RoiTableV1({prop})"
+        if meta.index_type is None:
+            meta.index_type = "str"
+        super().__init__(meta=meta, rois=rois)
 
     @classmethod
     def from_handler(
         cls,
         handler: ZarrGroupHandler,
-        backend: str | TableBackendProtocol | None = None,
+        backend: str | type[TableBackendProtocol] | None = None,
     ) -> "RoiTableV1":
         table = cls._from_handler(
             handler=handler,
@@ -339,16 +347,6 @@ class RoiTableV1(_GenericRoiTableV1):
     def table_type() -> Literal["roi_table"]:
         """Return the type of the table."""
         return "roi_table"
-
-    def get(self, roi_name: str) -> Roi:
-        """Get an ROI from the table."""
-        self._check_rois()
-        if self._rois is None:
-            self._rois = {}
-
-        if roi_name not in self._rois:
-            raise NgioValueError(f"ROI {roi_name} not found in the table.")
-        return self._rois[roi_name]
 
 
 class RegionMeta(BaseModel):
@@ -368,7 +366,7 @@ class MaskingRoiTableV1Meta(BackendMeta):
     index_type: Literal["int", "str"] | None = "int"
 
 
-class MaskingRoiTableV1(_GenericRoiTableV1):
+class MaskingRoiTableV1(GenericRoiTableV1):
     """Class to handle fractal ROI tables.
 
     To know more about the ROI table format, please refer to the
@@ -382,8 +380,6 @@ class MaskingRoiTableV1(_GenericRoiTableV1):
         *,
         reference_label: str | None = None,
         meta: MaskingRoiTableV1Meta | None = None,
-        index_key: str | None = None,
-        index_type: Literal["int", "str"] | None = None,
     ) -> None:
         """Create a new ROI table."""
         if meta is None:
@@ -392,12 +388,13 @@ class MaskingRoiTableV1(_GenericRoiTableV1):
         if reference_label is not None:
             meta.region = RegionMeta(path=reference_label)
 
-        meta.index_key = "label" if index_key is None else index_key
-        meta.index_type = "int" if index_type is None else index_type
+        if meta.index_key is None:
+            meta.index_key = "label"
+
+        if meta.index_type is None:
+            meta.index_type = "int"
         meta.instance_key = meta.index_key
-        super().__init__(
-            meta=meta, rois=rois, index_key=index_key, index_type=index_type
-        )
+        super().__init__(meta=meta, rois=rois)
 
     def __repr__(self) -> str:
         """Return a string representation of the table."""
@@ -412,7 +409,7 @@ class MaskingRoiTableV1(_GenericRoiTableV1):
     def from_handler(
         cls,
         handler: ZarrGroupHandler,
-        backend: str | TableBackendProtocol | None = None,
+        backend: str | type[TableBackendProtocol] | None = None,
     ) -> "MaskingRoiTableV1":
         table = cls._from_handler(
             handler=handler,
@@ -446,13 +443,7 @@ class MaskingRoiTableV1(_GenericRoiTableV1):
         path = path.split("/")[-1]
         return path
 
-    def get(self, label: int) -> Roi:
+    def get(self, label: int | str) -> Roi:  # type: ignore
         """Get an ROI from the table."""
-        self._check_rois()
-        if self._rois is None:
-            self._rois = {}
-
-        _label = str(label)
-        if _label not in self._rois:
-            raise KeyError(f"ROI {_label} not found in the table.")
-        return self._rois[_label]
+        roi_name = str(label)
+        return super().get(roi_name)
