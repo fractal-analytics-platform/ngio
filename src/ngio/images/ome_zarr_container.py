@@ -1,10 +1,10 @@
 """Abstract class for handling OME-NGFF images."""
 
+import warnings
 from collections.abc import Collection
-from typing import Literal, overload
 
 import numpy as np
-import warnings
+
 from ngio.images.create import create_empty_image_container
 from ngio.images.image import Image, ImagesContainer
 from ngio.images.label import Label, LabelsContainer
@@ -266,9 +266,7 @@ class OmeZarrContainer:
         if masking_table_name is None:
             masking_table = masking_label.build_masking_roi_table()
         else:
-            masking_table = self.get_table(
-                masking_table_name, check_type="masking_roi_table"
-            )
+            masking_table = self.get_masking_roi_table(name=masking_table_name)
 
         return MaskedImage(
             group_handler=image._group_handler,
@@ -429,7 +427,7 @@ class OmeZarrContainer:
         self,
         name: str,
         table_cls: type[TableType],
-        backend: str | TableBackendProtocol | None = None,
+        backend: str | type[TableBackendProtocol] | None = None,
     ) -> TableType:
         """Get a table from the image as a specific type.
 
@@ -457,7 +455,7 @@ class OmeZarrContainer:
         self,
         name: str,
         table: Table,
-        backend: str | TableBackendProtocol = "anndata_v1",
+        backend: str | type[TableBackendProtocol] = "anndata_v1",
         overwrite: bool = False,
     ) -> None:
         """Add a table to the image."""
@@ -520,9 +518,7 @@ class OmeZarrContainer:
         if masking_table_name is None:
             masking_table = masking_label.build_masking_roi_table()
         else:
-            masking_table = self.get_table(
-                masking_table_name, check_type="masking_roi_table"
-            )
+            masking_table = self.get_masking_roi_table(name=masking_table_name)
 
         return MaskedLabel(
             group_handler=label._group_handler,

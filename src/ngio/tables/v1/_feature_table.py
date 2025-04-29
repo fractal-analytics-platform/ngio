@@ -41,12 +41,10 @@ class FeatureTableMeta(BackendMeta):
 class FeatureTableV1(AbstractBaseTable):
     def __init__(
         self,
-        table: TabularData | None = None,
+        table_data: TabularData | None = None,
         *,
         reference_label: str | None = None,
         meta: FeatureTableMeta | None = None,
-        index_key: str | None = None,
-        index_type: Literal["int", "str"] | None = None,
     ) -> None:
         """Initialize the GenericTable."""
         if meta is None:
@@ -56,18 +54,22 @@ class FeatureTableV1(AbstractBaseTable):
             path = f"../labels/{reference_label}"
             meta = FeatureTableMeta(region=RegionMeta(path=path))
 
-        if table is not None and not isinstance(table, TabularData):
+        if table_data is not None and not isinstance(table_data, TabularData):
             raise NgioValueError(
-                f"The table is not of type SupportedTables. Got {type(table)}"
+                f"The table is not of type SupportedTables. Got {type(table_data)}"
             )
 
-        if index_key is not None:
-            meta.instance_key = index_key
+        if meta.index_key is None:
+            meta.index_key = "label"
+
+        if meta.index_type is None:
+            meta.index_type = "int"
+
+        meta.instance_key = meta.index_key
+
         super().__init__(
-            table_data=table,
+            table_data=table_data,
             meta=meta,
-            index_key=index_key,
-            index_type=index_type,
         )
 
     def __repr__(self) -> str:
@@ -83,7 +85,7 @@ class FeatureTableV1(AbstractBaseTable):
     def from_handler(
         cls,
         handler: ZarrGroupHandler,
-        backend: str | TableBackendProtocol | None = None,
+        backend: str | type[TableBackendProtocol] | None = None,
     ) -> "FeatureTableV1":
         return cls._from_handler(
             handler=handler,

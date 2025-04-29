@@ -1,7 +1,9 @@
 """A module for handling the Plate Collection in an OME-Zarr file."""
 
 import warnings
+from typing import Literal
 
+from ngio.hcs.table_utils import conctatenate_tables
 from ngio.images import OmeZarrContainer
 from ngio.ome_zarr_meta import (
     ImageInWellPath,
@@ -15,6 +17,10 @@ from ngio.ome_zarr_meta import (
     path_in_well_validation,
 )
 from ngio.tables import (
+    FeatureTable,
+    GenericRoiTable,
+    MaskingRoiTable,
+    RoiTable,
     Table,
     TableBackendProtocol,
     TablesContainer,
@@ -24,6 +30,7 @@ from ngio.tables import (
 from ngio.utils import (
     AccessModeLiteral,
     NgioValidationError,
+    NgioValueError,
     StoreOrGroup,
     ZarrGroupHandler,
 )
@@ -683,6 +690,56 @@ class OmeZarrPlate:
         """List all ROI tables in the image."""
         return self.tables_container.list_roi_tables()
 
+    def get_roi_table(self, name: str) -> RoiTable:
+        """Get a ROI table from the image.
+
+        Args:
+            name (str): The name of the table.
+        """
+        table = self.tables_container.get(name=name, strict=True)
+        if not isinstance(table, RoiTable):
+            raise NgioValueError(f"Table {name} is not a ROI table. Got {type(table)}")
+        return table
+
+    def get_masking_roi_table(self, name: str) -> MaskingRoiTable:
+        """Get a masking ROI table from the image.
+
+        Args:
+            name (str): The name of the table.
+        """
+        table = self.tables_container.get(name=name, strict=True)
+        if not isinstance(table, MaskingRoiTable):
+            raise NgioValueError(
+                f"Table {name} is not a masking ROI table. Got {type(table)}"
+            )
+        return table
+
+    def get_feature_table(self, name: str) -> FeatureTable:
+        """Get a feature table from the image.
+
+        Args:
+            name (str): The name of the table.
+        """
+        table = self.tables_container.get(name=name, strict=True)
+        if not isinstance(table, FeatureTable):
+            raise NgioValueError(
+                f"Table {name} is not a feature table. Got {type(table)}"
+            )
+        return table
+
+    def get_generic_roi_table(self, name: str) -> GenericRoiTable:
+        """Get a generic ROI table from the image.
+
+        Args:
+            name (str): The name of the table.
+        """
+        table = self.tables_container.get(name=name, strict=True)
+        if not isinstance(table, GenericRoiTable):
+            raise NgioValueError(
+                f"Table {name} is not a generic ROI table. Got {type(table)}"
+            )
+        return table
+
     def get_table(self, name: str, check_type: TypedTable | None = None) -> Table:
         """Get a table from the image.
 
@@ -707,7 +764,7 @@ class OmeZarrPlate:
         self,
         name: str,
         table_cls: type[TableType],
-        backend: str | TableBackendProtocol | None = None,
+        backend: str | type[TableBackendProtocol] | None = None,
     ) -> TableType:
         """Get a table from the image as a specific type.
 
@@ -727,7 +784,7 @@ class OmeZarrPlate:
         self,
         name: str,
         table: Table,
-        backend: str | TableBackendProtocol = "anndata_v1",
+        backend: str | type[TableBackendProtocol] = "anndata_v1",
         overwrite: bool = False,
     ) -> None:
         """Add a table to the image."""
@@ -738,7 +795,13 @@ class OmeZarrPlate:
     def list_image_tables(
         self, acquisition: int | None = None, only_common_tables: bool = True
     ) -> list[str]:
-        """List all image tables in the image."""
+        """List all image tables in the image.
+
+        Args:
+            acquisition (int | None): The acquisition id to filter the images.
+            only_common_tables (bool): Whether to return only common tables
+                between all images. Defaults to True.
+        """
         images = self.get_images(acquisition=acquisition)
         images_paths = []
         # key table name, value list of paths
@@ -764,29 +827,33 @@ class OmeZarrPlate:
         self,
         table_name: str,
         acquisition: int | None = None,
+        mode: Literal["eager", "lazy"] = "eager",
     ) -> Table:
         """Concatenate all image tables in the image."""
+        images = self.get_images(acquisition=acquisition)
+        tables = {}
+        for path, image in images.items():
+            if table_name in image.list_tables():
+                tables[path] = image.get_table(table_name)
 
-        def _path_to_col(path: str) -> dict[str, str]:
-            """Convert a path to a column name."""
-            row, col, path = path.split("/")
-            return {"row": row, "column": col, "path": path}
+        return conctatenate_tables(tables=tables, mode=mode, table_cls=None)
 
-        image0, image1, *images = self.get_images(acquisition=acquisition).items()
-
-        table0 = image0[1].get_table(table_name)
-        table1 = image1[1].get_table(table_name)
-        table = table0.concatenate(
-            table1,
-            src_columns=_path_to_col(image0[0]),
-            dst_columns=_path_to_col(image1[0]),
+    def concatenate_image_tables_as(
+        self,
+        table_name: str,
+        table_cls: type[TableType],
+        acquisition: int | None = None,
+        mode: Literal["eager", "lazy"] = "eager",
+    ) -> TableType:
+        """Concatenate all image tables in the image as a specific type."""
+        table = self.concatenate_image_tables(
+            table_name=table_name,
+            acquisition=acquisition,
+            mode=mode,
         )
-
-        for path, image in images:
-            table = table.concatenate(
-                image.get_table(table_name),
-                src_columns=None,
-                dst_columns=_path_to_col(path),
+        if not isinstance(table, table_cls):
+            raise NgioValueError(
+                f"Table {table_name} is not of type {table_cls}. Got {type(table)}"
             )
         return table
 
