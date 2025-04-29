@@ -22,6 +22,7 @@ from ngio.ome_zarr_meta.ngio_specs import (
     TimeUnits,
 )
 from ngio.tables import (
+    ConditionTable,
     FeatureTable,
     GenericRoiTable,
     MaskingRoiTable,
@@ -400,6 +401,19 @@ class OmeZarrContainer:
         if not isinstance(table, GenericRoiTable):
             raise NgioValueError(
                 f"Table {name} is not a generic ROI table. Got {type(table)}"
+            )
+        return table
+
+    def get_condition_table(self, name: str) -> ConditionTable:
+        """Get a condition table from the image.
+
+        Args:
+            name (str): The name of the table.
+        """
+        table = self.tables_container.get(name=name, strict=True)
+        if not isinstance(table, ConditionTable):
+            raise NgioValueError(
+                f"Table {name} is not a condition table. Got {type(table)}"
             )
         return table
 

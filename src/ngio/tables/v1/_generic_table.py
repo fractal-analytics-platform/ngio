@@ -15,7 +15,7 @@ class GenericTable(AbstractBaseTable):
     @staticmethod
     def table_type() -> str:
         """Return the type of the table."""
-        return "generic"
+        return "generic_table"
 
     @staticmethod
     def version() -> str:
@@ -29,7 +29,7 @@ class GenericTable(AbstractBaseTable):
     def from_handler(
         cls,
         handler: ZarrGroupHandler,
-        backend: str | TableBackendProtocol | None = None,
+        backend: str | type[TableBackendProtocol] | None = None,
     ) -> "GenericTable":
         return cls._from_handler(
             handler=handler,

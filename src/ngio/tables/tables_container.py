@@ -9,8 +9,13 @@ from ngio.tables.backends import (
     TableBackendProtocol,
     TabularData,
 )
-from ngio.tables.v1 import FeatureTableV1, MaskingRoiTableV1, RoiTableV1
-from ngio.tables.v1._generic_table import GenericTable
+from ngio.tables.v1 import (
+    ConditionTableV1,
+    FeatureTableV1,
+    GenericTable,
+    MaskingRoiTableV1,
+    RoiTableV1,
+)
 from ngio.tables.v1._roi_table import GenericRoiTableV1
 from ngio.utils import (
     AccessModeLiteral,
@@ -24,6 +29,7 @@ GenericRoiTable = GenericRoiTableV1
 RoiTable = RoiTableV1
 MaskingRoiTable = MaskingRoiTableV1
 FeatureTable = FeatureTableV1
+ConditionTable = ConditionTableV1
 
 
 class Table(Protocol):
@@ -108,7 +114,11 @@ class Table(Protocol):
 
 
 TypedTable = Literal[
-    "roi_table", "masking_roi_table", "feature_table", "generic_roi_table"
+    "roi_table",
+    "masking_roi_table",
+    "feature_table",
+    "generic_roi_table",
+    "condition_table",
 ]
 
 TableType = TypeVar("TableType", bound=Table)
@@ -311,6 +321,7 @@ class TablesContainer:
 ImplementedTables().add_implementation(RoiTableV1)
 ImplementedTables().add_implementation(MaskingRoiTableV1)
 ImplementedTables().add_implementation(FeatureTableV1)
+ImplementedTables().add_implementation(ConditionTableV1)
 
 ###################################################################################
 #
