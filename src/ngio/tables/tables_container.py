@@ -2,7 +2,9 @@
 
 from typing import Literal, Protocol, TypeVar
 
+import anndata as ad
 import pandas as pd
+import polars as pl
 
 from ngio.tables.backends import (
     BackendMeta,
@@ -58,6 +60,16 @@ class Table(Protocol):
     @property
     def dataframe(self) -> pd.DataFrame:
         """Return the table as a DataFrame."""
+        ...
+
+    @property
+    def lazy_frame(self) -> pl.LazyFrame:
+        """Return the table as a LazyFrame."""
+        ...
+
+    @property
+    def anndata(self) -> ad.AnnData:
+        """Return the table as an AnnData object."""
         ...
 
     def set_table_data(

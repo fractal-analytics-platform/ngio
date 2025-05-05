@@ -13,7 +13,9 @@ from ngio.tables.backends import (
     ImplementedTableBackends,
     TableBackendProtocol,
     TabularData,
+    convert_to_anndata,
     convert_to_pandas,
+    convert_to_polars,
     normalize_table,
 )
 from ngio.utils import NgioValueError, ZarrGroupHandler
@@ -127,6 +129,18 @@ class AbstractBaseTable(ABC):
         return convert_to_pandas(
             self.table_data, index_key=self.index_key, index_type=self.index_type
         )
+
+    @property
+    def lazy_frame(self) -> pl.LazyFrame:
+        """Return the table as a LazyFrame."""
+        return convert_to_polars(
+            self.table_data, index_key=self.index_key, index_type=self.index_type
+        )
+
+    @property
+    def anndata(self) -> AnnData:
+        """Return the table as an AnnData object."""
+        return convert_to_anndata(self.table_data, index_key=self.index_key)
 
     @staticmethod
     def _load_backend(
