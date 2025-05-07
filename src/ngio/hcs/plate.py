@@ -920,7 +920,7 @@ class OmeZarrPlate:
         )
 
     def list_image_tables(
-        self, acquisition: int | None = None, only_common_tables: bool = True
+        self, acquisition: int | None = None, only_common_tables: bool = True, filter_types: str | None = None
     ) -> list[str]:
         """List all image tables in the image.
 
@@ -928,6 +928,8 @@ class OmeZarrPlate:
             acquisition (int | None): The acquisition id to filter the images.
             only_common_tables (bool): Whether to return only common tables
                 between all images. Defaults to True.
+            filter_types (str | None): The type of tables to filter. If None,
+                return all tables. Defaults to None.
         """
         images = self.get_images(acquisition=acquisition)
         images_paths = []
@@ -935,7 +937,7 @@ class OmeZarrPlate:
         tables_dict = {}
         for path, image in images.items():
             images_paths.append(path)
-            tables = image.list_tables()
+            tables = image.list_tables(filter_types=filter_types)
             for table in tables:
                 if table not in tables_dict:
                     tables_dict[table] = []
@@ -1001,7 +1003,7 @@ class OmeZarrPlate:
         images = self.get_images(acquisition=acquisition)
         tables = []
         for path, image in images.items():
-            row, column, im_path = path.split("/")
+            row, column, path_in_well = path.split("/")
             if table_name in image.list_tables():
                 _table = image.get_table(table_name)
                 table = TableWithExtras(
@@ -1009,7 +1011,7 @@ class OmeZarrPlate:
                     extras={
                         "row": row,
                         "column": column,
-                        "image_path": im_path,
+                        "path_in_well": path_in_well,
                     },
                 )
                 tables.append(table)
@@ -1029,7 +1031,7 @@ class OmeZarrPlate:
             image: OmeZarrContainer, table_name: str, path
         ) -> TableWithExtras | None:
             """Process a single image and return the table."""
-            row, column, im_path = path.split("/")
+            row, column, path_in_well = path.split("/")
             if table_name in image.list_tables():
                 _table = image.get_table(table_name)
                 _table.set_table_data()
@@ -1038,7 +1040,7 @@ class OmeZarrPlate:
                     extras={
                         "row": row,
                         "column": column,
-                        "image_path": im_path,
+                        "path_in_well": path_in_well,
                     },
                 )
                 return table
