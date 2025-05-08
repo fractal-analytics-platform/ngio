@@ -24,6 +24,15 @@ from ngio.common._slicer import (
     numpy_get_slice,
     numpy_set_slice,
 )
+from ngio.common._table_ops import (
+    concatenate_image_tables,
+    concatenate_image_tables_as,
+    concatenate_image_tables_as_async,
+    concatenate_image_tables_async,
+    conctatenate_tables,
+    list_image_tables,
+    list_image_tables_async,
+)
 from ngio.common._zoom import dask_zoom, numpy_zoom
 
 __all__ = [
@@ -34,6 +43,11 @@ __all__ = [
     "SliceTransform",
     "compute_and_slices",
     "compute_masking_roi",
+    "concatenate_image_tables",
+    "concatenate_image_tables_as",
+    "concatenate_image_tables_as_async",
+    "concatenate_image_tables_async",
+    "conctatenate_tables",
     "consolidate_pyramid",
     "dask_get_slice",
     "dask_set_slice",
@@ -41,6 +55,8 @@ __all__ = [
     "get_masked_pipe",
     "get_pipe",
     "init_empty_pyramid",
+    "list_image_tables",
+    "list_image_tables_async",
     "numpy_get_slice",
     "numpy_set_slice",
     "numpy_zoom",

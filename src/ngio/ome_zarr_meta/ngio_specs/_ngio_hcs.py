@@ -360,6 +360,7 @@ class NgioPlateMeta(HCSAttrs):
             columns=self.plate.columns,
             acquisitions=self.plate.acquisitions,
             wells=wells,
+            name=self.plate.name,
             field_count=self.plate.field_count,
             name=self.plate.name,
             version=self.plate.version,

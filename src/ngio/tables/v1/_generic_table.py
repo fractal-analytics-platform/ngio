@@ -15,7 +15,7 @@ class GenericTable(AbstractBaseTable):
     @staticmethod
     def table_type() -> str:
         """Return the type of the table."""
-        return "generic"
+        return "generic_table"
 
     @staticmethod
     def version() -> str:

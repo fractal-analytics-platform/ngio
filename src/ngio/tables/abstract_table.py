@@ -13,7 +13,9 @@ from ngio.tables.backends import (
     ImplementedTableBackends,
     TableBackendProtocol,
     TabularData,
+    convert_to_anndata,
     convert_to_pandas,
+    convert_to_polars,
     normalize_table,
 )
 from ngio.utils import NgioValueError, ZarrGroupHandler
@@ -128,27 +130,38 @@ class AbstractBaseTable(ABC):
             self.table_data, index_key=self.index_key, index_type=self.index_type
         )
 
+    @property
+    def lazy_frame(self) -> pl.LazyFrame:
+        """Return the table as a LazyFrame."""
+        return convert_to_polars(
+            self.table_data, index_key=self.index_key, index_type=self.index_type
+        )
+
+    @property
+    def anndata(self) -> AnnData:
+        """Return the table as an AnnData object."""
+        return convert_to_anndata(self.table_data, index_key=self.index_key)
+
     @staticmethod
     def _load_backend(
         meta: BackendMeta,
         handler: ZarrGroupHandler,
-        backend: str | type[TableBackendProtocol],
+        backend: str | TableBackendProtocol,
     ) -> TableBackendProtocol:
         """Create a new ROI table from a Zarr group handler."""
         if isinstance(backend, str):
-            _backend = ImplementedTableBackends().get_backend(
+            return ImplementedTableBackends().get_backend(
                 backend_name=backend,
                 group_handler=handler,
                 index_key=meta.index_key,
                 index_type=meta.index_type,
             )
-        else:
-            _backend = backend(
-                group_handler=handler,
-                index_key=meta.index_key,
-                index_type=meta.index_type,
-            )
-        return _backend
+        backend.set_group_handler(
+            group_handler=handler,
+            index_key=meta.index_key,
+            index_type=meta.index_type,
+        )
+        return backend
 
     def set_table_data(
         self,
@@ -189,7 +202,7 @@ class AbstractBaseTable(ABC):
     def set_backend(
         self,
         handler: ZarrGroupHandler | None = None,
-        backend: str | type[TableBackendProtocol] = "anndata_v1",
+        backend: str | TableBackendProtocol = "anndata_v1",
     ) -> None:
         """Set the backend of the table."""
         if handler is None:
@@ -213,7 +226,7 @@ class AbstractBaseTable(ABC):
         cls,
         handler: ZarrGroupHandler,
         meta_model: builtins.type[BackendMeta],
-        backend: str | type[TableBackendProtocol] | None = None,
+        backend: str | TableBackendProtocol | None = None,
     ) -> Self:
         """Create a new ROI table from a Zarr group handler."""
         meta = meta_model(**handler.load_attrs())
@@ -228,7 +241,7 @@ class AbstractBaseTable(ABC):
     def from_handler(
         cls,
         handler: ZarrGroupHandler,
-        backend: str | type[TableBackendProtocol] | None = None,
+        backend: str | TableBackendProtocol | None = None,
     ) -> Self:
         """Create a new ROI table from a Zarr group handler."""
         pass
@@ -253,79 +266,3 @@ class AbstractBaseTable(ABC):
             self.table_data,
             metadata=self._meta.model_dump(exclude_none=True),
         )
-
-
-def _reindex_dataframe(
-    dataframe, index_cols: list[str], index_key: str | None = None
-) -> pd.DataFrame:
-    """Reindex a dataframe using an hash of the index columns."""
-    # Reindex the dataframe
-    old_index = dataframe.index.name
-    dataframe = dataframe.reset_index()
-    if old_index is not None:
-        index_cols.append(old_index)
-    dataframe.index = dataframe[index_cols].astype(str).agg("_".join, axis=1)
-    dataframe.index.name = index_key
-    return dataframe
-
-
-def _add_const_columns(
-    dataframe: pd.DataFrame,
-    new_cols: dict[str, str],
-    index_key: str | None = None,
-) -> pd.DataFrame:
-    for col, value in new_cols.items():
-        dataframe[col] = value
-
-    if index_key is not None:
-        dataframe = _reindex_dataframe(
-            dataframe=dataframe,
-            index_cols=list(new_cols.keys()),
-            index_key=index_key,
-        )
-    return dataframe
-
-
-def dataframe_concatenate(
-    table1: pd.DataFrame,
-    table2: pd.DataFrame,
-    src_columns: dict[str, str] | None = None,
-    dst_columns: dict[str, str] | None = None,
-    index_key: str = "index",
-) -> pd.DataFrame:
-    """Concatenate two dataframes."""
-    if src_columns is not None:
-        table1 = _add_const_columns(
-            dataframe=table1,
-            new_cols=src_columns,
-            index_key=index_key,
-        )
-
-    if dst_columns is not None:
-        table2 = _add_const_columns(
-            dataframe=table2,
-            new_cols=dst_columns,
-            index_key=index_key,
-        )
-
-    if table1.index.name != index_key:
-        raise NgioValueError(
-            f"Table 1 index name {table1.index.name} "
-            f"does not match the expected index key {index_key}"
-        )
-
-    if table2.index.name != index_key:
-        raise NgioValueError(
-            f"Table 2 index name {table2.index.name} "
-            f"does not match the expected index key {index_key}"
-        )
-
-    if len(table1.columns) != len(table2.columns) or any(
-        table1.columns != table2.columns
-    ):
-        raise NgioValueError(
-            "The columns of the two tables do not match. "
-            "Please make sure to use the same columns."
-            f" Got {table1.columns} and {table2.columns}"
-        )
-    return pd.concat([table1, table2])

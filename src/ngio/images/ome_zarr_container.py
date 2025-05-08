@@ -22,6 +22,7 @@ from ngio.ome_zarr_meta.ngio_specs import (
     TimeUnits,
 )
 from ngio.tables import (
+    ConditionTable,
     FeatureTable,
     GenericRoiTable,
     MaskingRoiTable,
@@ -345,9 +346,9 @@ class OmeZarrContainer:
             )
         return new_ome_zarr
 
-    def list_tables(self) -> list[str]:
+    def list_tables(self, filter_types: str | None = None) -> list[str]:
         """List all tables in the image."""
-        return self.tables_container.list()
+        return self.tables_container.list(filter_types=filter_types)
 
     def list_roi_tables(self) -> list[str]:
         """List all ROI tables in the image."""
@@ -403,6 +404,19 @@ class OmeZarrContainer:
             )
         return table
 
+    def get_condition_table(self, name: str) -> ConditionTable:
+        """Get a condition table from the image.
+
+        Args:
+            name (str): The name of the table.
+        """
+        table = self.tables_container.get(name=name, strict=True)
+        if not isinstance(table, ConditionTable):
+            raise NgioValueError(
+                f"Table {name} is not a condition table. Got {type(table)}"
+            )
+        return table
+
     def get_table(self, name: str, check_type: TypedTable | None = None) -> Table:
         """Get a table from the image.
 
@@ -427,7 +441,7 @@ class OmeZarrContainer:
         self,
         name: str,
         table_cls: type[TableType],
-        backend: str | type[TableBackendProtocol] | None = None,
+        backend: str | TableBackendProtocol | None = None,
     ) -> TableType:
         """Get a table from the image as a specific type.
 
@@ -455,7 +469,7 @@ class OmeZarrContainer:
         self,
         name: str,
         table: Table,
-        backend: str | type[TableBackendProtocol] = "anndata_v1",
+        backend: str | TableBackendProtocol = "anndata_v1",
         overwrite: bool = False,
     ) -> None:
         """Add a table to the image."""

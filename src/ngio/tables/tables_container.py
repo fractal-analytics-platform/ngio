@@ -2,15 +2,22 @@
 
 from typing import Literal, Protocol, TypeVar
 
+import anndata as ad
 import pandas as pd
+import polars as pl
 
 from ngio.tables.backends import (
     BackendMeta,
     TableBackendProtocol,
     TabularData,
 )
-from ngio.tables.v1 import FeatureTableV1, MaskingRoiTableV1, RoiTableV1
-from ngio.tables.v1._generic_table import GenericTable
+from ngio.tables.v1 import (
+    ConditionTableV1,
+    FeatureTableV1,
+    GenericTable,
+    MaskingRoiTableV1,
+    RoiTableV1,
+)
 from ngio.tables.v1._roi_table import GenericRoiTableV1
 from ngio.utils import (
     AccessModeLiteral,
@@ -24,6 +31,7 @@ GenericRoiTable = GenericRoiTableV1
 RoiTable = RoiTableV1
 MaskingRoiTable = MaskingRoiTableV1
 FeatureTable = FeatureTableV1
+ConditionTable = ConditionTableV1
 
 
 class Table(Protocol):
@@ -54,6 +62,16 @@ class Table(Protocol):
         """Return the table as a DataFrame."""
         ...
 
+    @property
+    def lazy_frame(self) -> pl.LazyFrame:
+        """Return the table as a LazyFrame."""
+        ...
+
+    @property
+    def anndata(self) -> ad.AnnData:
+        """Return the table as an AnnData object."""
+        ...
+
     def set_table_data(
         self,
         table_data: TabularData | None = None,
@@ -72,7 +90,7 @@ class Table(Protocol):
     def set_backend(
         self,
         handler: ZarrGroupHandler | None = None,
-        backend: str | type[TableBackendProtocol] = "anndata_v1",
+        backend: str | TableBackendProtocol = "anndata_v1",
     ) -> None:
         """Set the backend store and path for the table.
 
@@ -87,7 +105,7 @@ class Table(Protocol):
     def from_handler(
         cls,
         handler: ZarrGroupHandler,
-        backend: str | type[TableBackendProtocol] | None = None,
+        backend: str | TableBackendProtocol | None = None,
     ) -> "Table":
         """Create a new table from a Zarr group handler."""
         ...
@@ -108,7 +126,11 @@ class Table(Protocol):
 
 
 TypedTable = Literal[
-    "roi_table", "masking_roi_table", "feature_table", "generic_roi_table"
+    "roi_table",
+    "masking_roi_table",
+    "feature_table",
+    "generic_roi_table",
+    "condition_table",
 ]
 
 TableType = TypeVar("TableType", bound=Table)
@@ -153,7 +175,7 @@ class ImplementedTables:
         self,
         meta: TableMeta,
         handler: ZarrGroupHandler,
-        backend: str | type[TableBackendProtocol] | None = None,
+        backend: str | TableBackendProtocol | None = None,
         strict: bool = True,
     ) -> Table:
         """Try to get a handler for the given store based on the metadata version."""
@@ -242,12 +264,12 @@ class TablesContainer:
     def get(
         self,
         name: str,
-        backend: str | type[TableBackendProtocol] | None = None,
+        backend: str | TableBackendProtocol | None = None,
         strict: bool = True,
     ) -> Table:
         """Get a label from the group."""
         if name not in self.list():
-            raise KeyError(f"Table '{name}' not found in the group.")
+            raise NgioValueError(f"Table '{name}' not found in the group.")
 
         table_handler = self._get_table_group_handler(name)
 
@@ -263,11 +285,11 @@ class TablesContainer:
         self,
         name: str,
         table_cls: type[TableType],
-        backend: str | type[TableBackendProtocol] | None = None,
+        backend: str | TableBackendProtocol | None = None,
     ) -> TableType:
         """Get a table from the group as a specific type."""
         if name not in self.list():
-            raise KeyError(f"Table '{name}' not found in the group.")
+            raise NgioValueError(f"Table '{name}' not found in the group.")
 
         table_handler = self._get_table_group_handler(name)
         return table_cls.from_handler(
@@ -279,7 +301,7 @@ class TablesContainer:
         self,
         name: str,
         table: Table,
-        backend: str | type[TableBackendProtocol] = "anndata_v1",
+        backend: str | TableBackendProtocol = "anndata_v1",
         overwrite: bool = False,
     ) -> None:
         """Add a table to the group."""
@@ -311,6 +333,7 @@ class TablesContainer:
 ImplementedTables().add_implementation(RoiTableV1)
 ImplementedTables().add_implementation(MaskingRoiTableV1)
 ImplementedTables().add_implementation(FeatureTableV1)
+ImplementedTables().add_implementation(ConditionTableV1)
 
 ###################################################################################
 #
@@ -334,7 +357,7 @@ def open_tables_container(
 
 def open_table(
     store: StoreOrGroup,
-    backend: str | type[TableBackendProtocol] | None = None,
+    backend: str | TableBackendProtocol | None = None,
     cache: bool = False,
     mode: AccessModeLiteral = "a",
     parallel_safe: bool = False,
@@ -349,10 +372,28 @@ def open_table(
     )
 
 
+def open_table_as(
+    store: StoreOrGroup,
+    table_cls: type[TableType],
+    backend: str | TableBackendProtocol = "anndata_v1",
+    cache: bool = False,
+    mode: AccessModeLiteral = "a",
+    parallel_safe: bool = False,
+) -> TableType:
+    """Open a table from a Zarr store as a specific type."""
+    handler = ZarrGroupHandler(
+        store=store, cache=cache, mode=mode, parallel_safe=parallel_safe
+    )
+    return table_cls.from_handler(
+        handler=handler,
+        backend=backend,
+    )  # type: ignore[return-value]
+
+
 def write_table(
     store: StoreOrGroup,
     table: Table,
-    backend: str | type[TableBackendProtocol] = "anndata_v1",
+    backend: str | TableBackendProtocol = "anndata_v1",
     cache: bool = False,
     mode: AccessModeLiteral = "a",
     parallel_safe: bool = False,

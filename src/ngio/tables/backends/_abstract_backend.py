@@ -29,21 +29,20 @@ class BackendMeta(BaseModel):
 class AbstractTableBackend(ABC):
     """Abstract class for table backends."""
 
-    def __init__(
+    def set_group_handler(
         self,
         group_handler: ZarrGroupHandler,
         index_key: str | None = None,
         index_type: Literal["int", "str"] | None = None,
-    ):
-        """Initialize the handler.
+    ) -> None:
+        """Attach a group handler to the backend.
 
-        This is a base class for the table backends protocol.
+        Index keys and index types are used to ensure that the
+        serialization and deserialization of the table
+        is consistent across different backends.
 
-        Args:
-            group_handler (ZarrGroupHandler): An object to handle the Zarr group
-                containing the table data.
-            index_key (str): The column name to use as the index of the DataFrame.
-            index_type (str): The type of the index column in the DataFrame.
+        Making sure that this is consistent is
+        a duty of the backend implementations.
         """
         self._group_handler = group_handler
         self._index_key = index_key

@@ -1,9 +1,18 @@
 """A module for handling the Plate Collection in an OME-Zarr file."""
 
+import asyncio
 import warnings
+from collections.abc import Collection
 from typing import Literal
 
-from ngio.hcs.table_utils import conctatenate_tables
+from ngio.common import (
+    concatenate_image_tables,
+    concatenate_image_tables_as,
+    concatenate_image_tables_as_async,
+    concatenate_image_tables_async,
+    list_image_tables,
+    list_image_tables_async,
+)
 from ngio.images import OmeZarrContainer
 from ngio.ome_zarr_meta import (
     ImageInWellPath,
@@ -17,6 +26,7 @@ from ngio.ome_zarr_meta import (
     path_in_well_validation,
 )
 from ngio.tables import (
+    ConditionTable,
     FeatureTable,
     GenericRoiTable,
     MaskingRoiTable,
@@ -190,6 +200,28 @@ class OmeZarrWell:
         )
 
 
+def _buil_extras(paths: Collection[str]) -> list[dict[str, str]]:
+    """Build the extras for the images.
+
+    Args:
+        paths (Collection[str]): The paths of the images.
+
+    Returns:
+        list[dict[str, str]]: The extras for the images.
+    """
+    extras = []
+    for path in paths:
+        row, column, path_in_well = path.split("/")
+        extras.append(
+            {
+                "row": row,
+                "column": column,
+                "path_in_well": path_in_well,
+            }
+        )
+    return extras
+
+
 class OmeZarrPlate:
     """A class to handle the Plate Collection in an OME-Zarr file."""
 
@@ -257,6 +289,22 @@ class OmeZarrPlate:
         """Return the wells paths in the plate."""
         return self.meta.wells_paths
 
+    async def images_paths_async(self, acquisition: int | None = None) -> list[str]:
+        """Return the images paths in the plate asynchronously.
+
+        If acquisition is None, return all images paths in the plate.
+        Else, return the images paths in the plate for the given acquisition.
+
+        Args:
+            acquisition (int | None): The acquisition id to filter the images.
+        """
+        wells = await self.get_wells_async()
+        paths = []
+        for well_path, well in wells.items():
+            for img_path in well.paths(acquisition):
+                paths.append(f"{well_path}/{img_path}")
+        return paths
+
     def images_paths(self, acquisition: int | None = None) -> list[str]:
         """Return the images paths in the plate.
 
@@ -266,9 +314,10 @@ class OmeZarrPlate:
         Args:
             acquisition (int | None): The acquisition id to filter the images.
         """
+        wells = self.get_wells()
         images = []
-        for well_path, wells in self.get_wells().items():
-            for img_path in wells.paths(acquisition):
+        for well_path, well in wells.items():
+            for img_path in well.paths(acquisition):
                 images.append(f"{well_path}/{img_path}")
         return images
 
@@ -321,6 +370,37 @@ class OmeZarrPlate:
         group_handler = self._group_handler.derive_handler(well_path)
         return OmeZarrWell(group_handler)
 
+    async def get_wells_async(self) -> dict[str, OmeZarrWell]:
+        """Get all wells in the plate asynchronously.
+
+        This method processes wells in parallel for improved performance
+        when working with a large number of wells.
+
+        Returns:
+            dict[str, OmeZarrWell]: A dictionary of wells, where the key is the well
+                path and the value is the well object.
+        """
+        wells = self._group_handler.get_from_cache("wells")
+        if wells is not None:
+            return wells  # type: ignore[return-value]
+
+        def process_well(well_path):
+            group_handler = self._group_handler.derive_handler(well_path)
+            well = OmeZarrWell(group_handler)
+            return well_path, well
+
+        wells, tasks = {}, []
+        for well_path in self.wells_paths():
+            task = asyncio.to_thread(process_well, well_path)
+            tasks.append(task)
+
+        results = await asyncio.gather(*tasks)
+        for well_path, well in results:
+            wells[well_path] = well
+
+        self._group_handler.add_to_cache("wells", wells)
+        return wells
+
     def get_wells(self) -> dict[str, OmeZarrWell]:
         """Get all wells in the plate.
 
@@ -328,12 +408,62 @@ class OmeZarrPlate:
             dict[str, OmeZarrWell]: A dictionary of wells, where the key is the well
                 path and the value is the well object.
         """
-        wells = {}
-        for well_path in self.wells_paths():
+        wells = self._group_handler.get_from_cache("wells")
+        if wells is not None:
+            return wells  # type: ignore[return-value]
+
+        def process_well(well_path):
             group_handler = self._group_handler.derive_handler(well_path)
             well = OmeZarrWell(group_handler)
+            return well_path, well
+
+        wells = {}
+        for well_path in self.wells_paths():
+            _, well = process_well(well_path)
             wells[well_path] = well
+
+        self._group_handler.add_to_cache("wells", wells)
         return wells
+
+    async def get_images_async(
+        self, acquisition: int | None = None
+    ) -> dict[str, OmeZarrContainer]:
+        """Get all images in the plate asynchronously.
+
+        This method processes images in parallel for improved performance
+        when working with a large number of images.
+
+        Args:
+            acquisition: The acquisition id to filter the images.
+
+        Returns:
+            dict[str, OmeZarrContainer]: A dictionary of images, where the key is the
+                image path and the value is the image object.
+        """
+        images = self._group_handler.get_from_cache("images")
+        if images is not None:
+            return images  # type: ignore[return-value]
+
+        paths = await self.images_paths_async(acquisition=acquisition)
+
+        def process_image(image_path):
+            """Process a single image and return the image path and image object."""
+            img_group_handler = self._group_handler.derive_handler(image_path)
+            image = OmeZarrContainer(img_group_handler)
+            return image_path, image
+
+        images, tasks = {}, []
+        for image_path in paths:
+            task = asyncio.to_thread(process_image, image_path)
+            tasks.append(task)
+
+        results = await asyncio.gather(*tasks)
+
+        for image_path, image in results:
+            images[image_path] = image
+
+        self._group_handler.add_to_cache("images", images)
+        return images
 
     def get_images(self, acquisition: int | None = None) -> dict[str, OmeZarrContainer]:
         """Get all images in the plate.
@@ -341,10 +471,23 @@ class OmeZarrPlate:
         Args:
             acquisition: The acquisition id to filter the images.
         """
-        images = {}
-        for image_path in self.images_paths(acquisition):
+        images = self._group_handler.get_from_cache("images")
+        if images is not None:
+            return images  # type: ignore[return-value]
+        paths = self.images_paths(acquisition=acquisition)
+
+        def process_image(image_path):
+            """Process a single image and return the image path and image object."""
             img_group_handler = self._group_handler.derive_handler(image_path)
-            images[image_path] = OmeZarrContainer(img_group_handler)
+            image = OmeZarrContainer(img_group_handler)
+            return image_path, image
+
+        images = {}
+        for image_path in paths:
+            _, image = process_image(image_path)
+            images[image_path] = image
+
+        self._group_handler.add_to_cache("images", images)
         return images
 
     def get_image(
@@ -740,6 +883,19 @@ class OmeZarrPlate:
             )
         return table
 
+    def get_condition_table(self, name: str) -> ConditionTable:
+        """Get a condition table from the image.
+
+        Args:
+            name (str): The name of the table.
+        """
+        table = self.tables_container.get(name=name, strict=True)
+        if not isinstance(table, ConditionTable):
+            raise NgioValueError(
+                f"Table {name} is not a condition table. Got {type(table)}"
+            )
+        return table
+
     def get_table(self, name: str, check_type: TypedTable | None = None) -> Table:
         """Get a table from the image.
 
@@ -764,7 +920,7 @@ class OmeZarrPlate:
         self,
         name: str,
         table_cls: type[TableType],
-        backend: str | type[TableBackendProtocol] | None = None,
+        backend: str | TableBackendProtocol | None = None,
     ) -> TableType:
         """Get a table from the image as a specific type.
 
@@ -784,7 +940,7 @@ class OmeZarrPlate:
         self,
         name: str,
         table: Table,
-        backend: str | type[TableBackendProtocol] = "anndata_v1",
+        backend: str | TableBackendProtocol = "anndata_v1",
         overwrite: bool = False,
     ) -> None:
         """Add a table to the image."""
@@ -793,69 +949,168 @@ class OmeZarrPlate:
         )
 
     def list_image_tables(
-        self, acquisition: int | None = None, only_common_tables: bool = True
+        self,
+        acquisition: int | None = None,
+        filter_types: str | None = None,
+        mode: Literal["common", "all"] = "common",
     ) -> list[str]:
         """List all image tables in the image.
 
         Args:
             acquisition (int | None): The acquisition id to filter the images.
-            only_common_tables (bool): Whether to return only common tables
-                between all images. Defaults to True.
+            filter_types (str | None): The type of tables to filter. If None,
+                return all tables. Defaults to None.
+            mode (Literal["common", "all"]): The mode to use for listing the tables.
+                If 'common', return only common tables between all images.
+                If 'all', return all tables. Defaults to 'common'.
         """
         images = self.get_images(acquisition=acquisition)
-        images_paths = []
-        # key table name, value list of paths
-        tables_dict = {}
-        for path, image in images.items():
-            images_paths.append(path)
-            tables = image.list_tables()
-            for table in tables:
-                if table not in tables_dict:
-                    tables_dict[table] = []
-                tables_dict[table].append(path)
+        return list_image_tables(
+            images=images.values(),
+            filter_types=filter_types,
+            mode=mode,
+        )
 
-        if only_common_tables:
-            tables_list = []
-            for t_name, t_paths in tables_dict.items():
-                if len(t_paths) == len(images_paths):
-                    tables_list.append(t_name)
-        else:
-            tables_list = list(tables_dict.keys())
-        return tables_list
+    async def list_image_tables_async(
+        self,
+        acquisition: int | None = None,
+        filter_types: str | None = None,
+        mode: Literal["common", "all"] = "common",
+    ) -> list[str]:
+        """List all image tables in the image asynchronously.
+
+        Args:
+            acquisition (int | None): The acquisition id to filter the images.
+            filter_types (str | None): The type of tables to filter. If None,
+                return all tables. Defaults to None.
+            mode (Literal["common", "all"]): The mode to use for listing the tables.
+                If 'common', return only common tables between all images.
+                If 'all', return all tables. Defaults to 'common'.
+        """
+        images = await self.get_images_async(acquisition=acquisition)
+        return await list_image_tables_async(
+            images=images.values(),
+            filter_types=filter_types,
+            mode=mode,
+        )
 
     def concatenate_image_tables(
         self,
         table_name: str,
         acquisition: int | None = None,
+        strict: bool = True,
         mode: Literal["eager", "lazy"] = "eager",
     ) -> Table:
-        """Concatenate all image tables in the image."""
-        images = self.get_images(acquisition=acquisition)
-        tables = {}
-        for path, image in images.items():
-            if table_name in image.list_tables():
-                tables[path] = image.get_table(table_name)
+        """Concatenate tables from all images in the plate.
 
-        return conctatenate_tables(tables=tables, mode=mode, table_cls=None)
+        Args:
+            table_name: The name of the table to concatenate.
+            index_key: The key to use for the index of the concatenated table.
+            acquisition: The acquisition id to filter the images.
+            strict: If True, raise an error if the table is not found in the image.
+            mode: The mode to use for concatenation. Can be 'eager' or 'lazy'.
+                if 'eager', the table will be loaded into memory.
+                if 'lazy', the table will be loaded as a lazy frame.
+        """
+        images = self.get_images(acquisition=acquisition)
+        extras = _buil_extras(images.keys())
+        return concatenate_image_tables(
+            images=images.values(),
+            extras=extras,
+            table_name=table_name,
+            strict=strict,
+            mode=mode,
+        )
 
     def concatenate_image_tables_as(
         self,
         table_name: str,
         table_cls: type[TableType],
         acquisition: int | None = None,
+        strict: bool = True,
         mode: Literal["eager", "lazy"] = "eager",
     ) -> TableType:
-        """Concatenate all image tables in the image as a specific type."""
-        table = self.concatenate_image_tables(
+        """Concatenate tables from all images in the plate as a specific type.
+
+        Args:
+            table_name: The name of the table to concatenate.
+            table_cls: The type of the table to concatenate.
+            index_key: The key to use for the index of the concatenated table.
+            acquisition: The acquisition id to filter the images.
+            strict: If True, raise an error if the table is not found in the image.
+            mode: The mode to use for concatenation. Can be 'eager' or 'lazy'.
+                if 'eager', the table will be loaded into memory.
+                if 'lazy', the table will be loaded as a lazy frame.
+        """
+        images = self.get_images(acquisition=acquisition)
+        extras = _buil_extras(images.keys())
+        return concatenate_image_tables_as(
+            images=images.values(),
+            extras=extras,
             table_name=table_name,
-            acquisition=acquisition,
+            table_cls=table_cls,
+            strict=strict,
             mode=mode,
         )
-        if not isinstance(table, table_cls):
-            raise NgioValueError(
-                f"Table {table_name} is not of type {table_cls}. Got {type(table)}"
-            )
-        return table
+
+    async def concatenate_image_tables_async(
+        self,
+        table_name: str,
+        acquisition: int | None = None,
+        strict: bool = True,
+        mode: Literal["eager", "lazy"] = "eager",
+    ) -> Table:
+        """Concatenate tables from all images in the plate asynchronously.
+
+        Args:
+            table_name: The name of the table to concatenate.
+            index_key: The key to use for the index of the concatenated table.
+            acquisition: The acquisition id to filter the images.
+            strict: If True, raise an error if the table is not found in the image.
+            mode: The mode to use for concatenation. Can be 'eager' or 'lazy'.
+                if 'eager', the table will be loaded into memory.
+                if 'lazy', the table will be loaded as a lazy frame.
+        """
+        images = await self.get_images_async(acquisition=acquisition)
+        extras = _buil_extras(images.keys())
+        return await concatenate_image_tables_async(
+            images=images.values(),
+            extras=extras,
+            table_name=table_name,
+            strict=strict,
+            mode=mode,
+        )
+
+    async def concatenate_image_tables_as_async(
+        self,
+        table_name: str,
+        table_cls: type[TableType],
+        acquisition: int | None = None,
+        strict: bool = True,
+        mode: Literal["eager", "lazy"] = "eager",
+    ) -> TableType:
+        """Concatenate tables from all images in the plate as a specific type.
+
+        Args:
+            table_name: The name of the table to concatenate.
+            table_cls: The type of the table to concatenate.
+            index_key: The key to use for the index of the concatenated table.
+            acquisition: The acquisition id to filter the images.
+            strict: If True, raise an error if the table is not found in the image.
+            mode: The mode to use for concatenation. Can be 'eager' or 'lazy'.
+                if 'eager', the table will be loaded into memory.
+                if 'lazy', the table will be loaded as a lazy frame.
+        """
+        images = await self.get_images_async(acquisition=acquisition)
+        extras = _buil_extras(images.keys())
+        return await concatenate_image_tables_as_async(
+            images=images.values(),
+            extras=extras,
+            table_name=table_name,
+            table_cls=table_cls,
+            strict=strict,
+            mode=mode,
+        )
 
 
 def open_ome_zarr_plate(

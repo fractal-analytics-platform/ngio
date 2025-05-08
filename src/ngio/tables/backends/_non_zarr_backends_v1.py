@@ -1,6 +1,6 @@
 import io
 from collections.abc import Callable
-from typing import Any, Literal
+from typing import Any
 
 from pandas import DataFrame
 from polars import DataFrame as PolarsDataFrame
@@ -10,7 +10,6 @@ from zarr.storage import DirectoryStore, FSStore
 from ngio.tables.backends._abstract_backend import AbstractTableBackend
 from ngio.tables.backends._utils import normalize_pandas_df, normalize_polars_lf
 from ngio.utils import NgioFileNotFoundError, NgioValueError
-from ngio.utils._zarr_utils import ZarrGroupHandler
 
 
 class NonZarrBaseBackend(AbstractTableBackend):
@@ -23,11 +22,7 @@ class NonZarrBaseBackend(AbstractTableBackend):
         df_writer: Callable[[str, DataFrame], None],
         lf_writer: Callable[[str, PolarsDataFrame], None],
         table_name: str,
-        group_handler: ZarrGroupHandler,
-        index_key: str | None = None,
-        index_type: None | Literal["int"] | Literal["str"] = None,
     ):
-        super().__init__(group_handler, index_key, index_type)
         self.df_reader = df_reader
         self.lf_reader = lf_reader
         self.df_writer = df_writer
