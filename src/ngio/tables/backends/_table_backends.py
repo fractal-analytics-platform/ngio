@@ -16,13 +16,13 @@ from ngio.utils import NgioValueError, ZarrGroupHandler
 
 
 class TableBackendProtocol(Protocol):
-    def __init__(
+    def set_group_handler(
         self,
         group_handler: ZarrGroupHandler,
         index_key: str | None = None,
         index_type: Literal["int", "str"] | None = None,
-    ):
-        """Backend constructor.
+    ) -> None:
+        """Attach a group handler to the backend.
 
         Index keys and index types are used to ensure that the
         serialization and deserialization of the table
@@ -174,7 +174,8 @@ class ImplementedTableBackends:
         """Try to get a handler for the given store based on the metadata version."""
         if backend_name not in self._implemented_backends:
             raise NgioValueError(f"Table backend {backend_name} not implemented.")
-        backend = self._implemented_backends[backend_name](
+        backend = self._implemented_backends[backend_name]()
+        backend.set_group_handler(
             group_handler=group_handler, index_key=index_key, index_type=index_type
         )
         return backend

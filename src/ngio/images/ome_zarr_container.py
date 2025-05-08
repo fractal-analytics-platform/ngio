@@ -441,7 +441,7 @@ class OmeZarrContainer:
         self,
         name: str,
         table_cls: type[TableType],
-        backend: str | type[TableBackendProtocol] | None = None,
+        backend: str | TableBackendProtocol | None = None,
     ) -> TableType:
         """Get a table from the image as a specific type.
 
@@ -469,7 +469,7 @@ class OmeZarrContainer:
         self,
         name: str,
         table: Table,
-        backend: str | type[TableBackendProtocol] = "anndata_v1",
+        backend: str | TableBackendProtocol = "anndata_v1",
         overwrite: bool = False,
     ) -> None:
         """Add a table to the image."""

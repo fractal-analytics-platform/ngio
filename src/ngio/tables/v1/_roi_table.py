@@ -334,7 +334,7 @@ class RoiTableV1(GenericRoiTableV1):
     def from_handler(
         cls,
         handler: ZarrGroupHandler,
-        backend: str | type[TableBackendProtocol] | None = None,
+        backend: str | TableBackendProtocol | None = None,
     ) -> "RoiTableV1":
         table = cls._from_handler(
             handler=handler,
@@ -409,7 +409,7 @@ class MaskingRoiTableV1(GenericRoiTableV1):
     def from_handler(
         cls,
         handler: ZarrGroupHandler,
-        backend: str | type[TableBackendProtocol] | None = None,
+        backend: str | TableBackendProtocol | None = None,
     ) -> "MaskingRoiTableV1":
         table = cls._from_handler(
             handler=handler,

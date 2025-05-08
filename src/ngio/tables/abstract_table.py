@@ -146,23 +146,22 @@ class AbstractBaseTable(ABC):
     def _load_backend(
         meta: BackendMeta,
         handler: ZarrGroupHandler,
-        backend: str | type[TableBackendProtocol],
+        backend: str | TableBackendProtocol,
     ) -> TableBackendProtocol:
         """Create a new ROI table from a Zarr group handler."""
         if isinstance(backend, str):
-            _backend = ImplementedTableBackends().get_backend(
+            return ImplementedTableBackends().get_backend(
                 backend_name=backend,
                 group_handler=handler,
                 index_key=meta.index_key,
                 index_type=meta.index_type,
             )
-        else:
-            _backend = backend(
-                group_handler=handler,
-                index_key=meta.index_key,
-                index_type=meta.index_type,
-            )
-        return _backend
+        backend.set_group_handler(
+            group_handler=handler,
+            index_key=meta.index_key,
+            index_type=meta.index_type,
+        )
+        return backend
 
     def set_table_data(
         self,
@@ -203,7 +202,7 @@ class AbstractBaseTable(ABC):
     def set_backend(
         self,
         handler: ZarrGroupHandler | None = None,
-        backend: str | type[TableBackendProtocol] = "anndata_v1",
+        backend: str | TableBackendProtocol = "anndata_v1",
     ) -> None:
         """Set the backend of the table."""
         if handler is None:
@@ -227,7 +226,7 @@ class AbstractBaseTable(ABC):
         cls,
         handler: ZarrGroupHandler,
         meta_model: builtins.type[BackendMeta],
-        backend: str | type[TableBackendProtocol] | None = None,
+        backend: str | TableBackendProtocol | None = None,
     ) -> Self:
         """Create a new ROI table from a Zarr group handler."""
         meta = meta_model(**handler.load_attrs())
@@ -242,7 +241,7 @@ class AbstractBaseTable(ABC):
     def from_handler(
         cls,
         handler: ZarrGroupHandler,
-        backend: str | type[TableBackendProtocol] | None = None,
+        backend: str | TableBackendProtocol | None = None,
     ) -> Self:
         """Create a new ROI table from a Zarr group handler."""
         pass

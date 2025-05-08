@@ -29,7 +29,7 @@ class GenericTable(AbstractBaseTable):
     def from_handler(
         cls,
         handler: ZarrGroupHandler,
-        backend: str | type[TableBackendProtocol] | None = None,
+        backend: str | TableBackendProtocol | None = None,
     ) -> "GenericTable":
         return cls._from_handler(
             handler=handler,

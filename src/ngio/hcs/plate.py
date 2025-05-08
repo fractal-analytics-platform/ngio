@@ -891,7 +891,7 @@ class OmeZarrPlate:
         self,
         name: str,
         table_cls: type[TableType],
-        backend: str | type[TableBackendProtocol] | None = None,
+        backend: str | TableBackendProtocol | None = None,
     ) -> TableType:
         """Get a table from the image as a specific type.
 
@@ -911,7 +911,7 @@ class OmeZarrPlate:
         self,
         name: str,
         table: Table,
-        backend: str | type[TableBackendProtocol] = "anndata_v1",
+        backend: str | TableBackendProtocol = "anndata_v1",
         overwrite: bool = False,
     ) -> None:
         """Add a table to the image."""
@@ -920,7 +920,10 @@ class OmeZarrPlate:
         )
 
     def list_image_tables(
-        self, acquisition: int | None = None, only_common_tables: bool = True, filter_types: str | None = None
+        self,
+        acquisition: int | None = None,
+        only_common_tables: bool = True,
+        filter_types: str | None = None,
     ) -> list[str]:
         """List all image tables in the image.
 
@@ -953,7 +956,10 @@ class OmeZarrPlate:
         return tables_list
 
     async def list_image_tables_async(
-        self, acquisition: int | None = None, only_common_tables: bool = True, filter_types: str | None = None
+        self,
+        acquisition: int | None = None,
+        only_common_tables: bool = True,
+        filter_types: str | None = None,
     ) -> list[str]:
         """List all image tables in the image asynchronously.
 
@@ -968,7 +974,9 @@ class OmeZarrPlate:
         images_paths = []
 
         # key table name, value list of paths
-        def process_image(image: OmeZarrContainer, filter_types: str | None = None) -> list[str]:
+        def process_image(
+            image: OmeZarrContainer, filter_types: str | None = None
+        ) -> list[str]:
             tables = image.list_tables(filter_types=filter_types)
             return tables
 
