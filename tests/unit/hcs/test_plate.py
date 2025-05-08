@@ -68,6 +68,8 @@ def test_create_and_edit_plate(tmp_path: Path):
     test_plate.add_image(row="B", column="03", image_path="0", acquisition_id=0)
     test_plate.add_image(row="B", column="03", image_path="1", acquisition_id=0)
 
+    assert test_plate.meta.plate.name == "test_plate"
+
     with pytest.raises(NgioValueError):
         test_plate.add_image(row="B", column="03", image_path="1", acquisition_id=1)
 
