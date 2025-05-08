@@ -269,7 +269,7 @@ class TablesContainer:
     ) -> Table:
         """Get a label from the group."""
         if name not in self.list():
-            raise KeyError(f"Table '{name}' not found in the group.")
+            raise NgioValueError(f"Table '{name}' not found in the group.")
 
         table_handler = self._get_table_group_handler(name)
 
@@ -289,7 +289,7 @@ class TablesContainer:
     ) -> TableType:
         """Get a table from the group as a specific type."""
         if name not in self.list():
-            raise KeyError(f"Table '{name}' not found in the group.")
+            raise NgioValueError(f"Table '{name}' not found in the group.")
 
         table_handler = self._get_table_group_handler(name)
         return table_cls.from_handler(

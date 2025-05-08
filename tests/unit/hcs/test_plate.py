@@ -1,3 +1,4 @@
+import asyncio
 from pathlib import Path
 
 import pandas.testing as pdt
@@ -39,8 +40,14 @@ def test_open_real_ome_zarr_plate(cardiomyocyte_tiny_path: Path):
     assert image_path == "B/03/0"
 
     images_plate = ome_zarr_plate.get_images()
-    images_well = ome_zarr_plate.get_well_images("B", "03")
     assert len(images_plate) == 1
+    images_plate_async = asyncio.run(ome_zarr_plate.get_images_async())
+    assert len(images_plate_async) == 1
+    assert images_plate.keys() == images_plate_async.keys()
+
+    _ = ome_zarr_plate.get_image("B", "03", "0")
+
+    images_well = ome_zarr_plate.get_well_images("B", "03")
     assert len(images_well) == 1
 
     well = ome_zarr_plate.get_well("B", "03")
@@ -155,7 +162,6 @@ def test_tables_api(tmp_path: Path):
 
     test_df = DataFrame({"a": [1, 2], "b": [3, 4]})
     test_table = GenericTable(test_df)
-
     test_plate.add_table("test_table", test_table, backend="experimental_csv_v1")
 
     test_roi_table = RoiTable(
@@ -170,3 +176,29 @@ def test_tables_api(tmp_path: Path):
         test_df,
         check_names=False,
     )
+
+
+@pytest.mark.filterwarnings("ignore::anndata._warnings.ImplicitModificationWarning")
+def test_plate_table_aggregations(cardiomyocyte_small_mip_path: Path):
+    ome_zarr_plate = open_ome_zarr_plate(cardiomyocyte_small_mip_path)
+    expected_tables = [
+        "FOV_ROI_table",
+        "nuclei_ROI_table",
+        "well_ROI_table",
+        "regionprops_DAPI",
+        "nuclei_measurements_wf3",
+        "nuclei_measurements_wf4",
+        "nuclei_lamin_measurements_wf4",
+    ]
+    tables = ome_zarr_plate.list_image_tables()
+    assert set(tables) == set(expected_tables)
+    async_tables = asyncio.run(ome_zarr_plate.list_image_tables_async())
+    assert set(async_tables) == set(expected_tables)
+    roi_tables = ome_zarr_plate.list_image_tables(filter_types="roi_table")
+    assert set(roi_tables) == {"FOV_ROI_table", "well_ROI_table"}
+
+    t1 = ome_zarr_plate.concatenate_image_tables(table_name="regionprops_DAPI")
+    t2 = asyncio.run(
+        ome_zarr_plate.concatenate_image_tables_async(table_name="regionprops_DAPI")
+    )
+    pdt.assert_frame_equal(t1.dataframe, t2.dataframe)
