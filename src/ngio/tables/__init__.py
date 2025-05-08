@@ -12,9 +12,9 @@ from ngio.tables.tables_container import (
     TableType,
     TypedTable,
     open_table,
+    open_table_as,
     open_tables_container,
 )
-from ngio.tables.tables_ops import TableWithExtras, conctatenate_tables
 from ngio.tables.v1._generic_table import GenericTable
 
 __all__ = [
@@ -28,10 +28,9 @@ __all__ = [
     "Table",
     "TableBackendProtocol",
     "TableType",
-    "TableWithExtras",
     "TablesContainer",
     "TypedTable",
-    "conctatenate_tables",
     "open_table",
+    "open_table_as",
     "open_tables_container",
 ]

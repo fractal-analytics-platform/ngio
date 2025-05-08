@@ -85,7 +85,7 @@ class FeatureTableV1(AbstractBaseTable):
     def from_handler(
         cls,
         handler: ZarrGroupHandler,
-        backend: str | type[TableBackendProtocol] | None = None,
+        backend: str | TableBackendProtocol | None = None,
     ) -> "FeatureTableV1":
         return cls._from_handler(
             handler=handler,
