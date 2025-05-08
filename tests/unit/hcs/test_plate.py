@@ -61,6 +61,8 @@ def test_create_and_edit_plate(tmp_path: Path):
     test_plate.add_image(row="B", column="03", image_path="0", acquisition_id=0)
     test_plate.add_image(row="B", column="03", image_path="1", acquisition_id=0)
 
+    assert test_plate.meta.plate.name == "test_plate"
+
     with pytest.raises(NgioValueError):
         test_plate.add_image(row="B", column="03", image_path="1", acquisition_id=1)
 
@@ -106,6 +108,7 @@ def test_add_well(tmp_path: Path):
     assert test_plate.rows == ["B"]
     assert test_plate.acquisition_ids == []
     assert test_plate.wells_paths() == ["B/03"]
+    assert test_plate.meta.plate.name == "test_plate"
 
     test_plate.add_column("04")
     test_plate.add_row("C")

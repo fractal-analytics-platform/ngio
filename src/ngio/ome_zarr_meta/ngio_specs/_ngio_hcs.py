@@ -361,6 +361,7 @@ class NgioPlateMeta(HCSAttrs):
             acquisitions=self.plate.acquisitions,
             wells=wells,
             field_count=self.plate.field_count,
+            name=self.plate.name,
             version=self.plate.version,
         )
         return NgioPlateMeta(plate=new_plate), row_idx
@@ -398,6 +399,7 @@ class NgioPlateMeta(HCSAttrs):
             acquisitions=self.plate.acquisitions,
             wells=wells,
             field_count=self.plate.field_count,
+            name=self.plate.name,
             version=self.plate.version,
         )
         return NgioPlateMeta(plate=new_plate), column_idx
@@ -435,6 +437,7 @@ class NgioPlateMeta(HCSAttrs):
             acquisitions=plate.plate.acquisitions,
             wells=wells,
             field_count=plate.plate.field_count,
+            name=plate.plate.name,
             version=plate.plate.version,
         )
         return NgioPlateMeta(plate=new_plate)
@@ -473,6 +476,7 @@ class NgioPlateMeta(HCSAttrs):
             acquisitions=acquisitions,
             wells=self.plate.wells,
             field_count=self.plate.field_count,
+            name=self.plate.name,
             version=self.plate.version,
         )
         return NgioPlateMeta(plate=new_plate)
@@ -508,6 +512,7 @@ class NgioPlateMeta(HCSAttrs):
             acquisitions=self.plate.acquisitions,
             wells=wells,
             field_count=self.plate.field_count,
+            name=self.plate.name,
             version=self.plate.version,
         )
         return NgioPlateMeta(plate=new_plate)
