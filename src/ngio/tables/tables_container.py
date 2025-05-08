@@ -372,6 +372,24 @@ def open_table(
     )
 
 
+def open_table_as(
+    store: StoreOrGroup,
+    table_cls: type[TableType],
+    backend: str | TableBackendProtocol = "anndata_v1",
+    cache: bool = False,
+    mode: AccessModeLiteral = "a",
+    parallel_safe: bool = False,
+) -> TableType:
+    """Open a table from a Zarr store as a specific type."""
+    handler = ZarrGroupHandler(
+        store=store, cache=cache, mode=mode, parallel_safe=parallel_safe
+    )
+    return table_cls.from_handler(
+        handler=handler,
+        backend=backend,
+    )  # type: ignore[return-value]
+
+
 def write_table(
     store: StoreOrGroup,
     table: Table,

@@ -80,17 +80,17 @@ def test_roi_table_v1(tmp_path: Path):
     with pytest.raises(NgioValueError):
         loaded_table.get("roi3")
 
-    assert loaded_table._meta.backend == "anndata_v1"
-    assert loaded_table._meta.fractal_table_version == loaded_table.version()
-    assert loaded_table._meta.type == loaded_table.table_type()
+    assert loaded_table.meta.backend == "anndata_v1"
+    meta_dict = loaded_table._meta.model_dump()
+    assert meta_dict.get("fractal_table_version") == loaded_table.version()
+    assert meta_dict.get("type") == loaded_table.table_type()
 
 
 def test_roi_no_index(tmp_path: Path):
     """ngio needs to support reading a table without an index. for legacy reasons"""
     handler = ZarrGroupHandler(tmp_path / "roi_table.zarr")
-    backend = AnnDataBackend(
-        group_handler=handler,
-    )
+    backend = AnnDataBackend()
+    backend.set_group_handler(handler)
 
     roi_table = pd.DataFrame(
         {

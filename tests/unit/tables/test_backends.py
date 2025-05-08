@@ -63,7 +63,8 @@ def test_backend_manager(tmp_path: Path):
 def test_json_backend(tmp_path: Path):
     store = tmp_path / "test_json_backend.zarr"
     handler = ZarrGroupHandler(store=store, cache=True, mode="a")
-    backend = JsonTableBackend(handler, index_type="str")
+    backend = JsonTableBackend()
+    backend.set_group_handler(handler, index_type="str")
 
     assert backend.backend_name() == "experimental_json_v1"
     assert not backend.implements_anndata()
@@ -95,7 +96,8 @@ def test_json_backend(tmp_path: Path):
 def test_csv_backend(tmp_path: Path):
     store = tmp_path / "test_csv_backend.zarr"
     handler = ZarrGroupHandler(store=store, cache=True, mode="a")
-    backend = CsvTableBackend(handler)
+    backend = CsvTableBackend()
+    backend.set_group_handler(handler)
 
     assert backend.backend_name() == "experimental_csv_v1"
     assert not backend.implements_anndata()
@@ -123,7 +125,8 @@ def test_csv_backend(tmp_path: Path):
 def test_parquet_backend(tmp_path: Path):
     store = tmp_path / "test_parquet_backend.zarr"
     handler = ZarrGroupHandler(store=store, cache=True, mode="a")
-    backend = ParquetTableBackend(handler)
+    backend = ParquetTableBackend()
+    backend.set_group_handler(handler)
 
     assert backend.backend_name() == "experimental_parquet_v1"
     assert not backend.implements_anndata()
@@ -151,7 +154,8 @@ def test_parquet_backend(tmp_path: Path):
 def test_anndata_backend(tmp_path: Path):
     store = tmp_path / "test_anndata_backend.zarr"
     handler = ZarrGroupHandler(store=store, cache=True, mode="a")
-    backend = AnnDataBackend(handler, index_type="int")
+    backend = AnnDataBackend()
+    backend.set_group_handler(handler, index_type="int")
 
     assert backend.backend_name() == "anndata_v1"
     assert backend.implements_anndata()
