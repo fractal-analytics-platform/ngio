@@ -953,7 +953,7 @@ class OmeZarrPlate:
         return tables_list
 
     async def list_image_tables_async(
-        self, acquisition: int | None = None, only_common_tables: bool = True
+        self, acquisition: int | None = None, only_common_tables: bool = True, filter_types: str | None = None
     ) -> list[str]:
         """List all image tables in the image asynchronously.
 
@@ -961,20 +961,22 @@ class OmeZarrPlate:
             acquisition (int | None): The acquisition id to filter the images.
             only_common_tables (bool): Whether to return only common tables
                 between all images. Defaults to True.
+            filter_types (str | None): The type of tables to filter. If None,
+                return all tables. Defaults to None.
         """
         images = await self.get_images_async(acquisition=acquisition)
         images_paths = []
 
         # key table name, value list of paths
-        def process_image(image: OmeZarrContainer) -> list[str]:
-            tables = image.list_tables()
+        def process_image(image: OmeZarrContainer, filter_types: str | None = None) -> list[str]:
+            tables = image.list_tables(filter_types=filter_types)
             return tables
 
         tables_dict = {}
         tasks = []
         for path, image in images.items():
             images_paths.append(path)
-            tables = asyncio.to_thread(process_image, image)
+            tables = asyncio.to_thread(process_image, image, filter_types=filter_types)
             tasks.append(tables)
 
         results = await asyncio.gather(*tasks)
