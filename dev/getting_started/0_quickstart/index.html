@@ -1230,81 +1230,21 @@
 <p>Please report installation problems by opening an issue on our <a href="https://github.com/fractal-analytics-platform/ngio">GitHub repository</a>.</p>
 <h2 id="setup-some-test-data">Setup some test data</h2>
 <p>Let's start by downloading a sample OME-Zarr dataset to work with.</p>
-<div class="highlight"><pre><span></span><code><span class="n">Traceback</span> <span class="p">(</span><span class="n">most</span> <span class="n">recent</span> <span class="n">call</span> <span class="n">last</span><span class="p">):</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/markdown_exec/_internal/formatters/python.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">71</span><span class="p">,</span> <span class="ow">in</span> <span class="n">_run_python</span>
-    <span class="n">exec_python</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="n">code_block_id</span><span class="p">,</span> <span class="n">exec_globals</span><span class="p">)</span>
-    <span class="o">~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/markdown_exec/_internal/formatters/_exec_python.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">8</span><span class="p">,</span> <span class="ow">in</span> <span class="n">exec_python</span>
-    <span class="n">exec</span><span class="p">(</span><span class="n">compiled</span><span class="p">,</span> <span class="n">exec_globals</span><span class="p">)</span>  <span class="c1"># noqa: S102</span>
-    <span class="o">~~~~^^^^^^^^^^^^^^^^^^^^^^^^</span>
-  <span class="n">File</span> <span class="s2">&quot;&lt;code block: session quickstart; n1&gt;&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">2</span><span class="p">,</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="n">module</span><span class="o">&gt;</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">ngio.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">download_ome_zarr_dataset</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/ngio/__init__.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">12</span><span class="p">,</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="n">module</span><span class="o">&gt;</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">ngio.common</span><span class="w"> </span><span class="kn">import</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="n">Dimensions</span><span class="p">,</span> <span class="n">Roi</span><span class="p">,</span> <span class="n">RoiPixels</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/ngio/common/__init__.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">3</span><span class="p">,</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="n">module</span><span class="o">&gt;</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">ngio.common._array_pipe</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="o">...&lt;</span><span class="mi">4</span> <span class="n">lines</span><span class="o">&gt;...</span>
-    <span class="p">)</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/ngio/common/_array_pipe.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">9</span><span class="p">,</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="n">module</span><span class="o">&gt;</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">ngio.common._axes_transforms</span><span class="w"> </span><span class="kn">import</span> <span class="n">transform_dask_array</span><span class="p">,</span> <span class="n">transform_numpy_array</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/ngio/common/_axes_transforms.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">6</span><span class="p">,</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="n">module</span><span class="o">&gt;</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">ngio.ome_zarr_meta.ngio_specs._axes</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="o">...&lt;</span><span class="mi">4</span> <span class="n">lines</span><span class="o">&gt;...</span>
-    <span class="p">)</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/ngio/ome_zarr_meta/__init__.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">3</span><span class="p">,</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="n">module</span><span class="o">&gt;</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">ngio.ome_zarr_meta._meta_handlers</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="o">...&lt;</span><span class="mi">10</span> <span class="n">lines</span><span class="o">&gt;...</span>
-    <span class="p">)</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/ngio/ome_zarr_meta/_meta_handlers.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">7</span><span class="p">,</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="n">module</span><span class="o">&gt;</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">ngio.ome_zarr_meta.ngio_specs</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="o">...&lt;</span><span class="mi">5</span> <span class="n">lines</span><span class="o">&gt;...</span>
-    <span class="p">)</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/ngio/ome_zarr_meta/ngio_specs/__init__.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">33</span><span class="p">,</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="n">module</span><span class="o">&gt;</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">ngio.ome_zarr_meta.ngio_specs._ngio_hcs</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="o">...&lt;</span><span class="mi">4</span> <span class="n">lines</span><span class="o">&gt;...</span>
-    <span class="p">)</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/ngio/ome_zarr_meta/ngio_specs/_ngio_hcs.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">365</span>
-    <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">plate</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
-    <span class="o">^^^^^^^^^^^^^^^^^^^^</span>
-<span class="ne">SyntaxError</span><span class="p">:</span> <span class="n">keyword</span> <span class="n">argument</span> <span class="n">repeated</span><span class="p">:</span> <span class="n">name</span>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ngio.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">download_ome_zarr_dataset</span>
+
+<span class="c1"># Download a sample dataset</span>
+<span class="n">download_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;./data&quot;</span><span class="p">)</span>
+<span class="n">hcs_path</span> <span class="o">=</span> <span class="n">download_ome_zarr_dataset</span><span class="p">(</span><span class="s2">&quot;CardiomyocyteSmallMip&quot;</span><span class="p">,</span> <span class="n">download_dir</span><span class="o">=</span><span class="n">download_dir</span><span class="p">)</span>
+<span class="n">image_path</span> <span class="o">=</span> <span class="n">hcs_path</span> <span class="o">/</span> <span class="s2">&quot;B&quot;</span> <span class="o">/</span> <span class="s2">&quot;03&quot;</span> <span class="o">/</span> <span class="s2">&quot;0&quot;</span>
 </code></pre></div>
+<div class="result"></div>
 <h2 id="open-an-ome-zarr-image">Open an OME-Zarr image</h2>
 <p>Let's start by opening an OME-Zarr file and inspecting its contents.</p>
-<div class="highlight"><pre><span></span><code><span class="n">Traceback</span> <span class="p">(</span><span class="n">most</span> <span class="n">recent</span> <span class="n">call</span> <span class="n">last</span><span class="p">):</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/markdown_exec/_internal/formatters/python.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">71</span><span class="p">,</span> <span class="ow">in</span> <span class="n">_run_python</span>
-    <span class="n">exec_python</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="n">code_block_id</span><span class="p">,</span> <span class="n">exec_globals</span><span class="p">)</span>
-    <span class="o">~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/markdown_exec/_internal/formatters/_exec_python.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">8</span><span class="p">,</span> <span class="ow">in</span> <span class="n">exec_python</span>
-    <span class="n">exec</span><span class="p">(</span><span class="n">compiled</span><span class="p">,</span> <span class="n">exec_globals</span><span class="p">)</span>  <span class="c1"># noqa: S102</span>
-    <span class="o">~~~~^^^^^^^^^^^^^^^^^^^^^^^^</span>
-  <span class="n">File</span> <span class="s2">&quot;&lt;code block: session quickstart; n2&gt;&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">1</span><span class="p">,</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="n">module</span><span class="o">&gt;</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">ngio</span><span class="w"> </span><span class="kn">import</span> <span class="n">open_ome_zarr_container</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/ngio/__init__.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">12</span><span class="p">,</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="n">module</span><span class="o">&gt;</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">ngio.common</span><span class="w"> </span><span class="kn">import</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="n">Dimensions</span><span class="p">,</span> <span class="n">Roi</span><span class="p">,</span> <span class="n">RoiPixels</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/ngio/common/__init__.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">3</span><span class="p">,</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="n">module</span><span class="o">&gt;</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">ngio.common._array_pipe</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="o">...&lt;</span><span class="mi">4</span> <span class="n">lines</span><span class="o">&gt;...</span>
-    <span class="p">)</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/ngio/common/_array_pipe.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">11</span><span class="p">,</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="n">module</span><span class="o">&gt;</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">ngio.common._dimensions</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dimensions</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/ngio/common/_dimensions.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">10</span><span class="p">,</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="n">module</span><span class="o">&gt;</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">ngio.ome_zarr_meta</span><span class="w"> </span><span class="kn">import</span> <span class="n">AxesMapper</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/ngio/ome_zarr_meta/__init__.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">3</span><span class="p">,</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="n">module</span><span class="o">&gt;</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">ngio.ome_zarr_meta._meta_handlers</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="o">...&lt;</span><span class="mi">10</span> <span class="n">lines</span><span class="o">&gt;...</span>
-    <span class="p">)</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/ngio/ome_zarr_meta/_meta_handlers.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">7</span><span class="p">,</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="n">module</span><span class="o">&gt;</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">ngio.ome_zarr_meta.ngio_specs</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="o">...&lt;</span><span class="mi">5</span> <span class="n">lines</span><span class="o">&gt;...</span>
-    <span class="p">)</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/ngio/ome_zarr_meta/ngio_specs/__init__.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">33</span><span class="p">,</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="n">module</span><span class="o">&gt;</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">ngio.ome_zarr_meta.ngio_specs._ngio_hcs</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="o">...&lt;</span><span class="mi">4</span> <span class="n">lines</span><span class="o">&gt;...</span>
-    <span class="p">)</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/ngio/ome_zarr_meta/ngio_specs/_ngio_hcs.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">365</span>
-    <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">plate</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
-    <span class="o">^^^^^^^^^^^^^^^^^^^^</span>
-<span class="ne">SyntaxError</span><span class="p">:</span> <span class="n">keyword</span> <span class="n">argument</span> <span class="n">repeated</span><span class="p">:</span> <span class="n">name</span>
+<div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">ngio</span><span class="w"> </span><span class="kn">import</span> <span class="n">open_ome_zarr_container</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ome_zarr_container</span> <span class="o">=</span> <span class="n">open_ome_zarr_container</span><span class="p">(</span><span class="n">image_path</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ome_zarr_container</span>
+<span class="go">OmeZarrContainer(levels=5, #labels=4, #tables=7)</span>
 </code></pre></div>
 <h3 id="what-is-the-ome-zarr-container">What is the OME-Zarr container?</h3>
 <p>The <code>OME-Zarr Container</code> is the core of ngio and the entry point to working with OME-Zarr images. It provides high-level access to the image metadata, images, labels, and tables.</p>

@@ -1143,41 +1143,12 @@
 <p>Ngio provides a simple interface for high-content screening (HCS) plates. An HCS plate is a collection of OME-Zarr images organized in a grid-like structure. Each plates contains columns and rows, and each well in the plate is identified by its row and column indices. Each well can contain multiple images, and each image can belong to a different acquisition.</p>
 <p>The HCS plate is represented by the <code>OmeZarrPlate</code> class.</p>
 <p>Let's open an <code>OmeZarrPlate</code> object.</p>
-<div class="highlight"><pre><span></span><code><span class="n">Traceback</span> <span class="p">(</span><span class="n">most</span> <span class="n">recent</span> <span class="n">call</span> <span class="n">last</span><span class="p">):</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/markdown_exec/_internal/formatters/python.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">71</span><span class="p">,</span> <span class="ow">in</span> <span class="n">_run_python</span>
-    <span class="n">exec_python</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="n">code_block_id</span><span class="p">,</span> <span class="n">exec_globals</span><span class="p">)</span>
-    <span class="o">~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/markdown_exec/_internal/formatters/_exec_python.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">8</span><span class="p">,</span> <span class="ow">in</span> <span class="n">exec_python</span>
-    <span class="n">exec</span><span class="p">(</span><span class="n">compiled</span><span class="p">,</span> <span class="n">exec_globals</span><span class="p">)</span>  <span class="c1"># noqa: S102</span>
-    <span class="o">~~~~^^^^^^^^^^^^^^^^^^^^^^^^</span>
-  <span class="n">File</span> <span class="s2">&quot;&lt;code block: session hcs_plate; n1&gt;&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">3</span><span class="p">,</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="n">module</span><span class="o">&gt;</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">ngio</span><span class="w"> </span><span class="kn">import</span> <span class="n">open_ome_zarr_plate</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/ngio/__init__.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">12</span><span class="p">,</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="n">module</span><span class="o">&gt;</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">ngio.common</span><span class="w"> </span><span class="kn">import</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="n">Dimensions</span><span class="p">,</span> <span class="n">Roi</span><span class="p">,</span> <span class="n">RoiPixels</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/ngio/common/__init__.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">3</span><span class="p">,</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="n">module</span><span class="o">&gt;</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">ngio.common._array_pipe</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="o">...&lt;</span><span class="mi">4</span> <span class="n">lines</span><span class="o">&gt;...</span>
-    <span class="p">)</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/ngio/common/_array_pipe.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">11</span><span class="p">,</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="n">module</span><span class="o">&gt;</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">ngio.common._dimensions</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dimensions</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/ngio/common/_dimensions.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">10</span><span class="p">,</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="n">module</span><span class="o">&gt;</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">ngio.ome_zarr_meta</span><span class="w"> </span><span class="kn">import</span> <span class="n">AxesMapper</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/ngio/ome_zarr_meta/__init__.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">3</span><span class="p">,</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="n">module</span><span class="o">&gt;</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">ngio.ome_zarr_meta._meta_handlers</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="o">...&lt;</span><span class="mi">10</span> <span class="n">lines</span><span class="o">&gt;...</span>
-    <span class="p">)</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/ngio/ome_zarr_meta/_meta_handlers.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">7</span><span class="p">,</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="n">module</span><span class="o">&gt;</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">ngio.ome_zarr_meta.ngio_specs</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="o">...&lt;</span><span class="mi">5</span> <span class="n">lines</span><span class="o">&gt;...</span>
-    <span class="p">)</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/ngio/ome_zarr_meta/ngio_specs/__init__.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">33</span><span class="p">,</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="n">module</span><span class="o">&gt;</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">ngio.ome_zarr_meta.ngio_specs._ngio_hcs</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="o">...&lt;</span><span class="mi">4</span> <span class="n">lines</span><span class="o">&gt;...</span>
-    <span class="p">)</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/ngio/ome_zarr_meta/ngio_specs/_ngio_hcs.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">365</span>
-    <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">plate</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
-    <span class="o">^^^^^^^^^^^^^^^^^^^^</span>
-<span class="ne">SyntaxError</span><span class="p">:</span> <span class="n">keyword</span> <span class="n">argument</span> <span class="n">repeated</span><span class="p">:</span> <span class="n">name</span>
+<div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">ngio.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">download_ome_zarr_dataset</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">ngio</span><span class="w"> </span><span class="kn">import</span> <span class="n">open_ome_zarr_plate</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">hcs_path</span> <span class="o">=</span> <span class="n">download_ome_zarr_dataset</span><span class="p">(</span><span class="s2">&quot;CardiomyocyteSmallMip&quot;</span><span class="p">,</span> <span class="n">download_dir</span><span class="o">=</span><span class="n">download_dir</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ome_zarr_plate</span> <span class="o">=</span> <span class="n">open_ome_zarr_plate</span><span class="p">(</span><span class="n">hcs_path</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ome_zarr_plate</span>
+<span class="go">Plate([rows x columns] (1 x 1))</span>
 </code></pre></div>
 <p>This example plate is very small and contains only a single well.</p>
 <h2 id="plate-overview">Plate overview</h2>
@@ -1186,47 +1157,20 @@
 <div class="tabbed-content">
 <div class="tabbed-block">
 <p>Show the columns in the plate:
-<div class="highlight"><pre><span></span><code><span class="n">Traceback</span> <span class="p">(</span><span class="n">most</span> <span class="n">recent</span> <span class="n">call</span> <span class="n">last</span><span class="p">):</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/markdown_exec/_internal/formatters/python.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">71</span><span class="p">,</span> <span class="ow">in</span> <span class="n">_run_python</span>
-    <span class="n">exec_python</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="n">code_block_id</span><span class="p">,</span> <span class="n">exec_globals</span><span class="p">)</span>
-    <span class="o">~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/markdown_exec/_internal/formatters/_exec_python.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">8</span><span class="p">,</span> <span class="ow">in</span> <span class="n">exec_python</span>
-    <span class="n">exec</span><span class="p">(</span><span class="n">compiled</span><span class="p">,</span> <span class="n">exec_globals</span><span class="p">)</span>  <span class="c1"># noqa: S102</span>
-    <span class="o">~~~~^^^^^^^^^^^^^^^^^^^^^^^^</span>
-  <span class="n">File</span> <span class="s2">&quot;&lt;code block: session hcs_plate; n2&gt;&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">1</span><span class="p">,</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="n">module</span><span class="o">&gt;</span>
-    <span class="n">ome_zarr_plate</span><span class="o">.</span><span class="n">columns</span>
-    <span class="o">^^^^^^^^^^^^^^</span>
-<span class="ne">NameError</span><span class="p">:</span> <span class="n">name</span> <span class="s1">&#39;ome_zarr_plate&#39;</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">defined</span>
+<div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">ome_zarr_plate</span><span class="o">.</span><span class="n">columns</span>
+<span class="go">[&#39;03&#39;]</span>
 </code></pre></div></p>
 </div>
 <div class="tabbed-block">
 <p>Show the rows in the plate:
-<div class="highlight"><pre><span></span><code><span class="n">Traceback</span> <span class="p">(</span><span class="n">most</span> <span class="n">recent</span> <span class="n">call</span> <span class="n">last</span><span class="p">):</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/markdown_exec/_internal/formatters/python.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">71</span><span class="p">,</span> <span class="ow">in</span> <span class="n">_run_python</span>
-    <span class="n">exec_python</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="n">code_block_id</span><span class="p">,</span> <span class="n">exec_globals</span><span class="p">)</span>
-    <span class="o">~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/markdown_exec/_internal/formatters/_exec_python.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">8</span><span class="p">,</span> <span class="ow">in</span> <span class="n">exec_python</span>
-    <span class="n">exec</span><span class="p">(</span><span class="n">compiled</span><span class="p">,</span> <span class="n">exec_globals</span><span class="p">)</span>  <span class="c1"># noqa: S102</span>
-    <span class="o">~~~~^^^^^^^^^^^^^^^^^^^^^^^^</span>
-  <span class="n">File</span> <span class="s2">&quot;&lt;code block: session hcs_plate; n3&gt;&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">1</span><span class="p">,</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="n">module</span><span class="o">&gt;</span>
-    <span class="n">ome_zarr_plate</span><span class="o">.</span><span class="n">rows</span>
-    <span class="o">^^^^^^^^^^^^^^</span>
-<span class="ne">NameError</span><span class="p">:</span> <span class="n">name</span> <span class="s1">&#39;ome_zarr_plate&#39;</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">defined</span>
+<div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">ome_zarr_plate</span><span class="o">.</span><span class="n">rows</span>
+<span class="go">[&#39;B&#39;]</span>
 </code></pre></div></p>
 </div>
 <div class="tabbed-block">
 <p>Show the acquisitions ids:
-<div class="highlight"><pre><span></span><code><span class="n">Traceback</span> <span class="p">(</span><span class="n">most</span> <span class="n">recent</span> <span class="n">call</span> <span class="n">last</span><span class="p">):</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/markdown_exec/_internal/formatters/python.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">71</span><span class="p">,</span> <span class="ow">in</span> <span class="n">_run_python</span>
-    <span class="n">exec_python</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="n">code_block_id</span><span class="p">,</span> <span class="n">exec_globals</span><span class="p">)</span>
-    <span class="o">~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/markdown_exec/_internal/formatters/_exec_python.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">8</span><span class="p">,</span> <span class="ow">in</span> <span class="n">exec_python</span>
-    <span class="n">exec</span><span class="p">(</span><span class="n">compiled</span><span class="p">,</span> <span class="n">exec_globals</span><span class="p">)</span>  <span class="c1"># noqa: S102</span>
-    <span class="o">~~~~^^^^^^^^^^^^^^^^^^^^^^^^</span>
-  <span class="n">File</span> <span class="s2">&quot;&lt;code block: session hcs_plate; n4&gt;&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">1</span><span class="p">,</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="n">module</span><span class="o">&gt;</span>
-    <span class="n">ome_zarr_plate</span><span class="o">.</span><span class="n">acquisition_ids</span>
-    <span class="o">^^^^^^^^^^^^^^</span>
-<span class="ne">NameError</span><span class="p">:</span> <span class="n">name</span> <span class="s1">&#39;ome_zarr_plate&#39;</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">defined</span>
+<div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">ome_zarr_plate</span><span class="o">.</span><span class="n">acquisition_ids</span>
+<span class="go">[0]</span>
 </code></pre></div></p>
 </div>
 </div>
@@ -1237,47 +1181,20 @@
 <div class="tabbed-content">
 <div class="tabbed-block">
 <p>This will return the paths to all images in the plate:
-<div class="highlight"><pre><span></span><code><span class="n">Traceback</span> <span class="p">(</span><span class="n">most</span> <span class="n">recent</span> <span class="n">call</span> <span class="n">last</span><span class="p">):</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/markdown_exec/_internal/formatters/python.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">71</span><span class="p">,</span> <span class="ow">in</span> <span class="n">_run_python</span>
-    <span class="n">exec_python</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="n">code_block_id</span><span class="p">,</span> <span class="n">exec_globals</span><span class="p">)</span>
-    <span class="o">~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/markdown_exec/_internal/formatters/_exec_python.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">8</span><span class="p">,</span> <span class="ow">in</span> <span class="n">exec_python</span>
-    <span class="n">exec</span><span class="p">(</span><span class="n">compiled</span><span class="p">,</span> <span class="n">exec_globals</span><span class="p">)</span>  <span class="c1"># noqa: S102</span>
-    <span class="o">~~~~^^^^^^^^^^^^^^^^^^^^^^^^</span>
-  <span class="n">File</span> <span class="s2">&quot;&lt;code block: session hcs_plate; n5&gt;&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">1</span><span class="p">,</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="n">module</span><span class="o">&gt;</span>
-    <span class="n">ome_zarr_plate</span><span class="o">.</span><span class="n">images_paths</span><span class="p">()</span>
-    <span class="o">^^^^^^^^^^^^^^</span>
-<span class="ne">NameError</span><span class="p">:</span> <span class="n">name</span> <span class="s1">&#39;ome_zarr_plate&#39;</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">defined</span>
+<div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">ome_zarr_plate</span><span class="o">.</span><span class="n">images_paths</span><span class="p">()</span>
+<span class="go">[&#39;B/03/0&#39;]</span>
 </code></pre></div></p>
 </div>
 <div class="tabbed-block">
 <p>This will return the paths to all wells in the plate:
-<div class="highlight"><pre><span></span><code><span class="n">Traceback</span> <span class="p">(</span><span class="n">most</span> <span class="n">recent</span> <span class="n">call</span> <span class="n">last</span><span class="p">):</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/markdown_exec/_internal/formatters/python.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">71</span><span class="p">,</span> <span class="ow">in</span> <span class="n">_run_python</span>
-    <span class="n">exec_python</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="n">code_block_id</span><span class="p">,</span> <span class="n">exec_globals</span><span class="p">)</span>
-    <span class="o">~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/markdown_exec/_internal/formatters/_exec_python.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">8</span><span class="p">,</span> <span class="ow">in</span> <span class="n">exec_python</span>
-    <span class="n">exec</span><span class="p">(</span><span class="n">compiled</span><span class="p">,</span> <span class="n">exec_globals</span><span class="p">)</span>  <span class="c1"># noqa: S102</span>
-    <span class="o">~~~~^^^^^^^^^^^^^^^^^^^^^^^^</span>
-  <span class="n">File</span> <span class="s2">&quot;&lt;code block: session hcs_plate; n6&gt;&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">1</span><span class="p">,</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="n">module</span><span class="o">&gt;</span>
-    <span class="n">ome_zarr_plate</span><span class="o">.</span><span class="n">wells_paths</span><span class="p">()</span>
-    <span class="o">^^^^^^^^^^^^^^</span>
-<span class="ne">NameError</span><span class="p">:</span> <span class="n">name</span> <span class="s1">&#39;ome_zarr_plate&#39;</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">defined</span>
+<div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">ome_zarr_plate</span><span class="o">.</span><span class="n">wells_paths</span><span class="p">()</span>
+<span class="go">[&#39;B/03&#39;]</span>
 </code></pre></div></p>
 </div>
 <div class="tabbed-block">
 <p>This will return the paths to all images in a well:
-<div class="highlight"><pre><span></span><code><span class="n">Traceback</span> <span class="p">(</span><span class="n">most</span> <span class="n">recent</span> <span class="n">call</span> <span class="n">last</span><span class="p">):</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/markdown_exec/_internal/formatters/python.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">71</span><span class="p">,</span> <span class="ow">in</span> <span class="n">_run_python</span>
-    <span class="n">exec_python</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="n">code_block_id</span><span class="p">,</span> <span class="n">exec_globals</span><span class="p">)</span>
-    <span class="o">~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/markdown_exec/_internal/formatters/_exec_python.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">8</span><span class="p">,</span> <span class="ow">in</span> <span class="n">exec_python</span>
-    <span class="n">exec</span><span class="p">(</span><span class="n">compiled</span><span class="p">,</span> <span class="n">exec_globals</span><span class="p">)</span>  <span class="c1"># noqa: S102</span>
-    <span class="o">~~~~^^^^^^^^^^^^^^^^^^^^^^^^</span>
-  <span class="n">File</span> <span class="s2">&quot;&lt;code block: session hcs_plate; n7&gt;&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">1</span><span class="p">,</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="n">module</span><span class="o">&gt;</span>
-    <span class="n">ome_zarr_plate</span><span class="o">.</span><span class="n">well_images_paths</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="s2">&quot;B&quot;</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
-    <span class="o">^^^^^^^^^^^^^^</span>
-<span class="ne">NameError</span><span class="p">:</span> <span class="n">name</span> <span class="s1">&#39;ome_zarr_plate&#39;</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">defined</span>
+<div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">ome_zarr_plate</span><span class="o">.</span><span class="n">well_images_paths</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="s2">&quot;B&quot;</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">[&#39;B/03/0&#39;]</span>
 </code></pre></div></p>
 </div>
 </div>
@@ -1288,65 +1205,32 @@
 <div class="tabbed-content">
 <div class="tabbed-block">
 <p>Get all images in the plate:
-<div class="highlight"><pre><span></span><code><span class="n">Traceback</span> <span class="p">(</span><span class="n">most</span> <span class="n">recent</span> <span class="n">call</span> <span class="n">last</span><span class="p">):</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/markdown_exec/_internal/formatters/python.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">71</span><span class="p">,</span> <span class="ow">in</span> <span class="n">_run_python</span>
-    <span class="n">exec_python</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="n">code_block_id</span><span class="p">,</span> <span class="n">exec_globals</span><span class="p">)</span>
-    <span class="o">~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/markdown_exec/_internal/formatters/_exec_python.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">8</span><span class="p">,</span> <span class="ow">in</span> <span class="n">exec_python</span>
-    <span class="n">exec</span><span class="p">(</span><span class="n">compiled</span><span class="p">,</span> <span class="n">exec_globals</span><span class="p">)</span>  <span class="c1"># noqa: S102</span>
-    <span class="o">~~~~^^^^^^^^^^^^^^^^^^^^^^^^</span>
-  <span class="n">File</span> <span class="s2">&quot;&lt;code block: session hcs_plate; n8&gt;&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">1</span><span class="p">,</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="n">module</span><span class="o">&gt;</span>
-    <span class="n">ome_zarr_plate</span><span class="o">.</span><span class="n">get_images</span><span class="p">()</span>
-    <span class="o">^^^^^^^^^^^^^^</span>
-<span class="ne">NameError</span><span class="p">:</span> <span class="n">name</span> <span class="s1">&#39;ome_zarr_plate&#39;</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">defined</span>
+<div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">ome_zarr_plate</span><span class="o">.</span><span class="n">get_images</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ome_zarr_plate</span>
+<span class="go">{&#39;B/03/0&#39;: OmeZarrContainer(levels=5, #labels=5, #tables=8)}</span>
 </code></pre></div>
 This dictionary contains the path to the images and the corresponding <code>OmeZarrContainer</code> object.</p>
 </div>
 <div class="tabbed-block">
 <p>Get all images in a well:
-<div class="highlight"><pre><span></span><code><span class="n">Traceback</span> <span class="p">(</span><span class="n">most</span> <span class="n">recent</span> <span class="n">call</span> <span class="n">last</span><span class="p">):</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/markdown_exec/_internal/formatters/python.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">71</span><span class="p">,</span> <span class="ow">in</span> <span class="n">_run_python</span>
-    <span class="n">exec_python</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="n">code_block_id</span><span class="p">,</span> <span class="n">exec_globals</span><span class="p">)</span>
-    <span class="o">~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/markdown_exec/_internal/formatters/_exec_python.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">8</span><span class="p">,</span> <span class="ow">in</span> <span class="n">exec_python</span>
-    <span class="n">exec</span><span class="p">(</span><span class="n">compiled</span><span class="p">,</span> <span class="n">exec_globals</span><span class="p">)</span>  <span class="c1"># noqa: S102</span>
-    <span class="o">~~~~^^^^^^^^^^^^^^^^^^^^^^^^</span>
-  <span class="n">File</span> <span class="s2">&quot;&lt;code block: session hcs_plate; n9&gt;&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">1</span><span class="p">,</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="n">module</span><span class="o">&gt;</span>
-    <span class="n">well_images</span> <span class="o">=</span> <span class="n">ome_zarr_plate</span><span class="o">.</span><span class="n">get_well_images</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="s2">&quot;B&quot;</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
-                  <span class="o">^^^^^^^^^^^^^^</span>
-<span class="ne">NameError</span><span class="p">:</span> <span class="n">name</span> <span class="s1">&#39;ome_zarr_plate&#39;</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">defined</span>
+<div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">well_images</span> <span class="o">=</span> <span class="n">ome_zarr_plate</span><span class="o">.</span><span class="n">get_well_images</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="s2">&quot;B&quot;</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">well_images</span>
+<span class="go">{&#39;B/03/0&#39;: OmeZarrContainer(levels=5, #labels=5, #tables=8)}</span>
 </code></pre></div>
 This dictionary contains the path to the images and the corresponding <code>OmeZarrContainer</code> object.</p>
 </div>
 <div class="tabbed-block">
 <p>Get a specific image in a well:
-<div class="highlight"><pre><span></span><code><span class="n">Traceback</span> <span class="p">(</span><span class="n">most</span> <span class="n">recent</span> <span class="n">call</span> <span class="n">last</span><span class="p">):</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/markdown_exec/_internal/formatters/python.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">71</span><span class="p">,</span> <span class="ow">in</span> <span class="n">_run_python</span>
-    <span class="n">exec_python</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="n">code_block_id</span><span class="p">,</span> <span class="n">exec_globals</span><span class="p">)</span>
-    <span class="o">~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/markdown_exec/_internal/formatters/_exec_python.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">8</span><span class="p">,</span> <span class="ow">in</span> <span class="n">exec_python</span>
-    <span class="n">exec</span><span class="p">(</span><span class="n">compiled</span><span class="p">,</span> <span class="n">exec_globals</span><span class="p">)</span>  <span class="c1"># noqa: S102</span>
-    <span class="o">~~~~^^^^^^^^^^^^^^^^^^^^^^^^</span>
-  <span class="n">File</span> <span class="s2">&quot;&lt;code block: session hcs_plate; n10&gt;&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">1</span><span class="p">,</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="n">module</span><span class="o">&gt;</span>
-    <span class="n">ome_zarr_plate</span><span class="o">.</span><span class="n">get_image</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="s2">&quot;B&quot;</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">image_path</span><span class="o">=</span><span class="s2">&quot;0&quot;</span><span class="p">)</span>
-    <span class="o">^^^^^^^^^^^^^^</span>
-<span class="ne">NameError</span><span class="p">:</span> <span class="n">name</span> <span class="s1">&#39;ome_zarr_plate&#39;</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">defined</span>
+<div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">ome_zarr_plate</span><span class="o">.</span><span class="n">get_image</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="s2">&quot;B&quot;</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">image_path</span><span class="o">=</span><span class="s2">&quot;0&quot;</span><span class="p">)</span>
+<span class="go">OmeZarrContainer(levels=5, #labels=5, #tables=8)</span>
 </code></pre></div>
 This will return the <code>OmeZarrContainer</code> object for the image in the well.</p>
 </div>
 <div class="tabbed-block">
 <p>In these methods, you can also filter the images by acquisition. When available, the <code>acquisition</code> parameter can be used to filter the images by acquisition id.
-<div class="highlight"><pre><span></span><code><span class="n">Traceback</span> <span class="p">(</span><span class="n">most</span> <span class="n">recent</span> <span class="n">call</span> <span class="n">last</span><span class="p">):</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/markdown_exec/_internal/formatters/python.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">71</span><span class="p">,</span> <span class="ow">in</span> <span class="n">_run_python</span>
-    <span class="n">exec_python</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="n">code_block_id</span><span class="p">,</span> <span class="n">exec_globals</span><span class="p">)</span>
-    <span class="o">~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/markdown_exec/_internal/formatters/_exec_python.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">8</span><span class="p">,</span> <span class="ow">in</span> <span class="n">exec_python</span>
-    <span class="n">exec</span><span class="p">(</span><span class="n">compiled</span><span class="p">,</span> <span class="n">exec_globals</span><span class="p">)</span>  <span class="c1"># noqa: S102</span>
-    <span class="o">~~~~^^^^^^^^^^^^^^^^^^^^^^^^</span>
-  <span class="n">File</span> <span class="s2">&quot;&lt;code block: session hcs_plate; n11&gt;&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">1</span><span class="p">,</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="n">module</span><span class="o">&gt;</span>
-    <span class="n">well_images</span> <span class="o">=</span> <span class="n">ome_zarr_plate</span><span class="o">.</span><span class="n">get_well_images</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="s2">&quot;B&quot;</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">acquisition</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-                  <span class="o">^^^^^^^^^^^^^^</span>
-<span class="ne">NameError</span><span class="p">:</span> <span class="n">name</span> <span class="s1">&#39;ome_zarr_plate&#39;</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">defined</span>
+<div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">well_images</span> <span class="o">=</span> <span class="n">ome_zarr_plate</span><span class="o">.</span><span class="n">get_well_images</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="s2">&quot;B&quot;</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">acquisition</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">well_images</span>
+<span class="go">{}</span>
 </code></pre></div>
 The <code>acquisition</code> is not required, and if not provided, an empty dictionary will be returned.</p>
 </div>
@@ -1355,82 +1239,22 @@ The <code>acquisition</code> is not required, and if not provided, an empty dict
 <h2 id="creating-a-plate">Creating a plate</h2>
 <p>Ngio provides a utility function to create a plate.</p>
 <p>The first step is to create a list of <code>ImageInWellPath</code> objects. Each <code>ImageInWellPath</code> object contains the path to the image and the corresponding well.
-<div class="highlight"><pre><span></span><code><span class="n">Traceback</span> <span class="p">(</span><span class="n">most</span> <span class="n">recent</span> <span class="n">call</span> <span class="n">last</span><span class="p">):</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/markdown_exec/_internal/formatters/python.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">71</span><span class="p">,</span> <span class="ow">in</span> <span class="n">_run_python</span>
-    <span class="n">exec_python</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="n">code_block_id</span><span class="p">,</span> <span class="n">exec_globals</span><span class="p">)</span>
-    <span class="o">~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/markdown_exec/_internal/formatters/_exec_python.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">8</span><span class="p">,</span> <span class="ow">in</span> <span class="n">exec_python</span>
-    <span class="n">exec</span><span class="p">(</span><span class="n">compiled</span><span class="p">,</span> <span class="n">exec_globals</span><span class="p">)</span>  <span class="c1"># noqa: S102</span>
-    <span class="o">~~~~^^^^^^^^^^^^^^^^^^^^^^^^</span>
-  <span class="n">File</span> <span class="s2">&quot;&lt;code block: session hcs_plate; n12&gt;&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">1</span><span class="p">,</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="n">module</span><span class="o">&gt;</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">ngio</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImageInWellPath</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/ngio/__init__.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">12</span><span class="p">,</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="n">module</span><span class="o">&gt;</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">ngio.common</span><span class="w"> </span><span class="kn">import</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="n">Dimensions</span><span class="p">,</span> <span class="n">Roi</span><span class="p">,</span> <span class="n">RoiPixels</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/ngio/common/__init__.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">3</span><span class="p">,</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="n">module</span><span class="o">&gt;</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">ngio.common._array_pipe</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="o">...&lt;</span><span class="mi">4</span> <span class="n">lines</span><span class="o">&gt;...</span>
-    <span class="p">)</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/ngio/common/_array_pipe.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">11</span><span class="p">,</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="n">module</span><span class="o">&gt;</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">ngio.common._dimensions</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dimensions</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/ngio/common/_dimensions.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">10</span><span class="p">,</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="n">module</span><span class="o">&gt;</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">ngio.ome_zarr_meta</span><span class="w"> </span><span class="kn">import</span> <span class="n">AxesMapper</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/ngio/ome_zarr_meta/__init__.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">3</span><span class="p">,</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="n">module</span><span class="o">&gt;</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">ngio.ome_zarr_meta._meta_handlers</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="o">...&lt;</span><span class="mi">10</span> <span class="n">lines</span><span class="o">&gt;...</span>
-    <span class="p">)</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/ngio/ome_zarr_meta/_meta_handlers.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">7</span><span class="p">,</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="n">module</span><span class="o">&gt;</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">ngio.ome_zarr_meta.ngio_specs</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="o">...&lt;</span><span class="mi">5</span> <span class="n">lines</span><span class="o">&gt;...</span>
-    <span class="p">)</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/ngio/ome_zarr_meta/ngio_specs/__init__.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">33</span><span class="p">,</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="n">module</span><span class="o">&gt;</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">ngio.ome_zarr_meta.ngio_specs._ngio_hcs</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="o">...&lt;</span><span class="mi">4</span> <span class="n">lines</span><span class="o">&gt;...</span>
-    <span class="p">)</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/ngio/ome_zarr_meta/ngio_specs/_ngio_hcs.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">365</span>
-    <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">plate</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
-    <span class="o">^^^^^^^^^^^^^^^^^^^^</span>
-<span class="ne">SyntaxError</span><span class="p">:</span> <span class="n">keyword</span> <span class="n">argument</span> <span class="n">repeated</span><span class="p">:</span> <span class="n">name</span>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">ngio</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImageInWellPath</span>
+<span class="n">list_of_images</span> <span class="o">=</span> <span class="p">[</span><span class="n">ImageInWellPath</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="s2">&quot;0&quot;</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="s2">&quot;A&quot;</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span>
+                    <span class="n">ImageInWellPath</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="s2">&quot;0&quot;</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="s2">&quot;B&quot;</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+                    <span class="n">ImageInWellPath</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="s2">&quot;0&quot;</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="s2">&quot;C&quot;</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+                    <span class="n">ImageInWellPath</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="s2">&quot;1&quot;</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="s2">&quot;A&quot;</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">acquisition_id</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">acquisition_name</span><span class="o">=</span><span class="s2">&quot;acquisition_1&quot;</span><span class="p">),</span>
+<span class="p">]</span>
 </code></pre></div></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>The order in which the images are added is not important. The <code>rows</code> and <code>columns</code> attributes of the plate will be sorted in alphabetical/numerical order.</p>
 </div>
 <p>Then, you can create the plate using the <code>create_empty_plate</code> function.
-<div class="highlight"><pre><span></span><code><span class="n">Traceback</span> <span class="p">(</span><span class="n">most</span> <span class="n">recent</span> <span class="n">call</span> <span class="n">last</span><span class="p">):</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/markdown_exec/_internal/formatters/python.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">71</span><span class="p">,</span> <span class="ow">in</span> <span class="n">_run_python</span>
-    <span class="n">exec_python</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="n">code_block_id</span><span class="p">,</span> <span class="n">exec_globals</span><span class="p">)</span>
-    <span class="o">~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/markdown_exec/_internal/formatters/_exec_python.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">8</span><span class="p">,</span> <span class="ow">in</span> <span class="n">exec_python</span>
-    <span class="n">exec</span><span class="p">(</span><span class="n">compiled</span><span class="p">,</span> <span class="n">exec_globals</span><span class="p">)</span>  <span class="c1"># noqa: S102</span>
-    <span class="o">~~~~^^^^^^^^^^^^^^^^^^^^^^^^</span>
-  <span class="n">File</span> <span class="s2">&quot;&lt;code block: session hcs_plate; n13&gt;&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">1</span><span class="p">,</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="n">module</span><span class="o">&gt;</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">ngio</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_empty_plate</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/ngio/__init__.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">12</span><span class="p">,</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="n">module</span><span class="o">&gt;</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">ngio.common</span><span class="w"> </span><span class="kn">import</span> <span class="n">ArrayLike</span><span class="p">,</span> <span class="n">Dimensions</span><span class="p">,</span> <span class="n">Roi</span><span class="p">,</span> <span class="n">RoiPixels</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/ngio/common/__init__.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">3</span><span class="p">,</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="n">module</span><span class="o">&gt;</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">ngio.common._array_pipe</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="o">...&lt;</span><span class="mi">4</span> <span class="n">lines</span><span class="o">&gt;...</span>
-    <span class="p">)</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/ngio/common/_array_pipe.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">11</span><span class="p">,</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="n">module</span><span class="o">&gt;</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">ngio.common._dimensions</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dimensions</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/ngio/common/_dimensions.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">10</span><span class="p">,</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="n">module</span><span class="o">&gt;</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">ngio.ome_zarr_meta</span><span class="w"> </span><span class="kn">import</span> <span class="n">AxesMapper</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/ngio/ome_zarr_meta/__init__.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">3</span><span class="p">,</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="n">module</span><span class="o">&gt;</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">ngio.ome_zarr_meta._meta_handlers</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="o">...&lt;</span><span class="mi">10</span> <span class="n">lines</span><span class="o">&gt;...</span>
-    <span class="p">)</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/ngio/ome_zarr_meta/_meta_handlers.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">7</span><span class="p">,</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="n">module</span><span class="o">&gt;</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">ngio.ome_zarr_meta.ngio_specs</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="o">...&lt;</span><span class="mi">5</span> <span class="n">lines</span><span class="o">&gt;...</span>
-    <span class="p">)</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/ngio/ome_zarr_meta/ngio_specs/__init__.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">33</span><span class="p">,</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="n">module</span><span class="o">&gt;</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">ngio.ome_zarr_meta.ngio_specs._ngio_hcs</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="o">...&lt;</span><span class="mi">4</span> <span class="n">lines</span><span class="o">&gt;...</span>
-    <span class="p">)</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/ngio/ome_zarr_meta/ngio_specs/_ngio_hcs.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">365</span>
-    <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">plate</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
-    <span class="o">^^^^^^^^^^^^^^^^^^^^</span>
-<span class="ne">SyntaxError</span><span class="p">:</span> <span class="n">keyword</span> <span class="n">argument</span> <span class="n">repeated</span><span class="p">:</span> <span class="n">name</span>
+<div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">ngio</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_empty_plate</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">plate</span> <span class="o">=</span> <span class="n">create_empty_plate</span><span class="p">(</span><span class="n">store</span><span class="o">=</span><span class="s2">&quot;new_plate.zarr&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;test_plate&quot;</span><span class="p">,</span> <span class="n">images</span><span class="o">=</span><span class="n">list_of_images</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">plate</span>
+<span class="go">Plate([rows x columns] (3 x 2))</span>
 </code></pre></div></p>
 <p>This has created a new empty plate with the metadata correctly set. But no images have been added yet. </p>
 <h3 id="modifying-the-plate">Modifying the plate</h3>
@@ -1439,17 +1263,11 @@ The <code>acquisition</code> is not required, and if not provided, an empty dict
 <div class="tabbed-content">
 <div class="tabbed-block">
 <p>To add images to the plate, you can use the <code>add_image</code> method. This method takes the row and column indices of the well and the path to the image.
-<div class="highlight"><pre><span></span><code><span class="n">Traceback</span> <span class="p">(</span><span class="n">most</span> <span class="n">recent</span> <span class="n">call</span> <span class="n">last</span><span class="p">):</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/markdown_exec/_internal/formatters/python.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">71</span><span class="p">,</span> <span class="ow">in</span> <span class="n">_run_python</span>
-    <span class="n">exec_python</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="n">code_block_id</span><span class="p">,</span> <span class="n">exec_globals</span><span class="p">)</span>
-    <span class="o">~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/markdown_exec/_internal/formatters/_exec_python.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">8</span><span class="p">,</span> <span class="ow">in</span> <span class="n">exec_python</span>
-    <span class="n">exec</span><span class="p">(</span><span class="n">compiled</span><span class="p">,</span> <span class="n">exec_globals</span><span class="p">)</span>  <span class="c1"># noqa: S102</span>
-    <span class="o">~~~~^^^^^^^^^^^^^^^^^^^^^^^^</span>
-  <span class="n">File</span> <span class="s2">&quot;&lt;code block: session hcs_plate; n14&gt;&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">1</span><span class="p">,</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="n">module</span><span class="o">&gt;</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Before adding images: </span><span class="si">{</span><span class="n">plate</span><span class="o">.</span><span class="n">rows</span><span class="si">}</span><span class="s2"> rows, </span><span class="si">{</span><span class="n">plate</span><span class="o">.</span><span class="n">columns</span><span class="si">}</span><span class="s2"> columns&quot;</span><span class="p">)</span>
-                                   <span class="o">^^^^^</span>
-<span class="ne">NameError</span><span class="p">:</span> <span class="n">name</span> <span class="s1">&#39;plate&#39;</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">defined</span>
+<div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Before adding images: </span><span class="si">{</span><span class="n">plate</span><span class="o">.</span><span class="n">rows</span><span class="si">}</span><span class="s2"> rows, </span><span class="si">{</span><span class="n">plate</span><span class="o">.</span><span class="n">columns</span><span class="si">}</span><span class="s2"> columns&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">plate</span><span class="o">.</span><span class="n">add_image</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="s2">&quot;D&quot;</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">image_path</span><span class="o">=</span><span class="s2">&quot;0&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;After adding images: </span><span class="si">{</span><span class="n">plate</span><span class="o">.</span><span class="n">rows</span><span class="si">}</span><span class="s2"> rows, </span><span class="si">{</span><span class="n">plate</span><span class="o">.</span><span class="n">columns</span><span class="si">}</span><span class="s2"> columns&quot;</span><span class="p">)</span>
+<span class="go">Before adding images: [&#39;A&#39;, &#39;B&#39;, &#39;C&#39;] rows, [&#39;0&#39;, &#39;1&#39;] columns</span>
+<span class="go">After adding images: [&#39;A&#39;, &#39;B&#39;, &#39;C&#39;, &#39;D&#39;] rows, [&#39;0&#39;, &#39;1&#39;] columns</span>
 </code></pre></div>
 This will add a new image to the plate and well metadata.</p>
 <div class="admonition note">
@@ -1463,17 +1281,11 @@ This will add a new image to the plate and well metadata.</p>
 </div>
 <div class="tabbed-block">
 <p>To remove images from the plate, you can use the <code>remove_image</code> method. This method takes the row and column indices of the well and the path to the image.
-<div class="highlight"><pre><span></span><code><span class="n">Traceback</span> <span class="p">(</span><span class="n">most</span> <span class="n">recent</span> <span class="n">call</span> <span class="n">last</span><span class="p">):</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/markdown_exec/_internal/formatters/python.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">71</span><span class="p">,</span> <span class="ow">in</span> <span class="n">_run_python</span>
-    <span class="n">exec_python</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="n">code_block_id</span><span class="p">,</span> <span class="n">exec_globals</span><span class="p">)</span>
-    <span class="o">~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/markdown_exec/_internal/formatters/_exec_python.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">8</span><span class="p">,</span> <span class="ow">in</span> <span class="n">exec_python</span>
-    <span class="n">exec</span><span class="p">(</span><span class="n">compiled</span><span class="p">,</span> <span class="n">exec_globals</span><span class="p">)</span>  <span class="c1"># noqa: S102</span>
-    <span class="o">~~~~^^^^^^^^^^^^^^^^^^^^^^^^</span>
-  <span class="n">File</span> <span class="s2">&quot;&lt;code block: session hcs_plate; n15&gt;&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">1</span><span class="p">,</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="n">module</span><span class="o">&gt;</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Before removing images: </span><span class="si">{</span><span class="n">plate</span><span class="o">.</span><span class="n">wells_paths</span><span class="p">()</span><span class="si">}</span><span class="s2"> wells&quot;</span><span class="p">)</span>
-                                     <span class="o">^^^^^</span>
-<span class="ne">NameError</span><span class="p">:</span> <span class="n">name</span> <span class="s1">&#39;plate&#39;</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">defined</span>
+<div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Before removing images: </span><span class="si">{</span><span class="n">plate</span><span class="o">.</span><span class="n">wells_paths</span><span class="p">()</span><span class="si">}</span><span class="s2"> wells&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">plate</span><span class="o">.</span><span class="n">remove_image</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="s2">&quot;D&quot;</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">image_path</span><span class="o">=</span><span class="s2">&quot;0&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;After removing images: </span><span class="si">{</span><span class="n">plate</span><span class="o">.</span><span class="n">wells_paths</span><span class="p">()</span><span class="si">}</span><span class="s2"> wells&quot;</span><span class="p">)</span>
+<span class="go">Before removing images: [&#39;A/0&#39;, &#39;B/1&#39;, &#39;C/1&#39;, &#39;D/0&#39;] wells</span>
+<span class="go">After removing images: [&#39;A/0&#39;, &#39;B/1&#39;, &#39;C/1&#39;] wells</span>
 </code></pre></div>
 This will remove the image metadata from the plate and well metadata.</p>
 <div class="admonition warning">
