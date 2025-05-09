@@ -282,7 +282,7 @@ def test_channels():
     assert len(channels.channels) == 3
     assert channels.channels[0].label == "DAPI"
     assert channels.channels[0].wavelength_id == "DAPI"
-    assert channels.channels[0].channel_visualisation.color == "00FFFF"
+    assert channels.channels[0].channel_visualisation.color == NgioColors.dapi.value
 
     channels = ChannelsMeta.default_init(labels=4)
     assert len(channels.channels) == 4
