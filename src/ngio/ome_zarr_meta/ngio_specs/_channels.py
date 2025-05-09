@@ -344,7 +344,7 @@ class ChannelsMeta(BaseModel):
             _wavelength_id = _check_elements(wavelength_id, str)
             _wavelength_id = _check_unique(wavelength_id)
 
-        _colors: Collection[str | NgioColors] = ["random"] * len(labels)
+        _colors: Collection[str | NgioColors | None] = [None] * len(labels)
         if isinstance(colors, Collection):
             _colors = _check_elements(colors, str | NgioColors)
 
