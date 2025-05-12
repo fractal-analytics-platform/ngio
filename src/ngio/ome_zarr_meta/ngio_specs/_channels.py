@@ -9,7 +9,7 @@ from enum import Enum
 from typing import Any, TypeVar
 
 import numpy as np
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from ngio.utils import NgioValidationError, NgioValueError
 
@@ -124,7 +124,6 @@ class ChannelVisualisation(BaseModel):
     model_config = ConfigDict(extra="allow", frozen=True)
 
     @field_validator("color", mode="after")
-    @classmethod
     def validate_color(cls, value: str | NgioColors) -> str:
         """Color validator.
 
@@ -144,6 +143,33 @@ class ChannelVisualisation(BaseModel):
             return NgioColors.semi_random_pick(value_lower).value
         else:
             raise NgioValueError(f"Invalid color {value}.")
+
+    @model_validator(mode="before")
+    def check_start_end(cls, data):
+        """Check that the start and end values are valid.
+
+        If the start and end values are equal, set the end value to start + 1
+        """
+        start = data.get("start", None)
+        end = data.get("end", None)
+        if start is None or end is None:
+            return data
+        if abs(end - start) < 1e-6:
+            data["end"] = start + 1
+        return data
+
+    @model_validator(mode="after")
+    def check_model(self) -> "ChannelVisualisation":
+        """Check that the start and end values are within the min and max values."""
+        if self.start < self.min or self.start > self.max:
+            raise NgioValidationError(
+                f"Start value {self.start} is out of range [{self.min}, {self.max}]"
+            )
+        if self.end < self.min or self.end > self.max:
+            raise NgioValidationError(
+                f"End value {self.end} is out of range [{self.min}, {self.max}]"
+            )
+        return self
 
     @classmethod
     def default_init(
