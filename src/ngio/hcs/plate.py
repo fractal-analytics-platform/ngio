@@ -546,7 +546,7 @@ class OmeZarrPlate:
         acquisition_id: int | None = None,
         acquisition_name: str | None = None,
         atomic: bool = False,
-    ) -> StoreOrGroup | None:
+    ) -> str:
         """Add an image to an ome-zarr plate."""
         if image_path is not None:
             image_path = path_in_well_validation(path=image_path)
@@ -597,8 +597,8 @@ class OmeZarrPlate:
             meta_handler._group_handler.clean_cache()
 
         if image_path is not None:
-            return group_handler.get_group(image_path, create_mode=True)
-        return None
+            return f"{well_path}/{image_path}"
+        return well_path
 
     def atomic_add_image(
         self,
@@ -607,14 +607,14 @@ class OmeZarrPlate:
         image_path: str,
         acquisition_id: int | None = None,
         acquisition_name: str | None = None,
-    ) -> StoreOrGroup:
+    ) -> str:
         """Parallel safe version of add_image."""
         if image_path is None:
             raise ValueError(
                 "Image path cannot be None for atomic add_image. "
                 "If your intent is to add a well, use add_well instead."
             )
-        group = self._add_image(
+        path = self._add_image(
             row=row,
             column=column,
             image_path=image_path,
@@ -622,12 +622,7 @@ class OmeZarrPlate:
             acquisition_name=acquisition_name,
             atomic=True,
         )
-        if group is None:
-            raise ValueError(
-                f"Some error occurred while adding image {image_path} "
-                f"to well {row}{column}."
-            )
-        return group
+        return path
 
     def add_image(
         self,
@@ -636,14 +631,14 @@ class OmeZarrPlate:
         image_path: str,
         acquisition_id: int | None = None,
         acquisition_name: str | None = None,
-    ) -> StoreOrGroup:
+    ) -> str:
         """Add an image to an ome-zarr plate."""
         if image_path is None:
             raise ValueError(
                 "Image path cannot be None for atomic add_image. "
                 "If your intent is to add a well, use add_well instead."
             )
-        group = self._add_image(
+        path = self._add_image(
             row=row,
             column=column,
             image_path=image_path,
@@ -651,12 +646,7 @@ class OmeZarrPlate:
             acquisition_name=acquisition_name,
             atomic=False,
         )
-        if group is None:
-            raise ValueError(
-                f"Some error occurred while adding image {image_path} "
-                f"to well {row}{column}."
-            )
-        return group
+        return path
 
     def add_well(
         self,
