@@ -22,16 +22,18 @@ class TableWithExtras:
 
 
 def _reindex_dataframe(
-    dataframe, index_cols: list[str], index_key: str = "ConcatenateIndex"
+    dataframe, index_cols: list[str], index_key: str | None = None
 ) -> pd.DataFrame:
     """Reindex a dataframe using an hash of the index columns."""
     # Reindex the dataframe
     old_index = dataframe.index.name
-    dataframe = dataframe.reset_index()
     if old_index is not None:
+        dataframe = dataframe.reset_index()
         index_cols.append(old_index)
     dataframe.index = dataframe[index_cols].astype(str).agg("_".join, axis=1)
-    dataframe.index.name = index_key
+    
+    if index_key is None:
+        dataframe.index.name = index_key
     return dataframe
 
 
@@ -55,25 +57,26 @@ def _add_const_columns(
 def _add_const_columns_pl(
     dataframe: pl.LazyFrame,
     new_cols: dict[str, str],
-    index_key: str = "Index",
+    index_key: str | None = None,
 ) -> pl.LazyFrame:
     dataframe = dataframe.with_columns(
         [pl.lit(value, dtype=pl.String()).alias(col) for col, value in new_cols.items()]
     )
 
-    dataframe = dataframe.with_columns(
-        [
-            pl.concat_str(
-                [pl.col(col) for col in new_cols.keys()],
-                separator="_",
-            ).alias(index_key)
-        ]
-    )
+    if index_key is not None:
+        dataframe = dataframe.with_columns(
+            [
+                pl.concat_str(
+                    [pl.col(col) for col in new_cols.keys()],
+                    separator="_",
+                ).alias(index_key)
+            ]
+        )
     return dataframe
 
 
 def _pd_concat(
-    tables: Collection[TableWithExtras], index_key: str = "Index"
+    tables: Collection[TableWithExtras], index_key: str | None = None
 ) -> pd.DataFrame:
     """Concatenate tables from different plates into a single table."""
     if len(tables) == 0:
@@ -90,7 +93,7 @@ def _pd_concat(
 
 
 def _pl_concat(
-    tables: Collection[TableWithExtras], index_key: str = "Index"
+    tables: Collection[TableWithExtras], index_key: str | None = None
 ) -> pl.LazyFrame:
     """Concatenate tables from different plates into a single table."""
     if len(tables) == 0:
@@ -112,7 +115,7 @@ def _pl_concat(
 def conctatenate_tables(
     tables: Collection[TableWithExtras],
     mode: Literal["eager", "lazy"] = "eager",
-    index_key: str = "Index",
+    index_key: str | None = None,
     table_cls: type[TableType] | None = None,
 ) -> Table:
     """Concatenate tables from different plates into a single table."""
@@ -160,7 +163,7 @@ def _concatenate_image_tables(
     extras: Collection[dict[str, str]],
     table_name: str,
     table_cls: type[TableType] | None = None,
-    index_key: str = "Index",
+    index_key: str | None = None,
     strict: bool = True,
     mode: Literal["eager", "lazy"] = "eager",
 ) -> Table:
@@ -186,7 +189,7 @@ def concatenate_image_tables(
     images: Collection[OmeZarrContainer],
     extras: Collection[dict[str, str]],
     table_name: str,
-    index_key: str = "Index",
+    index_key: str | None = None,
     strict: bool = True,
     mode: Literal["eager", "lazy"] = "eager",
 ) -> Table:
@@ -220,7 +223,7 @@ def concatenate_image_tables_as(
     extras: Collection[dict[str, str]],
     table_name: str,
     table_cls: type[TableType],
-    index_key: str = "Index",
+    index_key: str | None = None,
     strict: bool = True,
     mode: Literal["eager", "lazy"] = "eager",
 ) -> TableType:
@@ -259,7 +262,7 @@ async def _concatenate_image_tables_async(
     extras: Collection[dict[str, str]],
     table_name: str,
     table_cls: type[TableType] | None = None,
-    index_key: str = "Index",
+    index_key: str | None = None,
     strict: bool = True,
     mode: Literal["eager", "lazy"] = "eager",
 ) -> Table:
@@ -315,7 +318,7 @@ async def concatenate_image_tables_async(
     images: Collection[OmeZarrContainer],
     extras: Collection[dict[str, str]],
     table_name: str,
-    index_key: str = "Index",
+    index_key: str | None = None,
     strict: bool = True,
     mode: Literal["eager", "lazy"] = "eager",
 ) -> Table:
@@ -349,7 +352,7 @@ async def concatenate_image_tables_as_async(
     extras: Collection[dict[str, str]],
     table_name: str,
     table_cls: type[TableType],
-    index_key: str = "Index",
+    index_key: str | None = None,
     strict: bool = True,
     mode: Literal["eager", "lazy"] = "eager",
 ) -> TableType:
