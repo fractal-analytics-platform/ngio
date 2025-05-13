@@ -989,6 +989,7 @@ class OmeZarrPlate:
         table_name: str,
         acquisition: int | None = None,
         strict: bool = True,
+        index_key: str | None = None,
         mode: Literal["eager", "lazy"] = "eager",
     ) -> Table:
         """Concatenate tables from all images in the plate.
@@ -998,6 +999,8 @@ class OmeZarrPlate:
             index_key: The key to use for the index of the concatenated table.
             acquisition: The acquisition id to filter the images.
             strict: If True, raise an error if the table is not found in the image.
+            index_key: If a string is provided, a new index column will be created
+                new_index_pattern = {row}_{column}_{path_in_well}_{label}
             mode: The mode to use for concatenation. Can be 'eager' or 'lazy'.
                 if 'eager', the table will be loaded into memory.
                 if 'lazy', the table will be loaded as a lazy frame.
@@ -1008,6 +1011,7 @@ class OmeZarrPlate:
             images=images.values(),
             extras=extras,
             table_name=table_name,
+            index_key=index_key,
             strict=strict,
             mode=mode,
         )
@@ -1017,6 +1021,7 @@ class OmeZarrPlate:
         table_name: str,
         table_cls: type[TableType],
         acquisition: int | None = None,
+        index_key: str | None = None,
         strict: bool = True,
         mode: Literal["eager", "lazy"] = "eager",
     ) -> TableType:
@@ -1027,6 +1032,8 @@ class OmeZarrPlate:
             table_cls: The type of the table to concatenate.
             index_key: The key to use for the index of the concatenated table.
             acquisition: The acquisition id to filter the images.
+            index_key: If a string is provided, a new index column will be created
+                new_index_pattern = {row}_{column}_{path_in_well}_{label}
             strict: If True, raise an error if the table is not found in the image.
             mode: The mode to use for concatenation. Can be 'eager' or 'lazy'.
                 if 'eager', the table will be loaded into memory.
@@ -1039,6 +1046,7 @@ class OmeZarrPlate:
             extras=extras,
             table_name=table_name,
             table_cls=table_cls,
+            index_key=index_key,
             strict=strict,
             mode=mode,
         )
@@ -1047,6 +1055,7 @@ class OmeZarrPlate:
         self,
         table_name: str,
         acquisition: int | None = None,
+        index_key: str | None = None,
         strict: bool = True,
         mode: Literal["eager", "lazy"] = "eager",
     ) -> Table:
@@ -1056,6 +1065,8 @@ class OmeZarrPlate:
             table_name: The name of the table to concatenate.
             index_key: The key to use for the index of the concatenated table.
             acquisition: The acquisition id to filter the images.
+            index_key: If a string is provided, a new index column will be created
+                new_index_pattern = {row}_{column}_{path_in_well}_{label}
             strict: If True, raise an error if the table is not found in the image.
             mode: The mode to use for concatenation. Can be 'eager' or 'lazy'.
                 if 'eager', the table will be loaded into memory.
@@ -1067,6 +1078,7 @@ class OmeZarrPlate:
             images=images.values(),
             extras=extras,
             table_name=table_name,
+            index_key=index_key,
             strict=strict,
             mode=mode,
         )
@@ -1076,6 +1088,7 @@ class OmeZarrPlate:
         table_name: str,
         table_cls: type[TableType],
         acquisition: int | None = None,
+        index_key: str | None = None,
         strict: bool = True,
         mode: Literal["eager", "lazy"] = "eager",
     ) -> TableType:
@@ -1086,6 +1099,8 @@ class OmeZarrPlate:
             table_cls: The type of the table to concatenate.
             index_key: The key to use for the index of the concatenated table.
             acquisition: The acquisition id to filter the images.
+            index_key: If a string is provided, a new index column will be created
+                new_index_pattern = {row}_{column}_{path_in_well}_{label}
             strict: If True, raise an error if the table is not found in the image.
             mode: The mode to use for concatenation. Can be 'eager' or 'lazy'.
                 if 'eager', the table will be loaded into memory.
@@ -1098,6 +1113,7 @@ class OmeZarrPlate:
             extras=extras,
             table_name=table_name,
             table_cls=table_cls,
+            index_key=index_key,
             strict=strict,
             mode=mode,
         )

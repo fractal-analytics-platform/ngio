@@ -31,7 +31,7 @@ def _reindex_dataframe(
         dataframe = dataframe.reset_index()
         index_cols.append(old_index)
     dataframe.index = dataframe[index_cols].astype(str).agg("_".join, axis=1)
-    
+
     if index_key is None:
         dataframe.index.name = index_key
     return dataframe
