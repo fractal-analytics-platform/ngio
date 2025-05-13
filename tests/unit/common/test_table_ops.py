@@ -97,6 +97,7 @@ def test_cat_sync_api(
     assert isinstance(concatenated_table, FeatureTable)
 
     df = concatenated_table.dataframe
+    df = df.reset_index()
     assert set(df.columns) == {"x", "y", "label", "column1"}
     if "table2" in table:
         assert df.shape == (3, 4), df.shape
@@ -121,6 +122,25 @@ def test_cat_as_sync(tmp_path: Path):
     assert isinstance(concatenated_table, GenericTable)
 
 
+def test_set_index(tmp_path: Path):
+    ome_zarr_1 = create_sample_ome_zarr(tmp_path, "test1", ["table1", "table2"])
+    ome_zarr_2 = create_sample_ome_zarr(tmp_path, "test2", ["table1"])
+
+    extras1 = {"column1": "value1"}
+    extras2 = {"column1": "value2"}
+
+    concatenated_table = concatenate_image_tables_as(
+        [ome_zarr_1, ome_zarr_2],
+        extras=[extras1, extras2],
+        table_name="table1",
+        table_cls=GenericTable,
+        index_key="Index",
+    )
+    df = concatenated_table.dataframe
+    assert set(df.columns) == {"x", "y", "label", "column1"}
+    assert df.index.name == "Index"
+
+
 def test_cat_async_api(tmp_path: Path):
     ome_zarr_1 = create_sample_ome_zarr(tmp_path, "test1", ["table1", "table2"])
     ome_zarr_2 = create_sample_ome_zarr(tmp_path, "test2", ["table1"])
@@ -138,6 +158,7 @@ def test_cat_async_api(tmp_path: Path):
     assert isinstance(concatenated_table, FeatureTable)
 
     df = concatenated_table.dataframe
+    df = df.reset_index()
     assert set(df.columns) == {"x", "y", "label", "column1"}
     assert df.shape == (6, 4), df.shape
 
