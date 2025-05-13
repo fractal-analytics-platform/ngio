@@ -14,6 +14,7 @@ from ngio.tables.backends import (
 from ngio.tables.backends._anndata_v1 import AnnDataBackend
 from ngio.tables.backends._csv_v1 import CsvTableBackend
 from ngio.tables.backends._json_v1 import JsonTableBackend
+from ngio.tables.backends._parquet_v1 import ParquetTableBackend
 from ngio.utils import NgioValueError, ZarrGroupHandler
 
 
@@ -24,6 +25,7 @@ def test_backend_manager(tmp_path: Path):
         "experimental_json_v1",
         "anndata_v1",
         "experimental_csv_v1",
+        "experimental_parquet_v1",
     }
     manager.add_backend(JsonTableBackend, overwrite=True)
 
@@ -32,11 +34,13 @@ def test_backend_manager(tmp_path: Path):
         "experimental_json_v1",
         "anndata_v1",
         "experimental_csv_v1",
+        "experimental_parquet_v1",
     }
     assert set(manager.available_backends) == {
         "experimental_json_v1",
         "anndata_v1",
         "experimental_csv_v1",
+        "experimental_parquet_v1",
     }
 
     store = tmp_path / "test_backend_manager.zarr"
@@ -46,11 +50,11 @@ def test_backend_manager(tmp_path: Path):
     )
     assert isinstance(backend, JsonTableBackend)
 
-    backend = manager.get_backend(None, handler)
+    backend = manager.get_backend(group_handler=handler)
     assert isinstance(backend, AnnDataBackend)
 
     with pytest.raises(NgioValueError):
-        manager.get_backend("non_existent", handler)
+        manager.get_backend(group_handler=handler, backend_name="non_existent_backend")
 
     with pytest.raises(NgioValueError):
         manager.add_backend(JsonTableBackend)
@@ -59,7 +63,8 @@ def test_backend_manager(tmp_path: Path):
 def test_json_backend(tmp_path: Path):
     store = tmp_path / "test_json_backend.zarr"
     handler = ZarrGroupHandler(store=store, cache=True, mode="a")
-    backend = JsonTableBackend(handler, index_type="str")
+    backend = JsonTableBackend()
+    backend.set_group_handler(handler, index_type="str")
 
     assert backend.backend_name() == "experimental_json_v1"
     assert not backend.implements_anndata()
@@ -91,7 +96,8 @@ def test_json_backend(tmp_path: Path):
 def test_csv_backend(tmp_path: Path):
     store = tmp_path / "test_csv_backend.zarr"
     handler = ZarrGroupHandler(store=store, cache=True, mode="a")
-    backend = CsvTableBackend(handler)
+    backend = CsvTableBackend()
+    backend.set_group_handler(handler)
 
     assert backend.backend_name() == "experimental_csv_v1"
     assert not backend.implements_anndata()
@@ -116,10 +122,40 @@ def test_csv_backend(tmp_path: Path):
     backend.write(lf_data, metadata={"test": "test"})
 
 
+def test_parquet_backend(tmp_path: Path):
+    store = tmp_path / "test_parquet_backend.zarr"
+    handler = ZarrGroupHandler(store=store, cache=True, mode="a")
+    backend = ParquetTableBackend()
+    backend.set_group_handler(handler)
+
+    assert backend.backend_name() == "experimental_parquet_v1"
+    assert not backend.implements_anndata()
+    assert backend.implements_pandas()
+
+    test_table = pd.DataFrame(
+        {"a": [1, 2, 3], "b": [4.0, 5.0, 6.0], "c": ["a", "b", "c"]}
+    )
+
+    backend.write(test_table, metadata={"test": "test"})
+    loaded_table = backend.load_as_pandas_df()
+    assert loaded_table.equals(test_table), loaded_table
+    meta = backend._group_handler.load_attrs()
+    assert meta["test"] == "test"
+    assert meta["backend"] == "experimental_parquet_v1"
+
+    a_data = backend.load_as_anndata()
+    with pytest.raises(NotImplementedError):
+        backend.write(a_data, metadata={"test": "test"})
+
+    lf_data = backend.load_as_polars_lf()
+    backend.write(lf_data, metadata={"test": "test"})
+
+
 def test_anndata_backend(tmp_path: Path):
     store = tmp_path / "test_anndata_backend.zarr"
     handler = ZarrGroupHandler(store=store, cache=True, mode="a")
-    backend = AnnDataBackend(handler, index_type="int")
+    backend = AnnDataBackend()
+    backend.set_group_handler(handler, index_type="int")
 
     assert backend.backend_name() == "anndata_v1"
     assert backend.implements_anndata()
