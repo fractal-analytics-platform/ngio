@@ -171,7 +171,7 @@ def test_tables_api(tmp_path: Path):
         rois=[Roi(name="roi_1", x_length=10, y_length=10, z_length=10)]  # type: ignore
     )
     test_plate.add_table("test_roi_table", test_roi_table)
-    assert test_plate.list_tables == ["test_table", "test_roi_table"]
+    assert test_plate.list_tables() == ["test_table", "test_roi_table"]
     assert test_plate.list_roi_tables() == ["test_roi_table"]
 
     pdt.assert_frame_equal(
