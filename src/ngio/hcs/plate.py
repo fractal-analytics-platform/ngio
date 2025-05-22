@@ -814,10 +814,9 @@ class OmeZarrPlate:
                 raise NgioValidationError("No tables found in the image.")
         return self._tables_container
 
-    @property
-    def list_tables(self) -> list[str]:
+    def list_tables(self, filter_types: str | None = None) -> list[str]:
         """List all tables in the image."""
-        return self.tables_container.list()
+        return self.tables_container.list(filter_types=filter_types)
 
     def list_roi_tables(self) -> list[str]:
         """List all ROI tables in the image."""
