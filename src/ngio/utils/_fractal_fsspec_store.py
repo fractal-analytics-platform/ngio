@@ -28,7 +28,7 @@ def fractal_fsspec_store(
                     f"'fractal_token' to access: {url}."
                 ) from e
             elif e.status == 401 and fractal_token is not None:
-                raise ValueError(
+                raise NgioValueError(
                     f"The 'fractal_token' provided is invalid for: {url}."
                 ) from e
             else:
