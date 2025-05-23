@@ -8,12 +8,15 @@ from ngio.tables.v1 import FeatureTableV1
 
 
 @pytest.mark.parametrize("backend", ["experimental_json_v1", "anndata_v1"])
-def test_generic_table(tmp_path: Path, backend: str):
+def test_feature_table(tmp_path: Path, backend: str):
     store = tmp_path / "test.zarr"
     test_df = pd.DataFrame({"a": [1, 2, 3], "b": [4, 5, 6], "label": [1, 2, 3]})
     table = FeatureTableV1(test_df, reference_label="label")
     assert isinstance(table.__repr__(), str)
-    assert table._meta.region.path == "../labels/label"
+    meta_dict = table.meta.model_dump()
+    assert meta_dict.get("fractal_table_version") == table.version()
+    assert meta_dict.get("type") == table.table_type()
+    assert meta_dict.get("region") == {"path": "../labels/label"}
     assert table.reference_label == "label"
 
     write_table(store=store, table=table, backend=backend)
@@ -25,3 +28,9 @@ def test_generic_table(tmp_path: Path, backend: str):
         pd.testing.assert_series_equal(
             loaded_table.dataframe[column], test_df[column], check_index=False
         )
+    meta_dict = loaded_table.meta.model_dump()
+
+    assert meta_dict.get("fractal_table_version") == loaded_table.version()
+    assert meta_dict.get("type") == loaded_table.table_type()
+    assert meta_dict.get("region") == {"path": "../labels/label"}
+    assert table.reference_label == "label"

@@ -11,8 +11,8 @@ from ngio.utils import NgioValueError, ZarrGroupHandler
 
 
 def test_roi_table_v1(tmp_path: Path):
-    rois = {
-        "roi1": Roi(
+    rois = [
+        Roi(
             name="roi1",
             x=0.0,
             y=0.0,
@@ -22,9 +22,9 @@ def test_roi_table_v1(tmp_path: Path):
             z_length=1.0,
             unit="micrometer",  # type: ignore
         )
-    }
+    ]
 
-    table = RoiTableV1(rois=rois.values())
+    table = RoiTableV1(rois=rois)
     assert isinstance(table.__repr__(), str)
 
     table.add(
@@ -68,30 +68,29 @@ def test_roi_table_v1(tmp_path: Path):
         ),
         overwrite=True,
     )
-
+    assert len(table.rois()) == 2
     write_table(store=tmp_path / "roi_table.zarr", table=table, backend="anndata_v1")
 
     loaded_table = open_table(store=tmp_path / "roi_table.zarr")
     assert isinstance(loaded_table, RoiTableV1)
-
-    assert len(loaded_table._rois) == 2
+    assert len(loaded_table.rois()) == 2
     assert loaded_table.get("roi1") == table.get("roi1")
     assert loaded_table.get("roi2") == table.get("roi2")
 
     with pytest.raises(NgioValueError):
         loaded_table.get("roi3")
 
-    assert loaded_table._meta.backend == "anndata_v1"
-    assert loaded_table._meta.fractal_table_version == loaded_table.version()
-    assert loaded_table._meta.type == loaded_table.type()
+    assert loaded_table.meta.backend == "anndata_v1"
+    meta_dict = loaded_table._meta.model_dump()
+    assert meta_dict.get("fractal_table_version") == loaded_table.version()
+    assert meta_dict.get("type") == loaded_table.table_type()
 
 
 def test_roi_no_index(tmp_path: Path):
     """ngio needs to support reading a table without an index. for legacy reasons"""
     handler = ZarrGroupHandler(tmp_path / "roi_table.zarr")
-    backend = AnnDataBackend(
-        group_handler=handler,
-    )
+    backend = AnnDataBackend()
+    backend.set_group_handler(handler)
 
     roi_table = pd.DataFrame(
         {
@@ -110,6 +109,6 @@ def test_roi_no_index(tmp_path: Path):
         metadata=RoiTableV1Meta().model_dump(exclude_none=True),
     )
 
-    roi_table = RoiTable._from_handler(handler=handler)
+    roi_table = RoiTable.from_handler(handler=handler)
     assert isinstance(roi_table, RoiTable)
     assert len(roi_table.rois()) == 2
