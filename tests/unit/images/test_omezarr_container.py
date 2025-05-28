@@ -47,11 +47,11 @@ def test_ome_zarr_tables(cardiomyocyte_tiny_path: Path):
         ome_zarr.list_roi_tables()
     )
 
-    fov_roi = ome_zarr.get_table("FOV_ROI_table", check_type=None)
+    fov_roi = ome_zarr.get_table("FOV_ROI_table")
     assert len(fov_roi.rois()) == 2  # type: ignore
-    roi_table_1 = ome_zarr.get_table("well_ROI_table", check_type="generic_roi_table")
+    roi_table_1 = ome_zarr.get_table("well_ROI_table")
     assert len(roi_table_1.rois()) == 1
-    roi_table_2 = ome_zarr.get_table("well_ROI_table", check_type="roi_table")
+    roi_table_2 = ome_zarr.get_table("well_ROI_table")
     assert len(roi_table_2.rois()) == 1
 
     new_well_roi_table = ome_zarr.build_image_roi_table()
@@ -167,4 +167,4 @@ def test_remote_ome_zarr_container():
     # ]
 
     _ = ome_zarr.get_label("nuclei", path="0")
-    _ = ome_zarr.get_table("well_ROI_table", check_type="roi_table")
+    _ = ome_zarr.get_table("well_ROI_table")

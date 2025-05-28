@@ -44,6 +44,10 @@ class AnnDataBackend(AbstractTableBackend):
         anndata = normalize_anndata(anndata, index_key=self.index_key)
         return anndata
 
+    def load(self) -> AnnData:
+        """Load the table as an AnnData object."""
+        return self.load_as_anndata()
+
     def write_from_anndata(self, table: AnnData) -> None:
         """Serialize the table from an AnnData object."""
         full_url = self._group_handler.full_url
