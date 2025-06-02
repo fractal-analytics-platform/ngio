@@ -31,13 +31,11 @@ We also provide utilities to convert between these in-memory representations, in
 
 These specifications define structured tables that standardize common table types used in image analysis. We currently developed five table types:
 
-- **Generic Tables**: A flexible table type that can represent any tabular data.
-- **ROI Tables**: A table type specifically designed for representing Regions of Interest (ROIs) in images.
-- **Masking ROI Tables**: A specialized table type for representing ROIs that are associated with specific labels in a OME-Zarr label image.
-- **Feature Tables**: A table type for representing features extracted from images. This table is also associated with a specific label image.
-- **Condition Tables**: A table to represent experimental conditions or metadata associated with images or experiments.
-
-A more detailed description of the table types can be found in the [Table Types documentation](./v1/types.md).
+- **Generic Tables**: A flexible table type that can represent any tabular data. See more in the [Generic Tables documentation](table_types/generic_table.md).
+- **ROI Tables**: A table type specifically designed for representing Regions of Interest (ROIs) in images. See more in the [ROI Tables documentation](table_types/roi_table.md).
+- **Masking ROI Tables**: A specialized table type for representing ROIs that are associated with specific labels in a OME-Zarr label image. See more in the [Masking ROI Tables documentation](table_types/masking_roi_table.md).
+- **Feature Tables**: A table type for representing features extracted from images. This table is also associated with a specific label image. See more in the [Feature Tables documentation](table_types/feature_table.md).
+- **Condition Tables**: A table to represent experimental conditions or metadata associated with images or experiments. See more in the [Condition Tables documentation](table_types/condition_table.md).
 
 ## Tables Groups
 

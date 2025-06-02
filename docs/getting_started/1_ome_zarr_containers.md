@@ -89,7 +89,7 @@ Examples of the OME-Zarr metadata access:
 
 To access images, labels, and tables, you can use the `get_image`, `get_label`, and `get_table` methods of the `OME-Zarr Container` object.
 
-A variety of examples and additional information can be found in the [Images and Labels](./2_images.md), and [Tables](../3_tables.md) sections.
+A variety of examples and additional information can be found in the [Images and Labels](./2_images.md), and [Tables](./3_tables.md) sections.
 
 ## Creating derived images
 
