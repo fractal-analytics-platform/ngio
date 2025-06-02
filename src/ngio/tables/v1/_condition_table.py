@@ -12,7 +12,7 @@ from ngio.utils import ZarrGroupHandler
 class ConditionTableMeta(BackendMeta):
     """Metadata for the condition table."""
 
-    fractal_table_version: str | None = "1"
+    table_version: str | None = "1"
     type: str | None = "condition_table"
 
 

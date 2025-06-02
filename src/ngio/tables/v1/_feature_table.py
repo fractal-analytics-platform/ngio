@@ -14,13 +14,6 @@ from ngio.utils import NgioValueError
 from ngio.utils._zarr_utils import ZarrGroupHandler
 
 
-class GenericTableMeta(BackendMeta):
-    """Metadata for the ROI table."""
-
-    fractal_table_version: str | None = None
-    type: str | None = None
-
-
 class RegionMeta(BaseModel):
     """Metadata for the region."""
 
@@ -30,7 +23,7 @@ class RegionMeta(BaseModel):
 class FeatureTableMeta(BackendMeta):
     """Metadata for the ROI table."""
 
-    fractal_table_version: Literal["1"] = "1"
+    table_version: Literal["1"] = "1"
     type: Literal["feature_table"] = "feature_table"
     region: RegionMeta | None = None
     instance_key: str = "label"

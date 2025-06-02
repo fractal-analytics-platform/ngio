@@ -84,7 +84,7 @@ def test_roi_table_v1(tmp_path: Path):
 
     assert loaded_table.meta.backend == "anndata"
     meta_dict = loaded_table._meta.model_dump()
-    assert meta_dict.get("fractal_table_version") == loaded_table.version()
+    assert meta_dict.get("table_version") == loaded_table.version()
     assert meta_dict.get("type") == loaded_table.table_type()
 
 

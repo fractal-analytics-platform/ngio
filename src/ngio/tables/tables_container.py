@@ -139,12 +139,12 @@ TableType = TypeVar("TableType", bound=Table)
 class TableMeta(BackendMeta):
     """Base class for table metadata."""
 
-    fractal_table_version: str = "1"
+    table_version: str = "1"
     type: str = "generic_table"
 
     def unique_name(self) -> str:
         """Return the unique name for the table."""
-        return f"{self.type}_v{self.fractal_table_version}"
+        return f"{self.type}_v{self.table_version}"
 
 
 def _get_meta(handler: ZarrGroupHandler) -> TableMeta:
@@ -196,7 +196,7 @@ class ImplementedTables:
         """Register a new table handler."""
         meta = TableMeta(
             type=handler.table_type(),
-            fractal_table_version=handler.version(),
+            table_version=handler.version(),
         )
 
         if meta.unique_name() in self._implemented_tables and not overwrite:

@@ -306,7 +306,7 @@ class GenericRoiTableV1(AbstractBaseTable):
 class RoiTableV1Meta(BackendMeta):
     """Metadata for the ROI table."""
 
-    fractal_table_version: Literal["1"] = "1"
+    table_version: Literal["1"] = "1"
     type: Literal["roi_table"] = "roi_table"
     index_key: str | None = "FieldIndex"
     index_type: Literal["str", "int"] | None = "str"
@@ -362,7 +362,7 @@ class RegionMeta(BaseModel):
 class MaskingRoiTableV1Meta(BackendMeta):
     """Metadata for the ROI table."""
 
-    fractal_table_version: Literal["1"] = "1"
+    table_version: Literal["1"] = "1"
     type: Literal["masking_roi_table"] = "masking_roi_table"
     region: RegionMeta | None = None
     instance_key: str = "label"

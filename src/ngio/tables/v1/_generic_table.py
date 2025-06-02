@@ -5,6 +5,17 @@ from ngio.tables.backends import BackendMeta, TableBackend
 from ngio.utils import ZarrGroupHandler
 
 
+class GenericTableMeta(BackendMeta):
+    """Metadata for the generic table.
+
+    This is used to store metadata for a generic table.
+    It does not have a specific definition.
+    """
+
+    table_version: str | None = "1"
+    type: str | None = "generic_table"
+
+
 class GenericTable(AbstractBaseTable):
     """Class to a non-specific table.
 
