@@ -7,10 +7,10 @@ from pandas import DataFrame
 from polars import DataFrame as PolarsDataFrame
 from polars import LazyFrame
 
-from ngio.tables.backends._anndata_v1 import AnnDataBackend
-from ngio.tables.backends._csv_v1 import CsvTableBackend
-from ngio.tables.backends._json_v1 import JsonTableBackend
-from ngio.tables.backends._parquet_v1 import ParquetTableBackend
+from ngio.tables.backends._anndata import AnnDataBackend
+from ngio.tables.backends._csv import CsvTableBackend
+from ngio.tables.backends._json import JsonTableBackend
+from ngio.tables.backends._parquet import ParquetTableBackend
 from ngio.tables.backends._utils import TabularData
 from ngio.utils import NgioValueError, ZarrGroupHandler
 
@@ -167,7 +167,7 @@ class ImplementedTableBackends:
         self,
         *,
         group_handler: ZarrGroupHandler,
-        backend_name: str = "anndata_v1",
+        backend_name: str = "anndata",
         index_key: str | None = None,
         index_type: Literal["int", "str"] | None = None,
     ) -> TableBackendProtocol:

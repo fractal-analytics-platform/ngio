@@ -21,7 +21,7 @@ class AnnDataBackend(AbstractTableBackend):
     @staticmethod
     def backend_name() -> str:
         """Return the name of the backend."""
-        return "anndata_v1"
+        return "anndata"
 
     @staticmethod
     def implements_anndata() -> bool:

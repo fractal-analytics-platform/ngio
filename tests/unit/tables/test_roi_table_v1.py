@@ -3,10 +3,12 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
+from ngio.common import Roi
 from ngio.tables import RoiTable
-from ngio.tables.backends._anndata_v1 import AnnDataBackend
+from ngio.tables.backends import AnnDataBackend
 from ngio.tables.tables_container import open_table, write_table
-from ngio.tables.v1._roi_table import Roi, RoiTableV1, RoiTableV1Meta
+from ngio.tables.v1 import RoiTableV1
+from ngio.tables.v1._roi_table import RoiTableV1Meta
 from ngio.utils import NgioValueError, ZarrGroupHandler
 
 

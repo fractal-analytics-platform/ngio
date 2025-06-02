@@ -202,7 +202,7 @@ class AbstractBaseTable(ABC):
     def set_backend(
         self,
         handler: ZarrGroupHandler | None = None,
-        backend: str | TableBackendProtocol = "anndata_v1",
+        backend: str | TableBackendProtocol = "anndata",
     ) -> None:
         """Set the backend of the table."""
         if handler is None:

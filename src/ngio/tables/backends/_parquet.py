@@ -1,7 +1,7 @@
 import pandas as pd
 import polars as pl
 
-from ngio.tables.backends._non_zarr_backends_v1 import NonZarrBaseBackend
+from ngio.tables.backends._non_zarr_backends import NonZarrBaseBackend
 
 
 def write_lf_to_parquet(path: str, table: pl.DataFrame) -> None:
@@ -44,4 +44,4 @@ class ParquetTableBackend(NonZarrBaseBackend):
     @staticmethod
     def backend_name() -> str:
         """Return the name of the backend."""
-        return "experimental_parquet_v1"
+        return "parquet"

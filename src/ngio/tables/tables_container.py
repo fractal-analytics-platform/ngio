@@ -90,7 +90,7 @@ class Table(Protocol):
     def set_backend(
         self,
         handler: ZarrGroupHandler | None = None,
-        backend: str | TableBackendProtocol = "anndata_v1",
+        backend: str | TableBackendProtocol = "anndata",
     ) -> None:
         """Set the backend store and path for the table.
 
@@ -301,7 +301,7 @@ class TablesContainer:
         self,
         name: str,
         table: Table,
-        backend: str | TableBackendProtocol = "anndata_v1",
+        backend: str | TableBackendProtocol = "anndata",
         overwrite: bool = False,
     ) -> None:
         """Add a table to the group."""
@@ -375,7 +375,7 @@ def open_table(
 def open_table_as(
     store: StoreOrGroup,
     table_cls: type[TableType],
-    backend: str | TableBackendProtocol = "anndata_v1",
+    backend: str | TableBackendProtocol = "anndata",
     cache: bool = False,
     mode: AccessModeLiteral = "a",
     parallel_safe: bool = False,
@@ -393,7 +393,7 @@ def open_table_as(
 def write_table(
     store: StoreOrGroup,
     table: Table,
-    backend: str | TableBackendProtocol = "anndata_v1",
+    backend: str | TableBackendProtocol = "anndata",
     cache: bool = False,
     mode: AccessModeLiteral = "a",
     parallel_safe: bool = False,

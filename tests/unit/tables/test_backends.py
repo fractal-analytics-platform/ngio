@@ -7,14 +7,14 @@ import pandas.api.types as ptypes
 import pytest
 
 from ngio.tables.backends import (
+    AnnDataBackend,
+    CsvTableBackend,
     ImplementedTableBackends,
+    JsonTableBackend,
+    ParquetTableBackend,
     convert_anndata_to_pandas,
     convert_pandas_to_anndata,
 )
-from ngio.tables.backends._anndata_v1 import AnnDataBackend
-from ngio.tables.backends._csv_v1 import CsvTableBackend
-from ngio.tables.backends._json_v1 import JsonTableBackend
-from ngio.tables.backends._parquet_v1 import ParquetTableBackend
 from ngio.utils import NgioValueError, ZarrGroupHandler
 
 
@@ -157,7 +157,7 @@ def test_anndata_backend(tmp_path: Path):
     backend = AnnDataBackend()
     backend.set_group_handler(handler, index_type="int")
 
-    assert backend.backend_name() == "anndata_v1"
+    assert backend.backend_name() == "anndata"
     assert backend.implements_anndata()
     assert backend.implements_pandas()
 

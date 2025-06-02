@@ -469,7 +469,7 @@ class OmeZarrContainer:
         self,
         name: str,
         table: Table,
-        backend: str | TableBackendProtocol = "anndata_v1",
+        backend: str | TableBackendProtocol = "anndata",
         overwrite: bool = False,
     ) -> None:
         """Add a table to the image."""
