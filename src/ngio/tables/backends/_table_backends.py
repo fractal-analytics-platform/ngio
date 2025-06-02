@@ -199,3 +199,5 @@ ImplementedTableBackends().add_backend(AnnDataBackend)
 ImplementedTableBackends().add_backend(JsonTableBackend)
 ImplementedTableBackends().add_backend(CsvTableBackend)
 ImplementedTableBackends().add_backend(ParquetTableBackend)
+
+TableBackend = Literal["anndata", "json", "csv", "parquet"] | str | TableBackendProtocol

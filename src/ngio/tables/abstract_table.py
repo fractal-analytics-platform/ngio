@@ -11,6 +11,7 @@ from anndata import AnnData
 from ngio.tables.backends import (
     BackendMeta,
     ImplementedTableBackends,
+    TableBackend,
     TableBackendProtocol,
     TabularData,
     convert_to_anndata,
@@ -146,7 +147,7 @@ class AbstractBaseTable(ABC):
     def _load_backend(
         meta: BackendMeta,
         handler: ZarrGroupHandler,
-        backend: str | TableBackendProtocol,
+        backend: TableBackend,
     ) -> TableBackendProtocol:
         """Create a new ROI table from a Zarr group handler."""
         if isinstance(backend, str):
@@ -202,7 +203,7 @@ class AbstractBaseTable(ABC):
     def set_backend(
         self,
         handler: ZarrGroupHandler | None = None,
-        backend: str | TableBackendProtocol = "anndata",
+        backend: TableBackend = "anndata",
     ) -> None:
         """Set the backend of the table."""
         if handler is None:
@@ -226,7 +227,7 @@ class AbstractBaseTable(ABC):
         cls,
         handler: ZarrGroupHandler,
         meta_model: builtins.type[BackendMeta],
-        backend: str | TableBackendProtocol | None = None,
+        backend: TableBackend | None = None,
     ) -> Self:
         """Create a new ROI table from a Zarr group handler."""
         meta = meta_model(**handler.load_attrs())
@@ -241,7 +242,7 @@ class AbstractBaseTable(ABC):
     def from_handler(
         cls,
         handler: ZarrGroupHandler,
-        backend: str | TableBackendProtocol | None = None,
+        backend: TableBackend | None = None,
     ) -> Self:
         """Create a new ROI table from a Zarr group handler."""
         pass

@@ -9,7 +9,7 @@ from typing import Literal
 from pydantic import BaseModel
 
 from ngio.tables.abstract_table import AbstractBaseTable
-from ngio.tables.backends import BackendMeta, TableBackendProtocol, TabularData
+from ngio.tables.backends import BackendMeta, TableBackend, TabularData
 from ngio.utils import NgioValueError
 from ngio.utils._zarr_utils import ZarrGroupHandler
 
@@ -85,7 +85,7 @@ class FeatureTableV1(AbstractBaseTable):
     def from_handler(
         cls,
         handler: ZarrGroupHandler,
-        backend: str | TableBackendProtocol | None = None,
+        backend: TableBackend | None = None,
     ) -> "FeatureTableV1":
         return cls._from_handler(
             handler=handler,

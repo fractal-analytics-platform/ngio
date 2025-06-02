@@ -7,6 +7,7 @@ from ngio.tables.backends._json import JsonTableBackend
 from ngio.tables.backends._parquet import ParquetTableBackend
 from ngio.tables.backends._table_backends import (
     ImplementedTableBackends,
+    TableBackend,
     TableBackendProtocol,
 )
 from ngio.tables.backends._utils import (
@@ -34,6 +35,7 @@ __all__ = [
     "ImplementedTableBackends",
     "JsonTableBackend",
     "ParquetTableBackend",
+    "TableBackend",
     "TableBackendProtocol",
     "TabularData",
     "convert_anndata_to_pandas",

@@ -15,10 +15,14 @@ from pydantic import BaseModel
 from ngio.common import Roi
 from ngio.tables.abstract_table import (
     AbstractBaseTable,
-    TableBackendProtocol,
     TabularData,
 )
-from ngio.tables.backends import BackendMeta, convert_to_pandas, normalize_pandas_df
+from ngio.tables.backends import (
+    BackendMeta,
+    TableBackend,
+    convert_to_pandas,
+    normalize_pandas_df,
+)
 from ngio.utils import (
     NgioTableValidationError,
     NgioValueError,
@@ -334,7 +338,7 @@ class RoiTableV1(GenericRoiTableV1):
     def from_handler(
         cls,
         handler: ZarrGroupHandler,
-        backend: str | TableBackendProtocol | None = None,
+        backend: TableBackend | None = None,
     ) -> "RoiTableV1":
         table = cls._from_handler(
             handler=handler,
@@ -409,7 +413,7 @@ class MaskingRoiTableV1(GenericRoiTableV1):
     def from_handler(
         cls,
         handler: ZarrGroupHandler,
-        backend: str | TableBackendProtocol | None = None,
+        backend: TableBackend | None = None,
     ) -> "MaskingRoiTableV1":
         table = cls._from_handler(
             handler=handler,
