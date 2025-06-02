@@ -23,7 +23,7 @@ A feature table must include the following metadata fields in the group attribut
 ```json
 {
     // Feature table metadata
-    "table_type": "feature_table",
+    "type": "feature_table",
     "table_version": "1",
     "categorical_columns": [
         "label",
@@ -38,6 +38,7 @@ A feature table must include the following metadata fields in the group attribut
     "metadata_columns": [
         "description",
     ],
+    "instance_key": "label", // Legacy field replaced by "index_key"
     "region": {"path": "../labels/label_DAPI"}, // Path to the label image associated with this feature table
     // Backend metadata
     "backend": "annadata", // the backend used to store the table, e.g. "annadata", "parquet", etc..
