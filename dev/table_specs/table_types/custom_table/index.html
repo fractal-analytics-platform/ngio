@@ -10,28 +10,28 @@
       
       
       
-        <link rel="canonical" href="https://github.com/fractal-analytics-platform/ngio.git/dev/api/utils/">
+        <link rel="canonical" href="https://github.com/fractal-analytics-platform/ngio.git/dev/table_specs/table_types/custom_table/">
       
       
-        <link rel="prev" href="../hcs/">
+        <link rel="prev" href="../condition_table/">
       
       
-        <link rel="next" href="../common/">
+        <link rel="next" href="../../../api/ngio/">
       
       
-      <link rel="icon" href="../../images/favicon.ico">
+      <link rel="icon" href="../../../images/favicon.ico">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.14">
     
     
       
-        <title>ngio.utils - NGIO: Next Generation File Format I/O</title>
+        <title>Add Custom Table - NGIO: Next Generation File Format I/O</title>
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.342714a4.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.342714a4.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.06af60db.min.css">
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.06af60db.min.css">
       
       
 
@@ -50,13 +50,13 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/_markdown_exec_pyodide.css">
+      <link rel="stylesheet" href="../../../assets/_markdown_exec_pyodide.css">
     
-      <link rel="stylesheet" href="../../assets/_markdown_exec_ansi.css">
+      <link rel="stylesheet" href="../../../assets/_markdown_exec_ansi.css">
     
-      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+      <link rel="stylesheet" href="../../../assets/_mkdocstrings.css">
     
-    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -82,7 +82,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#ngioutils" class="md-skip">
+        <a href="#add-a-custom-table" class="md-skip">
           Skip to content
         </a>
       
@@ -102,7 +102,7 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../.." title="NGIO: Next Generation File Format I/O" class="md-header__button md-logo" aria-label="NGIO: Next Generation File Format I/O" data-md-component="logo">
+    <a href="../../.." title="NGIO: Next Generation File Format I/O" class="md-header__button md-logo" aria-label="NGIO: Next Generation File Format I/O" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -122,7 +122,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              ngio.utils
+              Add Custom Table
             
           </span>
         </div>
@@ -245,7 +245,7 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../.." title="NGIO: Next Generation File Format I/O" class="md-nav__button md-logo" aria-label="NGIO: Next Generation File Format I/O" data-md-component="logo">
+    <a href="../../.." title="NGIO: Next Generation File Format I/O" class="md-nav__button md-logo" aria-label="NGIO: Next Generation File Format I/O" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -275,7 +275,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../.." class="md-nav__link">
+      <a href="../../.." class="md-nav__link">
         
   
   
@@ -354,7 +354,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../getting_started/0_quickstart/" class="md-nav__link">
+      <a href="../../../getting_started/0_quickstart/" class="md-nav__link">
         
   
   
@@ -377,7 +377,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../getting_started/1_ome_zarr_containers/" class="md-nav__link">
+      <a href="../../../getting_started/1_ome_zarr_containers/" class="md-nav__link">
         
   
   
@@ -400,7 +400,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../getting_started/2_images/" class="md-nav__link">
+      <a href="../../../getting_started/2_images/" class="md-nav__link">
         
   
   
@@ -423,7 +423,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../getting_started/3_tables/" class="md-nav__link">
+      <a href="../../../getting_started/3_tables/" class="md-nav__link">
         
   
   
@@ -446,7 +446,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../getting_started/4_masked_images/" class="md-nav__link">
+      <a href="../../../getting_started/4_masked_images/" class="md-nav__link">
         
   
   
@@ -469,7 +469,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../getting_started/5_hcs/" class="md-nav__link">
+      <a href="../../../getting_started/5_hcs/" class="md-nav__link">
         
   
   
@@ -552,7 +552,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../tutorials/image_processing/" class="md-nav__link">
+      <a href="../../../tutorials/image_processing/" class="md-nav__link">
         
   
   
@@ -575,7 +575,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../tutorials/image_segmentation/" class="md-nav__link">
+      <a href="../../../tutorials/image_segmentation/" class="md-nav__link">
         
   
   
@@ -598,7 +598,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../tutorials/feature_extraction/" class="md-nav__link">
+      <a href="../../../tutorials/feature_extraction/" class="md-nav__link">
         
   
   
@@ -621,7 +621,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../tutorials/hcs_processing/" class="md-nav__link">
+      <a href="../../../tutorials/hcs_processing/" class="md-nav__link">
         
   
   
@@ -648,8 +648,10 @@
       
   
   
+    
   
   
+  
     
     
       
@@ -668,11 +670,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
         
           
           <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
@@ -688,7 +690,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_4">
             <span class="md-nav__icon md-icon"></span>
             Table Specifications
@@ -702,7 +704,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../table_specs/overview/" class="md-nav__link">
+      <a href="../../overview/" class="md-nav__link">
         
   
   
@@ -725,7 +727,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../table_specs/backend/" class="md-nav__link">
+      <a href="../../backend/" class="md-nav__link">
         
   
   
@@ -745,8 +747,10 @@
                 
   
   
+    
   
   
+  
     
     
       
@@ -766,11 +770,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_3" checked>
         
           
           <label class="md-nav__link" for="__nav_4_3" id="__nav_4_3_label" tabindex="0">
@@ -786,7 +790,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_4_3">
             <span class="md-nav__icon md-icon"></span>
             Table Types
@@ -800,7 +804,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../table_specs/table_types/roi_table/" class="md-nav__link">
+      <a href="../roi_table/" class="md-nav__link">
         
   
   
@@ -823,7 +827,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../table_specs/table_types/masking_roi_table/" class="md-nav__link">
+      <a href="../masking_roi_table/" class="md-nav__link">
         
   
   
@@ -846,7 +850,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../table_specs/table_types/feature_table/" class="md-nav__link">
+      <a href="../feature_table/" class="md-nav__link">
         
   
   
@@ -869,201 +873,12 @@
   
   
     <li class="md-nav__item">
-      <a href="../../table_specs/table_types/condition_table/" class="md-nav__link">
+      <a href="../condition_table/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     Condition Table
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../table_specs/table_types/custom_table/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Add Custom Table
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-    
-      
-      
-  
-  
-    
-  
-  
-  
-    
-    
-      
-        
-      
-        
-      
-        
-      
-        
-      
-        
-      
-        
-      
-    
-    
-    
-      
-        
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
-        
-          
-          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
-            
-  
-  
-  <span class="md-ellipsis">
-    API Reference
-    
-  </span>
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_5">
-            <span class="md-nav__icon md-icon"></span>
-            API Reference
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../ngio/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    ngio
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../images/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    ngio.images
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../tables/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    ngio.tables
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../hcs/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    ngio.hcs
     
   </span>
   
@@ -1095,13 +910,108 @@
   
   
   <span class="md-ellipsis">
-    ngio.utils
+    Add Custom Table
     
   </span>
   
 
       </a>
       
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    API Reference
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            API Reference
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../api/ngio/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    ngio
+    
+  </span>
+  
+
+      </a>
     </li>
   
 
@@ -1114,7 +1024,99 @@
   
   
     <li class="md-nav__item">
-      <a href="../common/" class="md-nav__link">
+      <a href="../../../api/images/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    ngio.images
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../api/tables/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    ngio.tables
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../api/hcs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    ngio.hcs
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../api/utils/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    ngio.utils
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../api/common/" class="md-nav__link">
         
   
   
@@ -1193,7 +1195,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../contributing/" class="md-nav__link">
+      <a href="../../../contributing/" class="md-nav__link">
         
   
   
@@ -1216,7 +1218,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../code_of_conduct/" class="md-nav__link">
+      <a href="../../../code_of_conduct/" class="md-nav__link">
         
   
   
@@ -1276,12 +1278,11 @@
   
 
 
-<h1 id="ngioutils">ngio.utils</h1>
+<h1 id="add-a-custom-table">Add a Custom Table</h1>
+<p>Ngio allows users to define custom tables that can be used to store any kind of tabular data. Custom tables are flexible and can be used to represent any kind of data that does not fit into the predefined table types.</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
-<p>Coming soon, ngio API documentation is not yet available.
-If you have any questions please reach out to us on GitHub or via email.
-We are happy to help you with any questions or issues you may have.</p>
+<p>The library is still in the early stages and full documentation for custom tables is not yet available.</p>
 </div>
 
 
@@ -1305,7 +1306,7 @@ We are happy to help you with any questions or issues you may have.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 28, 2025 15:29:17 UTC">March 28, 2025</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="June 2, 2025 13:19:13 UTC">June 2, 2025</span>
   </span>
 
     
@@ -1315,34 +1316,11 @@ We are happy to help you with any questions or issues you may have.</p>
     <span class="md-icon" title="Created">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 28, 2025 15:29:17 UTC">March 28, 2025</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="June 2, 2025 13:19:13 UTC">June 2, 2025</span>
   </span>
 
     
     
-    
-      
-  <span class="md-source-file__fact">
-    
-      
-  <span class="md-icon" title="Contributors">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2A10 10 0 0 0 2 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.87 1.52 2.34 1.07 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33s1.71.11 2.5.33c1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2"/></svg>
-  </span>
-  <span>GitHub</span>
-
-    
-    <nav>
-      
-        <a href="https://github.com/lorenzocerrone" class="md-author" title="@lorenzocerrone">
-          
-          <img src="https://avatars.githubusercontent.com/u/23013839?v=4&size=72" alt="lorenzocerrone">
-        </a>
-      
-      
-      
-    </nav>
-  </span>
-
     
   </aside>
 
@@ -1369,7 +1347,7 @@ We are happy to help you with any questions or issues you may have.</p>
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../hcs/" class="md-footer__link md-footer__link--prev" aria-label="Previous: ngio.hcs">
+          <a href="../condition_table/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Condition Table">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -1379,20 +1357,20 @@ We are happy to help you with any questions or issues you may have.</p>
                 Previous
               </span>
               <div class="md-ellipsis">
-                ngio.hcs
+                Condition Table
               </div>
             </div>
           </a>
         
         
           
-          <a href="../common/" class="md-footer__link md-footer__link--next" aria-label="Next: ngio.common">
+          <a href="../../../api/ngio/" class="md-footer__link md-footer__link--next" aria-label="Next: ngio">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                ngio.common
+                ngio
               </div>
             </div>
             <div class="md-footer__button md-icon">
@@ -1446,12 +1424,12 @@ We are happy to help you with any questions or issues you may have.</p>
     
     
       
-      <script id="__config" type="application/json">{"base": "../..", "features": ["content.tooltips", "content.tabs.link", "content.code.annotate", "navigation.instant", "navigation.instant.progress", "navigation.sections", "navigation.path", "navigation.indexes", "navigation.footer", "toc.follow", "search.suggest", "search.share"], "search": "../../assets/javascripts/workers/search.d50fe291.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"base": "../../..", "features": ["content.tooltips", "content.tabs.link", "content.code.annotate", "navigation.instant", "navigation.instant.progress", "navigation.sections", "navigation.path", "navigation.indexes", "navigation.footer", "toc.follow", "search.suggest", "search.share"], "search": "../../../assets/javascripts/workers/search.d50fe291.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.13a4f30d.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.13a4f30d.min.js"></script>
       
-        <script src="../../assets/_markdown_exec_pyodide.js"></script>
+        <script src="../../../assets/_markdown_exec_pyodide.js"></script>
       
     
   </body>
