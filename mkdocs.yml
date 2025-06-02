@@ -99,6 +99,16 @@ nav:
     - tutorials/feature_extraction.ipynb
     - tutorials/hcs_processing.ipynb
 
+  - Table Specifications:
+    - "Overview": table_specs/overview.md
+    - "Table Backends": table_specs/backend.md
+    - "Table Types":
+      - "ROI Table": table_specs/table_types/roi_table.md
+      - "Masking ROI Table": table_specs/table_types/masking_roi_table.md
+      - "Feature Table": table_specs/table_types/feature_table.md
+      - "Condition Table": table_specs/table_types/condition_table.md
+      - "Add Custom Table": table_specs/table_types/custom_table.md
+
   - API Reference:
     - "ngio": api/ngio.md
     - "ngio.images": api/images.md
