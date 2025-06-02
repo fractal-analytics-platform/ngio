@@ -7,7 +7,7 @@ from ngio.tables.tables_container import open_table, write_table
 from ngio.tables.v1 import FeatureTableV1
 
 
-@pytest.mark.parametrize("backend", ["experimental_json_v1", "anndata_v1"])
+@pytest.mark.parametrize("backend", ["json", "anndata"])
 def test_feature_table(tmp_path: Path, backend: str):
     store = tmp_path / "test.zarr"
     test_df = pd.DataFrame({"a": [1, 2, 3], "b": [4, 5, 6], "label": [1, 2, 3]})

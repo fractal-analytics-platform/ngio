@@ -22,31 +22,31 @@ def test_backend_manager(tmp_path: Path):
     manager = ImplementedTableBackends()
 
     assert set(manager.available_backends) == {
-        "experimental_json_v1",
-        "anndata_v1",
-        "experimental_csv_v1",
-        "experimental_parquet_v1",
+        "json",
+        "anndata",
+        "csv",
+        "parquet",
     }
     manager.add_backend(JsonTableBackend, overwrite=True)
 
     manager2 = ImplementedTableBackends()
     assert set(manager2.available_backends) == {
-        "experimental_json_v1",
-        "anndata_v1",
-        "experimental_csv_v1",
-        "experimental_parquet_v1",
+        "json",
+        "anndata",
+        "csv",
+        "parquet",
     }
     assert set(manager.available_backends) == {
-        "experimental_json_v1",
-        "anndata_v1",
-        "experimental_csv_v1",
-        "experimental_parquet_v1",
+        "json",
+        "anndata",
+        "csv",
+        "parquet",
     }
 
     store = tmp_path / "test_backend_manager.zarr"
     handler = ZarrGroupHandler(store=store, cache=True, mode="a")
     backend = manager.get_backend(
-        backend_name="experimental_json_v1", group_handler=handler
+        backend_name="json", group_handler=handler
     )
     assert isinstance(backend, JsonTableBackend)
 
@@ -66,7 +66,7 @@ def test_json_backend(tmp_path: Path):
     backend = JsonTableBackend()
     backend.set_group_handler(handler, index_type="str")
 
-    assert backend.backend_name() == "experimental_json_v1"
+    assert backend.backend_name() == "json"
     assert not backend.implements_anndata()
     assert backend.implements_pandas()
 
@@ -82,7 +82,7 @@ def test_json_backend(tmp_path: Path):
 
     meta = backend._group_handler.load_attrs()
     assert meta["test"] == "test"
-    assert meta["backend"] == "experimental_json_v1"
+    assert meta["backend"] == "json"
 
     a_data = backend.load_as_anndata()
 
@@ -99,7 +99,7 @@ def test_csv_backend(tmp_path: Path):
     backend = CsvTableBackend()
     backend.set_group_handler(handler)
 
-    assert backend.backend_name() == "experimental_csv_v1"
+    assert backend.backend_name() == "csv"
     assert not backend.implements_anndata()
     assert backend.implements_pandas()
 
@@ -112,7 +112,7 @@ def test_csv_backend(tmp_path: Path):
     assert loaded_table.equals(test_table), loaded_table
     meta = backend._group_handler.load_attrs()
     assert meta["test"] == "test"
-    assert meta["backend"] == "experimental_csv_v1"
+    assert meta["backend"] == "csv"
 
     a_data = backend.load_as_anndata()
     with pytest.raises(NotImplementedError):
@@ -128,7 +128,7 @@ def test_parquet_backend(tmp_path: Path):
     backend = ParquetTableBackend()
     backend.set_group_handler(handler)
 
-    assert backend.backend_name() == "experimental_parquet_v1"
+    assert backend.backend_name() == "parquet"
     assert not backend.implements_anndata()
     assert backend.implements_pandas()
 
@@ -141,7 +141,7 @@ def test_parquet_backend(tmp_path: Path):
     assert loaded_table.equals(test_table), loaded_table
     meta = backend._group_handler.load_attrs()
     assert meta["test"] == "test"
-    assert meta["backend"] == "experimental_parquet_v1"
+    assert meta["backend"] == "parquet"
 
     a_data = backend.load_as_anndata()
     with pytest.raises(NotImplementedError):
@@ -175,7 +175,7 @@ def test_anndata_backend(tmp_path: Path):
 
     meta = backend._group_handler.load_attrs()
     assert meta["test"] == "test"
-    assert meta["backend"] == "anndata_v1"
+    assert meta["backend"] == "anndata"
 
     a_data = backend.load_as_anndata()
     backend.write(a_data, metadata={"test": "test"})
