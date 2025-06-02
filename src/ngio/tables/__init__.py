@@ -2,8 +2,8 @@
 
 from ngio.tables.backends import (
     ImplementedTableBackends,
-    TableBackendProtocol,
     TableBackend,
+    TableBackendProtocol,
 )
 from ngio.tables.tables_container import (
     ConditionTable,
@@ -25,12 +25,12 @@ __all__ = [
     "ConditionTable",
     "FeatureTable",
     "GenericRoiTable",
-    "TableBackend",
     "GenericTable",
     "ImplementedTableBackends",
     "MaskingRoiTable",
     "RoiTable",
     "Table",
+    "TableBackend",
     "TableBackendProtocol",
     "TableType",
     "TablesContainer",
