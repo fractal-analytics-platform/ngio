@@ -14,7 +14,8 @@ AnnData is a widely used format in single-cell genomics, and can natively store 
 The following normalization steps are applied to each table before saving it to the AnnData backend:
 
 - We separate the table in two parts: The floating point columns are casted to `float32` and stored as `X` in the AnnData object, while the categorical, boolean, and integer columns are stored as `obs`.
-- The index column is cast to a string, and the name and original type is stored in the zarr attributes.
+- The index column is cast to a string, and is stored in the `obs` index.
+- The index column name must match the `index_key` specified in the metadata.
 
 AnnData backend metadata:
 
