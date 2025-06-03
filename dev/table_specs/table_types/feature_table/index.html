@@ -1368,17 +1368,17 @@
 
 <h1 id="feature-tables">Feature Tables</h1>
 <p>A feature table is a table type for representing per object features in an image. Each row in a feature table corresponds to a specific label in the label image.</p>
-<p>Feature tables can optionally include a metadata to specify the type of features stored in each column:</p>
+<p>Feature tables can optionally include metadata to specify the type of features stored in each column:</p>
 <ul>
 <li><code>measurement</code>: A quantitative measurement of the object, such as area, perimeter, or intensity.</li>
 <li><code>categorical</code>: A categorical feature of the object, such as a classification label or a type.</li>
-<li><code>metadata</code>: Additional metadata free-from columns that can be used to store any other information about the object, but that should not be used for analysis/classification purposes.</li>
+<li><code>metadata</code>: Additional free-from columns that can be used to store any other information about the object, but that should not be used for analysis/classification purposes.</li>
 </ul>
-<p>The feature type can be explicitly specified in the feature table metadata. Alternatively, if a column is not specified, we apply the folling casting rules:</p>
+<p>These feature types inform casting of the values when serialising a table and can be used in downstream analysis to select specific subsets of features. The feature type can be explicitly specified in the feature table metadata. Alternatively, if a column is not specified, we apply the following casting rules:</p>
 <ul>
 <li>If the column contains only numeric values, it is considered a <code>measurement</code>.</li>
 <li>If the column contains string or boolean values, it is considered a <code>categorical</code>.</li>
-<li>The index columns is considered a <code>categorical</code> feature.</li>
+<li>The index column is considered a <code>categorical</code> feature.</li>
 </ul>
 <h2 id="specifications">Specifications</h2>
 <h3 id="v1">V1</h3>
@@ -1387,6 +1387,15 @@
 <span class="w">    </span><span class="c1">// Feature table metadata</span>
 <span class="w">    </span><span class="nt">&quot;table_type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;feature_table&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="nt">&quot;table_version&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;region&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;path&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;../labels/label_DAPI&quot;</span><span class="p">},</span><span class="w"> </span><span class="c1">// Path to the label image associated with this feature table</span>
+<span class="w">    </span><span class="c1">// Backend metadata</span>
+<span class="w">    </span><span class="nt">&quot;backend&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;annadata&quot;</span><span class="p">,</span><span class="w"> </span><span class="c1">// the backend used to store the table, e.g. &quot;annadata&quot;, &quot;parquet&quot;, etc..</span>
+<span class="w">    </span><span class="nt">&quot;index_key&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;label&quot;</span><span class="p">,</span><span class="w"> </span>
+<span class="w">    </span><span class="nt">&quot;index_type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;int&quot;</span><span class="p">,</span><span class="w"> </span><span class="c1">// Either &quot;int&quot; or &quot;str&quot;</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Additionally, it can include feature type information such as:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
 <span class="w">    </span><span class="nt">&quot;categorical_columns&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
 <span class="w">        </span><span class="s2">&quot;label&quot;</span><span class="p">,</span>
 <span class="w">        </span><span class="s2">&quot;cell_type&quot;</span><span class="p">,</span>
@@ -1400,11 +1409,6 @@
 <span class="w">    </span><span class="nt">&quot;metadata_columns&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
 <span class="w">        </span><span class="s2">&quot;description&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="p">],</span>
-<span class="w">    </span><span class="nt">&quot;region&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;path&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;../labels/label_DAPI&quot;</span><span class="p">},</span><span class="w"> </span><span class="c1">// Path to the label image associated with this feature table</span>
-<span class="w">    </span><span class="c1">// Backend metadata</span>
-<span class="w">    </span><span class="nt">&quot;backend&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;annadata&quot;</span><span class="p">,</span><span class="w"> </span><span class="c1">// the backend used to store the table, e.g. &quot;annadata&quot;, &quot;parquet&quot;, etc..</span>
-<span class="w">    </span><span class="nt">&quot;index_key&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;label&quot;</span><span class="p">,</span><span class="w"> </span>
-<span class="w">    </span><span class="nt">&quot;index_type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;int&quot;</span><span class="p">,</span><span class="w"> </span><span class="c1">// Either &quot;int&quot; or &quot;str&quot;</span>
 <span class="p">}</span>
 </code></pre></div>
 
@@ -1429,7 +1433,7 @@
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="June 2, 2025 13:19:13 UTC">June 2, 2025</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="June 3, 2025 09:41:37 UTC">June 3, 2025</span>
   </span>
 
     

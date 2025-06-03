@@ -1389,16 +1389,16 @@
 
 
 <h1 id="table-backends">Table Backends</h1>
-<p>In ngio we implented four different table backends. Each table backend is a python class that can serialize tabular data into OME-Zarr.</p>
+<p>In ngio we implemented four different table backends. Each table backend is a python class that can serialize tabular data into OME-Zarr containers.</p>
 <p>These backends are wrappers around existing tooling implemented in <code>anndata</code>, <code>pandas</code>, and <code>polars</code>.
 Currently, we provide a thin layer of metadata and table normalization to ensure that tables are serialized/deserialized in a consistent way across the different backends and across different table objects.</p>
-<p>In particular for each backend we provide, the metadata that describes the intended index key and type of the table.</p>
+<p>In particular, we provide the metadata that describes the intended index key and type of the table for each backend.</p>
 <h2 id="anndata-backend">AnnData Backend</h2>
-<p>AnnData is a widely used format in single-cell genomics, and can natively store complex tabular data in an Zarr group. The AnnData backend in ngio is a wrapper around the <code>anndata</code> library, which performs some table normalization to consistency and compatibility with the ngio table specifications.</p>
+<p>AnnData is a widely used format in single-cell genomics, and can natively store complex tabular data in a Zarr group. The AnnData backend in ngio is a wrapper around the <code>anndata</code> library, which performs some table normalization for consistency and compatibility with the ngio table specifications.</p>
 <p>The following normalization steps are applied to each table before saving it to the AnnData backend:</p>
 <ul>
 <li>We separate the table in two parts: The floating point columns are casted to <code>float32</code> and stored as <code>X</code> in the AnnData object, while the categorical, boolean, and integer columns are stored as <code>obs</code>.</li>
-<li>The index column is casted to a string, and the name and original type is stored in the zarr attributes.</li>
+<li>The index column is cast to a string, and the name and original type is stored in the zarr attributes.</li>
 </ul>
 <p>AnnData backend metadata:</p>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
@@ -1428,13 +1428,13 @@ Another advantage of the Parquet backend is that it can be used lazily, meaning 
 <span class="p">}</span>
 </code></pre></div>
 <p>The Zarr group directory will contain the Parquet file, and the metadata will be stored in the group attributes.</p>
-<div class="highlight"><pre><span></span><code>table.zarr<span class="w">        </span><span class="c1"># Zarr group for the table</span>
-├──<span class="w"> </span>table.csv<span class="w">      </span><span class="c1"># CSV file containing the table data</span>
+<div class="highlight"><pre><span></span><code>table.zarr<span class="w">          </span><span class="c1"># Zarr group for the table</span>
+├──<span class="w"> </span>table.parquet<span class="w">   </span><span class="c1"># Parquet file containing the table data</span>
 ├──<span class="w"> </span>.zattrs<span class="w">         </span><span class="c1"># Zarr group attributes containing the metadata</span>
 └──<span class="w"> </span>.zgroup<span class="w">         </span><span class="c1"># Zarr group metadata</span>
 </code></pre></div>
 <h2 id="csv-backend">CSV Backend</h2>
-<p>The CSV backend is a plain text format that is widely used for tabular data. It is easy to read and write, and can be easily used across many different tools.</p>
+<p>The CSV backend is a plain text format that is widely used for tabular data. It is easy to read and write, and can be used across many different tools.</p>
 <p>The CSV backen in ngio follows closely the same specifications as the Parquet backend, with the following metadata:</p>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
 <span class="w">    </span><span class="c1">// Backend metadata</span>
@@ -1446,10 +1446,10 @@ Another advantage of the Parquet backend is that it can be used lazily, meaning 
 <span class="p">}</span>
 </code></pre></div>
 <p>The Zarr group directory will contain the CSV file, and the metadata will be stored in the group attributes.</p>
-<div class="highlight"><pre><span></span><code>table.zarr<span class="w">        </span><span class="c1"># Zarr group for the table</span>
+<div class="highlight"><pre><span></span><code>table.zarr<span class="w">         </span><span class="c1"># Zarr group for the table</span>
 ├──<span class="w"> </span>table.csv<span class="w">      </span><span class="c1"># CSV file containing the table data</span>
-├──<span class="w"> </span>.zattrs<span class="w">         </span><span class="c1"># Zarr group attributes containing the metadata</span>
-└──<span class="w"> </span>.zgroup<span class="w">         </span><span class="c1"># Zarr group metadata</span>
+├──<span class="w"> </span>.zattrs<span class="w">        </span><span class="c1"># Zarr group attributes containing the metadata</span>
+└──<span class="w"> </span>.zgroup<span class="w">        </span><span class="c1"># Zarr group metadata</span>
 </code></pre></div>
 <h2 id="json-backend">JSON Backend</h2>
 <p>The JSON backend serializes the table data into the Zarr group attributes as a JSON object. This backend is useful for tiny tables.</p>
@@ -1461,13 +1461,13 @@ Another advantage of the Parquet backend is that it can be used lazily, meaning 
 <span class="w">    </span><span class="nt">&quot;index_type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;int&quot;</span><span class="w"> </span><span class="c1">// Either &quot;int&quot; or &quot;str&quot;</span>
 <span class="p">}</span>
 </code></pre></div>
-<p>The table will be stored in a subgroup of the Zarr group, and the metadata will be stored in the group attributes.</p>
+<p>The table will be stored in a subgroup of the Zarr group, and the metadata will be stored in the group attributes. Storing the table in a subgroup instead of a standalone json file allows for easier access via the Zarr API.</p>
 <div class="highlight"><pre><span></span><code>table.zarr<span class="w">        </span><span class="c1"># Zarr group for the table</span>
-└──<span class="w"> </span>table<span class="w">        </span><span class="c1"># Zarr subgroup for the table data</span>
+└──<span class="w"> </span>table<span class="w">         </span><span class="c1"># Zarr subgroup for the table data</span>
 <span class="w">    </span>├──<span class="w"> </span>.zattrs<span class="w">   </span><span class="c1"># the json table data serialized as a JSON object</span>
 <span class="w">    </span>└──<span class="w"> </span>.zgroup<span class="w">   </span><span class="c1"># Zarr group metadata</span>
-├──<span class="w"> </span>.zattrs<span class="w">         </span><span class="c1"># Zarr group attributes containing the metadata</span>
-└──<span class="w"> </span>.zgroup<span class="w">         </span><span class="c1"># Zarr group metadata</span>
+├──<span class="w"> </span>.zattrs<span class="w">       </span><span class="c1"># Zarr group attributes containing the metadata</span>
+└──<span class="w"> </span>.zgroup<span class="w">       </span><span class="c1"># Zarr group metadata</span>
 </code></pre></div>
 
 
@@ -1491,7 +1491,7 @@ Another advantage of the Parquet backend is that it can be used lazily, meaning 
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="June 2, 2025 13:19:13 UTC">June 2, 2025</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="June 3, 2025 09:41:37 UTC">June 3, 2025</span>
   </span>
 
     
