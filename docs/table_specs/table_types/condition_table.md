@@ -4,7 +4,7 @@ A condition table is a simple table that can be used to represent experimental c
 
 Example condition table:
 
-| Cell Type | Drug Type | Dose |
+| Cell Type | Drug     | Dose |
 |-----------|-----------|------|
 | A         | Drug A   | 10   |
 | A         | Drug B   | 20   |

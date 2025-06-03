@@ -1,20 +1,20 @@
 # Table Backends
 
-In ngio we implented four different table backends. Each table backend is a python class that can serialize tabular data into OME-Zarr.
+In ngio we implemented four different table backends. Each table backend is a python class that can serialize tabular data into OME-Zarr containers.
 
 These backends are wrappers around existing tooling implemented in `anndata`, `pandas`, and `polars`.
 Currently, we provide a thin layer of metadata and table normalization to ensure that tables are serialized/deserialized in a consistent way across the different backends and across different table objects.
 
-In particular for each backend we provide, the metadata that describes the intended index key and type of the table.
+In particular, we provide the metadata that describes the intended index key and type of the table for each backend.
 
 ## AnnData Backend
 
-AnnData is a widely used format in single-cell genomics, and can natively store complex tabular data in an Zarr group. The AnnData backend in ngio is a wrapper around the `anndata` library, which performs some table normalization to consistency and compatibility with the ngio table specifications.
+AnnData is a widely used format in single-cell genomics, and can natively store complex tabular data in a Zarr group. The AnnData backend in ngio is a wrapper around the `anndata` library, which performs some table normalization for consistency and compatibility with the ngio table specifications.
 
 The following normalization steps are applied to each table before saving it to the AnnData backend:
 
 - We separate the table in two parts: The floating point columns are casted to `float32` and stored as `X` in the AnnData object, while the categorical, boolean, and integer columns are stored as `obs`.
-- The index column is casted to a string, and the name and original type is stored in the zarr attributes.
+- The index column is cast to a string, and the name and original type is stored in the zarr attributes.
 
 AnnData backend metadata:
 
@@ -63,7 +63,7 @@ table.zarr          # Zarr group for the table
 
 ## CSV Backend
 
-The CSV backend is a plain text format that is widely used for tabular data. It is easy to read and write, and can be easily used across many different tools.
+The CSV backend is a plain text format that is widely used for tabular data. It is easy to read and write, and can be used across many different tools.
 
 The CSV backen in ngio follows closely the same specifications as the Parquet backend, with the following metadata:
 
@@ -79,10 +79,10 @@ The CSV backen in ngio follows closely the same specifications as the Parquet ba
 The Zarr group directory will contain the CSV file, and the metadata will be stored in the group attributes.
 
 ```bash
-table.zarr          # Zarr group for the table
-├── table.csv       # CSV file containing the table data
-├── .zattrs         # Zarr group attributes containing the metadata
-└── .zgroup         # Zarr group metadata
+table.zarr         # Zarr group for the table
+├── table.csv      # CSV file containing the table data
+├── .zattrs        # Zarr group attributes containing the metadata
+└── .zgroup        # Zarr group metadata
 ```
 
 ## JSON Backend
@@ -100,7 +100,7 @@ JSON backend metadata:
 }
 ```
 
-The table will be stored in a subgroup of the Zarr group, and the metadata will be stored in the group attributes.
+The table will be stored in a subgroup of the Zarr group, and the metadata will be stored in the group attributes. Storing the table in a subgroup instead of a standalone json file allows for easier access via the Zarr API.
 
 ```bash
 table.zarr          # Zarr group for the table

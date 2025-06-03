@@ -8,7 +8,7 @@ Generic tables can used as a safe fallback when trying to read a table that does
 
 ### V1
 
-A generic table might include the following metadata fields in the group attributes:
+A generic table should include the following metadata fields in the group attributes:
 
 ```json
 {
