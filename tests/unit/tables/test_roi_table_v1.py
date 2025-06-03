@@ -3,10 +3,12 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
+from ngio.common import Roi
 from ngio.tables import RoiTable
-from ngio.tables.backends._anndata_v1 import AnnDataBackend
+from ngio.tables.backends import AnnDataBackend
 from ngio.tables.tables_container import open_table, write_table
-from ngio.tables.v1._roi_table import Roi, RoiTableV1, RoiTableV1Meta
+from ngio.tables.v1 import RoiTableV1
+from ngio.tables.v1._roi_table import RoiTableV1Meta
 from ngio.utils import NgioValueError, ZarrGroupHandler
 
 
@@ -69,7 +71,7 @@ def test_roi_table_v1(tmp_path: Path):
         overwrite=True,
     )
     assert len(table.rois()) == 2
-    write_table(store=tmp_path / "roi_table.zarr", table=table, backend="anndata_v1")
+    write_table(store=tmp_path / "roi_table.zarr", table=table, backend="anndata")
 
     loaded_table = open_table(store=tmp_path / "roi_table.zarr")
     assert isinstance(loaded_table, RoiTableV1)
@@ -80,9 +82,9 @@ def test_roi_table_v1(tmp_path: Path):
     with pytest.raises(NgioValueError):
         loaded_table.get("roi3")
 
-    assert loaded_table.meta.backend == "anndata_v1"
+    assert loaded_table.meta.backend == "anndata"
     meta_dict = loaded_table._meta.model_dump()
-    assert meta_dict.get("fractal_table_version") == loaded_table.version()
+    assert meta_dict.get("table_version") == loaded_table.version()
     assert meta_dict.get("type") == loaded_table.table_type()
 
 

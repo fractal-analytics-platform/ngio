@@ -29,7 +29,7 @@ def create_sample_ome_zarr(
     for table_name in tables:
         table_data = pd.DataFrame({"x": [1, 2, 3], "y": [4, 5, 6], "label": [1, 2, 3]})
         table = FeatureTable(table_data=table_data)
-        ome_zarr_container.add_table(table_name, table, backend="experimental_json_v1")
+        ome_zarr_container.add_table(table_name, table, backend="json")
     return ome_zarr_container
 
 

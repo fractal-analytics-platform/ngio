@@ -49,8 +49,6 @@ Parquet backend metadata:
     "backend": "parquet", // the backend used to store the table, e.g. "annadata", "parquet", etc..
     "index_key": "index", // The default index key for the table, which is used to identify each row.
     "index_type": "int", // Either "int" or "str"
-
-    "table_path": "table.parquet", // The path to the Parquet file relative to the group.
 }
 ```
 
@@ -75,8 +73,6 @@ The CSV backen in ngio follows closely the same specifications as the Parquet ba
     "backend": "csv", // the backend used to store the table, e.g. "annadata", "parquet", etc..
     "index_key": "index", // The default index key for the table, which is used to identify each row.
     "index_type": "int", // Either "int" or "str"
-
-    "table_path": "table.csv", // The path to the CSV file relative to the group.
 }
 ```
 
@@ -107,10 +103,10 @@ JSON backend metadata:
 The table will be stored in a subgroup of the Zarr group, and the metadata will be stored in the group attributes. Storing the table in a subgroup instead of a standalone json file allows for easier access via the Zarr API.
 
 ```bash
-table.zarr        # Zarr group for the table
-└── table         # Zarr subgroup for the table data
-    ├── .zattrs   # the json table data serialized as a JSON object
-    └── .zgroup   # Zarr group metadata
-├── .zattrs       # Zarr group attributes containing the metadata
-└── .zgroup       # Zarr group metadata
+table.zarr          # Zarr group for the table
+└── table           # Zarr subgroup containing the table data
+    ├── .zattrs     # the json table data serialized as a JSON object
+    └── .zgroup     # Zarr group metadata
+├── .zattrs         # Zarr group attributes containing the metadata
+└── .zgroup         # Zarr group metadata
 ```

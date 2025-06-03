@@ -1,14 +1,18 @@
 """Implementation of a generic table class."""
 
 from ngio.tables.abstract_table import AbstractBaseTable
-from ngio.tables.backends import BackendMeta, TableBackendProtocol, TabularData
+from ngio.tables.backends import (
+    BackendMeta,
+    TableBackend,
+    TabularData,
+)
 from ngio.utils import ZarrGroupHandler
 
 
 class ConditionTableMeta(BackendMeta):
     """Metadata for the condition table."""
 
-    fractal_table_version: str | None = "1"
+    table_version: str | None = "1"
     type: str | None = "condition_table"
 
 
@@ -58,7 +62,7 @@ class ConditionTableV1(AbstractBaseTable):
     def from_handler(
         cls,
         handler: ZarrGroupHandler,
-        backend: str | TableBackendProtocol | None = None,
+        backend: TableBackend | None = None,
     ) -> "ConditionTableV1":
         return cls._from_handler(
             handler=handler,

@@ -8,7 +8,7 @@ import polars as pl
 
 from ngio.tables.backends import (
     BackendMeta,
-    TableBackendProtocol,
+    TableBackend,
     TabularData,
 )
 from ngio.tables.v1 import (
@@ -90,7 +90,7 @@ class Table(Protocol):
     def set_backend(
         self,
         handler: ZarrGroupHandler | None = None,
-        backend: str | TableBackendProtocol = "anndata_v1",
+        backend: TableBackend = "anndata",
     ) -> None:
         """Set the backend store and path for the table.
 
@@ -105,7 +105,7 @@ class Table(Protocol):
     def from_handler(
         cls,
         handler: ZarrGroupHandler,
-        backend: str | TableBackendProtocol | None = None,
+        backend: TableBackend | None = None,
     ) -> "Table":
         """Create a new table from a Zarr group handler."""
         ...
@@ -139,12 +139,12 @@ TableType = TypeVar("TableType", bound=Table)
 class TableMeta(BackendMeta):
     """Base class for table metadata."""
 
-    fractal_table_version: str = "1"
+    table_version: str = "1"
     type: str = "generic_table"
 
     def unique_name(self) -> str:
         """Return the unique name for the table."""
-        return f"{self.type}_v{self.fractal_table_version}"
+        return f"{self.type}_v{self.table_version}"
 
 
 def _get_meta(handler: ZarrGroupHandler) -> TableMeta:
@@ -175,7 +175,7 @@ class ImplementedTables:
         self,
         meta: TableMeta,
         handler: ZarrGroupHandler,
-        backend: str | TableBackendProtocol | None = None,
+        backend: TableBackend | None = None,
         strict: bool = True,
     ) -> Table:
         """Try to get a handler for the given store based on the metadata version."""
@@ -196,7 +196,7 @@ class ImplementedTables:
         """Register a new table handler."""
         meta = TableMeta(
             type=handler.table_type(),
-            fractal_table_version=handler.version(),
+            table_version=handler.version(),
         )
 
         if meta.unique_name() in self._implemented_tables and not overwrite:
@@ -264,7 +264,7 @@ class TablesContainer:
     def get(
         self,
         name: str,
-        backend: str | TableBackendProtocol | None = None,
+        backend: TableBackend | None = None,
         strict: bool = True,
     ) -> Table:
         """Get a label from the group."""
@@ -285,7 +285,7 @@ class TablesContainer:
         self,
         name: str,
         table_cls: type[TableType],
-        backend: str | TableBackendProtocol | None = None,
+        backend: TableBackend | None = None,
     ) -> TableType:
         """Get a table from the group as a specific type."""
         if name not in self.list():
@@ -301,7 +301,7 @@ class TablesContainer:
         self,
         name: str,
         table: Table,
-        backend: str | TableBackendProtocol = "anndata_v1",
+        backend: TableBackend = "anndata",
         overwrite: bool = False,
     ) -> None:
         """Add a table to the group."""
@@ -357,7 +357,7 @@ def open_tables_container(
 
 def open_table(
     store: StoreOrGroup,
-    backend: str | TableBackendProtocol | None = None,
+    backend: TableBackend | None = None,
     cache: bool = False,
     mode: AccessModeLiteral = "a",
     parallel_safe: bool = False,
@@ -375,7 +375,7 @@ def open_table(
 def open_table_as(
     store: StoreOrGroup,
     table_cls: type[TableType],
-    backend: str | TableBackendProtocol = "anndata_v1",
+    backend: TableBackend | None = None,
     cache: bool = False,
     mode: AccessModeLiteral = "a",
     parallel_safe: bool = False,
@@ -393,7 +393,7 @@ def open_table_as(
 def write_table(
     store: StoreOrGroup,
     table: Table,
-    backend: str | TableBackendProtocol = "anndata_v1",
+    backend: TableBackend = "anndata",
     cache: bool = False,
     mode: AccessModeLiteral = "a",
     parallel_safe: bool = False,

@@ -19,7 +19,7 @@ from ngio.utils import NgioValueError, ZarrGroupHandler
 class BackendMeta(BaseModel):
     """Metadata for the backend."""
 
-    backend: str = "anndata_v1"
+    backend: str = "anndata"
     index_key: str | None = None
     index_type: Literal["int", "str"] | None = None
 

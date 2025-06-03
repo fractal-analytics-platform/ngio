@@ -1,8 +1,19 @@
 """Implementation of a generic table class."""
 
 from ngio.tables.abstract_table import AbstractBaseTable
-from ngio.tables.backends import BackendMeta, TableBackendProtocol
+from ngio.tables.backends import BackendMeta, TableBackend
 from ngio.utils import ZarrGroupHandler
+
+
+class GenericTableMeta(BackendMeta):
+    """Metadata for the generic table.
+
+    This is used to store metadata for a generic table.
+    It does not have a specific definition.
+    """
+
+    table_version: str | None = "1"
+    type: str | None = "generic_table"
 
 
 class GenericTable(AbstractBaseTable):
@@ -29,7 +40,7 @@ class GenericTable(AbstractBaseTable):
     def from_handler(
         cls,
         handler: ZarrGroupHandler,
-        backend: str | TableBackendProtocol | None = None,
+        backend: TableBackend | None = None,
     ) -> "GenericTable":
         return cls._from_handler(
             handler=handler,

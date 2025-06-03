@@ -6,19 +6,12 @@ https://fractal-analytics-platform.github.io/fractal-tasks-core/tables/
 
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from ngio.tables.abstract_table import AbstractBaseTable
-from ngio.tables.backends import BackendMeta, TableBackendProtocol, TabularData
+from ngio.tables.backends import BackendMeta, TableBackend, TabularData
 from ngio.utils import NgioValueError
 from ngio.utils._zarr_utils import ZarrGroupHandler
-
-
-class GenericTableMeta(BackendMeta):
-    """Metadata for the ROI table."""
-
-    fractal_table_version: str | None = None
-    type: str | None = None
 
 
 class RegionMeta(BaseModel):
@@ -30,12 +23,17 @@ class RegionMeta(BaseModel):
 class FeatureTableMeta(BackendMeta):
     """Metadata for the ROI table."""
 
-    fractal_table_version: Literal["1"] = "1"
+    table_version: Literal["1"] = "1"
     type: Literal["feature_table"] = "feature_table"
     region: RegionMeta | None = None
-    instance_key: str = "label"
+    instance_key: str = "label" # Legacy field, kept for compatibility
+    # Backend metadata
     index_key: str | None = "label"
     index_type: Literal["int", "str"] | None = "int"
+    # Columns optional types
+    categorical_columns: list[str] = Field(default_factory=list)
+    measurement_columns: list[str] = Field(default_factory=list)
+    metadata_columns: list[str] = Field(default_factory=list)
 
 
 class FeatureTableV1(AbstractBaseTable):
@@ -85,7 +83,7 @@ class FeatureTableV1(AbstractBaseTable):
     def from_handler(
         cls,
         handler: ZarrGroupHandler,
-        backend: str | TableBackendProtocol | None = None,
+        backend: TableBackend | None = None,
     ) -> "FeatureTableV1":
         return cls._from_handler(
             handler=handler,

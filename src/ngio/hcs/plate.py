@@ -32,7 +32,7 @@ from ngio.tables import (
     MaskingRoiTable,
     RoiTable,
     Table,
-    TableBackendProtocol,
+    TableBackend,
     TablesContainer,
     TableType,
     TypedTable,
@@ -909,14 +909,14 @@ class OmeZarrPlate:
         self,
         name: str,
         table_cls: type[TableType],
-        backend: str | TableBackendProtocol | None = None,
+        backend: TableBackend | None = None,
     ) -> TableType:
         """Get a table from the image as a specific type.
 
         Args:
             name (str): The name of the table.
             table_cls (type[TableType]): The type of the table.
-            backend (str | TableBackendProtocol | None): The backend to use. If None,
+            backend (TableBackend | None): The backend to use. If None,
                 the default backend is used.
         """
         return self.tables_container.get_as(
@@ -929,7 +929,7 @@ class OmeZarrPlate:
         self,
         name: str,
         table: Table,
-        backend: str | TableBackendProtocol = "anndata_v1",
+        backend: TableBackend = "anndata",
         overwrite: bool = False,
     ) -> None:
         """Add a table to the image."""

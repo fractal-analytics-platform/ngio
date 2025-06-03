@@ -13,7 +13,7 @@ A generic table should include the following metadata fields in the group attrib
 ```json
 {
     // Generic table metadata
-    "table_type": "generic_table",
+    "type": "generic_table",
     "table_version": "1",
     // Backend metadata
     "backend": "annadata", // the backend used to store the table, e.g. "annadata", "parquet", etc..

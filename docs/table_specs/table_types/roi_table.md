@@ -17,7 +17,7 @@ A ROI table must include the following metadata fields in the group attributes:
 ```json
 {
     // ROI table metadata
-    "table_type": "roi_table",
+    "type": "roi_table",
     "table_version": "1",
     // Backend metadata
     "backend": "annadata", // the backend used to store the table, e.g. "annadata", "parquet", etc..

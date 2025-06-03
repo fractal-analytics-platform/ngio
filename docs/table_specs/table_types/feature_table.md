@@ -23,7 +23,7 @@ A feature table must include the following metadata fields in the group attribut
 ```json
 {
     // Feature table metadata
-    "table_type": "feature_table",
+    "type": "feature_table",
     "table_version": "1",
     "region": {"path": "../labels/label_DAPI"}, // Path to the label image associated with this feature table
     // Backend metadata

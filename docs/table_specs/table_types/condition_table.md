@@ -18,7 +18,7 @@ A condition table must include the following metadata fields in the group attrib
 ```json
 {
     // Condition table metadata
-    "table_type": "condition_table",
+    "type": "condition_table",
     "table_version": "1",
     // Backend metadata
     "backend": "csv", // the backend used to store the table, e.g. "annadata", "parquet", etc..

@@ -15,10 +15,14 @@ from pydantic import BaseModel
 from ngio.common import Roi
 from ngio.tables.abstract_table import (
     AbstractBaseTable,
-    TableBackendProtocol,
     TabularData,
 )
-from ngio.tables.backends import BackendMeta, convert_to_pandas, normalize_pandas_df
+from ngio.tables.backends import (
+    BackendMeta,
+    TableBackend,
+    convert_to_pandas,
+    normalize_pandas_df,
+)
 from ngio.utils import (
     NgioTableValidationError,
     NgioValueError,
@@ -302,7 +306,7 @@ class GenericRoiTableV1(AbstractBaseTable):
 class RoiTableV1Meta(BackendMeta):
     """Metadata for the ROI table."""
 
-    fractal_table_version: Literal["1"] = "1"
+    table_version: Literal["1"] = "1"
     type: Literal["roi_table"] = "roi_table"
     index_key: str | None = "FieldIndex"
     index_type: Literal["str", "int"] | None = "str"
@@ -334,7 +338,7 @@ class RoiTableV1(GenericRoiTableV1):
     def from_handler(
         cls,
         handler: ZarrGroupHandler,
-        backend: str | TableBackendProtocol | None = None,
+        backend: TableBackend | None = None,
     ) -> "RoiTableV1":
         table = cls._from_handler(
             handler=handler,
@@ -358,7 +362,7 @@ class RegionMeta(BaseModel):
 class MaskingRoiTableV1Meta(BackendMeta):
     """Metadata for the ROI table."""
 
-    fractal_table_version: Literal["1"] = "1"
+    table_version: Literal["1"] = "1"
     type: Literal["masking_roi_table"] = "masking_roi_table"
     region: RegionMeta | None = None
     instance_key: str = "label"
@@ -409,7 +413,7 @@ class MaskingRoiTableV1(GenericRoiTableV1):
     def from_handler(
         cls,
         handler: ZarrGroupHandler,
-        backend: str | TableBackendProtocol | None = None,
+        backend: TableBackend | None = None,
     ) -> "MaskingRoiTableV1":
         table = cls._from_handler(
             handler=handler,

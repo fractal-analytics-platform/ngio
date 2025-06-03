@@ -52,12 +52,12 @@ def test_masking_roi_table_v1(tmp_path: Path):
             )
         )
 
-    write_table(store=tmp_path / "roi_table.zarr", table=table, backend="anndata_v1")
+    write_table(store=tmp_path / "roi_table.zarr", table=table, backend="anndata")
 
     loaded_table = open_table(store=tmp_path / "roi_table.zarr")
     assert isinstance(loaded_table, MaskingRoiTableV1)
 
-    assert loaded_table.meta.backend == "anndata_v1"
+    assert loaded_table.meta.backend == "anndata"
     meta_dict = loaded_table._meta.model_dump()
-    assert meta_dict.get("fractal_table_version") == loaded_table.version()
+    assert meta_dict.get("table_version") == loaded_table.version()
     assert meta_dict.get("type") == loaded_table.table_type()
