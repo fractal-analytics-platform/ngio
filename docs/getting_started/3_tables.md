@@ -190,7 +190,7 @@ Tables (differently from Images and Labels) can be purely in memory objects, and
     >>> from ngio.tables import FeatureTable
     >>> import pandas as pd
     >>> example_data = pd.DataFrame({"label": [1, 2, 3], "area": [100, 200, 300]})
-    >>> feature_table = FeatureTable(dataframe=example_data)
+    >>> feature_table = FeatureTable(table_data=example_data)
     >>> feature_table
     >>> print(feature_table) # markdown-exec: hide
     ```
@@ -203,7 +203,7 @@ Tables (differently from Images and Labels) can be purely in memory objects, and
     >>> from ngio.tables import GenericTable
     >>> import pandas as pd
     >>> example_data = pd.DataFrame({"area": [100, 200, 300], "perimeter": [50, 60, 70]})
-    >>> generic_table = GenericTable(dataframe=example_data)
+    >>> generic_table = GenericTable(table_data=example_data)
     >>> generic_table
     >>> print(generic_table) # markdown-exec: hide
     ```
@@ -212,7 +212,7 @@ Tables (differently from Images and Labels) can be purely in memory objects, and
     >>> from ngio.tables import GenericTable
     >>> import anndata as ad
     >>> adata = ad.AnnData(X=np.random.rand(10, 5), obs=pd.DataFrame({"cell_type": ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"]}))
-    >>> generic_table = GenericTable(anndata=adata)
+    >>> generic_table = GenericTable(table_data=adata)
     >>> generic_table
     >>> print(generic_table) # markdown-exec: hide
     ```

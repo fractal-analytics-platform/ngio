@@ -71,6 +71,7 @@ dev = [
 
 docs = [
     "mkdocs",
+    "mkdocs-include-markdown-plugin",
     "mkdocs-material",
     "mkdocstrings[python]",
     "mkdocs-jupyter",
@@ -87,8 +88,8 @@ docs = [
 
 
 [project.urls]
-homepage = "https://github.com/lorenzocerrone/ngio"
-repository = "https://github.com/lorenzocerrone/ngio"
+homepage = "https://github.com/fractal-analytics-platform/ngio"
+repository = "https://github.com/fractal-analytics-platform/ngio"
 
 # Entry points
 # https://peps.python.org/pep-0621/#entry-points

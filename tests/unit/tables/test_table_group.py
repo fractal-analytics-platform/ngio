@@ -18,7 +18,7 @@ def test_table_container(tmp_path: Path):
 
     # Create a feature table
     table = FeatureTable(
-        dataframe=DataFrame({"label": [1, 2, 3], "a": [1.0, 1.3, 0.0]})
+        table_data=DataFrame({"label": [1, 2, 3], "a": [1.0, 1.3, 0.0]})
     )
     table_group.add(name="feat_table", table=table)
     assert table_group.list() == ["feat_table"]

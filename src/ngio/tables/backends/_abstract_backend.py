@@ -5,15 +5,13 @@ from anndata import AnnData
 from pandas import DataFrame
 from polars import DataFrame as PolarsDataFrame
 from polars import LazyFrame
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from ngio.tables.backends._utils import (
-    convert_anndata_to_pandas,
-    convert_anndata_to_polars,
-    convert_pandas_to_anndata,
-    convert_pandas_to_polars,
-    convert_polars_to_anndata,
-    convert_polars_to_pandas,
+    TabularData,
+    convert_to_anndata,
+    convert_to_pandas,
+    convert_to_polars,
 )
 from ngio.utils import NgioValueError, ZarrGroupHandler
 
@@ -21,29 +19,30 @@ from ngio.utils import NgioValueError, ZarrGroupHandler
 class BackendMeta(BaseModel):
     """Metadata for the backend."""
 
-    backend: str | None = None
+    backend: str = "anndata"
     index_key: str | None = None
     index_type: Literal["int", "str"] | None = None
+
+    model_config = ConfigDict(extra="allow")
 
 
 class AbstractTableBackend(ABC):
     """Abstract class for table backends."""
 
-    def __init__(
+    def set_group_handler(
         self,
         group_handler: ZarrGroupHandler,
         index_key: str | None = None,
         index_type: Literal["int", "str"] | None = None,
-    ):
-        """Initialize the handler.
+    ) -> None:
+        """Attach a group handler to the backend.
 
-        This is a base class for the table backends protocol.
+        Index keys and index types are used to ensure that the
+        serialization and deserialization of the table
+        is consistent across different backends.
 
-        Args:
-            group_handler (ZarrGroupHandler): An object to handle the Zarr group
-                containing the table data.
-            index_key (str): The column name to use as the index of the DataFrame.
-            index_type (str): The type of the index column in the DataFrame.
+        Making sure that this is consistent is
+        a duty of the backend implementations.
         """
         self._group_handler = group_handler
         self._index_key = index_key
@@ -67,7 +66,11 @@ class AbstractTableBackend(ABC):
         """Check if the backend implements the anndata protocol.
 
         If this is True, the backend should implement the
-        `load_as_anndata` and `write_from_anndata` methods.
+        `write_from_anndata` method.
+
+        AnnData objects are more complex than DataFrames,
+        so if this is true the backend should implement the
+        full serialization of the AnnData object.
 
         If this is False, these methods should raise a
         `NotImplementedError`.
@@ -80,7 +83,7 @@ class AbstractTableBackend(ABC):
         """Check if the backend implements the pandas protocol.
 
         If this is True, the backend should implement the
-        `load_as_dataframe` and `write_from_dataframe` methods.
+        `write_from_dataframe` methods.
 
         If this is False, these methods should raise a
         `NotImplementedError`.
@@ -93,7 +96,7 @@ class AbstractTableBackend(ABC):
         """Check if the backend implements the polars protocol.
 
         If this is True, the backend should implement the
-        `load_as_polars` and `write_from_polars` methods.
+        `write_from_polars` methods.
 
         If this is False, these methods should raise a
         `NotImplementedError`.
@@ -122,6 +125,16 @@ class AbstractTableBackend(ABC):
             )
         return self._index_type  # type: ignore[return-value]
 
+    @abstractmethod
+    def load(self) -> TabularData:
+        """Load the table from the store.
+
+        This is a generic load method.
+        Based on the explicit mode or the type of the table,
+        it will call the appropriate load method.
+        """
+        ...
+
     def load_as_anndata(self) -> AnnData:
         """Load the table as an AnnData object.
 
@@ -129,70 +142,35 @@ class AbstractTableBackend(ABC):
         selecting columns is not implemented, because it is not
         straightforward to do so for an arbitrary AnnData object.
         """
-        if self.implements_pandas():
-            return convert_pandas_to_anndata(
-                self.load_as_pandas_df(),
-                index_key=self.index_key,
-            )
-        elif self.implements_polars():
-            return convert_polars_to_anndata(
-                self.load_as_polars_lf(),
-                index_key=self.index_key,
-            )
-        else:
-            raise NgioValueError(
-                "Backend does not implement any of the protocols. "
-                "A backend should implement at least one of the "
-                "following protocols: anndata, pandas, polars."
-            )
+        table = self.load()
+        return convert_to_anndata(
+            table,
+            index_key=self.index_key,
+        )
 
     def load_as_pandas_df(self) -> DataFrame:
         """Load the table as a pandas DataFrame.
 
         If columns are provided, the table should be filtered
         """
-        if self.implements_anndata():
-            return convert_anndata_to_pandas(
-                self.load_as_anndata(),
-                index_key=self.index_key,
-                index_type=self.index_type,
-            )
-        elif self.implements_polars():
-            return convert_polars_to_pandas(
-                self.load_as_polars_lf(),
-                index_key=self.index_key,
-                index_type=self.index_type,
-            )
-        else:
-            raise NgioValueError(
-                "Backend does not implement any of the protocols. "
-                "A backend should implement at least one of the "
-                "following protocols: anndata, pandas, polars."
-            )
+        table = self.load()
+        return convert_to_pandas(
+            table,
+            index_key=self.index_key,
+            index_type=self.index_type,
+        )
 
     def load_as_polars_lf(self) -> LazyFrame:
         """Load the table as a polars LazyFrame.
 
         If columns are provided, the table should be filtered
         """
-        if self.implements_anndata():
-            return convert_anndata_to_polars(
-                self.load_as_anndata(),
-                index_key=self.index_key,
-                index_type=self.index_type,
-            ).lazy()
-        elif self.implements_pandas():
-            return convert_pandas_to_polars(
-                self.load_as_pandas_df(),
-                index_key=self.index_key,
-                index_type=self.index_type,
-            ).lazy()
-        else:
-            raise NgioValueError(
-                "Backend does not implement any of the protocols. "
-                "A backend should implement at least one of the "
-                "following protocols: anndata, pandas, polars."
-            )
+        table = self.load()
+        return convert_to_polars(
+            table,
+            index_key=self.index_key,
+            index_type=self.index_type,
+        )
 
     def write_from_pandas(self, table: DataFrame) -> None:
         """Serialize the table from a pandas DataFrame."""
@@ -230,7 +208,7 @@ class AbstractTableBackend(ABC):
 
     def write(
         self,
-        table: DataFrame | AnnData | PolarsDataFrame | LazyFrame,
+        table_data: TabularData,
         metadata: dict | None = None,
         mode: Literal["pandas", "anndata", "polars"] | None = None,
     ) -> None:
@@ -240,15 +218,15 @@ class AbstractTableBackend(ABC):
         Based on the explicit mode or the type of the table,
         it will call the appropriate write method.
         """
-        if mode == "pandas" or isinstance(table, DataFrame):
-            self.write_from_pandas(table)  # type: ignore[arg-type]
-        elif mode == "anndata" or isinstance(table, AnnData):
-            self.write_from_anndata(table)  # type: ignore[arg-type]
-        elif mode == "polars" or isinstance(table, PolarsDataFrame | LazyFrame):
-            self.write_from_polars(table)
+        if mode == "pandas" or isinstance(table_data, DataFrame):
+            self.write_from_pandas(table_data)  # type: ignore[arg-type]
+        elif mode == "anndata" or isinstance(table_data, AnnData):
+            self.write_from_anndata(table_data)  # type: ignore[arg-type]
+        elif mode == "polars" or isinstance(table_data, PolarsDataFrame | LazyFrame):
+            self.write_from_polars(table_data)
         else:
             raise NgioValueError(
-                f"Unsupported table type {type(table)}. "
+                f"Unsupported table type {type(table_data)}. "
                 "Please specify the mode explicitly. "
                 "Supported serialization modes are: "
                 "'pandas', 'anndata', 'polars'."

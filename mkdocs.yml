@@ -52,6 +52,7 @@ plugins:
   - search
   - autorefs
   - markdown-exec
+  - include-markdown
   - mkdocstrings:
       handlers:
         python:
@@ -99,6 +100,17 @@ nav:
     - tutorials/feature_extraction.ipynb
     - tutorials/hcs_processing.ipynb
 
+  - Table Specifications:
+    - "Overview": table_specs/overview.md
+    - "Table Backends": table_specs/backend.md
+    - "Table Types":
+      - "Generic Table": table_specs/table_types/generic_table.md 
+      - "ROI Table": table_specs/table_types/roi_table.md
+      - "Masking ROI Table": table_specs/table_types/masking_roi_table.md
+      - "Feature Table": table_specs/table_types/feature_table.md
+      - "Condition Table": table_specs/table_types/condition_table.md
+      - "Add Custom Table": table_specs/table_types/custom_table.md
+  
   - API Reference:
     - "ngio": api/ngio.md
     - "ngio.images": api/images.md
@@ -106,6 +118,8 @@ nav:
     - "ngio.hcs": api/hcs.md
     - "ngio.utils": api/utils.md
     - "ngio.common": api/common.md
+    - changelog.md
+
   - Contributing:
     - "Contributing Guide": contributing.md
     - "Code of Conduct": code_of_conduct.md

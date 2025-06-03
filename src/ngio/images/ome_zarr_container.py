@@ -1,7 +1,7 @@
 """Abstract class for handling OME-NGFF images."""
 
+import warnings
 from collections.abc import Collection
-from typing import Literal, overload
 
 import numpy as np
 
@@ -22,12 +22,15 @@ from ngio.ome_zarr_meta.ngio_specs import (
     TimeUnits,
 )
 from ngio.tables import (
+    ConditionTable,
     FeatureTable,
     GenericRoiTable,
     MaskingRoiTable,
     RoiTable,
     Table,
+    TableBackend,
     TablesContainer,
+    TableType,
     TypedTable,
 )
 from ngio.utils import (
@@ -264,9 +267,7 @@ class OmeZarrContainer:
         if masking_table_name is None:
             masking_table = masking_label.build_masking_roi_table()
         else:
-            masking_table = self.get_table(
-                masking_table_name, check_type="masking_roi_table"
-            )
+            masking_table = self.get_masking_roi_table(name=masking_table_name)
 
         return MaskedImage(
             group_handler=image._group_handler,
@@ -345,84 +346,116 @@ class OmeZarrContainer:
             )
         return new_ome_zarr
 
-    def list_tables(self) -> list[str]:
+    def list_tables(self, filter_types: str | None = None) -> list[str]:
         """List all tables in the image."""
-        return self.tables_container.list()
+        return self.tables_container.list(filter_types=filter_types)
 
     def list_roi_tables(self) -> list[str]:
         """List all ROI tables in the image."""
         return self.tables_container.list_roi_tables()
 
-    @overload
-    def get_table(self, name: str) -> Table: ...
+    def get_roi_table(self, name: str) -> RoiTable:
+        """Get a ROI table from the image.
 
-    @overload
-    def get_table(self, name: str, check_type: None) -> Table: ...
+        Args:
+            name (str): The name of the table.
+        """
+        table = self.tables_container.get(name=name, strict=True)
+        if not isinstance(table, RoiTable):
+            raise NgioValueError(f"Table {name} is not a ROI table. Got {type(table)}")
+        return table
 
-    @overload
-    def get_table(self, name: str, check_type: Literal["roi_table"]) -> RoiTable: ...
+    def get_masking_roi_table(self, name: str) -> MaskingRoiTable:
+        """Get a masking ROI table from the image.
 
-    @overload
-    def get_table(
-        self, name: str, check_type: Literal["masking_roi_table"]
-    ) -> MaskingRoiTable: ...
+        Args:
+            name (str): The name of the table.
+        """
+        table = self.tables_container.get(name=name, strict=True)
+        if not isinstance(table, MaskingRoiTable):
+            raise NgioValueError(
+                f"Table {name} is not a masking ROI table. Got {type(table)}"
+            )
+        return table
 
-    @overload
-    def get_table(
-        self, name: str, check_type: Literal["feature_table"]
-    ) -> FeatureTable: ...
+    def get_feature_table(self, name: str) -> FeatureTable:
+        """Get a feature table from the image.
 
-    @overload
-    def get_table(
-        self, name: str, check_type: Literal["generic_roi_table"]
-    ) -> GenericRoiTable: ...
+        Args:
+            name (str): The name of the table.
+        """
+        table = self.tables_container.get(name=name, strict=True)
+        if not isinstance(table, FeatureTable):
+            raise NgioValueError(
+                f"Table {name} is not a feature table. Got {type(table)}"
+            )
+        return table
+
+    def get_generic_roi_table(self, name: str) -> GenericRoiTable:
+        """Get a generic ROI table from the image.
+
+        Args:
+            name (str): The name of the table.
+        """
+        table = self.tables_container.get(name=name, strict=True)
+        if not isinstance(table, GenericRoiTable):
+            raise NgioValueError(
+                f"Table {name} is not a generic ROI table. Got {type(table)}"
+            )
+        return table
+
+    def get_condition_table(self, name: str) -> ConditionTable:
+        """Get a condition table from the image.
+
+        Args:
+            name (str): The name of the table.
+        """
+        table = self.tables_container.get(name=name, strict=True)
+        if not isinstance(table, ConditionTable):
+            raise NgioValueError(
+                f"Table {name} is not a condition table. Got {type(table)}"
+            )
+        return table
 
     def get_table(self, name: str, check_type: TypedTable | None = None) -> Table:
         """Get a table from the image.
 
         Args:
             name (str): The name of the table.
-            check_type (TypedTable | None): The type of the table. If None, the
-                type is not checked. If a type is provided, the table must be of that
-                type.
+            check_type (TypedTable | None): Deprecated. Please use
+                'get_table_as' instead, or one of the type specific
+                get_*table() methods.
+
         """
-        if check_type is None:
-            table = self.tables_container.get(name, strict=False)
-            return table
+        if check_type is not None:
+            warnings.warn(
+                "The 'check_type' argument is deprecated, and will be removed in "
+                "ngio=0.3. Use 'get_table_as' instead or one of the "
+                "type specific get_*table() methods.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+        return self.tables_container.get(name=name, strict=False)
 
-        table = self.tables_container.get(name, strict=True)
-        match check_type:
-            case "roi_table":
-                if not isinstance(table, RoiTable):
-                    raise NgioValueError(
-                        f"Table '{name}' is not a ROI table. Found type: {table.type()}"
-                    )
-                return table
-            case "masking_roi_table":
-                if not isinstance(table, MaskingRoiTable):
-                    raise NgioValueError(
-                        f"Table '{name}' is not a masking ROI table. "
-                        f"Found type: {table.type()}"
-                    )
-                return table
+    def get_table_as(
+        self,
+        name: str,
+        table_cls: type[TableType],
+        backend: TableBackend | None = None,
+    ) -> TableType:
+        """Get a table from the image as a specific type.
 
-            case "generic_roi_table":
-                if not isinstance(table, GenericRoiTable):
-                    raise NgioValueError(
-                        f"Table '{name}' is not a generic ROI table. "
-                        f"Found type: {table.type()}"
-                    )
-                return table
-
-            case "feature_table":
-                if not isinstance(table, FeatureTable):
-                    raise NgioValueError(
-                        f"Table '{name}' is not a feature table. "
-                        f"Found type: {table.type()}"
-                    )
-                return table
-            case _:
-                raise NgioValueError(f"Unknown check_type: {check_type}")
+        Args:
+            name (str): The name of the table.
+            table_cls (type[TableType]): The type of the table.
+            backend (TableBackend | None): The backend to use. If None,
+                the default backend is used.
+        """
+        return self.tables_container.get_as(
+            name=name,
+            table_cls=table_cls,
+            backend=backend,
+        )
 
     def build_image_roi_table(self, name: str = "image") -> RoiTable:
         """Compute the ROI table for an image."""
@@ -436,7 +469,7 @@ class OmeZarrContainer:
         self,
         name: str,
         table: Table,
-        backend: str | None = None,
+        backend: TableBackend = "anndata",
         overwrite: bool = False,
     ) -> None:
         """Add a table to the image."""
@@ -499,9 +532,7 @@ class OmeZarrContainer:
         if masking_table_name is None:
             masking_table = masking_label.build_masking_roi_table()
         else:
-            masking_table = self.get_table(
-                masking_table_name, check_type="masking_roi_table"
-            )
+            masking_table = self.get_masking_roi_table(name=masking_table_name)
 
         return MaskedLabel(
             group_handler=label._group_handler,
