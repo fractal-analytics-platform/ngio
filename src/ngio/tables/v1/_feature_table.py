@@ -6,7 +6,7 @@ https://fractal-analytics-platform.github.io/fractal-tasks-core/tables/
 
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from ngio.tables.abstract_table import AbstractBaseTable
 from ngio.tables.backends import BackendMeta, TableBackend, TabularData
@@ -26,9 +26,14 @@ class FeatureTableMeta(BackendMeta):
     table_version: Literal["1"] = "1"
     type: Literal["feature_table"] = "feature_table"
     region: RegionMeta | None = None
-    instance_key: str = "label"
+    instance_key: str = "label" # Legacy field, kept for compatibility
+    # Backend metadata
     index_key: str | None = "label"
     index_type: Literal["int", "str"] | None = "int"
+    # Columns optional types
+    categorical_columns: list[str] = Field(default_factory=list)
+    measurement_columns: list[str] = Field(default_factory=list)
+    metadata_columns: list[str] = Field(default_factory=list)
 
 
 class FeatureTableV1(AbstractBaseTable):
