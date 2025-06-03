@@ -104,6 +104,7 @@ nav:
     - "Overview": table_specs/overview.md
     - "Table Backends": table_specs/backend.md
     - "Table Types":
+      - "Generic Table": table_specs/table_types/generic_table.md 
       - "ROI Table": table_specs/table_types/roi_table.md
       - "Masking ROI Table": table_specs/table_types/masking_roi_table.md
       - "Feature Table": table_specs/table_types/feature_table.md
