@@ -3,6 +3,8 @@
 from collections.abc import Collection
 from typing import Literal
 
+import dask.array as da
+
 from ngio.common import compute_masking_roi
 from ngio.images._abstract_image import AbstractImage, consolidate_image
 from ngio.images._create import create_empty_label_container
@@ -309,6 +311,6 @@ def build_masking_roi_table(label: Label) -> MaskingRoiTable:
         raise NgioValueError("Time series labels are not supported.")
 
     array = label.get_array(axes_order=["z", "y", "x"], mode="dask")
-
+    assert isinstance(array, da.Array), "Array must be a Dask array."
     rois = compute_masking_roi(array, label.pixel_size)
     return MaskingRoiTable(rois, reference_label=label.meta.name)

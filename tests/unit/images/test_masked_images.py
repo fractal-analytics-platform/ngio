@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Literal
 
 import numpy as np
 import pytest
@@ -24,7 +25,9 @@ def _draw_random_labels(shape: tuple[int, ...], num_regions: int):
     "array_mode, shape",
     [("numpy", (64, 64)), ("dask", (64, 64)), ("numpy", (16, 32, 32))],
 )
-def test_masking(tmp_path: Path, array_mode: str, shape: tuple[int, ...]):
+def test_masking(
+    tmp_path: Path, array_mode: Literal["numpy", "dask"], shape: tuple[int, ...]
+):
     mask, label_image = _draw_random_labels(shape=shape, num_regions=20)
     unique_labels, counts = np.unique(label_image, return_counts=True)
     labels_stats = dict(zip(unique_labels, counts, strict=True))

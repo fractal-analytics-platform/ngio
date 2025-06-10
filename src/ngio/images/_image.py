@@ -3,7 +3,7 @@
 from collections.abc import Collection
 from typing import Literal
 
-from dask import array as da
+import dask.array as da
 
 from ngio.common import Dimensions
 from ngio.images._abstract_image import AbstractImage, consolidate_image
@@ -152,31 +152,33 @@ class ImagesContainer:
 
     def set_channel_meta(
         self,
-        labels: Collection[str] | int | None = None,
-        wavelength_id: Collection[str] | None = None,
-        start: Collection[float] | None = None,
-        end: Collection[float] | None = None,
+        labels: Collection[str | None] | int | None = None,
+        wavelength_id: Collection[str | None] | None = None,
+        start: Collection[float | None] | None = None,
+        end: Collection[float | None] | None = None,
         percentiles: tuple[float, float] | None = None,
-        colors: Collection[str] | None = None,
-        active: Collection[bool] | None = None,
+        colors: Collection[str | None] | None = None,
+        active: Collection[bool | None] | None = None,
         **omero_kwargs: dict,
     ) -> None:
         """Create a ChannelsMeta object with the default unit.
 
         Args:
-            labels(Collection[str] | int): The list of channels names in the image.
-                If an integer is provided, the channels will be named "channel_i".
-            wavelength_id(Collection[str] | None): The wavelength ID of the channel.
+            labels(Collection[str | None] | int): The list of channels names
+                in the image. If an integer is provided, the channels will
+                be named "channel_i".
+            wavelength_id(Collection[str | None]): The wavelength ID of the channel.
                 If None, the wavelength ID will be the same as the channel name.
-            start(Collection[float] | None): The start value for each channel.
+            start(Collection[float | None]): The start value for each channel.
                 If None, the start value will be computed from the image.
-            end(Collection[float] | None): The end value for each channel.
+            end(Collection[float | None]): The end value for each channel.
                 If None, the end value will be computed from the image.
-            percentiles(tuple[float, float] | None): The start and end percentiles
-                for each channel. If None, the percentiles will not be computed.
-            colors(Collection[str, NgioColors] | None): The list of colors for the
+            percentiles(tuple[float, float] | None): The start and end
+                percentiles for each channel. If None, the percentiles will
+                not be computed.
+            colors(Collection[str | None]): The list of colors for the
                 channels. If None, the colors will be random.
-            active (Collection[bool] | None):active(bool): Whether the channel should
+            active (Collection[bool | None]): Whether the channel should
                 be shown by default.
             omero_kwargs(dict): Extra fields to store in the omero attributes.
         """
@@ -376,9 +378,12 @@ def compute_image_percentile(
     starts, ends = [], []
     for c in range(image.num_channels):
         if image.num_channels == 1:
-            data = image.get_array(mode="dask").ravel()
+            data = image.get_array(mode="dask")
         else:
-            data = image.get_array(c=c, mode="dask").ravel()
+            data = image.get_array(c=c, mode="dask")
+
+        assert isinstance(data, da.Array), "Data must be a Dask array."
+        data = da.ravel(data)
         # remove all the zeros
         mask = data > 1e-16
         data = data[mask]
@@ -391,7 +396,7 @@ def compute_image_percentile(
         # compute the percentiles
         _s_perc, _e_perc = da.percentile(
             data, [start_percentile, end_percentile], method="nearest"
-        ).compute()
+        ).compute()  # type: ignore
 
         starts.append(float(_s_perc))
         ends.append(float(_e_perc))

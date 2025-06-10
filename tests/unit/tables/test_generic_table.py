@@ -20,11 +20,17 @@ def test_generic_df_table(tmp_path: Path, backend: str):
 
     loaded_table = open_table(store=store)
     assert isinstance(loaded_table, GenericTable)
+    assert table.backend_name == backend
+
     assert set(loaded_table.dataframe.columns) == {"a", "b"}
     for column in loaded_table.dataframe.columns:
         pd.testing.assert_series_equal(
             loaded_table.dataframe[column], test_df[column], check_index=False
         )
+
+    loaded_table.load_as_pandas_df()
+    loaded_table.load_as_polars_lf()
+    loaded_table.load_as_anndata()
 
 
 @pytest.mark.parametrize("backend", ["anndata"])
