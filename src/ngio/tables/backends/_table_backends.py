@@ -180,24 +180,46 @@ class ImplementedTableBackends:
         )
         return backend
 
-    def add_backend(
+    def _add_backend(
         self,
-        table_beckend: type[TableBackendProtocol],
+        table_backend: type[TableBackendProtocol],
+        name: str,
         overwrite: bool = False,
-    ):
+    ) -> None:
         """Register a new handler."""
-        backend_name = table_beckend.backend_name()
-        if backend_name in self._implemented_backends and not overwrite:
+        if name in self._implemented_backends and not overwrite:
             raise NgioValueError(
-                f"Table backend {backend_name} already implemented. "
+                f"Table backend {name} already implemented. "
                 "Use the `overwrite=True` parameter to overwrite it."
             )
-        self._implemented_backends[backend_name] = table_beckend
+        self._implemented_backends[name] = table_backend
+
+    def add_backend(
+        self,
+        table_backend: type[TableBackendProtocol],
+        overwrite: bool = False,
+        aliases: list[str] | None = None,
+    ) -> None:
+        """Register a new handler."""
+        self._add_backend(
+            table_backend=table_backend,
+            name=table_backend.backend_name(),
+            overwrite=overwrite,
+        )
+        if aliases is not None:
+            for alias in aliases:
+                self._add_backend(
+                    table_backend=table_backend, name=alias, overwrite=overwrite
+                )
 
 
-ImplementedTableBackends().add_backend(AnnDataBackend)
-ImplementedTableBackends().add_backend(JsonTableBackend)
-ImplementedTableBackends().add_backend(CsvTableBackend)
-ImplementedTableBackends().add_backend(ParquetTableBackend)
+ImplementedTableBackends().add_backend(AnnDataBackend, aliases=["anndata_v1"])
+ImplementedTableBackends().add_backend(
+    JsonTableBackend, aliases=["experimental_json_v1"]
+)
+ImplementedTableBackends().add_backend(CsvTableBackend, aliases=["experimental_csv_v1"])
+ImplementedTableBackends().add_backend(
+    ParquetTableBackend, aliases=["experimental_parquet_v1"]
+)
 
 TableBackend = Literal["anndata", "json", "csv", "parquet"] | str | TableBackendProtocol

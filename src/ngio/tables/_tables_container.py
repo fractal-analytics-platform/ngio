@@ -197,19 +197,34 @@ class ImplementedTables:
         table = table_cls.from_handler(handler=handler, backend=backend)
         return table
 
-    def add_implementation(self, handler: type[Table], overwrite: bool = False):
+    def _add_implementation(
+        self, handler: type[Table], name: str, overwrite: bool = False
+    ) -> None:
+        """Register a new table handler."""
+        if name in self._implemented_tables and not overwrite:
+            raise NgioValueError(
+                f"Table handler for {name} already implemented. "
+                "Use overwrite=True to replace it."
+            )
+        self._implemented_tables[name] = handler
+
+    def add_implementation(
+        self,
+        handler: type[Table],
+        overwrite: bool = False,
+        aliases: list[str] | None = None,
+    ) -> None:
         """Register a new table handler."""
         meta = TableMeta(
             type=handler.table_type(),
             table_version=handler.version(),
         )
 
-        if meta.unique_name() in self._implemented_tables and not overwrite:
-            raise NgioValueError(
-                f"Table handler for {meta.unique_name()} already implemented. "
-                "Use overwrite=True to replace it."
-            )
-        self._implemented_tables[meta.unique_name()] = handler
+        self._add_implementation(handler, meta.unique_name(), overwrite)
+
+        if aliases is not None:
+            for alias in aliases:
+                self._add_implementation(handler, alias, overwrite)
 
 
 class TablesContainer:
