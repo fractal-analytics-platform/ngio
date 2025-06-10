@@ -23,25 +23,29 @@ def test_backend_manager(tmp_path: Path):
 
     assert set(manager.available_backends) == {
         "json",
+        "experimental_json_v1",
         "anndata",
+        "anndata_v1",
         "csv",
+        "experimental_csv_v1",
         "parquet",
+        "experimental_parquet_v1",
     }
     manager.add_backend(JsonTableBackend, overwrite=True)
 
     manager2 = ImplementedTableBackends()
     assert set(manager2.available_backends) == {
         "json",
+        "experimental_json_v1",
         "anndata",
+        "anndata_v1",
         "csv",
+        "experimental_csv_v1",
         "parquet",
+        "experimental_parquet_v1",
     }
-    assert set(manager.available_backends) == {
-        "json",
-        "anndata",
-        "csv",
-        "parquet",
-    }
+    # check if singleton pattern works
+    assert manager is manager2
 
     store = tmp_path / "test_backend_manager.zarr"
     handler = ZarrGroupHandler(store=store, cache=True, mode="a")
