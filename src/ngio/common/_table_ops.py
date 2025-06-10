@@ -9,7 +9,7 @@ from typing import Literal
 import pandas as pd
 import polars as pl
 
-from ngio.images.ome_zarr_container import OmeZarrContainer
+from ngio.images._ome_zarr_container import OmeZarrContainer
 from ngio.tables import Table, TableType
 
 

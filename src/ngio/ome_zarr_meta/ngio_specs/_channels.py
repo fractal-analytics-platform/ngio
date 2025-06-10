@@ -329,33 +329,35 @@ class ChannelsMeta(BaseModel):
     @classmethod
     def default_init(
         cls,
-        labels: Collection[str] | int,
-        wavelength_id: Collection[str] | None = None,
-        colors: Collection[str | NgioColors] | None = None,
-        start: Collection[int | float] | int | float | None = None,
-        end: Collection[int | float] | int | float | None = None,
-        active: Collection[bool] | None = None,
+        labels: Collection[str | None] | int,
+        wavelength_id: Collection[str | None] | None = None,
+        colors: Collection[str | NgioColors | None] | None = None,
+        start: Collection[int | float | None] | int | float | None = None,
+        end: Collection[int | float | None] | int | float | None = None,
+        active: Collection[bool | None] | None = None,
         data_type: Any = np.uint16,
         **omero_kwargs: dict,
     ) -> "ChannelsMeta":
         """Create a ChannelsMeta object with the default unit.
 
         Args:
-            labels(Collection[str] | int): The list of channels names in the image.
-                If an integer is provided, the channels will be named "channel_i".
-            wavelength_id(Collection[str] | None): The wavelength ID of the channel.
-                If None, the wavelength ID will be the same as the channel name.
-            colors(Collection[str, NgioColors] | None): The list of colors for the
-                channels. If None, the colors will be random.
-            start(Collection[int | float] | int | float | None): The start value of the
-                channel. If None, the start value will be the minimum value of the
-                data type.
-            end(Collection[int | float] | int | float | None): The end value of the
-                channel. If None, the end value will be the maximum value of the
-                data type.
+            labels(Collection[str | None] | int): The list of channels names
+                in the image. If an integer is provided, the channels will be
+                named "channel_i".
+            wavelength_id(Collection[str | None] | None): The wavelength ID of the
+                channel. If None, the wavelength ID will be the same as the
+                channel name.
+            colors(Collection[str | NgioColors | None] | None): The list of
+                colors for the channels. If None, the colors will be random.
+            start(Collection[int | float | None] | int | float | None): The start
+                value of the channel. If None, the start value will be the
+                minimum value of the data type.
+            end(Collection[int | float | None] | int | float | None): The end
+                value of the channel. If None, the end value will be the
+                maximum value of the data type.
             data_type(Any): The data type of the channel. Will be used to set the
                 min and max values of the channel.
-            active (Collection[bool] | None):active(bool): Whether the channel should
+            active (Collection[bool | None] | None): Whether the channel should
                 be shown by default.
             omero_kwargs(dict): Extra fields to store in the omero attributes.
         """
@@ -366,25 +368,35 @@ class ChannelsMeta(BaseModel):
         labels = _check_unique(labels)
 
         _wavelength_id: Collection[str | None] = [None] * len(labels)
-        if isinstance(wavelength_id, Collection):
+        if wavelength_id is None:
+            _wavelength_id: Collection[str | None] = [None] * len(labels)
+        else:
             _wavelength_id = _check_elements(wavelength_id, str)
             _wavelength_id = _check_unique(wavelength_id)
 
-        _colors: Collection[str | NgioColors | None] = [None] * len(labels)
-        if isinstance(colors, Collection):
+        if colors is None:
+            _colors = [NgioColors.semi_random_pick(label) for label in labels]
+        else:
             _colors = _check_elements(colors, str | NgioColors)
 
-        _start: Collection[int | float | None] = [None] * len(labels)
-        if isinstance(start, Collection):
+        if start is None:
+            _start = [None] * len(labels)
+        elif isinstance(start, int | float):
+            _start = [start] * len(labels)
+        else:
             _start = _check_elements(start, (int, float))
 
-        _end: Collection[int | float | None] = [None] * len(labels)
-        if isinstance(end, Collection):
+        if end is None:
+            _end = [None] * len(labels)
+        elif isinstance(end, int | float):
+            _end = [end] * len(labels)
+        else:
             _end = _check_elements(end, (int, float))
 
-        _active: Collection[bool] = [True] * len(labels)
-        if isinstance(active, Collection):
-            _active = _check_elements(active, bool)
+        if active is None:
+            _active = [True] * len(labels)
+        else:
+            _active = _check_elements(active, (bool,))
 
         all_lengths = [
             len(labels),

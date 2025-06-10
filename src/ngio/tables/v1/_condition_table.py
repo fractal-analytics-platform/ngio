@@ -1,6 +1,6 @@
 """Implementation of a generic table class."""
 
-from ngio.tables.abstract_table import AbstractBaseTable
+from ngio.tables._abstract_table import AbstractBaseTable
 from ngio.tables.backends import (
     BackendMeta,
     TableBackend,

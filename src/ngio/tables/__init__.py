@@ -1,11 +1,6 @@
 """Ngio Tables implementations."""
 
-from ngio.tables.backends import (
-    ImplementedTableBackends,
-    TableBackend,
-    TableBackendProtocol,
-)
-from ngio.tables.tables_container import (
+from ngio.tables._tables_container import (
     ConditionTable,
     FeatureTable,
     GenericRoiTable,
@@ -18,6 +13,11 @@ from ngio.tables.tables_container import (
     open_table,
     open_table_as,
     open_tables_container,
+)
+from ngio.tables.backends import (
+    ImplementedTableBackends,
+    TableBackend,
+    TableBackendProtocol,
 )
 from ngio.tables.v1._generic_table import GenericTable
 

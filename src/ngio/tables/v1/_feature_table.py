@@ -8,7 +8,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-from ngio.tables.abstract_table import AbstractBaseTable
+from ngio.tables._abstract_table import AbstractBaseTable
 from ngio.tables.backends import BackendMeta, TableBackend, TabularData
 from ngio.utils import NgioValueError
 from ngio.utils._zarr_utils import ZarrGroupHandler
@@ -26,7 +26,7 @@ class FeatureTableMeta(BackendMeta):
     table_version: Literal["1"] = "1"
     type: Literal["feature_table"] = "feature_table"
     region: RegionMeta | None = None
-    instance_key: str = "label" # Legacy field, kept for compatibility
+    instance_key: str = "label"  # Legacy field, kept for compatibility
     # Backend metadata
     index_key: str | None = "label"
     index_type: Literal["int", "str"] | None = "int"

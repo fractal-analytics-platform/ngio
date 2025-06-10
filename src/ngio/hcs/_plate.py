@@ -39,7 +39,6 @@ from ngio.tables import (
 )
 from ngio.utils import (
     AccessModeLiteral,
-    NgioValidationError,
     NgioValueError,
     StoreOrGroup,
     ZarrGroupHandler,
@@ -805,22 +804,38 @@ class OmeZarrPlate:
             parallel_safe=parallel_safe,
         )
 
+    def _get_tables_container(self) -> TablesContainer | None:
+        """Return the tables container."""
+        if self._tables_container is None:
+            _tables_container = _default_table_container(self._group_handler)
+            if _tables_container is None:
+                return None
+            self._tables_container = _tables_container
+        return self._tables_container
+
     @property
     def tables_container(self) -> TablesContainer:
         """Return the tables container."""
-        if self._tables_container is None:
-            self._tables_container = _default_table_container(self._group_handler)
-            if self._tables_container is None:
-                raise NgioValidationError("No tables found in the image.")
-        return self._tables_container
+        _table_container = self._get_tables_container()
+        if _table_container is None:
+            raise NgioValueError(
+                "No tables container found. Please add a tables container to the plate."
+            )
+        return _table_container
 
-    def list_tables(self, filter_types: str | None = None) -> list[str]:
+    def list_tables(self, filter_types: TypedTable | str | None = None) -> list[str]:
         """List all tables in the image."""
         return self.tables_container.list(filter_types=filter_types)
 
     def list_roi_tables(self) -> list[str]:
         """List all ROI tables in the image."""
-        return self.tables_container.list_roi_tables()
+        masking_roi = self.tables_container.list(
+            filter_types="masking_roi_table",
+        )
+        roi = self.tables_container.list(
+            filter_types="roi_table",
+        )
+        return masking_roi + roi
 
     def get_roi_table(self, name: str) -> RoiTable:
         """Get a ROI table from the image.

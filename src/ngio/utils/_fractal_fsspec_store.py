@@ -37,6 +37,6 @@ def fractal_fsspec_store(
         raise NgioValueError(
             f"Store {url} can not be read. Possible problems are: \n"
             "- The url does not exist. \n"
-            f"- The url is not a valid .zarr. \n"
+            "- The url is not a valid .zarr. \n"
         )
     return store

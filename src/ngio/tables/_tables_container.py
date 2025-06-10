@@ -126,11 +126,16 @@ class Table(Protocol):
 
 
 TypedTable = Literal[
+    "generic_table",
     "roi_table",
     "masking_roi_table",
     "feature_table",
-    "generic_roi_table",
     "condition_table",
+]
+
+TypedRoiTable = Literal[
+    "roi_table",
+    "masking_roi_table",
 ]
 
 TableType = TypeVar("TableType", bound=Table)
@@ -240,14 +245,7 @@ class TablesContainer:
         handler = self._group_handler.derive_handler(path=name)
         return handler
 
-    def list_roi_tables(self) -> list[str]:
-        """List all ROI tables in the group."""
-        _tables = []
-        for _type in ["roi_table", "masking_roi_table"]:
-            _tables.extend(self.list(_type))
-        return _tables
-
-    def list(self, filter_types: str | None = None) -> list[str]:
+    def list(self, filter_types: TypedTable | str | None = None) -> list[str]:
         """List all labels in the group."""
         tables = self._get_tables_list()
         if filter_types is None:

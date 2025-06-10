@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from ngio.tables.tables_container import open_table, write_table
+from ngio.tables._tables_container import open_table, write_table
 from ngio.tables.v1._roi_table import MaskingRoiTableV1, Roi
 from ngio.utils import NgioValueError
 

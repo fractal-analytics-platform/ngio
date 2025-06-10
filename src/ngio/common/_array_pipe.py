@@ -1,10 +1,11 @@
 from collections.abc import Collection, Iterable
 from typing import Literal
 
-import dask
-import dask.delayed
+import dask.array as da
 import numpy as np
 import zarr
+from dask.array import Array as DaskArray
+from dask.delayed import Delayed, delayed
 
 from ngio.common._axes_transforms import transform_dask_array, transform_numpy_array
 from ngio.common._common_types import ArrayLike
@@ -55,26 +56,26 @@ def _numpy_get_pipe(
     slices: SliceTransform,
     transformations: tuple[AxesTransformation, ...],
 ) -> np.ndarray:
-    array = numpy_get_slice(array, slices)
-    return transform_numpy_array(array, transformations)
+    _array = numpy_get_slice(array, slices)
+    return transform_numpy_array(_array, transformations)
 
 
 def _delayed_numpy_get_pipe(
     array: zarr.Array,
     slices: SliceTransform,
     transformations: tuple[AxesTransformation, ...],
-) -> dask.delayed:
-    array = dask.delayed(numpy_get_slice)(array, slices)
-    return dask.delayed(transform_numpy_array)(array, transformations)
+) -> Delayed:
+    _array = delayed(numpy_get_slice)(array, slices)
+    return delayed(transform_numpy_array)(_array, transformations)
 
 
 def _dask_get_pipe(
     array: zarr.Array,
     slices: SliceTransform,
     transformations: tuple[AxesTransformation, ...],
-) -> dask.array:
-    array = dask_get_slice(array, slices)
-    return transform_dask_array(array, transformations)
+) -> DaskArray:
+    _array = dask_get_slice(array, slices)
+    return transform_dask_array(_array, transformations)
 
 
 def _numpy_set_pipe(
@@ -89,22 +90,22 @@ def _numpy_set_pipe(
 
 def _dask_set_pipe(
     array: zarr.Array,
-    patch: np.ndarray,
+    patch: DaskArray,
     slices: SliceTransform,
     transformations: tuple[AxesTransformation, ...],
 ) -> None:
-    patch = transform_dask_array(patch, transformations)
-    dask_set_slice(array, patch, slices)
+    _patch = transform_dask_array(patch, transformations)
+    dask_set_slice(array, _patch, slices)
 
 
 def _delayed_numpy_set_pipe(
     array: zarr.Array,
-    patch: np.ndarray,
+    patch: np.ndarray | Delayed,
     slices: SliceTransform,
     transformations: tuple[AxesTransformation, ...],
-) -> dask.delayed:
-    patch = dask.delayed(transform_numpy_array)(patch, transformations)
-    return dask.delayed(numpy_set_slice)(array, patch, slices)
+) -> Delayed:
+    _patch = delayed(transform_numpy_array)(patch, transformations)
+    return delayed(numpy_set_slice)(array, _patch, slices)
 
 
 def get_pipe(
@@ -144,7 +145,7 @@ def set_pipe(
     slices, transformations = _compute_to_disk_transforms(
         dimensions=dimensions, axes_order=axes_order, **slice_kwargs
     )
-    if isinstance(patch, dask.array.Array):
+    if isinstance(patch, DaskArray):
         _dask_set_pipe(
             array=array, patch=patch, slices=slices, transformations=transformations
         )
@@ -152,7 +153,7 @@ def set_pipe(
         _numpy_set_pipe(
             array=array, patch=patch, slices=slices, transformations=transformations
         )
-    elif isinstance(patch, dask.delayed.Delayed):
+    elif isinstance(patch, Delayed):
         _delayed_numpy_set_pipe(
             array=array, patch=patch, slices=slices, transformations=transformations
         )
@@ -193,12 +194,15 @@ def _mask_pipe_common(
         **slice_kwargs,
     )
 
-    if isinstance(array_patch, np.ndarray):
+    if isinstance(array_patch, np.ndarray) and isinstance(label_patch, np.ndarray):
         label_patch = np.broadcast_to(label_patch, array_patch.shape)
-    elif isinstance(array_patch, dask.array.Array):
-        label_patch = dask.array.broadcast_to(label_patch, array_patch.shape)
+    elif isinstance(array_patch, DaskArray) and isinstance(label_patch, DaskArray):
+        label_patch = da.broadcast_to(label_patch, array_patch.shape)
     else:
-        raise NgioValueError(f"Mode {mode} not yet supported for masked array.")
+        raise NgioValueError(
+            "Incompatible types for array and label: "
+            f"{type(array_patch)} and {type(label_patch)}"
+        )
 
     mask = label_patch == label
     return array_patch, mask
@@ -225,7 +229,14 @@ def get_masked_pipe(
         mode=mode,
         **slice_kwargs,
     )
-    array_patch[~mask] = 0
+    if isinstance(array_patch, np.ndarray):
+        array_patch[~mask] = 0
+    elif isinstance(array_patch, DaskArray):
+        array_patch = da.where(mask, array_patch, 0)
+    else:
+        raise NgioValueError(
+            "Mode not yet supported for masked array. Expected a numpy or dask array."
+        )
     return array_patch
 
 
@@ -240,7 +251,7 @@ def set_masked_pipe(
     axes_order: Collection[str] | None = None,
     **slice_kwargs: slice | int | Iterable[int],
 ):
-    if isinstance(patch, dask.array.Array):
+    if isinstance(patch, DaskArray):
         mode = "dask"
     elif isinstance(patch, np.ndarray):
         mode = "numpy"
@@ -259,7 +270,19 @@ def set_masked_pipe(
         mode=mode,
         **slice_kwargs,
     )
-    patch = np.where(mask, patch, array_patch)
+    if isinstance(patch, np.ndarray):
+        assert isinstance(array_patch, np.ndarray)
+        _patch = np.where(mask, patch, array_patch)
+    elif isinstance(patch, DaskArray):
+        _patch = da.where(mask, patch, array_patch)
+    else:
+        raise NgioValueError(
+            "Mode not yet supported for masked array. Expected a numpy or dask array."
+        )
     set_pipe(
-        array, patch, dimensions=dimensions_array, axes_order=axes_order, **slice_kwargs
+        array,
+        _patch,
+        dimensions=dimensions_array,
+        axes_order=axes_order,
+        **slice_kwargs,
     )

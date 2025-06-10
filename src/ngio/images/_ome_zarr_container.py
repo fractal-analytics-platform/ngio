@@ -5,10 +5,10 @@ from collections.abc import Collection
 
 import numpy as np
 
-from ngio.images.create import create_empty_image_container
-from ngio.images.image import Image, ImagesContainer
-from ngio.images.label import Label, LabelsContainer
-from ngio.images.masked_image import MaskedImage, MaskedLabel
+from ngio.images._create import create_empty_image_container
+from ngio.images._image import Image, ImagesContainer
+from ngio.images._label import Label, LabelsContainer
+from ngio.images._masked_image import MaskedImage, MaskedLabel
 from ngio.ome_zarr_meta import (
     NgioImageMeta,
     PixelSize,
@@ -68,7 +68,7 @@ class OmeZarrContainer:
         group_handler: ZarrGroupHandler,
         table_container: TablesContainer | None = None,
         label_container: LabelsContainer | None = None,
-        validate_arrays: bool = True,
+        validate_paths: bool = False,
     ) -> None:
         """Initialize the OmeZarrContainer."""
         self._group_handler = group_handler
@@ -76,6 +76,10 @@ class OmeZarrContainer:
 
         self._labels_container = label_container
         self._tables_container = table_container
+
+        if validate_paths:
+            for level_path in self._images_container.levels_paths:
+                self.get_image(path=level_path)
 
     def __repr__(self) -> str:
         """Return a string representation of the image."""
@@ -99,23 +103,39 @@ class OmeZarrContainer:
         """Return the image container."""
         return self._images_container
 
+    def _get_labels_container(self) -> LabelsContainer | None:
+        """Return the labels container."""
+        if self._labels_container is None:
+            _labels_container = _default_label_container(self._group_handler)
+            if _labels_container is None:
+                return None
+            self._labels_container = _labels_container
+        return self._labels_container
+
     @property
     def labels_container(self) -> LabelsContainer:
         """Return the labels container."""
-        if self._labels_container is None:
-            self._labels_container = _default_label_container(self._group_handler)
-            if self._labels_container is None:
-                raise NgioValidationError("No labels found in the image.")
-        return self._labels_container
+        _labels_container = self._get_labels_container()
+        if _labels_container is None:
+            raise NgioValidationError("No labels found in the image.")
+        return _labels_container
+
+    def _get_tables_container(self) -> TablesContainer | None:
+        """Return the tables container."""
+        if self._tables_container is None:
+            _tables_container = _default_table_container(self._group_handler)
+            if _tables_container is None:
+                return None
+            self._tables_container = _tables_container
+        return self._tables_container
 
     @property
     def tables_container(self) -> TablesContainer:
         """Return the tables container."""
-        if self._tables_container is None:
-            self._tables_container = _default_table_container(self._group_handler)
-            if self._tables_container is None:
-                raise NgioValidationError("No tables found in the image.")
-        return self._tables_container
+        _tables_container = self._get_tables_container()
+        if _tables_container is None:
+            raise NgioValidationError("No tables found in the image.")
+        return _tables_container
 
     @property
     def image_meta(self) -> NgioImageMeta:
@@ -332,7 +352,7 @@ class OmeZarrContainer:
 
         new_ome_zarr = OmeZarrContainer(
             group_handler=handler,
-            validate_arrays=False,
+            validate_paths=False,
         )
 
         if copy_labels:
@@ -346,13 +366,25 @@ class OmeZarrContainer:
             )
         return new_ome_zarr
 
-    def list_tables(self, filter_types: str | None = None) -> list[str]:
+    def list_tables(self, filter_types: TypedTable | str | None = None) -> list[str]:
         """List all tables in the image."""
-        return self.tables_container.list(filter_types=filter_types)
+        table_container = self._get_tables_container()
+        if table_container is None:
+            return []
+
+        return table_container.list(
+            filter_types=filter_types,
+        )
 
     def list_roi_tables(self) -> list[str]:
         """List all ROI tables in the image."""
-        return self.tables_container.list_roi_tables()
+        masking_roi = self.tables_container.list(
+            filter_types="masking_roi_table",
+        )
+        roi = self.tables_container.list(
+            filter_types="roi_table",
+        )
+        return masking_roi + roi
 
     def get_roi_table(self, name: str) -> RoiTable:
         """Get a ROI table from the image.
@@ -479,7 +511,10 @@ class OmeZarrContainer:
 
     def list_labels(self) -> list[str]:
         """List all labels in the image."""
-        return self.labels_container.list()
+        label_container = self._get_labels_container()
+        if label_container is None:
+            return []
+        return label_container.list()
 
     def get_label(
         self,
@@ -597,7 +632,7 @@ def open_ome_zarr_container(
     handler = ZarrGroupHandler(store=store, cache=cache, mode=mode)
     return OmeZarrContainer(
         group_handler=handler,
-        validate_arrays=validate_arrays,
+        validate_paths=validate_arrays,
     )
 
 

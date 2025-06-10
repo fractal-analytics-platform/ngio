@@ -13,7 +13,7 @@ import pandas as pd
 from pydantic import BaseModel
 
 from ngio.common import Roi
-from ngio.tables.abstract_table import (
+from ngio.tables._abstract_table import (
     AbstractBaseTable,
     TabularData,
 )
