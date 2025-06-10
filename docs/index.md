@@ -1,4 +1,3 @@
-
 ngio is a Python library designed to simplify bioimage analysis workflows, offering an intuitive interface for working with OME-Zarr files.
 
 ## What is Ngio?
@@ -30,12 +29,14 @@ Refer to the [Getting Started](getting_started/0_quickstart.md) guide to integra
 For more advanced usage and API documentation, see our [API Reference](api/ngio.md).
 
 ## Supported OME-Zarr versions
+
 Currently, ngio only supports OME-Zarr v0.4. Support for version 0.5 and higher is planned for future releases.
 
 ## Development Status
 
 !!! warning
     Ngio is under active development and is not yet stable. The API is subject to change, and bugs and breaking changes are expected.
+    We follow [Semantic Versioning](https://semver.org/). Which means for 0.x releases potentially breaking changes can be introduced in minor releases.
 
 ### Available Features
 
