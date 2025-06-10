@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 from pandas import DataFrame
 
-from ngio.tables.tables_container import (
+from ngio.tables._tables_container import (
     FeatureTable,
     TablesContainer,
     open_tables_container,

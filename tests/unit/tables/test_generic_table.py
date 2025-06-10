@@ -5,7 +5,7 @@ import pandas as pd
 import pytest
 from anndata import AnnData
 
-from ngio.tables.tables_container import open_table, write_table
+from ngio.tables._tables_container import open_table, write_table
 from ngio.tables.v1 import GenericTable
 
 

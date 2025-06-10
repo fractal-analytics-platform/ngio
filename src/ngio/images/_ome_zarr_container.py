@@ -5,10 +5,10 @@ from collections.abc import Collection
 
 import numpy as np
 
-from ngio.images.create import create_empty_image_container
-from ngio.images.image import Image, ImagesContainer
-from ngio.images.label import Label, LabelsContainer
-from ngio.images.masked_image import MaskedImage, MaskedLabel
+from ngio.images._create import create_empty_image_container
+from ngio.images._image import Image, ImagesContainer
+from ngio.images._label import Label, LabelsContainer
+from ngio.images._masked_image import MaskedImage, MaskedLabel
 from ngio.ome_zarr_meta import (
     NgioImageMeta,
     PixelSize,

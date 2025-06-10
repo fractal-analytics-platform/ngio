@@ -1,6 +1,6 @@
 """OME-Zarr HCS objects models."""
 
-from ngio.hcs.plate import (
+from ngio.hcs._plate import (
     OmeZarrPlate,
     OmeZarrWell,
     create_empty_plate,

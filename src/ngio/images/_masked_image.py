@@ -4,8 +4,8 @@ from collections.abc import Collection, Iterable
 from typing import Literal
 
 from ngio.common import ArrayLike, get_masked_pipe, roi_to_slice_kwargs, set_masked_pipe
-from ngio.images.image import Image
-from ngio.images.label import Label
+from ngio.images._image import Image
+from ngio.images._label import Label
 from ngio.ome_zarr_meta import ImageMetaHandler, LabelMetaHandler
 from ngio.tables import MaskingRoiTable
 from ngio.utils import (

@@ -4,9 +4,9 @@ from collections.abc import Collection
 from typing import Literal
 
 from ngio.common import compute_masking_roi
-from ngio.images.abstract_image import AbstractImage, consolidate_image
-from ngio.images.create import create_empty_label_container
-from ngio.images.image import Image
+from ngio.images._abstract_image import AbstractImage, consolidate_image
+from ngio.images._create import create_empty_label_container
+from ngio.images._image import Image
 from ngio.ome_zarr_meta import (
     LabelMetaHandler,
     NgioLabelMeta,

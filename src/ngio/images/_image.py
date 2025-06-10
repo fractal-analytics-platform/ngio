@@ -6,8 +6,8 @@ from typing import Literal
 from dask import array as da
 
 from ngio.common import Dimensions
-from ngio.images.abstract_image import AbstractImage, consolidate_image
-from ngio.images.create import create_empty_image_container
+from ngio.images._abstract_image import AbstractImage, consolidate_image
+from ngio.images._create import create_empty_image_container
 from ngio.ome_zarr_meta import (
     ImageMetaHandler,
     NgioImageMeta,
