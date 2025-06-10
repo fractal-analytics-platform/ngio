@@ -9,7 +9,6 @@ These functions are used to validate and normalize the tables
 to ensure that conversion between formats is consistent.
 """
 
-# %%
 from copy import deepcopy
 from typing import Literal
 
@@ -23,6 +22,8 @@ from polars import DataFrame as PolarsDataFrame
 from polars import LazyFrame
 
 from ngio.utils import NgioTableValidationError, NgioValueError
+
+TabularData = AnnData | DataFrame | PolarsDataFrame | LazyFrame
 
 # -----------------
 # Validation utils
@@ -460,3 +461,148 @@ def convert_polars_to_anndata(
         pandas_df,
         index_key=index_key,
     )
+
+
+# -----------------
+# Conversion functions
+# -----------------
+
+
+def normalize_table(
+    table_data: TabularData,
+    index_key: str | None = None,
+    index_type: Literal["int", "str"] | None = None,
+) -> TabularData:
+    """Normalize a table to a specific format.
+
+    Args:
+        table_data (TabularData): The table to normalize.
+        index_key (str | None): The column name to use as the index of the DataFrame.
+            Default is None.
+        index_type (str | None): The type of the index column in the DataFrame.
+            Either 'str' or 'int'. Default is None.
+
+    Returns:
+        DataFrame | AnnData | PolarsDataFrame | LazyFrame: Normalized table.
+    """
+    if isinstance(table_data, DataFrame):
+        return normalize_pandas_df(
+            table_data,
+            index_key=index_key,
+            index_type=index_type,
+            reset_index=False,
+        )
+    if isinstance(table_data, AnnData):
+        return normalize_anndata(table_data, index_key=index_key)
+    if isinstance(table_data, PolarsDataFrame) or isinstance(table_data, LazyFrame):
+        return normalize_polars_lf(
+            table_data,
+            index_key=index_key,
+            index_type=index_type,
+        )
+    raise NgioValueError(f"Unsupported table type: {type(table_data)}")
+
+
+def convert_to_anndata(
+    table_data: TabularData,
+    index_key: str | None = None,
+) -> AnnData:
+    """Convert a table to an AnnData object.
+
+    Args:
+        table_data (TabularData): The table to convert.
+        index_key (str | None): The column name to use as the index of the DataFrame.
+            Default is None.
+
+    Returns:
+        AnnData: Converted AnnData object.
+    """
+    if isinstance(table_data, AnnData):
+        return normalize_anndata(table_data, index_key=index_key)
+    if isinstance(table_data, DataFrame):
+        return convert_pandas_to_anndata(table_data, index_key=index_key)
+    if isinstance(table_data, PolarsDataFrame) or isinstance(table_data, LazyFrame):
+        return convert_polars_to_anndata(table_data, index_key=index_key)
+    raise NgioValueError(f"Unsupported table type: {type(table_data)}")
+
+
+def convert_to_pandas(
+    table_data: TabularData,
+    index_key: str | None = None,
+    index_type: Literal["int", "str"] | None = None,
+    reset_index: bool = False,
+) -> DataFrame:
+    """Convert a table to a pandas DataFrame.
+
+    Args:
+        table_data (TabularData): The table to convert.
+        index_key (str | None): The column name to use as the index of the DataFrame.
+            Default is None.
+        index_type (str | None): The type of the index column in the DataFrame.
+            Either 'str' or 'int'. Default is None.
+        reset_index (bool): If True the index will be reset (i.e., the index will be
+            converted to a column). If False, the index will be kept as is.
+
+    Returns:
+        DataFrame: Converted pandas DataFrame.
+    """
+    if isinstance(table_data, DataFrame):
+        return normalize_pandas_df(
+            table_data,
+            index_key=index_key,
+            index_type=index_type,
+            reset_index=reset_index,
+        )
+    if isinstance(table_data, AnnData):
+        return convert_anndata_to_pandas(
+            table_data,
+            index_key=index_key,
+            index_type=index_type,
+            reset_index=reset_index,
+        )
+    if isinstance(table_data, PolarsDataFrame) or isinstance(table_data, LazyFrame):
+        return convert_polars_to_pandas(
+            table_data,
+            index_key=index_key,
+            index_type=index_type,
+            reset_index=reset_index,
+        )
+    raise NgioValueError(f"Unsupported table type: {type(table_data)}")
+
+
+def convert_to_polars(
+    table_data: TabularData,
+    index_key: str | None = None,
+    index_type: Literal["int", "str"] | None = None,
+) -> LazyFrame:
+    """Convert a table to a polars LazyFrame.
+
+    Args:
+        table_data (TabularData): The table to convert.
+        index_key (str | None): The column name to use as the index of the DataFrame.
+            Default is None.
+        index_type (str | None): The type of the index column in the DataFrame.
+            Either 'str' or 'int'. Default is None.
+
+    Returns:
+        LazyFrame: Converted polars LazyFrame.
+    """
+    if isinstance(table_data, PolarsDataFrame) or isinstance(table_data, LazyFrame):
+        return normalize_polars_lf(
+            table_data,
+            index_key=index_key,
+            index_type=index_type,
+        )
+    if isinstance(table_data, DataFrame):
+        return convert_pandas_to_polars(
+            table_data,
+            index_key=index_key,
+            index_type=index_type,
+        )
+    if isinstance(table_data, AnnData):
+        return convert_anndata_to_polars(
+            table_data,
+            index_key=index_key,
+            index_type=index_type,
+        )
+    raise NgioValueError(f"Unsupported table type: {type(table_data)}")

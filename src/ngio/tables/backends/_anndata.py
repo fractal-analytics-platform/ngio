@@ -21,7 +21,7 @@ class AnnDataBackend(AbstractTableBackend):
     @staticmethod
     def backend_name() -> str:
         """Return the name of the backend."""
-        return "anndata_v1"
+        return "anndata"
 
     @staticmethod
     def implements_anndata() -> bool:
@@ -43,6 +43,10 @@ class AnnDataBackend(AbstractTableBackend):
         anndata = custom_anndata_read_zarr(self._group_handler._group)
         anndata = normalize_anndata(anndata, index_key=self.index_key)
         return anndata
+
+    def load(self) -> AnnData:
+        """Load the table as an AnnData object."""
+        return self.load_as_anndata()
 
     def write_from_anndata(self, table: AnnData) -> None:
         """Serialize the table from an AnnData object."""

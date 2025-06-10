@@ -187,10 +187,6 @@ class GenericMetaHandler(
 
         raise NgioValueError(f"Could not load metadata: {meta_or_error}")
 
-    def safe_load_meta(self) -> _image_meta | ConverterError:
-        """Load the metadata from the store."""
-        return self._load_meta(return_error=True)
-
     def _write_meta(self, meta) -> None:
         """Write the metadata to the store."""
         _meta = self._meta_exporter(metadata=meta)
@@ -217,6 +213,10 @@ class ImageMetaHandler(
             return meta
         raise NgioValueError(f"Could not load metadata: {meta}")
 
+    def safe_load_meta(self) -> NgioImageMeta | ConverterError:
+        """Load the metadata from the store."""
+        return self._load_meta(return_error=True)
+
 
 class LabelMetaHandler(
     GenericMetaHandler[NgioLabelMeta, LabelMetaImporter, LabelMetaExporter]
@@ -229,6 +229,10 @@ class LabelMetaHandler(
         if isinstance(meta, NgioLabelMeta):
             return meta
         raise NgioValueError(f"Could not load metadata: {meta}")
+
+    def safe_load_meta(self) -> NgioLabelMeta | ConverterError:
+        """Load the metadata from the store."""
+        return self._load_meta(return_error=True)
 
 
 ###########################################################################
@@ -267,10 +271,6 @@ class GenericHCSMetaHandler(Generic[_hcs_meta, _hcs_meta_importer, _hcs_meta_exp
 
         raise NgioValueError(f"Could not load metadata: {meta_or_error}")
 
-    def safe_load_meta(self) -> _hcs_meta | ConverterError:
-        """Load the metadata from the store."""
-        return self._load_meta(return_error=True)
-
     def _write_meta(self, meta) -> None:
         _meta = self._meta_exporter(metadata=meta)
         self._group_handler.write_attrs(_meta)
@@ -295,6 +295,10 @@ class WellMetaHandler(
             return meta
         raise NgioValueError(f"Could not load metadata: {meta}")
 
+    def safe_load_meta(self) -> NgioWellMeta | ConverterError:
+        """Load the metadata from the store."""
+        return self._load_meta(return_error=True)
+
 
 class PlateMetaHandler(
     GenericHCSMetaHandler[NgioPlateMeta, PlateMetaImporter, PlateMetaExporter]
@@ -307,6 +311,10 @@ class PlateMetaHandler(
         if isinstance(meta, NgioPlateMeta):
             return meta
         raise NgioValueError(f"Could not load metadata: {meta}")
+
+    def safe_load_meta(self) -> NgioPlateMeta | ConverterError:
+        """Load the metadata from the store."""
+        return self._load_meta(return_error=True)
 
 
 ###########################################################################

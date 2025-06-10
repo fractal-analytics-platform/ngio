@@ -17,7 +17,7 @@ class JsonTableBackend(AbstractTableBackend):
     @staticmethod
     def backend_name() -> str:
         """Return the name of the backend."""
-        return "experimental_json_v1"
+        return "json"
 
     @staticmethod
     def implements_anndata() -> bool:
@@ -60,6 +60,9 @@ class JsonTableBackend(AbstractTableBackend):
             reset_index=False,
         )
         return data_frame
+
+    def load(self) -> DataFrame:
+        return self.load_as_pandas_df()
 
     def _write_from_dict(self, table: dict) -> None:
         """Write the table from a dictionary to the store."""

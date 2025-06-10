@@ -1,8 +1,8 @@
 """OME-Zarr object models."""
 
-from ngio.images.image import Image, ImagesContainer
-from ngio.images.label import Label, LabelsContainer
-from ngio.images.ome_zarr_container import (
+from ngio.images._image import Image, ImagesContainer
+from ngio.images._label import Label, LabelsContainer
+from ngio.images._ome_zarr_container import (
     OmeZarrContainer,
     create_empty_ome_zarr,
     create_ome_zarr_from_array,
