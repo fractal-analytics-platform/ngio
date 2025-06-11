@@ -33,7 +33,7 @@ Moreover the ROI table must include the following columns:
 
 Additionally, each ROI can include the following optional columns:
 
-- `x_micrometer_original` and `y_micrometer_original` which are the original coordinates of the ROI in micrometers. These are typically used when the data is saved in different coordinates during conversion, e.g. to avoid overwriting data from overlapping ROIs.
+- `x_micrometer_original`, `y_micrometer_original` and `z_micrometer_original` which are the original coordinates of the ROI in micrometers. These are typically used when the data is saved in different coordinates during conversion, e.g. to avoid overwriting data from overlapping ROIs.
 - `translation_x`, `translation_y` and `translation_z`, which are used during registration of multiplexing acquisitions.
 
 The user can also add additional columns to the ROI table, but these columns will not be exposed in the ROI table API.
