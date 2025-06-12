@@ -399,7 +399,8 @@ class MaskingRoiTableV1(GenericRoiTableV1):
             meta = MaskingRoiTableV1Meta()
 
         if reference_label is not None:
-            meta.region = RegionMeta(path=reference_label)
+            path = f"../labels/{reference_label}"
+            meta.region = RegionMeta(path=path)
 
         if meta.index_key is None:
             meta.index_key = "label"
