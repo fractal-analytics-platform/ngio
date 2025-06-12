@@ -52,7 +52,15 @@ ORIGIN_COLUMNS = [
 
 TRANSLATION_COLUMNS = ["translation_x", "translation_y", "translation_z"]
 
-PLATE_COLUMNS = ["plate_name", "row", "column", "path", "acquisition"]
+PLATE_COLUMNS = [
+    "plate_name",
+    "row",
+    "column",
+    "path_in_well",
+    "path_in_plate",
+    "acquisition_id",
+    "acquisition_name",
+]
 
 INDEX_COLUMNS = [
     "FieldIndex",
