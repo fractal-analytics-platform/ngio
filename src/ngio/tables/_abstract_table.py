@@ -18,7 +18,6 @@ from ngio.tables.backends import (
     convert_to_pandas,
     convert_to_polars,
     normalize_table,
-    DefaultTableBackend
 )
 from ngio.utils import NgioValueError, ZarrGroupHandler
 
