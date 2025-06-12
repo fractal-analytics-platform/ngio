@@ -23,6 +23,7 @@ from ngio.ome_zarr_meta.ngio_specs import (
 )
 from ngio.tables import (
     ConditionTable,
+    DefaultTableBackend,
     FeatureTable,
     GenericRoiTable,
     MaskingRoiTable,
@@ -501,7 +502,7 @@ class OmeZarrContainer:
         self,
         name: str,
         table: Table,
-        backend: TableBackend = "anndata",
+        backend: TableBackend = DefaultTableBackend,
         overwrite: bool = False,
     ) -> None:
         """Add a table to the image."""
@@ -831,7 +832,7 @@ def create_ome_zarr_from_array(
         axes_names=axes_names,
         name=name,
         chunks=chunks,
-        dtype=array.dtype,
+        dtype=str(array.dtype),
         overwrite=overwrite,
         version=version,
     )

@@ -47,11 +47,20 @@ REQUIRED_COLUMNS = [
 ORIGIN_COLUMNS = [
     "x_micrometer_original",
     "y_micrometer_original",
+    "z_micrometer_original",
 ]
 
 TRANSLATION_COLUMNS = ["translation_x", "translation_y", "translation_z"]
 
-PLATE_COLUMNS = ["plate_name", "row", "column", "path", "acquisition"]
+PLATE_COLUMNS = [
+    "plate_name",
+    "row",
+    "column",
+    "path_in_well",
+    "path_in_plate",
+    "acquisition_id",
+    "acquisition_name",
+]
 
 INDEX_COLUMNS = [
     "FieldIndex",
@@ -390,7 +399,8 @@ class MaskingRoiTableV1(GenericRoiTableV1):
             meta = MaskingRoiTableV1Meta()
 
         if reference_label is not None:
-            meta.region = RegionMeta(path=reference_label)
+            path = f"../labels/{reference_label}"
+            meta.region = RegionMeta(path=path)
 
         if meta.index_key is None:
             meta.index_key = "label"

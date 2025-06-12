@@ -27,6 +27,7 @@ from ngio.ome_zarr_meta import (
 )
 from ngio.tables import (
     ConditionTable,
+    DefaultTableBackend,
     FeatureTable,
     GenericRoiTable,
     MaskingRoiTable,
@@ -944,7 +945,7 @@ class OmeZarrPlate:
         self,
         name: str,
         table: Table,
-        backend: TableBackend = "anndata",
+        backend: TableBackend = DefaultTableBackend,
         overwrite: bool = False,
     ) -> None:
         """Add a table to the image."""

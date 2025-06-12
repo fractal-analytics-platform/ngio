@@ -57,6 +57,7 @@ class Roi(BaseModel):
             x_length=_to_raster(self.x_length, pixel_size.x, dim_x),
             y_length=_to_raster(self.y_length, pixel_size.y, dim_y),
             z_length=_to_raster(self.z_length, pixel_size.z, dim_z),
+            **self.model_extra,
         )
 
     def zoom(self, zoom_factor: float = 1) -> "Roi":
@@ -94,6 +95,7 @@ class RoiPixels(BaseModel):
             y_length=_to_world(self.y_length, pixel_size.y),
             z_length=_to_world(self.z_length, pixel_size.z),
             unit=pixel_size.space_unit,
+            **self.model_extra,
         )
 
     def to_slices(self) -> dict[str, slice]:

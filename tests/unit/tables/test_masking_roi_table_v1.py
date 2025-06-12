@@ -24,6 +24,8 @@ def test_masking_roi_table_v1(tmp_path: Path):
     table = MaskingRoiTableV1(rois=rois.values(), reference_label="label")
     assert isinstance(table.__repr__(), str)
     assert table.reference_label == "label"
+    assert table.meta.region is not None
+    assert table.meta.region.path == "../labels/label"
 
     table.add(
         roi=Roi(

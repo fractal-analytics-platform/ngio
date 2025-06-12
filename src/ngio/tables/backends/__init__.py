@@ -6,6 +6,7 @@ from ngio.tables.backends._csv import CsvTableBackend
 from ngio.tables.backends._json import JsonTableBackend
 from ngio.tables.backends._parquet import ParquetTableBackend
 from ngio.tables.backends._table_backends import (
+    DefaultTableBackend,
     ImplementedTableBackends,
     TableBackend,
     TableBackendProtocol,
@@ -32,6 +33,7 @@ __all__ = [
     "AnnDataBackend",
     "BackendMeta",
     "CsvTableBackend",
+    "DefaultTableBackend",
     "ImplementedTableBackends",
     "JsonTableBackend",
     "ParquetTableBackend",
