@@ -8,6 +8,7 @@ import polars as pl
 
 from ngio.tables.backends import (
     BackendMeta,
+    DefaultTableBackend,
     TableBackend,
     TabularData,
 )
@@ -90,7 +91,7 @@ class Table(Protocol):
     def set_backend(
         self,
         handler: ZarrGroupHandler | None = None,
-        backend: TableBackend = "anndata",
+        backend: TableBackend = DefaultTableBackend,
     ) -> None:
         """Set the backend store and path for the table.
 
@@ -314,7 +315,7 @@ class TablesContainer:
         self,
         name: str,
         table: Table,
-        backend: TableBackend = "anndata",
+        backend: TableBackend = DefaultTableBackend,
         overwrite: bool = False,
     ) -> None:
         """Add a table to the group."""
@@ -406,7 +407,7 @@ def open_table_as(
 def write_table(
     store: StoreOrGroup,
     table: Table,
-    backend: TableBackend = "anndata",
+    backend: TableBackend = DefaultTableBackend,
     cache: bool = False,
     mode: AccessModeLiteral = "a",
     parallel_safe: bool = False,

@@ -18,6 +18,7 @@ from ngio.tables.backends import (
     convert_to_pandas,
     convert_to_polars,
     normalize_table,
+    DefaultTableBackend
 )
 from ngio.utils import NgioValueError, ZarrGroupHandler
 
@@ -203,7 +204,7 @@ class AbstractBaseTable(ABC):
     def set_backend(
         self,
         handler: ZarrGroupHandler | None = None,
-        backend: TableBackend = "anndata",
+        backend: TableBackend = Defa,
     ) -> None:
         """Set the backend of the table."""
         if handler is None:

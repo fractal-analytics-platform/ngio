@@ -223,3 +223,4 @@ ImplementedTableBackends().add_backend(
 )
 
 TableBackend = Literal["anndata", "json", "csv", "parquet"] | str | TableBackendProtocol
+DefaultTableBackend = "anndata_v1"

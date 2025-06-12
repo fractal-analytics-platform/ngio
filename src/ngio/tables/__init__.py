@@ -15,6 +15,7 @@ from ngio.tables._tables_container import (
     open_tables_container,
 )
 from ngio.tables.backends import (
+    DefaultTableBackend,
     ImplementedTableBackends,
     TableBackend,
     TableBackendProtocol,
@@ -23,6 +24,7 @@ from ngio.tables.v1._generic_table import GenericTable
 
 __all__ = [
     "ConditionTable",
+    "DefaultTableBackend",
     "FeatureTable",
     "GenericRoiTable",
     "GenericTable",
