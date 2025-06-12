@@ -47,6 +47,7 @@ REQUIRED_COLUMNS = [
 ORIGIN_COLUMNS = [
     "x_micrometer_original",
     "y_micrometer_original",
+    "z_micrometer_original",
 ]
 
 TRANSLATION_COLUMNS = ["translation_x", "translation_y", "translation_z"]
