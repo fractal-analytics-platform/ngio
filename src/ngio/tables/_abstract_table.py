@@ -10,6 +10,7 @@ from anndata import AnnData
 
 from ngio.tables.backends import (
     BackendMeta,
+    DefaultTableBackend,
     ImplementedTableBackends,
     TableBackend,
     TableBackendProtocol,
@@ -203,7 +204,7 @@ class AbstractBaseTable(ABC):
     def set_backend(
         self,
         handler: ZarrGroupHandler | None = None,
-        backend: TableBackend = Defa,
+        backend: TableBackend = DefaultTableBackend,
     ) -> None:
         """Set the backend of the table."""
         if handler is None:
