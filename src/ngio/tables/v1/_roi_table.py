@@ -321,7 +321,8 @@ class MaskingRoiTableV1(_GenericRoiTableV1[MaskingRoiTableV1Meta]):
         """Create a new ROI table."""
         meta = MaskingRoiTableV1Meta()
         if reference_label is not None:
-            meta.region = RegionMeta(path=reference_label)
+            path = f"../labels/{reference_label}"
+            meta.region = RegionMeta(path=path)
         super().__init__(meta, rois)
 
     def __repr__(self) -> str:
