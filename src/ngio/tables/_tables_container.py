@@ -97,7 +97,7 @@ class Table(Protocol):
 
         Either a handler or a backend must be provided.
 
-        If the hanlder in none it will be inferred from the backend.
+        If the handler in none it will be inferred from the backend.
         If the backend is none, it will be inferred from the group attrs
         """
         ...
