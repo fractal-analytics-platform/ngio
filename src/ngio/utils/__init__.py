@@ -3,7 +3,11 @@
 import os
 
 from ngio.common._common_types import ArrayLike
-from ngio.utils._datasets import download_ome_zarr_dataset, list_ome_zarr_datasets
+from ngio.utils._datasets import (
+    download_ome_zarr_dataset,
+    list_ome_zarr_datasets,
+    print_datasets_infos,
+)
 from ngio.utils._errors import (
     NgioFileExistsError,
     NgioFileNotFoundError,
@@ -34,13 +38,13 @@ __all__ = [
     "NgioValueError",
     "StoreOrGroup",
     "ZarrGroupHandler",
-    # Datasets
+    # Other
     "download_ome_zarr_dataset",
-    # Fractal
     "fractal_fsspec_store",
     "list_ome_zarr_datasets",
     # Logger
     "ngio_logger",
     "open_group_wrapper",
+    "print_datasets_infos",
     "set_logger_level",
 ]
