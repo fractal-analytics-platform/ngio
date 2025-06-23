@@ -1,5 +1,11 @@
 # Changelog
 
+## [v0.3.3]
+
+### Chores
+
+- improve dataset download process and streamline the CI workflows
+
 ## [v0.3.2]
 
 ### API Changes
