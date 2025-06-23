@@ -143,12 +143,12 @@ def download_ome_zarr_dataset(
         re_unzip=re_unzip,
     )
 
-    pooch.retrieve(
-        url=zenodo_infos["url"],
-        known_hash=zenodo_infos["known_hash"],
-        fname=fname,
-        path=download_dir,
-        processor=processor,
-        progressbar=progressbar,
-    )
+    #pooch.retrieve(
+    #    url=zenodo_infos["url"],
+    #    known_hash=zenodo_infos["known_hash"],
+    #    fname=fname,
+    #    path=download_dir,
+    #    processor=processor,
+    #    progressbar=progressbar,
+    #)
     return processor.output_file()
