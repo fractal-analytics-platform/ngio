@@ -1524,43 +1524,22 @@
 
 <h1 id="1-ome-zarr-container">1. OME-Zarr Container</h1>
 <p>Let's see how to open and explore an OME-Zarr image using <code>ngio</code>:</p>
-<div class="highlight"><pre><span></span><code><span class="n">Traceback</span> <span class="p">(</span><span class="n">most</span> <span class="n">recent</span> <span class="n">call</span> <span class="n">last</span><span class="p">):</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/ngio/utils/_zarr_utils.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">70</span><span class="p">,</span> <span class="ow">in</span> <span class="n">open_group_wrapper</span>
-    <span class="n">group</span> <span class="o">=</span> <span class="n">zarr</span><span class="o">.</span><span class="n">open_group</span><span class="p">(</span><span class="n">store</span><span class="o">=</span><span class="n">store</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">)</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/zarr/hierarchy.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">1578</span><span class="p">,</span> <span class="ow">in</span> <span class="n">open_group</span>
-    <span class="k">raise</span> <span class="n">GroupNotFoundError</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-<span class="n">zarr</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">GroupNotFoundError</span><span class="p">:</span> <span class="n">group</span> <span class="ow">not</span> <span class="n">found</span> <span class="n">at</span> <span class="n">path</span> <span class="s1">&#39;&#39;</span>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ngio</span><span class="w"> </span><span class="kn">import</span> <span class="n">open_ome_zarr_container</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ngio.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">download_ome_zarr_dataset</span>
 
-<span class="n">The</span> <span class="n">above</span> <span class="n">exception</span> <span class="n">was</span> <span class="n">the</span> <span class="n">direct</span> <span class="n">cause</span> <span class="n">of</span> <span class="n">the</span> <span class="n">following</span> <span class="n">exception</span><span class="p">:</span>
+<span class="c1"># Download a sample dataset</span>
+<span class="n">download_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;./data&quot;</span><span class="p">)</span>
+<span class="n">hcs_path</span> <span class="o">=</span> <span class="n">download_ome_zarr_dataset</span><span class="p">(</span><span class="s2">&quot;CardiomyocyteSmallMip&quot;</span><span class="p">,</span> <span class="n">download_dir</span><span class="o">=</span><span class="n">download_dir</span><span class="p">)</span>
+<span class="n">image_path</span> <span class="o">=</span> <span class="n">hcs_path</span> <span class="o">/</span> <span class="s2">&quot;B&quot;</span> <span class="o">/</span> <span class="s2">&quot;03&quot;</span> <span class="o">/</span> <span class="s2">&quot;0&quot;</span>
 
-<span class="n">Traceback</span> <span class="p">(</span><span class="n">most</span> <span class="n">recent</span> <span class="n">call</span> <span class="n">last</span><span class="p">):</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/markdown_exec/_internal/formatters/python.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">71</span><span class="p">,</span> <span class="ow">in</span> <span class="n">_run_python</span>
-    <span class="n">exec_python</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="n">code_block_id</span><span class="p">,</span> <span class="n">exec_globals</span><span class="p">)</span>
-    <span class="o">~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/markdown_exec/_internal/formatters/_exec_python.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">8</span><span class="p">,</span> <span class="ow">in</span> <span class="n">exec_python</span>
-    <span class="n">exec</span><span class="p">(</span><span class="n">compiled</span><span class="p">,</span> <span class="n">exec_globals</span><span class="p">)</span>  <span class="c1"># noqa: S102</span>
-    <span class="o">~~~~^^^^^^^^^^^^^^^^^^^^^^^^</span>
-  <span class="n">File</span> <span class="s2">&quot;&lt;code block: session get_started; n1&gt;&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">12</span><span class="p">,</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="n">module</span><span class="o">&gt;</span>
-    <span class="n">ome_zarr_container</span> <span class="o">=</span> <span class="n">open_ome_zarr_container</span><span class="p">(</span><span class="n">image_path</span><span class="p">)</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/ngio/images/_ome_zarr_container.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">633</span><span class="p">,</span> <span class="ow">in</span> <span class="n">open_ome_zarr_container</span>
-    <span class="n">handler</span> <span class="o">=</span> <span class="n">ZarrGroupHandler</span><span class="p">(</span><span class="n">store</span><span class="o">=</span><span class="n">store</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="n">cache</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">)</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/ngio/utils/_zarr_utils.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">115</span><span class="p">,</span> <span class="ow">in</span> <span class="fm">__init__</span>
-    <span class="n">group</span> <span class="o">=</span> <span class="n">open_group_wrapper</span><span class="p">(</span><span class="n">store</span><span class="p">,</span> <span class="n">mode</span><span class="p">)</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/ngio/utils/_zarr_utils.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">78</span><span class="p">,</span> <span class="ow">in</span> <span class="n">open_group_wrapper</span>
-    <span class="k">raise</span> <span class="n">NgioFileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No Zarr group found at </span><span class="si">{</span><span class="n">store</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
-<span class="n">ngio</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">_errors</span><span class="o">.</span><span class="n">NgioFileNotFoundError</span><span class="p">:</span> <span class="n">No</span> <span class="n">Zarr</span> <span class="n">group</span> <span class="n">found</span> <span class="n">at</span> <span class="mi">20200812</span><span class="o">-</span><span class="n">CardiomyocyteDifferentiation14</span><span class="o">-</span><span class="n">Cycle1</span><span class="o">-</span><span class="n">small</span><span class="o">-</span><span class="n">mip</span><span class="o">.</span><span class="n">zarr</span><span class="o">/</span><span class="n">B</span><span class="o">/</span><span class="mi">03</span><span class="o">/</span><span class="mi">0</span>
+<span class="c1"># Open the OME-Zarr container</span>
+<span class="n">ome_zarr_container</span> <span class="o">=</span> <span class="n">open_ome_zarr_container</span><span class="p">(</span><span class="n">image_path</span><span class="p">)</span>
 </code></pre></div>
+<div class="result"></div>
 <p>The <code>OME-Zarr Container</code> in is your entry point to working with OME-Zarr images. It provides high-level access to the image metadata, images, labels, and tables.</p>
-<div class="highlight"><pre><span></span><code><span class="n">Traceback</span> <span class="p">(</span><span class="n">most</span> <span class="n">recent</span> <span class="n">call</span> <span class="n">last</span><span class="p">):</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/markdown_exec/_internal/formatters/python.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">71</span><span class="p">,</span> <span class="ow">in</span> <span class="n">_run_python</span>
-    <span class="n">exec_python</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="n">code_block_id</span><span class="p">,</span> <span class="n">exec_globals</span><span class="p">)</span>
-    <span class="o">~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/markdown_exec/_internal/formatters/_exec_python.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">8</span><span class="p">,</span> <span class="ow">in</span> <span class="n">exec_python</span>
-    <span class="n">exec</span><span class="p">(</span><span class="n">compiled</span><span class="p">,</span> <span class="n">exec_globals</span><span class="p">)</span>  <span class="c1"># noqa: S102</span>
-    <span class="o">~~~~^^^^^^^^^^^^^^^^^^^^^^^^</span>
-  <span class="n">File</span> <span class="s2">&quot;&lt;code block: session get_started; n2&gt;&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">1</span><span class="p">,</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="n">module</span><span class="o">&gt;</span>
-    <span class="n">ome_zarr_container</span>
-<span class="ne">NameError</span><span class="p">:</span> <span class="n">name</span> <span class="s1">&#39;ome_zarr_container&#39;</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">defined</span><span class="o">.</span> <span class="n">Did</span> <span class="n">you</span> <span class="n">mean</span><span class="p">:</span> <span class="s1">&#39;open_ome_zarr_container&#39;</span><span class="err">?</span>
+<div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">ome_zarr_container</span>
+<span class="go">OmeZarrContainer(levels=5, #labels=4, #tables=7)</span>
 </code></pre></div>
 <p>The <code>OME-Zarr Container</code> will be the starting point for all your image processing tasks.</p>
 <h2 id="main-concepts">Main concepts</h2>
@@ -1582,87 +1561,33 @@
 <div class="tabbed-content">
 <div class="tabbed-block">
 <p>Show the number of resolution levels:
-<div class="highlight"><pre><span></span><code><span class="n">Traceback</span> <span class="p">(</span><span class="n">most</span> <span class="n">recent</span> <span class="n">call</span> <span class="n">last</span><span class="p">):</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/markdown_exec/_internal/formatters/python.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">71</span><span class="p">,</span> <span class="ow">in</span> <span class="n">_run_python</span>
-    <span class="n">exec_python</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="n">code_block_id</span><span class="p">,</span> <span class="n">exec_globals</span><span class="p">)</span>
-    <span class="o">~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/markdown_exec/_internal/formatters/_exec_python.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">8</span><span class="p">,</span> <span class="ow">in</span> <span class="n">exec_python</span>
-    <span class="n">exec</span><span class="p">(</span><span class="n">compiled</span><span class="p">,</span> <span class="n">exec_globals</span><span class="p">)</span>  <span class="c1"># noqa: S102</span>
-    <span class="o">~~~~^^^^^^^^^^^^^^^^^^^^^^^^</span>
-  <span class="n">File</span> <span class="s2">&quot;&lt;code block: session get_started; n3&gt;&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">1</span><span class="p">,</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="n">module</span><span class="o">&gt;</span>
-    <span class="n">ome_zarr_container</span><span class="o">.</span><span class="n">levels</span> <span class="c1"># Show the number of resolution levels</span>
-    <span class="o">^^^^^^^^^^^^^^^^^^</span>
-<span class="ne">NameError</span><span class="p">:</span> <span class="n">name</span> <span class="s1">&#39;ome_zarr_container&#39;</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">defined</span><span class="o">.</span> <span class="n">Did</span> <span class="n">you</span> <span class="n">mean</span><span class="p">:</span> <span class="s1">&#39;open_ome_zarr_container&#39;</span><span class="err">?</span>
+<div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">ome_zarr_container</span><span class="o">.</span><span class="n">levels</span> <span class="c1"># Show the number of resolution levels</span>
+<span class="go">5</span>
 </code></pre></div></p>
 </div>
 <div class="tabbed-block">
 <p>Show the paths to all available resolution levels:
-<div class="highlight"><pre><span></span><code><span class="n">Traceback</span> <span class="p">(</span><span class="n">most</span> <span class="n">recent</span> <span class="n">call</span> <span class="n">last</span><span class="p">):</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/markdown_exec/_internal/formatters/python.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">71</span><span class="p">,</span> <span class="ow">in</span> <span class="n">_run_python</span>
-    <span class="n">exec_python</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="n">code_block_id</span><span class="p">,</span> <span class="n">exec_globals</span><span class="p">)</span>
-    <span class="o">~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/markdown_exec/_internal/formatters/_exec_python.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">8</span><span class="p">,</span> <span class="ow">in</span> <span class="n">exec_python</span>
-    <span class="n">exec</span><span class="p">(</span><span class="n">compiled</span><span class="p">,</span> <span class="n">exec_globals</span><span class="p">)</span>  <span class="c1"># noqa: S102</span>
-    <span class="o">~~~~^^^^^^^^^^^^^^^^^^^^^^^^</span>
-  <span class="n">File</span> <span class="s2">&quot;&lt;code block: session get_started; n4&gt;&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">1</span><span class="p">,</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="n">module</span><span class="o">&gt;</span>
-    <span class="n">ome_zarr_container</span><span class="o">.</span><span class="n">levels_paths</span> <span class="c1"># Show the paths to all available images</span>
-    <span class="o">^^^^^^^^^^^^^^^^^^</span>
-<span class="ne">NameError</span><span class="p">:</span> <span class="n">name</span> <span class="s1">&#39;ome_zarr_container&#39;</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">defined</span><span class="o">.</span> <span class="n">Did</span> <span class="n">you</span> <span class="n">mean</span><span class="p">:</span> <span class="s1">&#39;open_ome_zarr_container&#39;</span><span class="err">?</span>
+<div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">ome_zarr_container</span><span class="o">.</span><span class="n">levels_paths</span> <span class="c1"># Show the paths to all available images</span>
+<span class="go">[&#39;0&#39;, &#39;1&#39;, &#39;2&#39;, &#39;3&#39;, &#39;4&#39;]</span>
 </code></pre></div></p>
 </div>
 <div class="tabbed-block">
 <p>Show if the image is 2D or 3D:
-<div class="highlight"><pre><span></span><code><span class="n">Traceback</span> <span class="p">(</span><span class="n">most</span> <span class="n">recent</span> <span class="n">call</span> <span class="n">last</span><span class="p">):</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/markdown_exec/_internal/formatters/python.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">71</span><span class="p">,</span> <span class="ow">in</span> <span class="n">_run_python</span>
-    <span class="n">exec_python</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="n">code_block_id</span><span class="p">,</span> <span class="n">exec_globals</span><span class="p">)</span>
-    <span class="o">~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/markdown_exec/_internal/formatters/_exec_python.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">8</span><span class="p">,</span> <span class="ow">in</span> <span class="n">exec_python</span>
-    <span class="n">exec</span><span class="p">(</span><span class="n">compiled</span><span class="p">,</span> <span class="n">exec_globals</span><span class="p">)</span>  <span class="c1"># noqa: S102</span>
-    <span class="o">~~~~^^^^^^^^^^^^^^^^^^^^^^^^</span>
-  <span class="n">File</span> <span class="s2">&quot;&lt;code block: session get_started; n5&gt;&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">1</span><span class="p">,</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="n">module</span><span class="o">&gt;</span>
-    <span class="n">ome_zarr_container</span><span class="o">.</span><span class="n">is_3d</span> <span class="c1"># Get if the image is 3D</span>
-    <span class="o">^^^^^^^^^^^^^^^^^^</span>
-<span class="ne">NameError</span><span class="p">:</span> <span class="n">name</span> <span class="s1">&#39;ome_zarr_container&#39;</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">defined</span><span class="o">.</span> <span class="n">Did</span> <span class="n">you</span> <span class="n">mean</span><span class="p">:</span> <span class="s1">&#39;open_ome_zarr_container&#39;</span><span class="err">?</span>
+<div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">ome_zarr_container</span><span class="o">.</span><span class="n">is_3d</span> <span class="c1"># Get if the image is 3D</span>
+<span class="go">False</span>
 </code></pre></div>
 or if the image is a time series:
-<div class="highlight"><pre><span></span><code><span class="n">Traceback</span> <span class="p">(</span><span class="n">most</span> <span class="n">recent</span> <span class="n">call</span> <span class="n">last</span><span class="p">):</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/markdown_exec/_internal/formatters/python.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">71</span><span class="p">,</span> <span class="ow">in</span> <span class="n">_run_python</span>
-    <span class="n">exec_python</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="n">code_block_id</span><span class="p">,</span> <span class="n">exec_globals</span><span class="p">)</span>
-    <span class="o">~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/markdown_exec/_internal/formatters/_exec_python.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">8</span><span class="p">,</span> <span class="ow">in</span> <span class="n">exec_python</span>
-    <span class="n">exec</span><span class="p">(</span><span class="n">compiled</span><span class="p">,</span> <span class="n">exec_globals</span><span class="p">)</span>  <span class="c1"># noqa: S102</span>
-    <span class="o">~~~~^^^^^^^^^^^^^^^^^^^^^^^^</span>
-  <span class="n">File</span> <span class="s2">&quot;&lt;code block: session get_started; n6&gt;&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">1</span><span class="p">,</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="n">module</span><span class="o">&gt;</span>
-    <span class="n">ome_zarr_container</span><span class="o">.</span><span class="n">is_time_series</span> <span class="c1"># Get if the image is a time series</span>
-    <span class="o">^^^^^^^^^^^^^^^^^^</span>
-<span class="ne">NameError</span><span class="p">:</span> <span class="n">name</span> <span class="s1">&#39;ome_zarr_container&#39;</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">defined</span><span class="o">.</span> <span class="n">Did</span> <span class="n">you</span> <span class="n">mean</span><span class="p">:</span> <span class="s1">&#39;open_ome_zarr_container&#39;</span><span class="err">?</span>
+<div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">ome_zarr_container</span><span class="o">.</span><span class="n">is_time_series</span> <span class="c1"># Get if the image is a time series</span>
+<span class="go">False</span>
 </code></pre></div></p>
 </div>
 <div class="tabbed-block">
-<p><div class="highlight"><pre><span></span><code><span class="n">Traceback</span> <span class="p">(</span><span class="n">most</span> <span class="n">recent</span> <span class="n">call</span> <span class="n">last</span><span class="p">):</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/markdown_exec/_internal/formatters/python.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">71</span><span class="p">,</span> <span class="ow">in</span> <span class="n">_run_python</span>
-    <span class="n">exec_python</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="n">code_block_id</span><span class="p">,</span> <span class="n">exec_globals</span><span class="p">)</span>
-    <span class="o">~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/markdown_exec/_internal/formatters/_exec_python.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">8</span><span class="p">,</span> <span class="ow">in</span> <span class="n">exec_python</span>
-    <span class="n">exec</span><span class="p">(</span><span class="n">compiled</span><span class="p">,</span> <span class="n">exec_globals</span><span class="p">)</span>  <span class="c1"># noqa: S102</span>
-    <span class="o">~~~~^^^^^^^^^^^^^^^^^^^^^^^^</span>
-  <span class="n">File</span> <span class="s2">&quot;&lt;code block: session get_started; n7&gt;&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">1</span><span class="p">,</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="n">module</span><span class="o">&gt;</span>
-    <span class="n">metadata</span> <span class="o">=</span> <span class="n">ome_zarr_container</span><span class="o">.</span><span class="n">image_meta</span>
-               <span class="o">^^^^^^^^^^^^^^^^^^</span>
-<span class="ne">NameError</span><span class="p">:</span> <span class="n">name</span> <span class="s1">&#39;ome_zarr_container&#39;</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">defined</span><span class="o">.</span> <span class="n">Did</span> <span class="n">you</span> <span class="n">mean</span><span class="p">:</span> <span class="s1">&#39;open_ome_zarr_container&#39;</span><span class="err">?</span>
+<p><div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">metadata</span> <span class="o">=</span> <span class="n">ome_zarr_container</span><span class="o">.</span><span class="n">image_meta</span>
+<span class="go">NgioImageMeta(name=None, datasets=[&#39;0&#39;, &#39;1&#39;, &#39;2&#39;, &#39;3&#39;, &#39;4&#39;], axes=[&#39;c&#39;, &#39;z&#39;, &#39;y&#39;, &#39;x&#39;])</span>
 </code></pre></div>
 The metadata object contains all the information about the image, for example, the channel labels:
-<div class="highlight"><pre><span></span><code><span class="n">Traceback</span> <span class="p">(</span><span class="n">most</span> <span class="n">recent</span> <span class="n">call</span> <span class="n">last</span><span class="p">):</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/markdown_exec/_internal/formatters/python.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">71</span><span class="p">,</span> <span class="ow">in</span> <span class="n">_run_python</span>
-    <span class="n">exec_python</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="n">code_block_id</span><span class="p">,</span> <span class="n">exec_globals</span><span class="p">)</span>
-    <span class="o">~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</span>
-  <span class="n">File</span> <span class="s2">&quot;/opt/hostedtoolcache/Python/3.13.3/x64/lib/python3.13/site-packages/markdown_exec/_internal/formatters/_exec_python.py&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">8</span><span class="p">,</span> <span class="ow">in</span> <span class="n">exec_python</span>
-    <span class="n">exec</span><span class="p">(</span><span class="n">compiled</span><span class="p">,</span> <span class="n">exec_globals</span><span class="p">)</span>  <span class="c1"># noqa: S102</span>
-    <span class="o">~~~~^^^^^^^^^^^^^^^^^^^^^^^^</span>
-  <span class="n">File</span> <span class="s2">&quot;&lt;code block: session get_started; n8&gt;&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">1</span><span class="p">,</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="n">module</span><span class="o">&gt;</span>
-    <span class="n">metadata</span><span class="o">.</span><span class="n">channel_labels</span>
-    <span class="o">^^^^^^^^</span>
-<span class="ne">NameError</span><span class="p">:</span> <span class="n">name</span> <span class="s1">&#39;metadata&#39;</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">defined</span>
+<div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">metadata</span><span class="o">.</span><span class="n">channel_labels</span>
+<span class="go">[&#39;DAPI&#39;, &#39;nanog&#39;, &#39;Lamin B1&#39;]</span>
 </code></pre></div></p>
 </div>
 </div>
@@ -1773,6 +1698,44 @@ In this case we need to provide a <code>fractal_token</code> to authenticate the
 
     
     
+    
+      
+  <span class="md-source-file__fact">
+    
+      
+  <span class="md-icon" title="Contributors">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2A10 10 0 0 0 2 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.87 1.52 2.34 1.07 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33s1.71.11 2.5.33c1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2"/></svg>
+  </span>
+  <span>GitHub</span>
+
+    
+    <nav>
+      
+        <a href="https://github.com/lorenzocerrone" class="md-author" title="@lorenzocerrone">
+          
+          <img src="https://avatars.githubusercontent.com/u/23013839?v=4&size=72" alt="lorenzocerrone">
+        </a>
+      
+        <a href="https://github.com/web-flow" class="md-author" title="@web-flow">
+          
+          <img src="https://avatars.githubusercontent.com/u/19864447?v=4&size=72" alt="web-flow">
+        </a>
+      
+        <a href="https://github.com/jluethi" class="md-author" title="@jluethi">
+          
+          <img src="https://avatars.githubusercontent.com/u/18033446?v=4&size=72" alt="jluethi">
+        </a>
+      
+        <a href="https://github.com/csoneson" class="md-author" title="@csoneson">
+          
+          <img src="https://avatars.githubusercontent.com/u/5628952?v=4&size=72" alt="csoneson">
+        </a>
+      
+      
+      
+    </nav>
+  </span>
+
     
   </aside>
 
