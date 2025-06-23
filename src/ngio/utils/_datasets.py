@@ -131,7 +131,6 @@ def download_ome_zarr_dataset(
     if dataset_name not in _ome_zarr_zoo:
         raise NgioValueError(f"Dataset {dataset_name} not found in the OME-Zarr zoo.")
     zenodo_infos = _ome_zarr_zoo[dataset_name]
-    zenodo_infos.pop("description", None)
 
     fname = zenodo_infos["fname"]
     zarrname = fname.replace(".zip", "")
@@ -143,9 +142,11 @@ def download_ome_zarr_dataset(
     )
 
     pooch.retrieve(
+        url=zenodo_infos["url"],
+        known_hash=zenodo_infos["known_hash"],
+        fname=fname,
         path=download_dir,
         processor=processor,
-        **zenodo_infos,
         progressbar=True,
     )
     return processor.output_file()
