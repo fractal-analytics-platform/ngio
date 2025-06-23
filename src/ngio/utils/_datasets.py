@@ -118,6 +118,7 @@ def download_ome_zarr_dataset(
     dataset_name: AVAILABLE_DATASETS | str,
     download_dir: str | Path = "data",
     re_unzip: bool = True,
+    progressbar: bool = False,
 ) -> Path:
     """Download an OME-Zarr dataset.
 
@@ -127,6 +128,7 @@ def download_ome_zarr_dataset(
         dataset_name (str): The dataset name.
         download_dir (str): The download directory. Defaults to "data".
         re_unzip (bool): If True, it will unzip the dataset even if it already exists.
+        progressbar (bool): If True, show a progress bar during download.
     """
     if dataset_name not in _ome_zarr_zoo:
         raise NgioValueError(f"Dataset {dataset_name} not found in the OME-Zarr zoo.")
@@ -147,6 +149,6 @@ def download_ome_zarr_dataset(
         fname=fname,
         path=download_dir,
         processor=processor,
-        progressbar=True,
+        progressbar=progressbar,
     )
     return processor.output_file()
