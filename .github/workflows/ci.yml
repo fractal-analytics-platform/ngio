@@ -12,6 +12,9 @@ on:
   schedule:
     # run every week (for --pre release tests)
     - cron: "0 0 * * 0"
+  workflow_run:
+    workflows: ["Download and Cache Shared Data"]            # name of Workflow A
+    types: [ completed ]
 
 # cancel in-progress runs that use the same workflow and branch
 concurrency:
