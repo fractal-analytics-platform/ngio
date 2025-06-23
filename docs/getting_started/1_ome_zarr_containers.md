@@ -9,7 +9,7 @@ from ngio.utils import download_ome_zarr_dataset
 
 # Download a sample dataset
 download_dir = Path("./data")
-download_dir = Path(".").absolute().parent.parent / "data" # markdown-exec: hide
+download_dir = Path(".").absolute().parent.parent.parent / "data" # markdown-exec: hide
 hcs_path = download_ome_zarr_dataset("CardiomyocyteSmallMip", download_dir=download_dir)
 image_path = hcs_path / "B" / "03" / "0"
 
