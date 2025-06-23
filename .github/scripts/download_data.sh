@@ -84,11 +84,11 @@ process_dataset() {
 }
 
 # Process the CardioMyocyte dataset
-process_dataset "20200812-CardiomyocyteDifferentiation14-Cycle1.zarr.zip" \
+process_dataset "20200812-CardiomyocyteDifferentiation14-Cycle1-tiny.zarr.zip" \
                 "https://zenodo.org/records/13305156/files/20200812-CardiomyocyteDifferentiation14-Cycle1.zarr.zip" \
                 "efc21fe8d4ea3abab76226d8c166452c"
 
-process_dataset "20200812-CardiomyocyteDifferentiation14-Cycle1_mip.zarr.zip" \
+process_dataset "20200812-CardiomyocyteDifferentiation14-Cycle1-small-mip.zarr.zip" \
                 "https://zenodo.org/records/13305316/files/20200812-CardiomyocyteDifferentiation14-Cycle1_mip.zarr.zip" \
                 "3ed3ea898e0ed42d397da2e1dbe40750"
 # To add more datasets, add more calls to process_dataset like this:
