@@ -8,17 +8,8 @@ on:
       - "v*"
 
 jobs:
-  download-test-ome-zarr:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Check and Download Artifacts
-        run: |
-          bash .github/scripts/download_data.sh
-
   deploy:
     name: Deploy Docs
-    needs: download-test-ome-zarr
     runs-on: ubuntu-latest
 
     steps:
