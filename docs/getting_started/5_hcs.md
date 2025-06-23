@@ -10,7 +10,7 @@ Let's open an `OmeZarrPlate` object.
 >>> from pathlib import Path # markdown-exec: hide
 >>> from ngio.utils import download_ome_zarr_dataset
 >>> from ngio import open_ome_zarr_plate
->>> download_dir = Path(".").absolute().parent.parent.parent / "data" # markdown-exec: hide
+>>> download_dir = Path(".").absolute() / "data" # markdown-exec: hide
 >>> hcs_path = download_ome_zarr_dataset("CardiomyocyteSmallMip", download_dir=download_dir)
 >>> ome_zarr_plate = open_ome_zarr_plate(hcs_path)
 >>> ome_zarr_plate
