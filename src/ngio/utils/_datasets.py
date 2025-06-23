@@ -64,25 +64,25 @@ class UnzipAndRename(pooch.Unzip):
 
 _ome_zarr_zoo = {
     "CardiomyocyteTiny": {
-        "url": "",#"https://zenodo.org/records/13305156/files/20200812-CardiomyocyteDifferentiation14-Cycle1.zarr.zip",
+        "url": "https://zenodo.org/records/13305156/files/20200812-CardiomyocyteDifferentiation14-Cycle1.zarr.zip",
         "known_hash": "md5:efc21fe8d4ea3abab76226d8c166452c",
         "fname": "20200812-CardiomyocyteDifferentiation14-Cycle1-tiny.zarr.zip",
         "description": "Tiny cardiomyocyte dataset 3D (32MB).",
     },
     "CardiomyocyteTinyMip": {
-        "url": "", #"https://zenodo.org/records/13305156/files/20200812-CardiomyocyteDifferentiation14-Cycle1_mip.zarr.zip",
+        "url": "https://zenodo.org/records/13305156/files/20200812-CardiomyocyteDifferentiation14-Cycle1_mip.zarr.zip",
         "known_hash": "md5:51809479777cafbe9ac0f9fa5636aa95",
         "fname": "20200812-CardiomyocyteDifferentiation14-Cycle1-tiny-mip.zarr.zip",
         "description": "Tiny cardiomyocyte dataset 2D MIP (16.4MB).",
     },
     "CardiomyocyteSmall": {
-        "url": "", #"https://zenodo.org/records/13305316/files/20200812-CardiomyocyteDifferentiation14-Cycle1.zarr.zip",
+        "url": "https://zenodo.org/records/13305316/files/20200812-CardiomyocyteDifferentiation14-Cycle1.zarr.zip",
         "known_hash": "md5:d5752ed4b72a9092a0290b3c04c0b9c2",
         "fname": "20200812-CardiomyocyteDifferentiation14-Cycle1-small.zarr.zip",
         "description": "Small cardiomyocyte dataset 3D (750MB).",
     },
     "CardiomyocyteSmallMip": {
-        "url": "", # "https://zenodo.org/records/13305316/files/20200812-CardiomyocyteDifferentiation14-Cycle1_mip.zarr.zip",
+        "url": "https://zenodo.org/records/13305316/files/20200812-CardiomyocyteDifferentiation14-Cycle1_mip.zarr.zip",
         "known_hash": "md5:3ed3ea898e0ed42d397da2e1dbe40750",
         "fname": "20200812-CardiomyocyteDifferentiation14-Cycle1-small-mip.zarr.zip",
         "description": "Small cardiomyocyte dataset 2D MIP (106MB).",
