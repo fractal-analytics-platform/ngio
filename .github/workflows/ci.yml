@@ -45,6 +45,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Restore shared data cache
+        id: cache-data
+        uses: actions/cache@v4
+        with:
+          path: data/
+          key: ${{ runner.os }}-${{ hashFiles('.github/scripts/download_data.sh') }}
+          restore-keys: |
+            ${{ runner.os }}-
+
+      - name: Check if cache hit
+        if: steps.cache-data.outputs.cache-hit != 'true'
+        run: exit 1
+
       - name: 🐍 Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
