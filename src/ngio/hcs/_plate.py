@@ -200,7 +200,7 @@ class OmeZarrWell:
         )
 
 
-def _buil_extras(paths: Collection[str]) -> list[dict[str, str]]:
+def _build_extras(paths: Collection[str]) -> list[dict[str, str]]:
     """Build the extras for the images.
 
     Args:
@@ -1021,7 +1021,7 @@ class OmeZarrPlate:
                 if 'lazy', the table will be loaded as a lazy frame.
         """
         images = self.get_images(acquisition=acquisition)
-        extras = _buil_extras(images.keys())
+        extras = _build_extras(images.keys())
         return concatenate_image_tables(
             images=images.values(),
             extras=extras,
@@ -1055,7 +1055,7 @@ class OmeZarrPlate:
                 if 'lazy', the table will be loaded as a lazy frame.
         """
         images = self.get_images(acquisition=acquisition)
-        extras = _buil_extras(images.keys())
+        extras = _build_extras(images.keys())
         return concatenate_image_tables_as(
             images=images.values(),
             extras=extras,
@@ -1088,7 +1088,7 @@ class OmeZarrPlate:
                 if 'lazy', the table will be loaded as a lazy frame.
         """
         images = await self.get_images_async(acquisition=acquisition)
-        extras = _buil_extras(images.keys())
+        extras = _build_extras(images.keys())
         return await concatenate_image_tables_async(
             images=images.values(),
             extras=extras,
@@ -1122,7 +1122,7 @@ class OmeZarrPlate:
                 if 'lazy', the table will be loaded as a lazy frame.
         """
         images = await self.get_images_async(acquisition=acquisition)
-        extras = _buil_extras(images.keys())
+        extras = _build_extras(images.keys())
         return await concatenate_image_tables_as_async(
             images=images.values(),
             extras=extras,

@@ -4,28 +4,23 @@ on:
   push:
     branches:
       - dev
+      - main
     tags:
       - "v*"
 
-jobs:
-  download-test-ome-zarr:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Check and Download Artifacts
-        run: |
-          bash .github/scripts/download_data.sh
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
+jobs:
   deploy:
     name: Deploy Docs
-    needs: download-test-ome-zarr
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
       - name: 🐍 Set up Python
         uses: actions/setup-python@v5
         with:
@@ -44,6 +39,15 @@ jobs:
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
         
+      - name: Restore shared data cache
+        id: cache-data
+        uses: actions/cache@v4
+        with:
+          path: data/
+          key: "${{ runner.os }}-data-${{ hashFiles('tests/conftest.py') }}"
+          restore-keys: |
+            "${{ runner.os }}-data-"
+            
       - name: Deploy docs
         run: |
           VERSION=$(echo $GITHUB_REF | sed 's/refs\/tags\///' | sed 's/refs\/heads\///')
@@ -53,9 +57,14 @@ jobs:
           if [[ $GITHUB_REF == refs/tags/* ]] && [[ $VERSION =~ ^v[0-9.]+$ ]]; then
             mike deploy --push --update-aliases $VERSION stable
             mike set-default --push stable
-            echo "Deployed stable version"
-          else
+            echo "Deployed stable version $VERSION (stable)"
+
+          elif [[ $GITHUB_REF == refs/heads/main ]]; then
+            mike deploy --push stable
+            mike set-default --push stable
+            echo "Deployed main version (stable)"
+          elif [[ $GITHUB_REF == refs/heads/dev ]]; then
             mike deploy --push dev
             mike set-default --push dev
-            echo "Deployed development version"
+            echo "Deployed development version (dev)"
           fi

@@ -10,7 +10,7 @@ Let's open an `OmeZarrPlate` object.
 >>> from pathlib import Path # markdown-exec: hide
 >>> from ngio.utils import download_ome_zarr_dataset
 >>> from ngio import open_ome_zarr_plate
->>> download_dir = Path(".").absolute().parent.parent / "data" # markdown-exec: hide
+>>> download_dir = Path(".").absolute() / "data" # markdown-exec: hide
 >>> hcs_path = download_ome_zarr_dataset("CardiomyocyteSmallMip", download_dir=download_dir)
 >>> ome_zarr_plate = open_ome_zarr_plate(hcs_path)
 >>> ome_zarr_plate
@@ -111,6 +111,7 @@ The `OmeZarrPlate` object provides a method to get the image objects in a well. 
 Ngio provides a utility function to create a plate.
 
 The first step is to create a list of `ImageInWellPath` objects. Each `ImageInWellPath` object contains the path to the image and the corresponding well.
+
 ```python exec="true" source="console" session="hcs_plate"
 from ngio import ImageInWellPath
 list_of_images = [ImageInWellPath(path="0", row="A", column=0),
@@ -124,6 +125,7 @@ list_of_images = [ImageInWellPath(path="0", row="A", column=0),
     The order in which the images are added is not important. The `rows` and `columns` attributes of the plate will be sorted in alphabetical/numerical order.
 
 Then, you can create the plate using the `create_empty_plate` function.
+
 ```pycon exec="true" source="console" session="hcs_plate"
 >>> from ngio import create_empty_plate
 >>> plate = create_empty_plate(store="new_plate.zarr", name="test_plate", images=list_of_images, overwrite=True)
@@ -131,7 +133,7 @@ Then, you can create the plate using the `create_empty_plate` function.
 >>> print(plate) # markdown-exec: hide
 ```
 
-This has created a new empty plate with the metadata correctly set. But no images have been added yet. 
+This has created a new empty plate with the metadata correctly set. But no images have been added yet.
 
 ### Modifying the plate
 

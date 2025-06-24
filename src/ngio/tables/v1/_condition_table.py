@@ -23,7 +23,7 @@ class ConditionTableV1(AbstractBaseTable):
     The condition table is a generic table that does not
     have a specific definition.
 
-    It is used to store informations about the particular conditions
+    It is used to store information about the particular conditions
     used to generate the data.
     - How much drug was used in the experiment
     - What treatment was used
