@@ -1,0 +1,43 @@
+name: "Download and Cache Shared Data"
+description: "Composite action to restore, download, and cache shared data"
+
+inputs:
+  os:
+    description: "Runner OS (for cache key). Defaults to runner.os if not set"
+    required: false
+    default: "${{ runner.os }}"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Restore shared data cache
+      id: cache-data
+      uses: actions/cache@v4
+      with:
+        path: data/
+        key: "${{ inputs.os }}-${{ hashFiles('.github/scripts/download_data.py') }}"
+        restore-keys: |
+          "${{ inputs.os }}-"
+
+    - name: Set up Python (only on cache miss)
+      if: steps.cache-data.outputs.cache-hit != 'true'
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+        cache-dependency-path: "pyproject.toml"
+        cache: "pip"
+
+    - name: Install dependencies (only on cache miss)
+      if: steps.cache-data.outputs.cache-hit != 'true'
+      run: |
+        python -m pip install -U pip
+        python -m pip install .[dev]
+
+    - name: Download data if cache missed
+      if: steps.cache-data.outputs.cache-hit != 'true'
+      run: |
+        echo "Cache miss, downloading data..."
+        python .github/scripts/download_data.py
