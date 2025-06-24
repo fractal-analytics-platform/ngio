@@ -12,51 +12,40 @@ on:
 
 jobs:
   download-data:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Restore data cache
-        id: cache-data
-        uses: actions/cache@v4
-        with:
-          path: data/
-          key: shared-data-${{ hashFiles('.github/scripts/download_data.sh') }}
-          restore-keys: |
-            shared-data-
-
-      - name: Download data if cache missed
-        if: steps.cache-data.outputs.cache-hit != 'true'
-        run: |
-          echo "Cache miss, downloading data..."
-          bash .github/scripts/download_data.sh
-
-      - name: Upload shared data
-        uses: actions/upload-artifact@v4
-        with:
-          name: shared-data
-          path: data/
-
-  create-cache:
-    needs: download-data
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
+
     steps:
       - uses: actions/checkout@v4
-
-      - name: Download shared data
-        uses: actions/download-artifact@v4
-        with:
-          name: shared-data
-          path: data/
 
       - name: Restore shared data cache
         id: cache-data
         uses: actions/cache@v4
         with:
           path: data/
-          key: ${{ runner.os }}-${{ hashFiles('.github/scripts/download_data.sh') }}
+          key: ${{ runner.os }}-${{ hashFiles('.github/scripts/download_data.py') }}
           restore-keys: |
             ${{ runner.os }}-
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        if: steps.cache-data.outputs.cache-hit != 'true'
+        with:
+          python-version: "3.12"
+          cache-dependency-path: "pyproject.toml"
+          cache: "pip"
+      
+      - name: Install Dependencies
+        if: steps.cache-data.outputs.cache-hit != 'true'
+        run: |
+          python -m pip install -U pip
+          python -m pip install .[dev]
+
+      - name: Download data if cache missed
+        if: steps.cache-data.outputs.cache-hit != 'true'
+        run: |
+          echo "Cache miss, downloading data..."
+          python .github/scripts/download_data.py
+
