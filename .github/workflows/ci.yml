@@ -45,7 +45,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: ./.github/workflows/download_data.yml
+      - uses: ./.github/actions/download_data
         with:
           os: ${{ matrix.platform }}
 
