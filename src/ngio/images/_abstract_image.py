@@ -343,18 +343,19 @@ def set_roi_pipe(
 
 def build_image_roi_table(image: AbstractImage, name: str = "image") -> RoiTable:
     """Build the ROI table for an image."""
-    dim_z, dim_y, dim_x = (
-        image.dimensions.get("z", strict=False),
-        image.dimensions.get("y"),
-        image.dimensions.get("x"),
-    )
+    dim_x = image.dimensions.get("x")
+    dim_y = image.dimensions.get("y")
+    dim_z = image.dimensions.get("z", default=1)
+    dim_t = image.dimensions.get("t", default=1)
     image_roi = RoiPixels(
         name=name,
         x=0,
         y=0,
         z=0,
+        t=0,
         x_length=dim_x,
         y_length=dim_y,
         z_length=dim_z,
+        t_length=dim_t,
     )
     return RoiTable(rois=[image_roi.to_roi(pixel_size=image.pixel_size)])

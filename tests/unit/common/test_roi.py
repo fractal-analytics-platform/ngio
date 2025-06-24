@@ -29,6 +29,7 @@ def test_rois():
         "x": slice(0, 1),
         "y": slice(0, 1),
         "z": slice(0, 1),
+        "t": slice(0, 1),
     }
     assert roi.model_extra is not None
     assert roi.model_extra["other"] == "other"

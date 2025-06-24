@@ -32,8 +32,7 @@ from ngio.utils import (
 
 def _check_channel_meta(meta: NgioImageMeta, dimension: Dimensions) -> ChannelsMeta:
     """Check the channel metadata."""
-    c_dim = dimension.get("c", strict=False)
-    c_dim = 1 if c_dim is None else c_dim
+    c_dim = dimension.get("c", default=1)
 
     if meta.channels_meta is None:
         return ChannelsMeta.default_init(labels=c_dim)

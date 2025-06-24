@@ -49,8 +49,8 @@ class Roi(BaseModel):
         dim_x = dimensions.get("x")
         dim_y = dimensions.get("y")
         # Will default to 1 if z does not exist
-        dim_z = dimensions.get("z", strict=False)
-        dim_t = dimensions.get("t", strict=False)
+        dim_z = dimensions.get("z", default=1)
+        dim_t = dimensions.get("t", default=1)
         extra_dict = self.model_extra if self.model_extra else {}
 
         return RoiPixels(
