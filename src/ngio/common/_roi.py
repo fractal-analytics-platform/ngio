@@ -33,9 +33,11 @@ class Roi(BaseModel):
     x_length: float
     y_length: float
     z_length: float = 1.0
+    t_length: float = 1.0
     x: float = 0.0
     y: float = 0.0
     z: float = 0.0
+    t: float = 0.0
     unit: SpaceUnits | str | None = Field(DefaultSpaceUnit, repr=False)
 
     model_config = ConfigDict(extra="allow")
@@ -48,16 +50,20 @@ class Roi(BaseModel):
         dim_y = dimensions.get("y")
         # Will default to 1 if z does not exist
         dim_z = dimensions.get("z", strict=False)
+        dim_t = dimensions.get("t", strict=False)
+        extra_dict = self.model_extra if self.model_extra else {}
 
         return RoiPixels(
             name=self.name,
             x=_to_raster(self.x, pixel_size.x, dim_x),
             y=_to_raster(self.y, pixel_size.y, dim_y),
             z=_to_raster(self.z, pixel_size.z, dim_z),
+            t=_to_raster(self.t, pixel_size.t, dim_t),
             x_length=_to_raster(self.x_length, pixel_size.x, dim_x),
             y_length=_to_raster(self.y_length, pixel_size.y, dim_y),
             z_length=_to_raster(self.z_length, pixel_size.z, dim_z),
-            **self.model_extra,
+            t_length=_to_raster(self.t_length, pixel_size.t, dim_t),
+            **extra_dict,
         )
 
     def zoom(self, zoom_factor: float = 1) -> "Roi":
@@ -76,26 +82,31 @@ class RoiPixels(BaseModel):
     """Region of interest (ROI) metadata."""
 
     name: str
-    x: int
-    y: int
-    z: int
     x_length: int
     y_length: int
-    z_length: int
+    z_length: int = 1
+    t_length: int = 1
+    x: int = 0
+    y: int = 0
+    z: int = 0
+    t: int = 0
     model_config = ConfigDict(extra="allow")
 
     def to_roi(self, pixel_size: PixelSize) -> Roi:
         """Convert to world coordinates."""
+        extra_dict = self.model_extra if self.model_extra else {}
         return Roi(
             name=self.name,
             x=_to_world(self.x, pixel_size.x),
             y=_to_world(self.y, pixel_size.y),
             z=_to_world(self.z, pixel_size.z),
+            t=_to_world(self.t, pixel_size.t),
             x_length=_to_world(self.x_length, pixel_size.x),
             y_length=_to_world(self.y_length, pixel_size.y),
             z_length=_to_world(self.z_length, pixel_size.z),
+            t_length=_to_world(self.t_length, pixel_size.t),
             unit=pixel_size.space_unit,
-            **self.model_extra,
+            **extra_dict,
         )
 
     def to_slices(self) -> dict[str, slice]:
@@ -104,6 +115,7 @@ class RoiPixels(BaseModel):
             "x": slice(self.x, self.x + self.x_length),
             "y": slice(self.y, self.y + self.y_length),
             "z": slice(self.z, self.z + self.z_length),
+            "t": slice(self.t, self.t + self.t_length),
         }
 
 
@@ -134,9 +146,11 @@ def zoom_roi(roi: Roi, zoom_factor: float = 1) -> Roi:
         x=new_x,
         y=new_y,
         z=roi.z,
+        t=roi.t,
         x_length=roi.x_length + diff_x,
         y_length=roi.y_length + diff_y,
         z_length=roi.z_length,
+        t_length=roi.t_length,
         unit=roi.unit,
     )
 
@@ -150,18 +164,19 @@ def roi_to_slice_kwargs(
     **slice_kwargs: slice | int | Iterable[int],
 ) -> dict[str, slice | int | Iterable[int]]:
     """Convert a WorldCooROI to slice_kwargs."""
-    raster_roi = roi.to_pixel_roi(
+    pixel_roi = roi.to_pixel_roi(
         pixel_size=pixel_size, dimensions=dimensions
     ).to_slices()
 
-    if not dimensions.has_axis(axis_name="z"):
-        raster_roi.pop("z")
+    for ax in ["x", "y", "z", "t"]:
+        if not dimensions.has_axis(axis_name=ax):
+            pixel_roi.pop(ax, None)
 
     for key in slice_kwargs.keys():
-        if key in raster_roi:
+        if key in pixel_roi:
             raise NgioValueError(
                 f"Key {key} is already in the slice_kwargs. "
                 "Ambiguous which one to use: "
-                f"{key}={slice_kwargs[key]} or roi_{key}={raster_roi[key]}"
+                f"{key}={slice_kwargs[key]} or roi_{key}={pixel_roi[key]}"
             )
-    return {**raster_roi, **slice_kwargs}
+    return {**pixel_roi, **slice_kwargs}
