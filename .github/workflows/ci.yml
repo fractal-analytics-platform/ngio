@@ -45,10 +45,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: ./.github/actions/download_data
-        with:
-          os: ${{ matrix.platform }}
-
       - name: 🐍 Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
@@ -61,6 +57,11 @@ jobs:
           python -m pip install -U pip
           # if running a cron job, we add the --pre flag to test against pre-releases
           python -m pip install .[test] ${{ github.event_name == 'schedule' && '--pre' || ''  }}
+
+      - name: Download and Cache Shared Data
+        uses: ./.github/actions/download_data
+        with:
+          os: ${{ matrix.platform }}
 
       - name: 🧪 Run Tests
         run: pytest
