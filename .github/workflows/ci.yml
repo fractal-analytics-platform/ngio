@@ -57,10 +57,6 @@ jobs:
           python -m pip install -U pip
           # if running a cron job, we add the --pre flag to test against pre-releases
           python -m pip install .[test] ${{ github.event_name == 'schedule' && '--pre' || ''  }}
-
-      #- name: Download and Cache Shared Data
-      #  uses: ./.github/actions/download_data
-      #  with:
       
       - name: Restore shared data cache
         id: cache-data
@@ -89,7 +85,6 @@ jobs:
           update_existing: true
 
       - name: Coverage
-        if: ${{ matrix.python-version == '3.11' }} && ${{ matrix.platform == 'ubuntu-latest' }}
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
