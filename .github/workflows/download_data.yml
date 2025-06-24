@@ -1,21 +1,17 @@
 name: Download and Cache Shared Data
 
 on:
-  push:
-    branches:
-      - main
-      - dev
-    tags:
-      - "v*"
-  pull_request:
-  workflow_dispatch:
+  workflow_call:
+    inputs:
+      os:
+        description: Operating system to run the job on
+        required: true
+        default: ubuntu-latest
+        type: string
 
 jobs:
   download-data:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ inputs.os }}
 
     steps:
       - uses: actions/checkout@v4
@@ -25,9 +21,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: data/
-          key: ${{ runner.os }}-${{ hashFiles('.github/scripts/download_data.py') }}
+          key: ${{ inputs.os }}-${{ hashFiles('.github/scripts/download_data.py') }}
           restore-keys: |
-            ${{ runner.os }}-
+            ${{ inputs.os }}-
 
       - name: Set up Python
         uses: actions/setup-python@v5
