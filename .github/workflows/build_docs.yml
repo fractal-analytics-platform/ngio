@@ -59,10 +59,6 @@ jobs:
             mike set-default --push stable
             echo "Deployed stable version $VERSION (stable)"
 
-          elif [[ $GITHUB_REF == refs/heads/main ]]; then
-            mike deploy --push stable
-            mike set-default --push stable
-            echo "Deployed main version (stable)"
           elif [[ $GITHUB_REF == refs/heads/dev ]]; then
             mike deploy --push dev
             mike set-default --push dev
