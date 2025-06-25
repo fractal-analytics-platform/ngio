@@ -427,29 +427,29 @@ class AxesMapper:
 
         # Step 1: Check find squeeze axes
         axes_to_squeeze = []
-        axes_names = []
+        axes_names_after_squeeze = []
         for i, ax in enumerate(self.on_disk_axes_names):
             # If the axis is not in the names, it means we need to squeeze it
             ax_canonical = inv_canonical_map.get(ax, None)
             if ax not in names and ax_canonical not in names:
                 axes_to_squeeze.append(i)
             elif ax in names:
-                axes_names.append(ax)
+                axes_names_after_squeeze.append(ax)
             elif ax_canonical in names:
                 # If the axis is in the canonical map, we add it to the names
-                axes_names.append(ax_canonical)
+                axes_names_after_squeeze.append(ax_canonical)
         # Step 2: Find the transposition order
         transposition_order = []
-        axes_names_2 = []
+        axes_names_after_transpose = []
         for ax in names:
-            if ax in axes_names:
-                transposition_order.append(axes_names.index(ax))
-                axes_names_2.append(ax)
+            if ax in axes_names_after_squeeze:
+                transposition_order.append(axes_names_after_squeeze.index(ax))
+                axes_names_after_transpose.append(ax)
 
         # Step 3: Find axes to expand
         axes_to_expand = []
         for i, name in enumerate(names):
-            if name not in self._index_mapping.keys():
+            if name not in axes_names_after_transpose:
                 # If the axis is not in the mapping, it means we need to expand it
                 axes_to_expand.append(i)
         return tuple(axes_to_squeeze), tuple(transposition_order), tuple(axes_to_expand)
