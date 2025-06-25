@@ -461,7 +461,15 @@ class AxesMapper:
         transforms = []
         if len(axes_to_squeeze) > 0:
             transforms.append(AxesSqueeze(axes=axes_to_squeeze))
-        if len(transposition_order) > 0:
+
+        # Check if the transposition order is not the identity
+        check = [
+            i == j
+            for i, j in zip(
+                transposition_order, range(len(transposition_order)), strict=True
+            )
+        ]
+        if not all(check):
             transforms.append(AxesTranspose(axes=transposition_order))
         if len(axes_to_expand) > 0:
             transforms.append(AxesExpand(axes=axes_to_expand))
@@ -475,7 +483,12 @@ class AxesMapper:
         transforms = []
         if len(axes_to_expand) > 0:
             transforms.append(AxesSqueeze(axes=axes_to_expand))
-        if len(_reverse_indices) > 0:
+
+        check = [
+            i == j
+            for i, j in zip(_reverse_indices, range(len(_reverse_indices)), strict=True)
+        ]
+        if not all(check):
             transforms.append(AxesTranspose(axes=_reverse_indices))
         if len(axes_to_squeeze) > 0:
             transforms.append(AxesExpand(axes=axes_to_squeeze))

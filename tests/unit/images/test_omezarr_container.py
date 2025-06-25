@@ -200,7 +200,7 @@ def test_get_and_squeeze(tmp_path: Path, array_mode: str):
         np.ones((30, 20), dtype="uint8"),
         axes_order=["x", "y"],
     )
-    assert image.get_array(axes_order=["x"], y=0).shape == (30, )
+    assert image.get_array(axes_order=["x"], y=0).shape == (30,)
     image.set_array(
         np.ones((30,), dtype="uint8"),
         axes_order=["x"],
