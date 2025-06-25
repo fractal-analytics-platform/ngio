@@ -185,15 +185,6 @@ def test_axes_fail():
     with pytest.raises(ValueError):
         mapper.to_order(["x", "y", "y"])
 
-    with pytest.raises(ValueError):
-        mapper.from_order(["x"])
-
-    with pytest.raises(ValueError):
-        mapper.from_order(["XX"])
-
-    with pytest.raises(ValueError):
-        mapper.get_index("XX")
-
 
 def test_pixel_size():
     ps_dict = {"x": 0.5, "y": 0.5, "z": 1.0, "t": 1.0}

@@ -168,3 +168,41 @@ def test_remote_ome_zarr_container():
 
     _ = ome_zarr.get_label("nuclei", path="0")
     _ = ome_zarr.get_table("well_ROI_table")
+
+
+@pytest.mark.parametrize("array_mode", ["numpy", "dask"])
+def test_get_and_squeeze(tmp_path: Path, array_mode: str):
+    # Very basic test to check if the container is working
+    # to be expanded with more meaningful tests
+    store = tmp_path / "ome_zarr.zarr"
+    ome_zarr = create_empty_ome_zarr(
+        store,
+        shape=(1, 20, 30),
+        xy_pixelsize=0.5,
+        levels=1,
+        axes_names=["c", "y", "x"],
+        dtype="uint8",
+    )
+    image = ome_zarr.get_image()
+    assert image.shape == (1, 20, 30)
+    assert image.get_array(axes_order=["c", "y", "x"]).shape == (1, 20, 30)
+    image.set_array(
+        np.ones((1, 20, 30), dtype="uint8"),
+        axes_order=["c", "y", "x"],
+    )
+    assert image.get_array(axes_order=["y", "x"]).shape == (20, 30)
+    image.set_array(
+        np.ones((20, 30), dtype="uint8"),
+        axes_order=["y", "x"],
+    )
+    assert image.get_array(axes_order=["x", "y"]).shape == (30, 20)
+    image.set_array(
+        np.ones((30, 20), dtype="uint8"),
+        axes_order=["x", "y"],
+    )
+    assert image.get_array(axes_order=["x"], y=0).shape == (30, )
+    image.set_array(
+        np.ones((30,), dtype="uint8"),
+        axes_order=["x"],
+        y=0,
+    )
