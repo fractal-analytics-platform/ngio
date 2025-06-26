@@ -68,6 +68,11 @@ class Dimensions:
         return str(self)
 
     @property
+    def axes_mapper(self) -> AxesMapper:
+        """Return the axes mapper object."""
+        return self._axes_mapper
+
+    @property
     def on_disk_shape(self) -> tuple[int, ...]:
         """Return the shape as a tuple."""
         return tuple(self._shape)

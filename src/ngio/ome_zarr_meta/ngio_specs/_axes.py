@@ -266,20 +266,11 @@ def validate_axes(
     )
 
 
-class AxesTransformation(BaseModel):
+class AxesOps(BaseModel):
+    transpose_axes: tuple[int, ...] | None = None
+    expand_axes: tuple[int, ...] | None = None
+    squeeze_axes: tuple[int, ...] | None = None
     model_config = ConfigDict(extra="forbid", frozen=True, arbitrary_types_allowed=True)
-
-
-class AxesTranspose(AxesTransformation):
-    axes: tuple[int, ...]
-
-
-class AxesExpand(AxesTransformation):
-    axes: tuple[int, ...]
-
-
-class AxesSqueeze(AxesTransformation):
-    axes: tuple[int, ...]
 
 
 class AxesMapper:
@@ -410,7 +401,7 @@ class AxesMapper:
 
     def _change_order(
         self, names: Collection[str]
-    ) -> tuple[tuple[int, ...], tuple[int, ...], tuple[int, ...]]:
+    ) -> tuple[tuple[int, ...] | None, tuple[int, ...] | None, tuple[int, ...] | None]:
         """Change the order of the axes."""
         # Validate the names
         unique_names = set(names)
@@ -426,80 +417,75 @@ class AxesMapper:
         inv_canonical_map = self.axes_setup.inverse_canonical_map()
 
         # Step 1: Check find squeeze axes
-        axes_to_squeeze = []
+        _axes_to_squeeze: list[int] = []
         axes_names_after_squeeze = []
         for i, ax in enumerate(self.on_disk_axes_names):
             # If the axis is not in the names, it means we need to squeeze it
             ax_canonical = inv_canonical_map.get(ax, None)
             if ax not in names and ax_canonical not in names:
-                axes_to_squeeze.append(i)
+                _axes_to_squeeze.append(i)
             elif ax in names:
                 axes_names_after_squeeze.append(ax)
             elif ax_canonical in names:
                 # If the axis is in the canonical map, we add it to the names
                 axes_names_after_squeeze.append(ax_canonical)
+
+        axes_to_squeeze = tuple(_axes_to_squeeze) if len(_axes_to_squeeze) > 0 else None
+
         # Step 2: Find the transposition order
-        transposition_order = []
+        _transposition_order: list[int] = []
         axes_names_after_transpose = []
         for ax in names:
             if ax in axes_names_after_squeeze:
-                transposition_order.append(axes_names_after_squeeze.index(ax))
+                _transposition_order.append(axes_names_after_squeeze.index(ax))
                 axes_names_after_transpose.append(ax)
 
+        if np.allclose(_transposition_order, range(len(_transposition_order))):
+            # If the transposition order is the identity, we don't need to transpose
+            transposition_order = None
+        else:
+            transposition_order = tuple(_transposition_order)
+
         # Step 3: Find axes to expand
-        axes_to_expand = []
+        _axes_to_expand: list[int] = []
         for i, name in enumerate(names):
             if name not in axes_names_after_transpose:
                 # If the axis is not in the mapping, it means we need to expand it
-                axes_to_expand.append(i)
-        return tuple(axes_to_squeeze), tuple(transposition_order), tuple(axes_to_expand)
+                _axes_to_expand.append(i)
 
-    def to_order(self, names: Collection[str]) -> tuple[AxesTransformation, ...]:
+        axes_to_expand = tuple(_axes_to_expand) if len(_axes_to_expand) > 0 else None
+        return axes_to_squeeze, transposition_order, axes_to_expand
+
+    def to_order(self, names: Collection[str]) -> AxesOps:
         """Get the new order of the axes."""
         axes_to_squeeze, transposition_order, axes_to_expand = self._change_order(names)
+        return AxesOps(
+            transpose_axes=transposition_order,
+            expand_axes=axes_to_expand,
+            squeeze_axes=axes_to_squeeze,
+        )
 
-        transforms = []
-        if len(axes_to_squeeze) > 0:
-            transforms.append(AxesSqueeze(axes=axes_to_squeeze))
-
-        # Check if the transposition order is not the identity
-        check = [
-            i == j
-            for i, j in zip(
-                transposition_order, range(len(transposition_order)), strict=True
-            )
-        ]
-        if not all(check):
-            transforms.append(AxesTranspose(axes=transposition_order))
-        if len(axes_to_expand) > 0:
-            transforms.append(AxesExpand(axes=axes_to_expand))
-        return tuple(transforms)
-
-    def from_order(self, names: Collection[str]) -> tuple[AxesTransformation, ...]:
+    def from_order(self, names: Collection[str]) -> AxesOps:
         """Get the new order of the axes."""
         axes_to_squeeze, transposition_order, axes_to_expand = self._change_order(names)
         # Inverse transpose is just the transpose with the inverse indices
-        _reverse_indices = tuple(np.argsort(transposition_order))
-        transforms = []
-        if len(axes_to_expand) > 0:
-            transforms.append(AxesSqueeze(axes=axes_to_expand))
+        if transposition_order is None:
+            _reverse_indices = None
+        else:
+            _reverse_indices = tuple(np.argsort(transposition_order))
 
-        check = [
-            i == j
-            for i, j in zip(_reverse_indices, range(len(_reverse_indices)), strict=True)
-        ]
-        if not all(check):
-            transforms.append(AxesTranspose(axes=_reverse_indices))
-        if len(axes_to_squeeze) > 0:
-            transforms.append(AxesExpand(axes=axes_to_squeeze))
-        return tuple(transforms)
+        return AxesOps(
+            transpose_axes=_reverse_indices,
+            expand_axes=axes_to_squeeze,
+            squeeze_axes=axes_to_expand,
+        )
 
-    def to_canonical(self) -> tuple[AxesTransformation, ...]:
+    def to_canonical(self) -> AxesOps:
         """Get the new order of the axes."""
         other = self._axes_setup.others
         return self.to_order(other + list(self._canonical_order))
 
-    def from_canonical(self) -> tuple[AxesTransformation, ...]:
+    def from_canonical(self) -> AxesOps:
         """Get the new order of the axes."""
         other = self._axes_setup.others
         return self.from_order(other + list(self._canonical_order))
