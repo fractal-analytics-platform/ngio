@@ -7,7 +7,6 @@ import zarr
 from dask.array import Array as DaskArray
 from dask.delayed import Delayed, delayed
 
-from ngio.common._common_types import ArrayLike
 from ngio.common._dimensions import Dimensions
 from ngio.ome_zarr_meta.ngio_specs import AxesOps
 from ngio.utils import NgioValueError
@@ -19,6 +18,7 @@ from ngio.utils import NgioValueError
 ##############################################################
 
 SliceDefinition = tuple[slice | tuple[int, ...], ...]
+ArrayLike = np.ndarray | DaskArray | Delayed
 
 
 def _validate_int(value: int, shape: int) -> int:
