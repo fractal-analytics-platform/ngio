@@ -469,6 +469,52 @@ def _mask_pipe_common_dask(
     return array_patch, mask
 
 
+def get_masked_as_numpy(
+    array: zarr.Array,
+    label_array: zarr.Array,
+    label: int,
+    *,
+    dimensions_array: Dimensions,
+    dimensions_label: Dimensions,
+    axes_order: Collection[str] | None = None,
+    **slice_kwargs: slice | int | Iterable[int],
+) -> np.ndarray:
+    array_patch, mask = _mask_pipe_common_numpy(
+        array=array,
+        label_array=label_array,
+        label=label,
+        dimensions_array=dimensions_array,
+        dimensions_label=dimensions_label,
+        axes_order=axes_order,
+        **slice_kwargs,
+    )
+    array_patch[~mask] = 0
+    return array_patch
+
+
+def get_masked_as_dask(
+    array: zarr.Array,
+    label_array: zarr.Array,
+    label: int,
+    *,
+    dimensions_array: Dimensions,
+    dimensions_label: Dimensions,
+    axes_order: Collection[str] | None = None,
+    **slice_kwargs: slice | int | Iterable[int],
+) -> DaskArray:
+    array_patch, mask = _mask_pipe_common_dask(
+        array=array,
+        label_array=label_array,
+        label=label,
+        dimensions_array=dimensions_array,
+        dimensions_label=dimensions_label,
+        axes_order=axes_order,
+        **slice_kwargs,
+    )
+    array_patch = da.where(mask, array_patch, 0)
+    return array_patch
+
+
 def get_masked_pipe(
     array: zarr.Array,
     label_array: zarr.Array,
@@ -481,7 +527,7 @@ def get_masked_pipe(
     **slice_kwargs: slice | int | Iterable[int],
 ):
     if mode == "numpy":
-        array_patch, mask = _mask_pipe_common_numpy(
+        return get_masked_as_numpy(
             array=array,
             label_array=label_array,
             label=label,
@@ -490,10 +536,8 @@ def get_masked_pipe(
             axes_order=axes_order,
             **slice_kwargs,
         )
-        array_patch[~mask] = 0
-        return array_patch
     elif mode == "dask":
-        array_patch, mask = _mask_pipe_common_dask(
+        return get_masked_as_dask(
             array=array,
             label_array=label_array,
             label=label,
@@ -502,10 +546,70 @@ def get_masked_pipe(
             axes_order=axes_order,
             **slice_kwargs,
         )
-        array_patch = da.where(mask, array_patch, 0)
-        return array_patch
 
     raise NgioValueError(f"Unknown mode {mode}, expected 'numpy' or 'dask'.")
+
+
+def set_masked_as_numpy(
+    array: zarr.Array,
+    label_array: zarr.Array,
+    label: int,
+    patch: np.ndarray,
+    *,
+    dimensions_array: Dimensions,
+    dimensions_label: Dimensions,
+    axes_order: Collection[str] | None = None,
+    **slice_kwargs: slice | int | Iterable[int],
+):
+    array_patch, mask = _mask_pipe_common_numpy(
+        array=array,
+        label_array=label_array,
+        label=label,
+        dimensions_array=dimensions_array,
+        dimensions_label=dimensions_label,
+        axes_order=axes_order,
+        **slice_kwargs,
+    )
+    _patch = np.where(mask, patch, array_patch)
+
+    set_numpy(
+        array,
+        _patch,
+        dimensions=dimensions_array,
+        axes_order=axes_order,
+        **slice_kwargs,
+    )
+
+
+def set_masked_as_dask(
+    array: zarr.Array,
+    label_array: zarr.Array,
+    label: int,
+    patch: DaskArray,
+    *,
+    dimensions_array: Dimensions,
+    dimensions_label: Dimensions,
+    axes_order: Collection[str] | None = None,
+    **slice_kwargs: slice | int | Iterable[int],
+):
+    array_patch, mask = _mask_pipe_common_dask(
+        array=array,
+        label_array=label_array,
+        label=label,
+        dimensions_array=dimensions_array,
+        dimensions_label=dimensions_label,
+        axes_order=axes_order,
+        **slice_kwargs,
+    )
+    _patch = da.where(mask, patch, array_patch)
+
+    set_dask(
+        array,
+        _patch,
+        dimensions=dimensions_array,
+        axes_order=axes_order,
+        **slice_kwargs,
+    )
 
 
 def set_masked_pipe(
@@ -520,36 +624,30 @@ def set_masked_pipe(
     **slice_kwargs: slice | int | Iterable[int],
 ):
     if isinstance(patch, DaskArray):
-        array_patch, mask = _mask_pipe_common_dask(
+        set_masked_as_dask(
             array=array,
             label_array=label_array,
             label=label,
+            patch=patch,
             dimensions_array=dimensions_array,
             dimensions_label=dimensions_label,
             axes_order=axes_order,
             **slice_kwargs,
         )
-        _patch = da.where(mask, patch, array_patch)
+        return None
     elif isinstance(patch, np.ndarray):
-        array_patch, mask = _mask_pipe_common_numpy(
+        set_masked_as_numpy(
             array=array,
             label_array=label_array,
             label=label,
+            patch=patch,
             dimensions_array=dimensions_array,
             dimensions_label=dimensions_label,
             axes_order=axes_order,
             **slice_kwargs,
         )
-        _patch = np.where(mask, patch, array_patch)
-    else:
-        raise NgioValueError(
-            "Mode not yet supported for masked array. Expected a numpy or dask array."
-        )
+        return None
 
-    set_pipe(
-        array,
-        _patch,
-        dimensions=dimensions_array,
-        axes_order=axes_order,
-        **slice_kwargs,
+    raise NgioValueError(
+        "Mode not yet supported for masked array. Expected a numpy or dask array."
     )

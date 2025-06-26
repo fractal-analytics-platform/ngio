@@ -158,15 +158,24 @@ def zoom_roi(roi: Roi, zoom_factor: float = 1) -> Roi:
 
 
 def roi_to_slice_kwargs(
-    roi: Roi,
-    pixel_size: PixelSize,
+    roi: Roi | RoiPixels,
     dimensions: Dimensions,
+    pixel_size: PixelSize | None = None,
     **slice_kwargs: slice | int | Iterable[int],
 ) -> dict[str, slice | int | Iterable[int]]:
     """Convert a WorldCooROI to slice_kwargs."""
-    pixel_roi = roi.to_pixel_roi(
-        pixel_size=pixel_size, dimensions=dimensions
-    ).to_slices()
+    if isinstance(roi, Roi):
+        if pixel_size is None:
+            raise NgioValueError(
+                "pixel_size must be provided when converting a Roi to slice_kwargs."
+            )
+        pixel_roi = roi.to_pixel_roi(
+            pixel_size=pixel_size, dimensions=dimensions
+        ).to_slices()
+    elif isinstance(roi, RoiPixels):
+        pixel_roi = roi.to_slices()
+    else:
+        raise TypeError(f"Unsupported ROI type: {type(roi)}")
 
     for ax in ["x", "y", "z", "t"]:
         if not dimensions.has_axis(axis_name=ax):
