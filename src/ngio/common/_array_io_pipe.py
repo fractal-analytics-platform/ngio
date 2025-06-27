@@ -408,7 +408,7 @@ def _mask_pipe_common_numpy(
         transforms=transforms,
         **slice_kwargs,
     )
-    
+
     label_slice_kwargs = {}
     for key, value in slice_kwargs.items():
         if dimensions_label.get(key, -1) != -1:
