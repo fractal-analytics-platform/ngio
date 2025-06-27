@@ -7,6 +7,12 @@ from dask.array import Array as DaskArray
 from dask.delayed import Delayed, delayed
 
 from ngio.common._dimensions import Dimensions
+from ngio.common._io_transforms import (
+    TransformProtocol,
+    apply_dask_transforms,
+    apply_delayed_transforms,
+    apply_numpy_transforms,
+)
 from ngio.ome_zarr_meta.ngio_specs import AxesOps
 from ngio.utils import NgioValueError
 
@@ -120,12 +126,14 @@ def _set_dask_slice(
 
 ##############################################################
 #
-# Array Axes Transformations
+# Array Axes Operations
 #
 ##############################################################
 
 
-def _numpy_apply_axes_ops(array: np.ndarray, axes_ops: AxesOps) -> np.ndarray:
+def _numpy_apply_axes_ops(array: np.ndarray, axes_ops: AxesOps | None) -> np.ndarray:
+    if axes_ops is None:
+        return array
     if axes_ops.squeeze_axes is not None:
         array = np.squeeze(array, axis=axes_ops.squeeze_axes)
     if axes_ops.transpose_axes is not None:
@@ -135,7 +143,9 @@ def _numpy_apply_axes_ops(array: np.ndarray, axes_ops: AxesOps) -> np.ndarray:
     return array
 
 
-def _dask_apply_axes_ops(array: da.Array, axes_ops: AxesOps) -> da.Array:
+def _dask_apply_axes_ops(array: da.Array, axes_ops: AxesOps | None) -> da.Array:
+    if axes_ops is None:
+        return array
     if axes_ops.squeeze_axes is not None:
         array = da.squeeze(array, axis=axes_ops.squeeze_axes)
     if axes_ops.transpose_axes is not None:
@@ -157,41 +167,50 @@ def _setup_from_disk_pipe(
     dimensions: Dimensions,
     axes_order: Collection[str] | None = None,
     **slice_kwargs: slice | int | Iterable[int],
-) -> tuple[SliceDefinition | None, AxesOps]:
+) -> tuple[SliceDefinition | None, AxesOps | None]:
     slices = _build_slices(dimensions=dimensions, **slice_kwargs)
 
     if axes_order is None:
-        return slices, AxesOps(transpose_axes=None, expand_axes=None, squeeze_axes=None)
+        return slices, None
 
-    additional_transformations = dimensions.axes_mapper.to_order(axes_order)
-    return slices, additional_transformations
+    axes_ops = dimensions.axes_mapper.to_order(axes_order)
+    return slices, axes_ops
 
 
 def _numpy_get_pipe(
     array: zarr.Array,
     slices: SliceDefinition | None,
-    transformations: AxesOps,
+    axes_ops: AxesOps | None,
+    transforms: Collection[TransformProtocol] | None,
 ) -> np.ndarray:
     _array = _get_slice_as_numpy(array, slices)
-    return _numpy_apply_axes_ops(_array, transformations)
+    _array = _numpy_apply_axes_ops(_array, axes_ops)
+    _array = apply_numpy_transforms(_array, transforms)
+    return _array
 
 
 def _delayed_numpy_get_pipe(
     array: zarr.Array,
     slices: SliceDefinition | None,
-    transformations: AxesOps,
+    axes_ops: AxesOps | None,
+    transforms: Collection[TransformProtocol] | None,
 ) -> Delayed:
     _array = delayed(_get_slice_as_numpy)(array, slices)
-    return delayed(_numpy_apply_axes_ops)(_array, transformations)
+    _array = delayed(_numpy_apply_axes_ops)(_array, axes_ops)
+    _array = apply_delayed_transforms(_array, transforms)
+    return _array
 
 
 def _dask_get_pipe(
     array: zarr.Array,
     slices: SliceDefinition | None,
-    transformations: AxesOps,
+    axes_ops: AxesOps | None,
+    transforms: Collection[TransformProtocol] | None,
 ) -> DaskArray:
     _array = _get_slice_as_dask(array, slices)
-    return _dask_apply_axes_ops(_array, transformations)
+    _array = _dask_apply_axes_ops(_array, axes_ops)
+    _array = apply_dask_transforms(_array, transforms)
+    return _array
 
 
 def get_as_numpy(
@@ -199,12 +218,15 @@ def get_as_numpy(
     *,
     dimensions: Dimensions,
     axes_order: Collection[str] | None = None,
+    transforms: Collection[TransformProtocol] | None = None,
     **slice_kwargs: slice | int | Iterable[int],
 ) -> np.ndarray:
-    slices, transformations = _setup_from_disk_pipe(
+    slices, axes_ops = _setup_from_disk_pipe(
         dimensions=dimensions, axes_order=axes_order, **slice_kwargs
     )
-    return _numpy_get_pipe(array, slices, transformations)
+    return _numpy_get_pipe(
+        array=array, slices=slices, axes_ops=axes_ops, transforms=transforms
+    )
 
 
 def get_as_dask(
@@ -212,12 +234,15 @@ def get_as_dask(
     *,
     dimensions: Dimensions,
     axes_order: Collection[str] | None = None,
+    transforms: Collection[TransformProtocol] | None = None,
     **slice_kwargs: slice | int | Iterable[int],
 ) -> DaskArray:
-    slices, transformations = _setup_from_disk_pipe(
+    slices, axes_ops = _setup_from_disk_pipe(
         dimensions=dimensions, axes_order=axes_order, **slice_kwargs
     )
-    return _dask_get_pipe(array, slices, transformations)
+    return _dask_get_pipe(
+        array=array, slices=slices, axes_ops=axes_ops, transforms=transforms
+    )
 
 
 def get_as_delayed(
@@ -225,12 +250,15 @@ def get_as_delayed(
     *,
     dimensions: Dimensions,
     axes_order: Collection[str] | None = None,
+    transforms: Collection[TransformProtocol] | None = None,
     **slice_kwargs: slice | int | Iterable[int],
 ) -> Delayed:
-    slices, transformations = _setup_from_disk_pipe(
+    slices, axes_ops = _setup_from_disk_pipe(
         dimensions=dimensions, axes_order=axes_order, **slice_kwargs
     )
-    return _delayed_numpy_get_pipe(array, slices, transformations)
+    return _delayed_numpy_get_pipe(
+        array=array, slices=slices, axes_ops=axes_ops, transforms=transforms
+    )
 
 
 ##############################################################
@@ -245,32 +273,36 @@ def _setup_to_disk_pipe(
     dimensions: Dimensions,
     axes_order: Collection[str] | None = None,
     **slice_kwargs: slice | int | Iterable[int],
-) -> tuple[SliceDefinition | None, AxesOps]:
+) -> tuple[SliceDefinition | None, AxesOps | None]:
     slices = _build_slices(dimensions=dimensions, **slice_kwargs)
     if axes_order is None:
-        return slices, AxesOps(transpose_axes=None, expand_axes=None, squeeze_axes=None)
+        return slices, None
 
-    additional_transformations = dimensions.axes_mapper.from_order(axes_order)
-    return slices, additional_transformations
+    axes_ops = dimensions.axes_mapper.from_order(axes_order)
+    return slices, axes_ops
 
 
 def _numpy_set_pipe(
     array: zarr.Array,
     patch: np.ndarray,
     slices: SliceDefinition | None,
-    transformations: AxesOps,
+    axes_ops: AxesOps | None,
+    transforms: Collection[TransformProtocol] | None,
 ) -> None:
-    patch = _numpy_apply_axes_ops(patch, transformations)
-    _set_numpy_slice(array, patch, slices)
+    _patch = apply_numpy_transforms(patch, transforms)
+    _patch = _numpy_apply_axes_ops(_patch, axes_ops)
+    _set_numpy_slice(array, _patch, slices)
 
 
 def _dask_set_pipe(
     array: zarr.Array,
     patch: DaskArray,
     slices: SliceDefinition | None,
-    transformations: AxesOps,
+    axes_ops: AxesOps | None,
+    transforms: Collection[TransformProtocol] | None,
 ) -> None:
-    _patch = _dask_apply_axes_ops(patch, transformations)
+    _patch = apply_dask_transforms(patch, transforms)
+    _patch = _dask_apply_axes_ops(_patch, axes_ops)
     _set_dask_slice(array, _patch, slices)
 
 
@@ -278,9 +310,13 @@ def _delayed_numpy_set_pipe(
     array: zarr.Array,
     patch: np.ndarray | Delayed,
     slices: SliceDefinition | None,
-    transformations: AxesOps,
+    axes_ops: AxesOps | None,
+    transforms: Collection[TransformProtocol] | None,
 ) -> Delayed:
-    _patch = delayed(_numpy_apply_axes_ops)(patch, transformations)
+    if isinstance(patch, np.ndarray):
+        patch = delayed(patch)
+    _patch = apply_delayed_transforms(patch, transforms)
+    _patch = delayed(_numpy_apply_axes_ops)(_patch, axes_ops)
     return delayed(_set_numpy_slice)(array, _patch, slices)
 
 
@@ -290,13 +326,18 @@ def set_numpy(
     *,
     dimensions: Dimensions,
     axes_order: Collection[str] | None = None,
+    transforms: Collection[TransformProtocol] | None = None,
     **slice_kwargs: slice | int | Iterable[int],
 ):
-    slices, transformations = _setup_to_disk_pipe(
+    slices, axes_ops = _setup_to_disk_pipe(
         dimensions=dimensions, axes_order=axes_order, **slice_kwargs
     )
     _numpy_set_pipe(
-        array=array, patch=patch, slices=slices, transformations=transformations
+        array=array,
+        patch=patch,
+        slices=slices,
+        axes_ops=axes_ops,
+        transforms=transforms,
     )
 
 
@@ -306,13 +347,18 @@ def set_dask(
     *,
     dimensions: Dimensions,
     axes_order: Collection[str] | None = None,
+    transforms: Collection[TransformProtocol] | None = None,
     **slice_kwargs: slice | int | Iterable[int],
 ):
-    slices, transformations = _setup_to_disk_pipe(
+    slices, axes_ops = _setup_to_disk_pipe(
         dimensions=dimensions, axes_order=axes_order, **slice_kwargs
     )
     _dask_set_pipe(
-        array=array, patch=patch, slices=slices, transformations=transformations
+        array=array,
+        patch=patch,
+        slices=slices,
+        axes_ops=axes_ops,
+        transforms=transforms,
     )
 
 
@@ -322,13 +368,18 @@ def set_delayed(
     *,
     dimensions: Dimensions,
     axes_order: Collection[str] | None = None,
+    transforms: Collection[TransformProtocol] | None = None,
     **slice_kwargs: slice | int | Iterable[int],
 ):
-    slices, transformations = _setup_to_disk_pipe(
+    slices, axes_ops = _setup_to_disk_pipe(
         dimensions=dimensions, axes_order=axes_order, **slice_kwargs
     )
     _delayed_numpy_set_pipe(
-        array=array, patch=patch, slices=slices, transformations=transformations
+        array=array,
+        patch=patch,
+        slices=slices,
+        axes_ops=axes_ops,
+        transforms=transforms,
     )
 
 
@@ -347,12 +398,14 @@ def _mask_pipe_common_numpy(
     dimensions_array: Dimensions,
     dimensions_label: Dimensions,
     axes_order: Collection[str] | None = None,
+    transforms: Collection[TransformProtocol] | None = None,
     **slice_kwargs: slice | int | Iterable[int],
 ) -> tuple[np.ndarray, np.ndarray]:
     array_patch = get_as_numpy(
         array,
         dimensions=dimensions_array,
         axes_order=axes_order,
+        transforms=transforms,
         **slice_kwargs,
     )
 
@@ -360,6 +413,7 @@ def _mask_pipe_common_numpy(
         label_array,
         dimensions=dimensions_label,
         axes_order=axes_order,
+        transforms=transforms,
         **slice_kwargs,
     )
 
@@ -378,12 +432,14 @@ def _mask_pipe_common_dask(
     dimensions_array: Dimensions,
     dimensions_label: Dimensions,
     axes_order: Collection[str] | None = None,
+    transforms: Collection[TransformProtocol] | None = None,
     **slice_kwargs: slice | int | Iterable[int],
 ) -> tuple[DaskArray, DaskArray]:
     array_patch = get_as_dask(
         array,
         dimensions=dimensions_array,
         axes_order=axes_order,
+        transforms=transforms,
         **slice_kwargs,
     )
 
@@ -391,6 +447,7 @@ def _mask_pipe_common_dask(
         label_array,
         dimensions=dimensions_label,
         axes_order=axes_order,
+        transforms=transforms,
         **slice_kwargs,
     )
 
@@ -409,6 +466,7 @@ def get_masked_as_numpy(
     dimensions_array: Dimensions,
     dimensions_label: Dimensions,
     axes_order: Collection[str] | None = None,
+    transforms: Collection[TransformProtocol] | None = None,
     **slice_kwargs: slice | int | Iterable[int],
 ) -> np.ndarray:
     array_patch, mask = _mask_pipe_common_numpy(
@@ -418,6 +476,7 @@ def get_masked_as_numpy(
         dimensions_array=dimensions_array,
         dimensions_label=dimensions_label,
         axes_order=axes_order,
+        transforms=transforms,
         **slice_kwargs,
     )
     array_patch[~mask] = 0
@@ -432,6 +491,7 @@ def get_masked_as_dask(
     dimensions_array: Dimensions,
     dimensions_label: Dimensions,
     axes_order: Collection[str] | None = None,
+    transforms: Collection[TransformProtocol] | None = None,
     **slice_kwargs: slice | int | Iterable[int],
 ) -> DaskArray:
     array_patch, mask = _mask_pipe_common_dask(
@@ -441,6 +501,7 @@ def get_masked_as_dask(
         dimensions_array=dimensions_array,
         dimensions_label=dimensions_label,
         axes_order=axes_order,
+        transforms=transforms,
         **slice_kwargs,
     )
     array_patch = da.where(mask, array_patch, 0)
@@ -456,6 +517,7 @@ def set_numpy_masked(
     dimensions_array: Dimensions,
     dimensions_label: Dimensions,
     axes_order: Collection[str] | None = None,
+    transforms: Collection[TransformProtocol] | None = None,
     **slice_kwargs: slice | int | Iterable[int],
 ):
     array_patch, mask = _mask_pipe_common_numpy(
@@ -465,6 +527,7 @@ def set_numpy_masked(
         dimensions_array=dimensions_array,
         dimensions_label=dimensions_label,
         axes_order=axes_order,
+        transforms=transforms,
         **slice_kwargs,
     )
     _patch = np.where(mask, patch, array_patch)
@@ -474,6 +537,7 @@ def set_numpy_masked(
         _patch,
         dimensions=dimensions_array,
         axes_order=axes_order,
+        transforms=transforms,
         **slice_kwargs,
     )
 
@@ -487,6 +551,7 @@ def set_dask_masked(
     dimensions_array: Dimensions,
     dimensions_label: Dimensions,
     axes_order: Collection[str] | None = None,
+    transforms: Collection[TransformProtocol] | None = None,
     **slice_kwargs: slice | int | Iterable[int],
 ):
     array_patch, mask = _mask_pipe_common_dask(
@@ -496,6 +561,7 @@ def set_dask_masked(
         dimensions_array=dimensions_array,
         dimensions_label=dimensions_label,
         axes_order=axes_order,
+        transforms=transforms,
         **slice_kwargs,
     )
     _patch = da.where(mask, patch, array_patch)
@@ -505,5 +571,6 @@ def set_dask_masked(
         _patch,
         dimensions=dimensions_array,
         axes_order=axes_order,
+        transforms=transforms,
         **slice_kwargs,
     )

@@ -14,6 +14,10 @@ from ngio.common._array_io_pipe import (
     set_numpy_masked,
 )
 from ngio.common._dimensions import Dimensions
+from ngio.common._io_transforms import (
+    AbstractTransform,
+    TransformProtocol,
+)
 from ngio.common._masking_roi import compute_masking_roi
 from ngio.common._pyramid import consolidate_pyramid, init_empty_pyramid, on_disk_zoom
 from ngio.common._roi import Roi, RoiPixels, roi_to_slice_kwargs
@@ -29,10 +33,12 @@ from ngio.common._table_ops import (
 from ngio.common._zoom import dask_zoom, numpy_zoom
 
 __all__ = [
+    "AbstractTransform",
     "ArrayLike",
     "Dimensions",
     "Roi",
     "RoiPixels",
+    "TransformProtocol",
     "compute_masking_roi",
     "concatenate_image_tables",
     "concatenate_image_tables_as",

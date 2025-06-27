@@ -7,10 +7,12 @@ import dask.array as da
 import numpy as np
 from dask.delayed import Delayed
 
-from ngio.common import ArrayLike, roi_to_slice_kwargs
-from ngio.common._array_io_pipe import (
+from ngio.common import (
+    ArrayLike,
+    TransformProtocol,
     get_masked_as_dask,
     get_masked_as_numpy,
+    roi_to_slice_kwargs,
     set_dask_masked,
     set_numpy_masked,
 )
@@ -63,6 +65,7 @@ class MaskedImage(Image):
         channel_label: str | None = None,
         zoom_factor: float = 1.0,
         axes_order: Collection[str] | None = None,
+        transforms: Collection[TransformProtocol] | None = None,
         **slice_kwargs: slice | int | Iterable[int],
     ) -> ArrayLike:
         """Return the array for a given ROI."""
@@ -72,6 +75,7 @@ class MaskedImage(Image):
             roi=roi,
             channel_label=channel_label,
             axes_order=axes_order,
+            transforms=transforms,
             **slice_kwargs,
         )
 
@@ -81,6 +85,7 @@ class MaskedImage(Image):
         channel_label: str | None = None,
         zoom_factor: float = 1.0,
         axes_order: Collection[str] | None = None,
+        transforms: Collection[TransformProtocol] | None = None,
         **slice_kwargs: slice | int | Iterable[int],
     ) -> da.Array:
         """Return the array for a given ROI as a Dask array."""
@@ -90,6 +95,7 @@ class MaskedImage(Image):
             roi=roi,
             channel_label=channel_label,
             axes_order=axes_order,
+            transforms=transforms,
             **slice_kwargs,
         )
 
@@ -99,6 +105,7 @@ class MaskedImage(Image):
         channel_label: str | None = None,
         zoom_factor: float = 1.0,
         axes_order: Collection[str] | None = None,
+        transforms: Collection[TransformProtocol] | None = None,
         **slice_kwargs: slice | int | Iterable[int],
     ) -> Delayed:
         """Return the array for a given ROI as a delayed object."""
@@ -108,6 +115,7 @@ class MaskedImage(Image):
             roi=roi,
             channel_label=channel_label,
             axes_order=axes_order,
+            transforms=transforms,
             **slice_kwargs,
         )
 
@@ -117,6 +125,7 @@ class MaskedImage(Image):
         zoom_factor: float = 1.0,
         channel_label: str | None = None,
         axes_order: Collection[str] | None = None,
+        transforms: Collection[TransformProtocol] | None = None,
         mode: Literal["numpy", "dask", "delayed"] = "numpy",
         **slice_kwargs: slice | int | Iterable[int],
     ) -> ArrayLike:
@@ -127,6 +136,7 @@ class MaskedImage(Image):
             roi=roi,
             channel_label=channel_label,
             axes_order=axes_order,
+            transforms=transforms,
             mode=mode,
             **slice_kwargs,
         )
@@ -138,6 +148,7 @@ class MaskedImage(Image):
         zoom_factor: float = 1.0,
         channel_label: str | None = None,
         axes_order: Collection[str] | None = None,
+        transforms: Collection[TransformProtocol] | None = None,
         **slice_kwargs: slice | int | Iterable[int],
     ) -> None:
         """Set the array for a given ROI."""
@@ -148,6 +159,7 @@ class MaskedImage(Image):
             patch=patch,
             channel_label=channel_label,
             axes_order=axes_order,
+            transforms=transforms,
             **slice_kwargs,
         )
 
@@ -178,6 +190,7 @@ class MaskedImage(Image):
         channel_label: str | None = None,
         zoom_factor: float = 1.0,
         axes_order: Collection[str] | None = None,
+        transforms: Collection[TransformProtocol] | None = None,
         **slice_kwargs: slice | int | Iterable[int],
     ) -> np.ndarray:
         """Return the masked array for a given label as a NumPy array."""
@@ -194,6 +207,7 @@ class MaskedImage(Image):
             dimensions_array=self.dimensions,
             dimensions_label=self._label.dimensions,
             axes_order=axes_order,
+            transforms=transforms,
             **slice_kwargs,
         )
 
@@ -203,6 +217,7 @@ class MaskedImage(Image):
         channel_label: str | None = None,
         zoom_factor: float = 1.0,
         axes_order: Collection[str] | None = None,
+        transforms: Collection[TransformProtocol] | None = None,
         **slice_kwargs: slice | int | Iterable[int],
     ) -> da.Array:
         """Return the masked array for a given label as a Dask array."""
@@ -219,6 +234,7 @@ class MaskedImage(Image):
             dimensions_array=self.dimensions,
             dimensions_label=self._label.dimensions,
             axes_order=axes_order,
+            transforms=transforms,
             **slice_kwargs,
         )
 
@@ -228,6 +244,7 @@ class MaskedImage(Image):
         channel_label: str | None = None,
         zoom_factor: float = 1.0,
         axes_order: Collection[str] | None = None,
+        transforms: Collection[TransformProtocol] | None = None,
         mode: Literal["numpy", "dask"] = "numpy",
         **slice_kwargs: slice | int | Iterable[int],
     ) -> ArrayLike:
@@ -238,6 +255,7 @@ class MaskedImage(Image):
                 channel_label=channel_label,
                 zoom_factor=zoom_factor,
                 axes_order=axes_order,
+                transforms=transforms,
                 **slice_kwargs,
             )
         elif mode == "dask":
@@ -246,6 +264,7 @@ class MaskedImage(Image):
                 channel_label=channel_label,
                 zoom_factor=zoom_factor,
                 axes_order=axes_order,
+                transforms=transforms,
                 **slice_kwargs,
             )
         else:
@@ -258,6 +277,7 @@ class MaskedImage(Image):
         channel_label: str | None = None,
         axes_order: Collection[str] | None = None,
         zoom_factor: float = 1.0,
+        transforms: Collection[TransformProtocol] | None = None,
         **slice_kwargs: slice | int | Iterable[int],
     ) -> None:
         """Set the masked array for a given label."""
@@ -276,6 +296,7 @@ class MaskedImage(Image):
                 dimensions_array=self.dimensions,
                 dimensions_label=self._label.dimensions,
                 axes_order=axes_order,
+                transforms=transforms,
                 **slice_kwargs,
             )
         elif isinstance(patch, np.ndarray):
@@ -287,6 +308,7 @@ class MaskedImage(Image):
                 dimensions_array=self.dimensions,
                 dimensions_label=self._label.dimensions,
                 axes_order=axes_order,
+                transforms=transforms,
                 **slice_kwargs,
             )
         else:
@@ -335,6 +357,7 @@ class MaskedLabel(Label):
         label: int,
         zoom_factor: float = 1.0,
         axes_order: Collection[str] | None = None,
+        transforms: Collection[TransformProtocol] | None = None,
         **slice_kwargs: slice | int | Iterable[int],
     ) -> np.ndarray:
         """Return the ROI as a NumPy array."""
@@ -343,6 +366,7 @@ class MaskedLabel(Label):
         return super().get_roi_as_numpy(
             roi=roi,
             axes_order=axes_order,
+            transforms=transforms,
             **slice_kwargs,
         )
 
@@ -351,6 +375,7 @@ class MaskedLabel(Label):
         label: int,
         zoom_factor: float = 1.0,
         axes_order: Collection[str] | None = None,
+        transforms: Collection[TransformProtocol] | None = None,
         **slice_kwargs: slice | int | Iterable[int],
     ) -> da.Array:
         """Return the ROI as a Dask array."""
@@ -359,6 +384,7 @@ class MaskedLabel(Label):
         return super().get_roi_as_dask(
             roi=roi,
             axes_order=axes_order,
+            transforms=transforms,
             **slice_kwargs,
         )
 
@@ -367,6 +393,7 @@ class MaskedLabel(Label):
         label: int,
         zoom_factor: float = 1.0,
         axes_order: Collection[str] | None = None,
+        transforms: Collection[TransformProtocol] | None = None,
         **slice_kwargs: slice | int | Iterable[int],
     ) -> Delayed:
         """Return the ROI as a delayed object."""
@@ -375,6 +402,7 @@ class MaskedLabel(Label):
         return super().get_roi_as_delayed(
             roi=roi,
             axes_order=axes_order,
+            transforms=transforms,
             **slice_kwargs,
         )
 
@@ -384,13 +412,18 @@ class MaskedLabel(Label):
         zoom_factor: float = 1.0,
         axes_order: Collection[str] | None = None,
         mode: Literal["numpy", "dask", "delayed"] = "numpy",
+        transforms: Collection[TransformProtocol] | None = None,
         **slice_kwargs: slice | int | Iterable[int],
     ) -> ArrayLike:
         """Return the array for a given ROI."""
         roi = self._masking_roi_table.get(label)
         roi = roi.zoom(zoom_factor)
         return super().get_roi(
-            roi=roi, axes_order=axes_order, mode=mode, **slice_kwargs
+            roi=roi,
+            axes_order=axes_order,
+            mode=mode,
+            transforms=transforms,
+            **slice_kwargs,
         )
 
     def set_roi(
@@ -399,13 +432,18 @@ class MaskedLabel(Label):
         patch: ArrayLike,
         zoom_factor: float = 1.0,
         axes_order: Collection[str] | None = None,
+        transforms: Collection[TransformProtocol] | None = None,
         **slice_kwargs: slice | int | Iterable[int],
     ) -> None:
         """Set the array for a given ROI."""
         roi = self._masking_roi_table.get(label)
         roi = roi.zoom(zoom_factor)
         return super().set_roi(
-            roi=roi, patch=patch, axes_order=axes_order, **slice_kwargs
+            roi=roi,
+            patch=patch,
+            axes_order=axes_order,
+            transforms=transforms,
+            **slice_kwargs,
         )
 
     def _build_slice_kwargs(
@@ -430,6 +468,7 @@ class MaskedLabel(Label):
         label: int,
         zoom_factor: float = 1.0,
         axes_order: Collection[str] | None = None,
+        transforms: Collection[TransformProtocol] | None = None,
         **slice_kwargs: slice | int | Iterable[int],
     ) -> np.ndarray:
         """Return the masked array for a given label as a NumPy array."""
@@ -445,6 +484,7 @@ class MaskedLabel(Label):
             dimensions_array=self.dimensions,
             dimensions_label=self._label.dimensions,
             axes_order=axes_order,
+            transforms=transforms,
             **slice_kwargs,
         )
 
@@ -453,6 +493,7 @@ class MaskedLabel(Label):
         label: int,
         zoom_factor: float = 1.0,
         axes_order: Collection[str] | None = None,
+        transforms: Collection[TransformProtocol] | None = None,
         **slice_kwargs: slice | int | Iterable[int],
     ) -> da.Array:
         """Return the masked array for a given label as a Dask array."""
@@ -468,6 +509,7 @@ class MaskedLabel(Label):
             dimensions_array=self.dimensions,
             dimensions_label=self._label.dimensions,
             axes_order=axes_order,
+            transforms=transforms,
             **slice_kwargs,
         )
 
@@ -477,6 +519,7 @@ class MaskedLabel(Label):
         zoom_factor: float = 1.0,
         axes_order: Collection[str] | None = None,
         mode: Literal["numpy", "dask"] = "numpy",
+        transforms: Collection[TransformProtocol] | None = None,
         **slice_kwargs: slice | int | Iterable[int],
     ) -> ArrayLike:
         """Return the masked array for a given label."""
@@ -490,6 +533,7 @@ class MaskedLabel(Label):
                 label=label,
                 zoom_factor=zoom_factor,
                 axes_order=axes_order,
+                transforms=transforms,
                 **slice_kwargs,
             )
         elif mode == "dask":
@@ -497,6 +541,7 @@ class MaskedLabel(Label):
                 label=label,
                 zoom_factor=zoom_factor,
                 axes_order=axes_order,
+                transforms=transforms,
                 **slice_kwargs,
             )
         else:
@@ -508,6 +553,7 @@ class MaskedLabel(Label):
         patch: ArrayLike,
         axes_order: Collection[str] | None = None,
         zoom_factor: float = 1.0,
+        transforms: Collection[TransformProtocol] | None = None,
         **slice_kwargs: slice | int | Iterable[int],
     ) -> None:
         """Set the masked array for a given label."""
@@ -525,6 +571,7 @@ class MaskedLabel(Label):
                 dimensions_array=self.dimensions,
                 dimensions_label=self._label.dimensions,
                 axes_order=axes_order,
+                transforms=transforms,
                 **slice_kwargs,
             )
         elif isinstance(patch, np.ndarray):
@@ -536,6 +583,7 @@ class MaskedLabel(Label):
                 dimensions_array=self.dimensions,
                 dimensions_label=self._label.dimensions,
                 axes_order=axes_order,
+                transforms=transforms,
                 **slice_kwargs,
             )
         else:

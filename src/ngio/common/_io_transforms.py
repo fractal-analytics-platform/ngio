@@ -39,27 +39,33 @@ class TransformProtocol(Protocol):
 
 
 def apply_numpy_transforms(
-    array: np.ndarray, transforms: Collection[TransformProtocol]
+    array: np.ndarray, transforms: Collection[TransformProtocol] | None
 ) -> np.ndarray:
     """Apply a numpy transform to an array."""
+    if transforms is None:
+        return array
     for transform in transforms:
         array = transform.transform_numpy(array)
     return array
 
 
 def apply_dask_transforms(
-    array: da.Array, transforms: Collection[TransformProtocol]
+    array: da.Array, transforms: Collection[TransformProtocol] | None
 ) -> da.Array:
     """Apply a dask transform to an array."""
+    if transforms is None:
+        return array
     for transform in transforms:
         array = transform.transform_dask(array)
     return array
 
 
 def apply_delayed_transforms(
-    array: Delayed, transforms: Collection[TransformProtocol]
+    array: Delayed, transforms: Collection[TransformProtocol] | None
 ) -> Delayed:
     """Apply a delayed transform to an array."""
+    if transforms is None:
+        return array
     for transform in transforms:
         array = transform.transform_delayed(array)
     return array
