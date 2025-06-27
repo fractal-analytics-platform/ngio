@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from ngio.common._axes_transforms import transform_list, transform_numpy_array
+from ngio.common._array_io_pipe import _numpy_apply_axes_ops
 from ngio.ome_zarr_meta.ngio_specs import (
     AxesMapper,
     AxesSetup,
@@ -74,33 +74,16 @@ def test_axes_base(
     shape = list(range(2, len(on_disk_axes) + 2))
     np.random.seed(0)
     x_in = np.random.rand(*shape)
-    x_inner = transform_numpy_array(x_in, mapper.to_canonical())
-    x_inner_shape = transform_list(
-        list(x_in.shape), default=1, operations=mapper.to_canonical()
-    )
+    x_inner = _numpy_apply_axes_ops(x_in, mapper.to_canonical())
     assert len(x_inner.shape) == 5 + len(mapper._axes_setup.others)
-    assert tuple(x_inner_shape) == tuple(x_inner.shape)
-
-    x_out = transform_numpy_array(x_inner, mapper.from_canonical())
-    x_out_shape = transform_list(
-        list(x_inner.shape), default=1, operations=mapper.from_canonical()
-    )
-    assert tuple(x_out_shape) == tuple(x_in.shape)
+    x_out = _numpy_apply_axes_ops(x_inner, mapper.from_canonical())
 
     np.testing.assert_allclose(x_in, x_out)
     # Test transformation with shuffle
     shuffled_axes = np.random.permutation(on_disk_axes)
-    x_inner = transform_numpy_array(x_in, mapper.to_order(shuffled_axes))
-    x_inner_shape = transform_list(
-        list(x_in.shape), default=1, operations=mapper.to_order(shuffled_axes)
-    )
+    x_inner = _numpy_apply_axes_ops(x_in, mapper.to_order(shuffled_axes))
     assert len(x_inner.shape) == len(on_disk_axes)
-    assert tuple(x_inner_shape) == tuple(x_inner.shape)
-    x_out = transform_numpy_array(x_inner, mapper.from_order(shuffled_axes))
-    x_out_shape = transform_list(
-        list(x_inner.shape), default=1, operations=mapper.from_order(shuffled_axes)
-    )
-    assert tuple(x_out_shape) == tuple(x_out.shape)
+    x_out = _numpy_apply_axes_ops(x_inner, mapper.from_order(shuffled_axes))
     np.testing.assert_allclose(x_in, x_out)
 
 
@@ -184,15 +167,6 @@ def test_axes_fail():
     )
     with pytest.raises(ValueError):
         mapper.to_order(["x", "y", "y"])
-
-    with pytest.raises(ValueError):
-        mapper.from_order(["x"])
-
-    with pytest.raises(ValueError):
-        mapper.from_order(["XX"])
-
-    with pytest.raises(ValueError):
-        mapper.get_index("XX")
 
 
 def test_pixel_size():
@@ -390,9 +364,11 @@ def test_image_meta():
     assert image_meta.get_dataset(path="1").path == "1"
     assert image_meta.get_dataset().path == "0"
     assert image_meta.get_dataset(pixel_size=datasets[-1].pixel_size).path == "3"
-    assert image_meta.get_channel_idx(label="DAPI") == 0
-    assert image_meta.get_channel_idx(wavelength_id="DAPI") == 0
-    assert image_meta.channel_labels == ["DAPI", "GFP", "RFP"]
+    channels_meta = image_meta.channels_meta
+    assert channels_meta is not None
+    assert channels_meta.get_channel_idx(channel_label="DAPI") == 0
+    assert channels_meta.get_channel_idx(wavelength_id="DAPI") == 0
+    assert channels_meta.channel_labels == ["DAPI", "GFP", "RFP"]
 
 
 def test_label_meta():

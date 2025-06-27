@@ -3,10 +3,8 @@
 from collections.abc import Collection
 from typing import Literal
 
-import dask.array as da
-
 from ngio.common import compute_masking_roi
-from ngio.images._abstract_image import AbstractImage, consolidate_image
+from ngio.images._abstract_image import AbstractImage
 from ngio.images._create import create_empty_label_container
 from ngio.images._image import Image
 from ngio.ome_zarr_meta import (
@@ -32,6 +30,17 @@ from ngio.utils import (
 
 class Label(AbstractImage[LabelMetaHandler]):
     """Placeholder class for a label."""
+
+    get_as_numpy = AbstractImage._get_as_numpy
+    get_as_dask = AbstractImage._get_as_dask
+    get_as_delayed = AbstractImage._get_as_delayed
+    get_array = AbstractImage._get_array
+    get_roi_as_numpy = AbstractImage._get_roi_as_numpy
+    get_roi_as_dask = AbstractImage._get_roi_as_dask
+    get_roi_as_delayed = AbstractImage._get_roi_as_delayed
+    get_roi = AbstractImage._get_roi
+    set_array = AbstractImage._set_array
+    set_roi = AbstractImage._set_roi
 
     def __init__(
         self,
@@ -86,7 +95,10 @@ class Label(AbstractImage[LabelMetaHandler]):
         mode: Literal["dask", "numpy", "coarsen"] = "dask",
     ) -> None:
         """Consolidate the label on disk."""
-        consolidate_image(self, mode=mode, order=0)
+        self._consolidate(
+            order=0,
+            mode=mode,
+        )
 
 
 class LabelsContainer:
@@ -310,7 +322,6 @@ def build_masking_roi_table(label: Label) -> MaskingRoiTable:
     if label.dimensions.is_time_series:
         raise NgioValueError("Time series labels are not supported.")
 
-    array = label.get_array(axes_order=["z", "y", "x"], mode="dask")
-    assert isinstance(array, da.Array), "Array must be a Dask array."
+    array = label.get_as_dask(axes_order=["z", "y", "x"])
     rois = compute_masking_roi(array, label.pixel_size)
     return MaskingRoiTable(rois, reference_label=label.meta.name)

@@ -1,5 +1,19 @@
 # Changelog
 
+## [Unreleased]
+
+### Features
+
+- add support for time in rois and roi-tables
+
+### API Changes
+
+- change to `Dimension` class. `get_shape` and `get_canonical_shape` have been removed, `get` uses new keyword arguments `default` instead of `strict`.
+
+### Table specs
+
+- add `t_second` and `len_t_second` to ROI tables and masking ROI tables
+
 ## [v0.3.3]
 
 ### Chores

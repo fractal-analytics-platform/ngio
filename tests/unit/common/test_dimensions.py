@@ -50,8 +50,6 @@ def test_dimensions(axes_names):
     if dim_dict.get("z", 1) == 1 and dim_dict.get("t", 1) > 1:
         assert dims.is_2d_time_series
 
-    assert dims.get_canonical_shape() == tuple(dim_dict.get(ax, 1) for ax in "tczyx")
-
     assert dims.on_disk_shape == shape
 
 
@@ -65,11 +63,8 @@ def test_dimensions_error():
     shape = (3, 4)
     dims = Dimensions(shape=shape, axes_mapper=AxesMapper(on_disk_axes=axes))
 
-    assert dims.get_shape(axes_order=["c", "x", "y", "z"]) == (1, 3, 4, 1)
-    assert dims.get_shape(axes_order=["c", "z", "y", "x"]) == (1, 1, 4, 3)
-
     with pytest.raises(NgioValueError):
-        dims.get("c", strict=True)
+        dims.get("c", default=None)
 
     assert not dims.is_3d
     assert not dims.is_multi_channels
