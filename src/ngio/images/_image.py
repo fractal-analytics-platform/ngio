@@ -1,12 +1,15 @@
 """Generic class to handle Image-like data in a OME-NGFF file."""
 
-from collections.abc import Collection
+from collections.abc import Collection, Iterable
 from typing import Literal
 
 import dask.array as da
+import numpy as np
+from dask.delayed import Delayed
 
-from ngio.common import Dimensions
-from ngio.images._abstract_image import AbstractImage, consolidate_image
+from ngio.common import ArrayLike, Dimensions
+from ngio.common._roi import Roi, RoiPixels
+from ngio.images._abstract_image import AbstractImage
 from ngio.images._create import create_empty_image_container
 from ngio.ome_zarr_meta import (
     ImageMetaHandler,
@@ -25,6 +28,7 @@ from ngio.ome_zarr_meta.ngio_specs import (
 )
 from ngio.utils import (
     NgioValidationError,
+    NgioValueError,
     StoreOrGroup,
     ZarrGroupHandler,
 )
@@ -37,10 +41,10 @@ def _check_channel_meta(meta: NgioImageMeta, dimension: Dimensions) -> ChannelsM
     if meta.channels_meta is None:
         return ChannelsMeta.default_init(labels=c_dim)
 
-    if len(meta.channels) != c_dim:
+    if len(meta.channels_meta.channels) != c_dim:
         raise NgioValidationError(
             "The number of channels does not match the image. "
-            f"Expected {len(meta.channels)} channels, got {c_dim}."
+            f"Expected {len(meta.channels_meta.channels)} channels, got {c_dim}."
         )
 
     return meta.channels_meta
@@ -71,7 +75,6 @@ class Image(AbstractImage[ImageMetaHandler]):
         super().__init__(
             group_handler=group_handler, path=path, meta_handler=meta_handler
         )
-        self._channels_meta = _check_channel_meta(self.meta, self.dimensions)
 
     @property
     def meta(self) -> NgioImageMeta:
@@ -79,25 +82,307 @@ class Image(AbstractImage[ImageMetaHandler]):
         return self._meta_handler.meta
 
     @property
+    def channels_meta(self) -> ChannelsMeta:
+        """Return the channels metadata."""
+        return _check_channel_meta(self.meta, self.dimensions)
+
+    @property
     def channel_labels(self) -> list[str]:
         """Return the channels of the image."""
-        channel_labels = []
-        for c in self._channels_meta.channels:
-            channel_labels.append(c.label)
-        return channel_labels
+        return self.channels_meta.channel_labels
 
     @property
     def wavelength_ids(self) -> list[str | None]:
         """Return the list of wavelength of the image."""
-        wavelength_ids = []
-        for c in self._channels_meta.channels:
-            wavelength_ids.append(c.wavelength_id)
-        return wavelength_ids
+        return self.channels_meta.channel_wavelength_ids
 
     @property
     def num_channels(self) -> int:
         """Return the number of channels."""
-        return len(self._channels_meta.channels)
+        return len(self.channel_labels)
+
+    def get_channel_idx(
+        self, channel_label: str | None = None, wavelength_id: str | None = None
+    ) -> int:
+        """Get the index of a channel by its label or wavelength ID."""
+        return self.channels_meta.get_channel_idx(
+            channel_label=channel_label, wavelength_id=wavelength_id
+        )
+
+    def _add_channel_label(
+        self,
+        channel_label: str | None = None,
+        **slice_kwargs: slice | int | Iterable[int],
+    ) -> dict[str, slice | int | Iterable[int]]:
+        """Add a channel label to the image metadata."""
+        if channel_label is None:
+            return slice_kwargs
+        channel_idx = self.get_channel_idx(channel_label=channel_label)
+        if "c" in slice_kwargs:
+            raise NgioValueError(
+                "Cannot specify a channel label and a channel index at the same time."
+            )
+        slice_kwargs["c"] = channel_idx
+        return slice_kwargs
+
+    def get_as_numpy(
+        self,
+        channel_label: str | None = None,
+        axes_order: Collection[str] | None = None,
+        **slice_kwargs: slice | int | Iterable[int],
+    ) -> np.ndarray:
+        """Get the image as a numpy array.
+
+        Args:
+            channel_label: Select a specific channel by label.
+                If None, all channels are returned.
+                Alternatively, you can slice arbitrary channels
+                using the slice_kwargs (c=[0, 2]).
+            axes_order: The order of the axes to return the array.
+            **slice_kwargs: The slices to get the array.
+
+        Returns:
+            The array of the region of interest.
+        """
+        slice_kwargs = self._add_channel_label(
+            channel_label=channel_label, **slice_kwargs
+        )
+        return self._get_as_numpy(axes_order=axes_order, **slice_kwargs)
+
+    def get_roi_as_numpy(
+        self,
+        roi: Roi | RoiPixels,
+        channel_label: str | None = None,
+        axes_order: Collection[str] | None = None,
+        **slice_kwargs: slice | int | Iterable[int],
+    ) -> np.ndarray:
+        """Get the image as a numpy array for a region of interest.
+
+        Args:
+            roi: The region of interest to get the array.
+            channel_label: Select a specific channel by label.
+                If None, all channels are returned.
+                Alternatively, you can slice arbitrary channels
+                using the slice_kwargs (c=[0, 2]).
+            axes_order: The order of the axes to return the array.
+            **slice_kwargs: The slices to get the array.
+
+        Returns:
+            The array of the region of interest.
+        """
+        slice_kwargs = self._add_channel_label(
+            channel_label=channel_label, **slice_kwargs
+        )
+        return self._get_roi_as_numpy(roi=roi, axes_order=axes_order, **slice_kwargs)
+
+    def get_as_dask(
+        self,
+        channel_label: str | None = None,
+        axes_order: Collection[str] | None = None,
+        **slice_kwargs: slice | int | Iterable[int],
+    ) -> da.Array:
+        """Get the image as a dask array.
+
+        Args:
+            channel_label: Select a specific channel by label.
+                If None, all channels are returned.
+                Alternatively, you can slice arbitrary channels
+                using the slice_kwargs (c=[0, 2]).
+            axes_order: The order of the axes to return the array.
+            **slice_kwargs: The slices to get the array.
+
+        Returns:
+            The dask array of the region of interest.
+        """
+        slice_kwargs = self._add_channel_label(
+            channel_label=channel_label, **slice_kwargs
+        )
+        return self._get_as_dask(axes_order=axes_order, **slice_kwargs)
+
+    def get_roi_as_dask(
+        self,
+        roi: Roi | RoiPixels,
+        channel_label: str | None = None,
+        axes_order: Collection[str] | None = None,
+        **slice_kwargs: slice | int | Iterable[int],
+    ) -> da.Array:
+        """Get the image as a dask array for a region of interest.
+
+        Args:
+            roi: The region of interest to get the array.
+            channel_label: Select a specific channel by label.
+                If None, all channels are returned.
+                Alternatively, you can slice arbitrary channels
+                using the slice_kwargs (c=[0, 2]).
+            axes_order: The order of the axes to return the array.
+            **slice_kwargs: The slices to get the array.
+
+        Returns:
+            The dask array of the region of interest.
+        """
+        slice_kwargs = self._add_channel_label(
+            channel_label=channel_label, **slice_kwargs
+        )
+        return self._get_roi_as_dask(roi=roi, axes_order=axes_order, **slice_kwargs)
+
+    def get_as_delayed(
+        self,
+        channel_label: str | None = None,
+        axes_order: Collection[str] | None = None,
+        **slice_kwargs: slice | int | Iterable[int],
+    ) -> Delayed:
+        """Get the image as a dask delayed array.
+
+        Args:
+            channel_label: Select a specific channel by label.
+                If None, all channels are returned.
+                Alternatively, you can slice arbitrary channels
+                using the slice_kwargs (c=[0, 2]).
+            axes_order: The order of the axes to return the array.
+            **slice_kwargs: The slices to get the array.
+
+        Returns:
+            The dask delayed array of the region of interest.
+        """
+        slice_kwargs = self._add_channel_label(
+            channel_label=channel_label, **slice_kwargs
+        )
+        return self._get_as_delayed(axes_order=axes_order, **slice_kwargs)
+
+    def get_roi_as_delayed(
+        self,
+        roi: Roi | RoiPixels,
+        channel_label: str | None = None,
+        axes_order: Collection[str] | None = None,
+        **slice_kwargs: slice | int | Iterable[int],
+    ) -> Delayed:
+        """Get the image as a dask delayed array for a region of interest.
+
+        Args:
+            roi: The region of interest to get the array.
+            channel_label: Select a specific channel by label.
+                If None, all channels are returned.
+                Alternatively, you can slice arbitrary channels
+                using the slice_kwargs (c=[0, 2]).
+            axes_order: The order of the axes to return the array.
+            **slice_kwargs: The slices to get the array.
+
+        Returns:
+            The dask delayed array of the region of interest.
+        """
+        slice_kwargs = self._add_channel_label(
+            channel_label=channel_label, **slice_kwargs
+        )
+        return self._get_roi_as_delayed(roi=roi, axes_order=axes_order, **slice_kwargs)
+
+    def get_array(
+        self,
+        channel_label: str | None = None,
+        axes_order: Collection[str] | None = None,
+        mode: Literal["dask", "numpy", "delayed"] = "dask",
+        **slice_kwargs: slice | int | Iterable[int],
+    ) -> ArrayLike:
+        """Get the image as a zarr array.
+
+        Args:
+            channel_label: Select a specific channel by label.
+                If None, all channels are returned.
+                Alternatively, you can slice arbitrary channels
+                using the slice_kwargs (c=[0, 2]).
+            axes_order: The order of the axes to return the array.
+            mode: The object type to return.
+                Can be "dask", "numpy", or "delayed".
+            **slice_kwargs: The slices to get the array.
+
+        Returns:
+            The zarr array of the region of interest.
+        """
+        slice_kwargs = self._add_channel_label(
+            channel_label=channel_label, **slice_kwargs
+        )
+        return self._get_array(axes_order=axes_order, mode=mode, **slice_kwargs)
+
+    def get_roi(
+        self,
+        roi: Roi | RoiPixels,
+        channel_label: str | None = None,
+        axes_order: Collection[str] | None = None,
+        mode: Literal["dask", "numpy", "delayed"] = "dask",
+        **slice_kwargs: slice | int | Iterable[int],
+    ) -> ArrayLike:
+        """Get the image as a zarr array for a region of interest.
+
+        Args:
+            roi: The region of interest to get the array.
+            channel_label: Select a specific channel by label.
+                If None, all channels are returned.
+                Alternatively, you can slice arbitrary channels
+                using the slice_kwargs (c=[0, 2]).
+            axes_order: The order of the axes to return the array.
+            mode: The object type to return.
+                Can be "dask", "numpy", or "delayed".
+            **slice_kwargs: The slices to get the array.
+
+        Returns:
+            The zarr array of the region of interest.
+        """
+        slice_kwargs = self._add_channel_label(
+            channel_label=channel_label, **slice_kwargs
+        )
+        return self._get_roi(
+            roi=roi,
+            axes_order=axes_order,
+            mode=mode,
+            **slice_kwargs,
+        )
+
+    def set_array(
+        self,
+        patch: ArrayLike,
+        channel_label: str | None = None,
+        axes_order: Collection[str] | None = None,
+        **slice_kwargs: slice | int | Iterable[int],
+    ) -> None:
+        """Set the image array.
+
+        Args:
+            patch: The array to set.
+            channel_label: Select a specific channel by label.
+                If None, all channels are set.
+                Alternatively, you can slice arbitrary channels
+                using the slice_kwargs (c=[0, 2]).
+            axes_order: The order of the axes to set the array.
+            **slice_kwargs: The slices to set the array.
+        """
+        slice_kwargs = self._add_channel_label(
+            channel_label=channel_label, **slice_kwargs
+        )
+        self._set_array(patch=patch, axes_order=axes_order, **slice_kwargs)
+
+    def set_roi(
+        self,
+        roi: Roi | RoiPixels,
+        patch: ArrayLike,
+        channel_label: str | None = None,
+        axes_order: Collection[str] | None = None,
+        **slice_kwargs: slice | int | Iterable[int],
+    ) -> None:
+        """Set the image array for a region of interest.
+
+        Args:
+            roi: The region of interest to set the array.
+            patch: The array to set.
+            channel_label: Select a specific channel by label.
+                If None, all channels are set.
+                Alternatively, you can slice arbitrary channels
+                using the slice_kwargs (c=[0, 2]).
+            axes_order: The order of the axes to set the array.
+            **slice_kwargs: The slices to set the array.
+        """
+        slice_kwargs = self._add_channel_label(
+            channel_label=channel_label, **slice_kwargs
+        )
+        self._set_roi(roi=roi, patch=patch, axes_order=axes_order, **slice_kwargs)
 
     def consolidate(
         self,
@@ -105,7 +390,7 @@ class Image(AbstractImage[ImageMetaHandler]):
         mode: Literal["dask", "numpy", "coarsen"] = "dask",
     ) -> None:
         """Consolidate the label on disk."""
-        consolidate_image(self, order=order, mode=mode)
+        self._consolidate(order=order, mode=mode)
 
 
 class ImagesContainer:
@@ -148,6 +433,26 @@ class ImagesContainer:
         """Return the wavelength of the image."""
         image = self.get()
         return image.wavelength_ids
+
+    def get_channel_idx(
+        self, channel_label: str | None = None, wavelength_id: str | None = None
+    ) -> int:
+        """Get the index of a channel by label or wavelength ID.
+
+        Args:
+            channel_label (str | None): The label of the channel.
+                If None a wavelength ID must be provided.
+            wavelength_id (str | None): The wavelength ID of the channel.
+                If None a channel label must be provided.
+
+        Returns:
+            int: The index of the channel.
+
+        """
+        image = self.get()
+        return image.get_channel_idx(
+            channel_label=channel_label, wavelength_id=wavelength_id
+        )
 
     def set_channel_meta(
         self,
@@ -377,11 +682,10 @@ def compute_image_percentile(
     starts, ends = [], []
     for c in range(image.num_channels):
         if image.num_channels == 1:
-            data = image.get_array(mode="dask")
+            data = image.get_as_dask()
         else:
-            data = image.get_array(c=c, mode="dask")
+            data = image.get_as_dask(c=c)
 
-        assert isinstance(data, da.Array), "Data must be a Dask array."
         data = da.ravel(data)
         # remove all the zeros
         mask = data > 1e-16
@@ -494,16 +798,11 @@ def derive_image_container(
         _labels = ref_image.channel_labels
         wavelength_id = ref_image.wavelength_ids
 
-        colors = [
-            c.channel_visualisation.color for c in ref_image._channels_meta.channels
-        ]
-        active = [
-            c.channel_visualisation.active for c in ref_image._channels_meta.channels
-        ]
-        start = [
-            c.channel_visualisation.start for c in ref_image._channels_meta.channels
-        ]
-        end = [c.channel_visualisation.end for c in ref_image._channels_meta.channels]
+        channel_meta = ref_image.channels_meta
+        colors = [c.channel_visualisation.color for c in channel_meta.channels]
+        active = [c.channel_visualisation.active for c in channel_meta.channels]
+        start = [c.channel_visualisation.start for c in channel_meta.channels]
+        end = [c.channel_visualisation.end for c in channel_meta.channels]
     else:
         _labels = None
         wavelength_id = None

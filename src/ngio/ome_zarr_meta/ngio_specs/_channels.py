@@ -425,3 +425,39 @@ class ChannelsMeta(BaseModel):
                 )
             )
         return cls(channels=channels, **omero_kwargs)
+
+    @property
+    def channel_labels(self) -> list[str]:
+        """Get the labels of the channels in the image."""
+        return [channel.label for channel in self.channels]
+
+    @property
+    def channel_wavelength_ids(self) -> list[str | None]:
+        """Get the wavelength IDs of the channels in the image."""
+        return [channel.wavelength_id for channel in self.channels]
+
+    def get_channel_idx(
+        self, channel_label: str | None = None, wavelength_id: str | None = None
+    ) -> int:
+        """Get the index of a channel by its label or wavelength ID."""
+        # Only one of the arguments must be provided
+        if channel_label is not None and wavelength_id is not None:
+            raise NgioValueError(
+                "get_channel_idx must receive either label or wavelength_id, not both."
+            )
+
+        if channel_label is not None:
+            if channel_label not in self.channel_labels:
+                raise NgioValueError(f"Channel with label {channel_label} not found.")
+            return self.channel_labels.index(channel_label)
+
+        if wavelength_id is not None:
+            if wavelength_id not in self.channel_wavelength_ids:
+                raise NgioValueError(
+                    f"Channel with wavelength ID {wavelength_id} not found."
+                )
+            return self.channel_wavelength_ids.index(wavelength_id)
+
+        raise NgioValueError(
+            "get_channel_idx must receive either label or wavelength_id"
+        )

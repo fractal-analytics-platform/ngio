@@ -1,5 +1,4 @@
 from collections.abc import Collection, Iterable
-from typing import Literal
 
 import dask.array as da
 import numpy as np
@@ -234,35 +233,6 @@ def get_as_delayed(
     return _delayed_numpy_get_pipe(array, slices, transformations)
 
 
-def get_pipe(
-    array: zarr.Array,
-    *,
-    dimensions: Dimensions,
-    axes_order: Collection[str] | None = None,
-    mode: Literal["numpy", "dask", "delayed"] = "numpy",
-    **slice_kwargs: slice | int | Iterable[int],
-):
-    match mode:
-        case "numpy":
-            return get_as_numpy(
-                array, dimensions=dimensions, axes_order=axes_order, **slice_kwargs
-            )
-        case "dask":
-            return get_as_dask(
-                array, dimensions=dimensions, axes_order=axes_order, **slice_kwargs
-            )
-
-        case "delayed":
-            return get_as_delayed(
-                array, dimensions=dimensions, axes_order=axes_order, **slice_kwargs
-            )
-
-        case _:
-            raise NgioValueError(
-                f"Unknown get pipe mode {mode}, expected 'numpy', 'dask' or 'delayed'."
-            )
-
-
 ##############################################################
 #
 # Concrete "To Disk" Pipes
@@ -360,44 +330,6 @@ def set_delayed(
     _delayed_numpy_set_pipe(
         array=array, patch=patch, slices=slices, transformations=transformations
     )
-
-
-def set_pipe(
-    array: zarr.Array,
-    patch: ArrayLike,
-    *,
-    dimensions: Dimensions,
-    axes_order: Collection[str] | None = None,
-    **slice_kwargs: slice | int | Iterable[int],
-):
-    if isinstance(patch, np.ndarray):
-        set_numpy(
-            array,
-            patch,
-            dimensions=dimensions,
-            axes_order=axes_order,
-            **slice_kwargs,
-        )
-    elif isinstance(patch, DaskArray):
-        set_dask(
-            array,
-            patch,
-            dimensions=dimensions,
-            axes_order=axes_order,
-            **slice_kwargs,
-        )
-    elif isinstance(patch, Delayed):
-        set_delayed(
-            array,
-            patch,
-            dimensions=dimensions,
-            axes_order=axes_order,
-            **slice_kwargs,
-        )
-    else:
-        raise NgioValueError(
-            f"Unknown patch type, expected numpy, dask or delayed. Got {type(patch)}."
-        )
 
 
 ################################################################
@@ -515,42 +447,7 @@ def get_masked_as_dask(
     return array_patch
 
 
-def get_masked_pipe(
-    array: zarr.Array,
-    label_array: zarr.Array,
-    label: int,
-    *,
-    dimensions_array: Dimensions,
-    dimensions_label: Dimensions,
-    axes_order: Collection[str] | None = None,
-    mode: Literal["numpy", "dask", "delayed"] = "numpy",
-    **slice_kwargs: slice | int | Iterable[int],
-):
-    if mode == "numpy":
-        return get_masked_as_numpy(
-            array=array,
-            label_array=label_array,
-            label=label,
-            dimensions_array=dimensions_array,
-            dimensions_label=dimensions_label,
-            axes_order=axes_order,
-            **slice_kwargs,
-        )
-    elif mode == "dask":
-        return get_masked_as_dask(
-            array=array,
-            label_array=label_array,
-            label=label,
-            dimensions_array=dimensions_array,
-            dimensions_label=dimensions_label,
-            axes_order=axes_order,
-            **slice_kwargs,
-        )
-
-    raise NgioValueError(f"Unknown mode {mode}, expected 'numpy' or 'dask'.")
-
-
-def set_masked_as_numpy(
+def set_numpy_masked(
     array: zarr.Array,
     label_array: zarr.Array,
     label: int,
@@ -581,7 +478,7 @@ def set_masked_as_numpy(
     )
 
 
-def set_masked_as_dask(
+def set_dask_masked(
     array: zarr.Array,
     label_array: zarr.Array,
     label: int,
@@ -609,45 +506,4 @@ def set_masked_as_dask(
         dimensions=dimensions_array,
         axes_order=axes_order,
         **slice_kwargs,
-    )
-
-
-def set_masked_pipe(
-    array: zarr.Array,
-    label_array: zarr.Array,
-    label: int,
-    patch: ArrayLike,
-    *,
-    dimensions_array: Dimensions,
-    dimensions_label: Dimensions,
-    axes_order: Collection[str] | None = None,
-    **slice_kwargs: slice | int | Iterable[int],
-):
-    if isinstance(patch, DaskArray):
-        set_masked_as_dask(
-            array=array,
-            label_array=label_array,
-            label=label,
-            patch=patch,
-            dimensions_array=dimensions_array,
-            dimensions_label=dimensions_label,
-            axes_order=axes_order,
-            **slice_kwargs,
-        )
-        return None
-    elif isinstance(patch, np.ndarray):
-        set_masked_as_numpy(
-            array=array,
-            label_array=label_array,
-            label=label,
-            patch=patch,
-            dimensions_array=dimensions_array,
-            dimensions_label=dimensions_label,
-            axes_order=axes_order,
-            **slice_kwargs,
-        )
-        return None
-
-    raise NgioValueError(
-        "Mode not yet supported for masked array. Expected a numpy or dask array."
     )

@@ -364,9 +364,11 @@ def test_image_meta():
     assert image_meta.get_dataset(path="1").path == "1"
     assert image_meta.get_dataset().path == "0"
     assert image_meta.get_dataset(pixel_size=datasets[-1].pixel_size).path == "3"
-    assert image_meta.get_channel_idx(label="DAPI") == 0
-    assert image_meta.get_channel_idx(wavelength_id="DAPI") == 0
-    assert image_meta.channel_labels == ["DAPI", "GFP", "RFP"]
+    channels_meta = image_meta.channels_meta
+    assert channels_meta is not None
+    assert channels_meta.get_channel_idx(channel_label="DAPI") == 0
+    assert channels_meta.get_channel_idx(wavelength_id="DAPI") == 0
+    assert channels_meta.channel_labels == ["DAPI", "GFP", "RFP"]
 
 
 def test_label_meta():
