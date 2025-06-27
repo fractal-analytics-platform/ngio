@@ -408,13 +408,18 @@ def _mask_pipe_common_numpy(
         transforms=transforms,
         **slice_kwargs,
     )
+    
+    label_slice_kwargs = {}
+    for key, value in slice_kwargs.items():
+        if dimensions_label.get(key, -1) != -1:
+            label_slice_kwargs[key] = value
 
     label_patch = get_as_numpy(
         label_array,
         dimensions=dimensions_label,
         axes_order=axes_order,
         transforms=transforms,
-        **slice_kwargs,
+        **label_slice_kwargs,
     )
 
     if label_patch.shape != array_patch.shape:
@@ -441,6 +446,19 @@ def _mask_pipe_common_dask(
         axes_order=axes_order,
         transforms=transforms,
         **slice_kwargs,
+    )
+
+    label_slice_kwargs = {}
+    for key, value in slice_kwargs.items():
+        if dimensions_label.get(key, -1) != -1:
+            label_slice_kwargs[key] = value
+
+    label_patch = get_as_numpy(
+        label_array,
+        dimensions=dimensions_label,
+        axes_order=axes_order,
+        transforms=transforms,
+        **label_slice_kwargs,
     )
 
     label_patch = get_as_dask(
