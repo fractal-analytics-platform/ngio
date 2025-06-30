@@ -1,5 +1,9 @@
 # Changelog
 
+## [v0.3.4]
+
+- allow to write as `anndata_v1` for backward compatibility with older ngio versions.
+
 ## [v0.3.3]
 
 ### Chores
