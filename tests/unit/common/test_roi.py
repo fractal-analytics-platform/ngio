@@ -42,4 +42,4 @@ def test_rois():
     assert world_roi_2.x_length == 1.0
     assert world_roi_2.y_length == 1.0
     assert world_roi_2.z_length == 1.0
-    assert world_roi_2.other == "other"
+    assert world_roi_2.other == "other" # type: ignore
