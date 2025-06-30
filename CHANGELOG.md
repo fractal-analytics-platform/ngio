@@ -14,6 +14,10 @@
 
 - add `t_second` and `len_t_second` to ROI tables and masking ROI tables
 
+## [v0.3.4]
+
+- allow to write as `anndata_v1` for backward compatibility with older ngio versions.
+
 ## [v0.3.3]
 
 ### Chores
@@ -28,5 +32,5 @@
 
 ### Bug Fixes
 
-- fix [#13](https://github.com/fractal-analytics-platform/fractal-converters-tools/issues/13) (converters tools)
-- fix [#88](https://github.com/fractal-analytics-platform/ngio/issues/88)
+- fix [#13](https://github.com/BioVisionCenter/fractal-converters-tools/issues/13) (converters tools)
+- fix [#88](https://github.com/BioVisionCenter/ngio/issues/88)

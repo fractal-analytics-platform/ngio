@@ -88,8 +88,8 @@ docs = [
 
 
 [project.urls]
-homepage = "https://github.com/fractal-analytics-platform/ngio"
-repository = "https://github.com/fractal-analytics-platform/ngio"
+homepage = "https://github.com/BioVisionCenter/ngio"
+repository = "https://github.com/BioVisionCenter/ngio"
 
 # Entry points
 # https://peps.python.org/pep-0621/#entry-points

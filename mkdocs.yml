@@ -1,8 +1,8 @@
 site_name: "NGIO: Next Generation File Format I/O"
-site_url: "https://github.com/fractal-analytics-platform/ngio.git"
+site_url: "https://github.com/BioVisionCenter/ngio.git"
 site_description: "A Python library for processing OME-Zarr images"
 repo_name: "ngio"
-repo_url: "https://github.com/fractal-analytics-platform/ngio"
+repo_url: "https://github.com/BioVisionCenter/ngio"
 copyright: "Copyright &copy; 2024-, BioVisionCenter UZH"
 
 theme:
@@ -45,7 +45,7 @@ extra:
     provider: mike
   social:
     - icon: fontawesome/brands/github
-      link: "https://github.com/fractal-analytics-platform/ngio"
+      link: "https://github.com/BioVisionCenter/ngio"
       name: NGIO on GitHub
 
 plugins: 
@@ -71,7 +71,7 @@ plugins:
   - git-revision-date-localized:
       enable_creation_date: true
   - git-committers:
-      repository: fractal-analytics-platform/ngio
+      repository: BioVisionCenter/ngio
       branch: main
   - mkdocs-jupyter:
       execute: true
