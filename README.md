@@ -3,8 +3,8 @@
 [![License](https://img.shields.io/pypi/l/ngio.svg?color=green)](https://github.com/lorenzocerrone/ngio/raw/main/LICENSE)
 [![PyPI](https://img.shields.io/pypi/v/ngio.svg?color=green)](https://pypi.org/project/ngio)
 [![Python Version](https://img.shields.io/pypi/pyversions/ngio.svg?color=green)](https://python.org)
-[![CI](https://github.com/fractal-analytics-platform/ngio/actions/workflows/ci.yml/badge.svg)](https://github.com/fractal-analytics-platform/ngio/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/fractal-analytics-platform/ngio/graph/badge.svg?token=FkmF26FZki)](https://codecov.io/gh/fractal-analytics-platform/ngio)
+[![CI](https://github.com/BioVisionCenter/ngio/actions/workflows/ci.yml/badge.svg)](https://github.com/BioVisionCenter/ngio/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/BioVisionCenter/ngio/graph/badge.svg?token=FkmF26FZki)](https://codecov.io/gh/BioVisionCenter/ngio)
 
 ngio is a Python library designed to simplify bioimage analysis workflows, offering an intuitive interface for working with OME-Zarr files.
 
@@ -24,7 +24,7 @@ Ngio's mission is to streamline working with OME-Zarr files by providing a simpl
 ### 🔍 Rich Tables and Regions of Interest (ROI) Support
 
 - Extract and analyze specific regions of interest
-- Tight integration with [Tabular Data](https://fractal-analytics-platform.github.io/ngio/stable/table_specs/overview/)
+- Tight integration with [Tabular Data](https://BioVisionCenter.github.io/ngio/stable/table_specs/overview/)
 
 ### 🔄 Scalable Data Processing (Coming Soon)
 
@@ -39,7 +39,7 @@ You can install ngio via pip:
 pip install ngio
 ```
 
-To get started check out the [Quickstart Guide](https://fractal-analytics-platform.github.io/ngio/stable/getting_started/0_quickstart/).
+To get started check out the [Quickstart Guide](https://BioVisionCenter.github.io/ngio/stable/getting_started/0_quickstart/).
 
 ## Supported OME-Zarr versions
 
@@ -71,4 +71,4 @@ Ngio is developed at the [BioVisionCenter](https://www.biovisioncenter.uzh.ch/en
 
 ## License
 
-Ngio is released under the BSD-3-Clause License. See [LICENSE](https://github.com/fractal-analytics-platform/ngio/blob/main/LICENSE) for details.
+Ngio is released under the BSD-3-Clause License. See [LICENSE](https://github.com/BioVisionCenter/ngio/blob/main/LICENSE) for details.

@@ -16,7 +16,7 @@ Ngio's mission is to streamline working with OME-Zarr files by providing a simpl
 ### 🔍 Rich Tables and Regions of Interest (ROI) Support
 
 - Extract and analyze specific regions of interest
-- Tight integration with [Fractal's table framework](https://fractal-analytics-platform.github.io/fractal-tasks-core/tables/)
+- Tight integration with [Fractal's table framework](https://BioVisionCenter.github.io/fractal-tasks-core/tables/)
 
 ### 🔄 Scalable Data Processing (Coming Soon)
 
@@ -58,8 +58,8 @@ Ngio is developed at the [BioVisionCenter](https://www.biovisioncenter.uzh.ch/en
 
 ## License
 
-Ngio is released under the BSD-3-Clause License. See [LICENSE](https://github.com/fractal-analytics-platform/ngio/blob/main/LICENSE) for details.
+Ngio is released under the BSD-3-Clause License. See [LICENSE](https://github.com/BioVisionCenter/ngio/blob/main/LICENSE) for details.
 
 ## Repository
 
-Visit our [GitHub repository](https://github.com/fractal-analytics-platform/ngio) for the latest code, issues, and contributions.
+Visit our [GitHub repository](https://github.com/BioVisionCenter/ngio) for the latest code, issues, and contributions.
