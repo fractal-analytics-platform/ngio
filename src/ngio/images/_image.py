@@ -741,7 +741,7 @@ def compute_image_percentile(
         # compute the percentiles
         _s_perc, _e_perc = da.percentile(
             data, [start_percentile, end_percentile], method="nearest"
-        ).compute()  # type: ignore
+        ).compute() # type: ignore (return type is a tuple of floats)
 
         starts.append(float(_s_perc))
         ends.append(float(_e_perc))

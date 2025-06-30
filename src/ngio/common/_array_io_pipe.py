@@ -1,4 +1,5 @@
 from collections.abc import Collection, Iterable
+from typing import TypeAlias
 
 import dask.array as da
 import numpy as np
@@ -22,8 +23,8 @@ from ngio.utils import NgioValueError
 #
 ##############################################################
 
-SliceDefinition = tuple[slice | tuple[int, ...], ...]
-ArrayLike = np.ndarray | DaskArray | Delayed
+SliceDefinition: TypeAlias = tuple[slice | tuple[int, ...], ...]
+ArrayLike: TypeAlias = np.ndarray | DaskArray | Delayed
 
 
 def _validate_int(value: int, shape: int) -> int:

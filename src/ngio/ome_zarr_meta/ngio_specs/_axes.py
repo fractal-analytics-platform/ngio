@@ -493,8 +493,8 @@ class AxesMapper:
 
 def canonical_axes(
     axes_names: Collection[str],
-    space_units: SpaceUnits | None = DefaultSpaceUnit,
-    time_units: TimeUnits | None = DefaultTimeUnit,
+    space_units: SpaceUnits | str | None = DefaultSpaceUnit,
+    time_units: TimeUnits | str | None = DefaultTimeUnit,
 ) -> list[Axis]:
     """Create a new canonical axes mapper.
 

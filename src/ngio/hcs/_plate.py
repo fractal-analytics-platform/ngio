@@ -382,7 +382,8 @@ class OmeZarrPlate:
         """
         wells = self._group_handler.get_from_cache("wells")
         if wells is not None:
-            return wells  # type: ignore[return-value]
+            assert isinstance(wells, dict)
+            return wells
 
         def process_well(well_path):
             group_handler = self._group_handler.derive_handler(well_path)
@@ -410,7 +411,8 @@ class OmeZarrPlate:
         """
         wells = self._group_handler.get_from_cache("wells")
         if wells is not None:
-            return wells  # type: ignore[return-value]
+            assert isinstance(wells, dict)
+            return wells
 
         def process_well(well_path):
             group_handler = self._group_handler.derive_handler(well_path)
@@ -442,7 +444,8 @@ class OmeZarrPlate:
         """
         images = self._group_handler.get_from_cache("images")
         if images is not None:
-            return images  # type: ignore[return-value]
+            assert isinstance(images, dict)
+            return images
 
         paths = await self.images_paths_async(acquisition=acquisition)
 
@@ -473,7 +476,8 @@ class OmeZarrPlate:
         """
         images = self._group_handler.get_from_cache("images")
         if images is not None:
-            return images  # type: ignore[return-value]
+            assert isinstance(images, dict)
+            return images
         paths = self.images_paths(acquisition=acquisition)
 
         def process_image(image_path):

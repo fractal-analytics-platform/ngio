@@ -120,15 +120,15 @@ def _dataframe_to_rois(
 
         roi = Roi(
             name=str(row.Index),
-            x=row.x_micrometer,  # type: ignore
-            y=row.y_micrometer,  # type: ignore
-            z=row.z_micrometer,  # type: ignore
+            x=row.x_micrometer,  # type: ignore (type can not be known here)
+            y=row.y_micrometer,  # type: ignore (type can not be known here)
+            z=row.z_micrometer,  # type: ignore (type can not be known here)
             t=t_second,
-            x_length=row.len_x_micrometer,  # type: ignore
-            y_length=row.len_y_micrometer,  # type: ignore
-            z_length=row.len_z_micrometer,  # type: ignore
+            x_length=row.len_x_micrometer,  # type: ignore (type can not be known here)
+            y_length=row.len_y_micrometer,  # type: ignore (type can not be known here)
+            z_length=row.len_z_micrometer,  # type: ignore (type can not be known here)
             t_length=t_length_second,
-            unit="micrometer",  # type: ignore
+            unit="micrometer",
             **extras,
         )
         rois[roi.name] = roi

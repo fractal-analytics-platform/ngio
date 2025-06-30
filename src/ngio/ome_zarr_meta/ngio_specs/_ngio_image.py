@@ -76,8 +76,8 @@ class AbstractNgioImageMeta:
         """Initialize the ImageMeta object."""
         axes = canonical_axes(
             axes_names,
-            space_units=pixel_size.space_unit,  # type: ignore[arg-type]
-            time_units=pixel_size.time_unit,  # type: ignore[arg-type]
+            space_units=pixel_size.space_unit,
+            time_units=pixel_size.time_unit,
         )
 
         px_size_dict = pixel_size.as_dict()
@@ -136,7 +136,7 @@ class AbstractNgioImageMeta:
     @property
     def version(self) -> NgffVersions:
         """Version of the OME-NFF metadata used to build the object."""
-        return self._version  # type: ignore[return-value]
+        return self._version # type: ignore (version is a Literal type)
 
     @property
     def name(self) -> str | None:
