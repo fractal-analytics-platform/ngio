@@ -9,10 +9,18 @@
 ### API Changes
 
 - change to `Dimension` class. `get_shape` and `get_canonical_shape` have been removed, `get` uses new keyword arguments `default` instead of `strict`.
+- Image like objects now have a more clean API to load data. Instead of `get_array` and `set_array`, they now use `get_as_numpy`, `get_as_dask`, and `get_as_delayed` for delayed arrays.
+- Same for `get_roi` now specific methods are available:
+  - for ROI objects, the `get_roi_as_numpy`, `get_roi_as_dask`, and `get_roi_as_delayed` methods
+- for Image objects, the `get_*` methods now have a new `channel_name` keyword argument to specify the channel to load not by index but by name.
 
 ### Table specs
 
 - add `t_second` and `len_t_second` to ROI tables and masking ROI tables
+
+### Bug Fixes
+
+- improve type consistency and remove non-necessary "type: ignore"
 
 ## [v0.3.4]
 
