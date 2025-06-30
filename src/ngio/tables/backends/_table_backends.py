@@ -7,7 +7,7 @@ from pandas import DataFrame
 from polars import DataFrame as PolarsDataFrame
 from polars import LazyFrame
 
-from ngio.tables.backends._anndata import AnnDataBackend
+from ngio.tables.backends._anndata import AnnDataBackend, AnnDataBackendV1
 from ngio.tables.backends._csv import CsvTableBackend
 from ngio.tables.backends._json import JsonTableBackend
 from ngio.tables.backends._parquet import ParquetTableBackend
@@ -213,7 +213,8 @@ class ImplementedTableBackends:
                 )
 
 
-ImplementedTableBackends().add_backend(AnnDataBackend, aliases=["anndata_v1"])
+ImplementedTableBackends().add_backend(AnnDataBackend)
+ImplementedTableBackends().add_backend(AnnDataBackendV1)
 ImplementedTableBackends().add_backend(
     JsonTableBackend, aliases=["experimental_json_v1"]
 )

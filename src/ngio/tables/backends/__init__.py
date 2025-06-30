@@ -1,7 +1,7 @@
 """Ngio Tables backend implementations."""
 
 from ngio.tables.backends._abstract_backend import AbstractTableBackend, BackendMeta
-from ngio.tables.backends._anndata import AnnDataBackend
+from ngio.tables.backends._anndata import AnnDataBackend, AnnDataBackendV1
 from ngio.tables.backends._csv import CsvTableBackend
 from ngio.tables.backends._json import JsonTableBackend
 from ngio.tables.backends._parquet import ParquetTableBackend
@@ -31,6 +31,7 @@ from ngio.tables.backends._utils import (
 __all__ = [
     "AbstractTableBackend",
     "AnnDataBackend",
+    "AnnDataBackendV1",
     "BackendMeta",
     "CsvTableBackend",
     "DefaultTableBackend",
