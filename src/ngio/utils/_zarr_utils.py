@@ -1,6 +1,5 @@
 """Common utilities for working with Zarr groups in consistent ways."""
 
-# %%
 from pathlib import Path
 from typing import Literal
 
@@ -164,7 +163,7 @@ class ZarrGroupHandler:
     @property
     def mode(self) -> AccessModeLiteral:
         """Return the mode of the group."""
-        return self._mode  # type: ignore
+        return self._mode  # type: ignore (return type is Literal)
 
     @property
     def lock(self) -> BaseFileLock:
@@ -412,4 +411,3 @@ class ZarrGroupHandler:
             )
 
 
-# %%

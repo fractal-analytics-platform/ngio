@@ -4,9 +4,6 @@ This is not related to the NGFF metadata,
 but it is based on the actual metadata of the image data.
 """
 
-from collections.abc import Collection
-
-from ngio.common._axes_transforms import transform_list
 from ngio.ome_zarr_meta import AxesMapper
 from ngio.utils import NgioValidationError, NgioValueError
 
@@ -43,18 +40,20 @@ class Dimensions:
         )
         return f"Dimensions({dims})"
 
-    def get(self, axis_name: str, strict: bool = True) -> int:
+    def get(self, axis_name: str, default: int | None = None) -> int:
         """Return the dimension of the given axis name.
 
         Args:
             axis_name: The name of the axis (either canonical or non-canonical).
-            strict: If True, raise an error if the axis does not exist.
+            default: The default value to return if the axis does not exist. If None,
+                an error is raised.
         """
         index = self._axes_mapper.get_index(axis_name)
-        if index is None and strict:
+        if index is None:
+            if default is not None:
+                return default
             raise NgioValueError(f"Axis {axis_name} does not exist.")
-        elif index is None:
-            return 1
+
         return self._shape[index]
 
     def has_axis(self, axis_name: str) -> bool:
@@ -64,19 +63,14 @@ class Dimensions:
             return False
         return True
 
-    def get_shape(self, axes_order: Collection[str]) -> tuple[int, ...]:
-        """Return the shape in the given axes order."""
-        transforms = self._axes_mapper.to_order(axes_order)
-        return tuple(transform_list(list(self._shape), 1, transforms))
-
-    def get_canonical_shape(self) -> tuple[int, ...]:
-        """Return the shape in the canonical order."""
-        transforms = self._axes_mapper.to_canonical()
-        return tuple(transform_list(list(self._shape), 1, transforms))
-
     def __repr__(self) -> str:
         """Return the string representation of the object."""
         return str(self)
+
+    @property
+    def axes_mapper(self) -> AxesMapper:
+        """Return the axes mapper object."""
+        return self._axes_mapper
 
     @property
     def on_disk_shape(self) -> tuple[int, ...]:
@@ -86,14 +80,14 @@ class Dimensions:
     @property
     def is_time_series(self) -> bool:
         """Return whether the data is a time series."""
-        if self.get("t", strict=False) == 1:
+        if self.get("t", default=1) == 1:
             return False
         return True
 
     @property
     def is_2d(self) -> bool:
         """Return whether the data is 2D."""
-        if self.get("z", strict=False) != 1:
+        if self.get("z", default=1) != 1:
             return False
         return True
 
@@ -115,6 +109,6 @@ class Dimensions:
     @property
     def is_multi_channels(self) -> bool:
         """Return whether the data has multiple channels."""
-        if self.get("c", strict=False) == 1:
+        if self.get("c", default=1) == 1:
             return False
         return True

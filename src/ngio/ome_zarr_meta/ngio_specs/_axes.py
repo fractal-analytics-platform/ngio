@@ -170,6 +170,26 @@ class AxesSetup(BaseModel):
 
     model_config = ConfigDict(extra="forbid", frozen=True)
 
+    def canonical_map(self) -> dict[str, str]:
+        """Get the canonical map of axes."""
+        return {
+            "t": self.t,
+            "c": self.c,
+            "z": self.z,
+            "y": self.y,
+            "x": self.x,
+        }
+
+    def inverse_canonical_map(self) -> dict[str, str]:
+        """Get the on disk map of axes."""
+        return {
+            self.t: "t",
+            self.c: "c",
+            self.z: "z",
+            self.y: "y",
+            self.x: "x",
+        }
+
 
 def _check_unique_names(axes: Collection[Axis]):
     """Check if all axes on disk have unique names."""
@@ -246,20 +266,11 @@ def validate_axes(
     )
 
 
-class AxesTransformation(BaseModel):
+class AxesOps(BaseModel):
+    transpose_axes: tuple[int, ...] | None = None
+    expand_axes: tuple[int, ...] | None = None
+    squeeze_axes: tuple[int, ...] | None = None
     model_config = ConfigDict(extra="forbid", frozen=True, arbitrary_types_allowed=True)
-
-
-class AxesTranspose(AxesTransformation):
-    axes: tuple[int, ...]
-
-
-class AxesExpand(AxesTransformation):
-    axes: tuple[int, ...]
-
-
-class AxesSqueeze(AxesTransformation):
-    axes: tuple[int, ...]
 
 
 class AxesMapper:
@@ -300,56 +311,42 @@ class AxesMapper:
         self._strict_canonical_order = strict_canonical_order
 
         self._canonical_order = canonical_axes_order()
-        self._extended_canonical_order = [*axes_setup.others, *self._canonical_order]
 
         self._on_disk_axes = on_disk_axes
         self._axes_setup = axes_setup
 
-        self._name_mapping = self._compute_name_mapping()
         self._index_mapping = self._compute_index_mapping()
 
         # Validate the axes type and cast them if necessary
         # This needs to be done after the name mapping is computed
-        self.validate_axex_type()
-
-    def _compute_name_mapping(self):
-        """Compute the name mapping.
-
-        The name mapping is a dictionary with keys the canonical axes names
-        and values the on disk axes names.
-        """
-        _name_mapping = {}
-        axis_setup_dict = self._axes_setup.model_dump(exclude={"others"})
-        _on_disk_names = self.on_disk_axes_names
-        for canonical_key, on_disk_value in axis_setup_dict.items():
-            if on_disk_value in _on_disk_names:
-                _name_mapping[canonical_key] = on_disk_value
-            else:
-                _name_mapping[canonical_key] = None
-
-        for on_disk_name in _on_disk_names:
-            if on_disk_name not in _name_mapping.keys():
-                _name_mapping[on_disk_name] = on_disk_name
-
-        for other in self._axes_setup.others:
-            if other not in _name_mapping.keys():
-                _name_mapping[other] = None
-        return _name_mapping
+        self.validate_axes_type()
 
     def _compute_index_mapping(self):
         """Compute the index mapping.
 
         The index mapping is a dictionary with keys the canonical axes names
         and values the on disk axes index.
+
+        Example:
+            If the on disk axes are ['channel', 't', 'z', 'y', 'x'],
+            the index mapping will be:
+            {
+                'c': 0,
+                'channel': 0,
+                't': 1,
+                'z': 2,
+                'y': 3,
+                'x': 4,
+            }
         """
         _index_mapping = {}
-        for canonical_key, on_disk_value in self._name_mapping.items():
-            if on_disk_value is not None:
-                _index_mapping[canonical_key] = self.on_disk_axes_names.index(
-                    on_disk_value
-                )
-            else:
-                _index_mapping[canonical_key] = None
+        for i, ax in enumerate(self.on_disk_axes_names):
+            _index_mapping[ax] = i
+        # If the axis is not in the canonical order we also set it.
+        canonical_map = self._axes_setup.canonical_map()
+        for canonical_key, on_disk_value in canonical_map.items():
+            if on_disk_value in _index_mapping.keys():
+                _index_mapping[canonical_key] = _index_mapping[on_disk_value]
         return _index_mapping
 
     @property
@@ -377,12 +374,7 @@ class AxesMapper:
 
     def get_index(self, name: str) -> int | None:
         """Get the index of the axis by name."""
-        if name not in self._index_mapping.keys():
-            raise NgioValueError(
-                f"Invalid axis name '{name}'. "
-                f"Possible values are {self._index_mapping.keys()}"
-            )
-        return self._index_mapping[name]
+        return self._index_mapping.get(name, None)
 
     def get_axis(self, name: str) -> Axis | None:
         """Get the axis object by name."""
@@ -391,7 +383,7 @@ class AxesMapper:
             return None
         return self.on_disk_axes[index]
 
-    def validate_axex_type(self):
+    def validate_axes_type(self):
         """Validate the axes type.
 
         If the axes type is not correct, a warning is issued.
@@ -409,64 +401,100 @@ class AxesMapper:
 
     def _change_order(
         self, names: Collection[str]
-    ) -> tuple[tuple[int, ...], tuple[int, ...]]:
-        unique_names = set()
-        for name in names:
-            if name not in self._index_mapping.keys():
-                raise NgioValueError(
-                    f"Invalid axis name '{name}'. "
-                    f"Possible values are {self._index_mapping.keys()}"
-                )
-            _unique_name = self._name_mapping.get(name)
-            if _unique_name is None:
-                continue
-            if _unique_name in unique_names:
-                raise NgioValueError(
-                    f"Duplicate axis name, two or more '{_unique_name}' were found. "
-                    f"Please provide unique names."
-                )
-            unique_names.add(_unique_name)
-
-        if len(self.on_disk_axes_names) > len(unique_names):
-            missing_names = set(self.on_disk_axes_names) - unique_names
+    ) -> tuple[tuple[int, ...] | None, tuple[int, ...] | None, tuple[int, ...] | None]:
+        """Change the order of the axes."""
+        # Validate the names
+        unique_names = set(names)
+        if len(unique_names) != len(names):
             raise NgioValueError(
-                f"Some axes where not queried. "
-                f"Please provide the following missing axes {missing_names}"
+                "Duplicate axis names found. Please provide unique names for each axis."
             )
-        _indices, _insert = [], []
+        for name in names:
+            if not isinstance(name, str):
+                raise NgioValueError(
+                    f"Invalid axis name '{name}'. Axis names must be strings."
+                )
+        inv_canonical_map = self.axes_setup.inverse_canonical_map()
+
+        # Step 1: Check find squeeze axes
+        _axes_to_squeeze: list[int] = []
+        axes_names_after_squeeze = []
+        for i, ax in enumerate(self.on_disk_axes_names):
+            # If the axis is not in the names, it means we need to squeeze it
+            ax_canonical = inv_canonical_map.get(ax, None)
+            if ax not in names and ax_canonical not in names:
+                _axes_to_squeeze.append(i)
+            elif ax in names:
+                axes_names_after_squeeze.append(ax)
+            elif ax_canonical in names:
+                # If the axis is in the canonical map, we add it to the names
+                axes_names_after_squeeze.append(ax_canonical)
+
+        axes_to_squeeze = tuple(_axes_to_squeeze) if len(_axes_to_squeeze) > 0 else None
+
+        # Step 2: Find the transposition order
+        _transposition_order: list[int] = []
+        axes_names_after_transpose = []
+        for ax in names:
+            if ax in axes_names_after_squeeze:
+                _transposition_order.append(axes_names_after_squeeze.index(ax))
+                axes_names_after_transpose.append(ax)
+
+        if np.allclose(_transposition_order, range(len(_transposition_order))):
+            # If the transposition order is the identity, we don't need to transpose
+            transposition_order = None
+        else:
+            transposition_order = tuple(_transposition_order)
+
+        # Step 3: Find axes to expand
+        _axes_to_expand: list[int] = []
         for i, name in enumerate(names):
-            _index = self._index_mapping[name]
-            if _index is None:
-                _insert.append(i)
-            else:
-                _indices.append(self._index_mapping[name])
-        return tuple(_indices), tuple(_insert)
+            if name not in axes_names_after_transpose:
+                # If the axis is not in the mapping, it means we need to expand it
+                _axes_to_expand.append(i)
 
-    def to_order(self, names: Collection[str]) -> tuple[AxesTransformation, ...]:
-        """Get the new order of the axes."""
-        _indices, _insert = self._change_order(names)
-        return AxesTranspose(axes=_indices), AxesExpand(axes=_insert)
+        axes_to_expand = tuple(_axes_to_expand) if len(_axes_to_expand) > 0 else None
+        return axes_to_squeeze, transposition_order, axes_to_expand
 
-    def from_order(self, names: Collection[str]) -> tuple[AxesTransformation, ...]:
+    def to_order(self, names: Collection[str]) -> AxesOps:
         """Get the new order of the axes."""
-        _indices, _insert = self._change_order(names)
+        axes_to_squeeze, transposition_order, axes_to_expand = self._change_order(names)
+        return AxesOps(
+            transpose_axes=transposition_order,
+            expand_axes=axes_to_expand,
+            squeeze_axes=axes_to_squeeze,
+        )
+
+    def from_order(self, names: Collection[str]) -> AxesOps:
+        """Get the new order of the axes."""
+        axes_to_squeeze, transposition_order, axes_to_expand = self._change_order(names)
         # Inverse transpose is just the transpose with the inverse indices
-        _reverse_indices = tuple(np.argsort(_indices))
-        return AxesSqueeze(axes=_insert), AxesTranspose(axes=_reverse_indices)
+        if transposition_order is None:
+            _reverse_indices = None
+        else:
+            _reverse_indices = tuple(np.argsort(transposition_order))
 
-    def to_canonical(self) -> tuple[AxesTransformation, ...]:
-        """Get the new order of the axes."""
-        return self.to_order(self._extended_canonical_order)
+        return AxesOps(
+            transpose_axes=_reverse_indices,
+            expand_axes=axes_to_squeeze,
+            squeeze_axes=axes_to_expand,
+        )
 
-    def from_canonical(self) -> tuple[AxesTransformation, ...]:
+    def to_canonical(self) -> AxesOps:
         """Get the new order of the axes."""
-        return self.from_order(self._extended_canonical_order)
+        other = self._axes_setup.others
+        return self.to_order(other + list(self._canonical_order))
+
+    def from_canonical(self) -> AxesOps:
+        """Get the new order of the axes."""
+        other = self._axes_setup.others
+        return self.from_order(other + list(self._canonical_order))
 
 
 def canonical_axes(
     axes_names: Collection[str],
-    space_units: SpaceUnits | None = DefaultSpaceUnit,
-    time_units: TimeUnits | None = DefaultTimeUnit,
+    space_units: SpaceUnits | str | None = DefaultSpaceUnit,
+    time_units: TimeUnits | str | None = DefaultTimeUnit,
 ) -> list[Axis]:
     """Create a new canonical axes mapper.
 

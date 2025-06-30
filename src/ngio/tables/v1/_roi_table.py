@@ -44,6 +44,11 @@ REQUIRED_COLUMNS = [
 # only a warning is raised if non optional columns are present
 #####################
 
+TIME_COLUMNS = [
+    "t_second",
+    "len_t_second",
+]
+
 ORIGIN_COLUMNS = [
     "x_micrometer_original",
     "y_micrometer_original",
@@ -73,7 +78,7 @@ OPTIONAL_COLUMNS = ORIGIN_COLUMNS + TRANSLATION_COLUMNS + PLATE_COLUMNS + INDEX_
 @cache
 def _check_optional_columns(col_name: str) -> None:
     """Check if the column name is in the optional columns."""
-    if col_name not in OPTIONAL_COLUMNS:
+    if col_name not in OPTIONAL_COLUMNS + TIME_COLUMNS:
         ngio_logger.warning(
             f"Column {col_name} is not in the optional columns. "
             f"Standard optional columns are: {OPTIONAL_COLUMNS}."
@@ -95,7 +100,9 @@ def _dataframe_to_rois(
             f"Could not find required columns: {_required_columns} in the table."
         )
 
-    extra_columns = set(dataframe.columns).difference(set(required_columns))
+    extra_columns = set(dataframe.columns).difference(
+        set(required_columns + TIME_COLUMNS)
+    )
 
     for col in extra_columns:
         _check_optional_columns(col)
@@ -108,15 +115,20 @@ def _dataframe_to_rois(
         if len(extra_columns) > 0:
             extras = {col: getattr(row, col, None) for col in extra_columns}
 
+        t_second = getattr(row, "t_second", 0.0)
+        t_length_second = getattr(row, "len_t_second", 1.0)
+
         roi = Roi(
             name=str(row.Index),
-            x=row.x_micrometer,  # type: ignore
-            y=row.y_micrometer,  # type: ignore
-            z=row.z_micrometer,  # type: ignore
-            x_length=row.len_x_micrometer,  # type: ignore
-            y_length=row.len_y_micrometer,  # type: ignore
-            z_length=row.len_z_micrometer,  # type: ignore
-            unit="micrometer",  # type: ignore
+            x=row.x_micrometer,  # type: ignore (type can not be known here)
+            y=row.y_micrometer,  # type: ignore (type can not be known here)
+            z=row.z_micrometer,  # type: ignore (type can not be known here)
+            t=t_second,
+            x_length=row.len_x_micrometer,  # type: ignore (type can not be known here)
+            y_length=row.len_y_micrometer,  # type: ignore (type can not be known here)
+            z_length=row.len_z_micrometer,  # type: ignore (type can not be known here)
+            t_length=t_length_second,
+            unit="micrometer",
             **extras,
         )
         rois[roi.name] = roi
@@ -157,16 +169,18 @@ def _rois_to_dataframe(rois: dict[str, Roi], index_key: str | None) -> pd.DataFr
             "x_micrometer": roi.x,
             "y_micrometer": roi.y,
             "z_micrometer": roi.z,
+            "t_second": roi.t,
             "len_x_micrometer": roi.x_length,
             "len_y_micrometer": roi.y_length,
             "len_z_micrometer": roi.z_length,
+            "len_t_second": roi.t_length,
         }
 
         extra = roi.model_extra or {}
         for col in extra:
             _check_optional_columns(col)
-            row[col] = extra[col]
         data.append(row)
+
     dataframe = pd.DataFrame(data)
     dataframe = normalize_pandas_df(dataframe, index_key=index_key)
     return dataframe
