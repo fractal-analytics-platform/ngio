@@ -50,9 +50,9 @@ def test_ome_zarr_tables(cardiomyocyte_tiny_path: Path):
     fov_roi = ome_zarr.get_table("FOV_ROI_table")
     assert len(fov_roi.rois()) == 2  # type: ignore
     roi_table_1 = ome_zarr.get_table("well_ROI_table")
-    assert len(roi_table_1.rois()) == 1 # type: ignore
+    assert len(roi_table_1.rois()) == 1  # type: ignore
     roi_table_2 = ome_zarr.get_table("well_ROI_table")
-    assert len(roi_table_2.rois()) == 1 # type: ignore
+    assert len(roi_table_2.rois()) == 1  # type: ignore
 
     new_well_roi_table = ome_zarr.build_image_roi_table()
     ome_zarr.add_table("new_well_ROI_table", new_well_roi_table)
@@ -122,7 +122,7 @@ def test_create_ome_zarr_container(tmp_path: Path, array_mode: str):
     ome_zarr.set_channel_percentiles()
 
     image = ome_zarr.get_image(path="2")
-    assert np.mean(image.get_array()) == 1 # type: ignore
+    assert np.mean(image.get_array()) == 1  # type: ignore
 
     new_ome_zarr = ome_zarr.derive_image(tmp_path / "derived2.zarr", ref_path="2")
 

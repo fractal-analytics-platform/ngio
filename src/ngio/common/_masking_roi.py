@@ -100,7 +100,7 @@ def compute_slices(segmentation: np.ndarray) -> dict[int, tuple[slice, ...]]:
 def lazy_compute_slices(segmentation: da.Array) -> dict[int, tuple[slice, ...]]:
     """Compute slices for each label in a segmentation."""
     global_offsets = _compute_offsets(segmentation.chunks)
-    delayed_chunks = segmentation.to_delayed() # type: ignore
+    delayed_chunks = segmentation.to_delayed()  # type: ignore
 
     grid_shape = tuple(len(c) for c in segmentation.chunks)
 

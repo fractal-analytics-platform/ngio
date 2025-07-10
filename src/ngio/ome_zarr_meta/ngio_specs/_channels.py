@@ -77,7 +77,7 @@ class NgioColors(str, Enum):
             # try to match the color to the channel name
             similarity[color] = SequenceMatcher(None, channel_name, color).ratio()
         # Get the color with the highest similarity
-        color_str = max(similarity, key=similarity.get) # type: ignore (max type overload fails to infer type)
+        color_str = max(similarity, key=similarity.get)  # type: ignore (max type overload fails to infer type)
         assert isinstance(color_str, str), "Color name must be a string."
         return NgioColors.__members__[color_str]
 

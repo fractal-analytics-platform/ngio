@@ -409,5 +409,3 @@ class ZarrGroupHandler:
                 f"Error copying group to {handler.full_url}, "
                 f"#{n_skipped} files where skipped."
             )
-
-

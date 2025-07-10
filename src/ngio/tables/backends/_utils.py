@@ -126,10 +126,10 @@ def _check_for_mixed_types(series: pd.Series) -> None:
     Raises:
         NgioTableValidationError: If the column has mixed types.
     """
-    if series.apply(type).nunique() > 1: # type: ignore (type lint fails here)
+    if series.apply(type).nunique() > 1:  # type: ignore (type lint fails here)
         raise NgioTableValidationError(
             f"Column {series.name} has mixed types: "
-            f"{series.apply(type).unique()}. " # type: ignore (type lint fails here)
+            f"{series.apply(type).unique()}. "  # type: ignore (type lint fails here)
             "Type of all elements must be the same."
         )
 
