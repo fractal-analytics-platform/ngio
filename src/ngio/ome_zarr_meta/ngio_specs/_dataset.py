@@ -123,8 +123,8 @@ class Dataset:
             y=self.get_scale("y"),
             z=self.get_scale("z"),
             t=self.get_scale("t"),
-            space_unit=self.space_unit,  # type: ignore
-            time_unit=self.time_unit,  # type: ignore
+            space_unit=self.space_unit,
+            time_unit=self.time_unit,
         )
 
     @property

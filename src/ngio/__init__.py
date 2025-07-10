@@ -25,6 +25,7 @@ from ngio.images import (
     create_empty_ome_zarr,
     create_ome_zarr_from_array,
     open_image,
+    open_label,
     open_ome_zarr_container,
 )
 from ngio.ome_zarr_meta.ngio_specs import (
@@ -55,6 +56,7 @@ __all__ = [
     "create_empty_well",
     "create_ome_zarr_from_array",
     "open_image",
+    "open_label",
     "open_ome_zarr_container",
     "open_ome_zarr_plate",
     "open_ome_zarr_well",

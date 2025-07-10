@@ -52,6 +52,12 @@ def test_masking(
         label=1, patch=np.ones_like(_roi_array), zoom_factor=1.123
     )
 
+    _ = masked_image.get_roi_as_numpy(label=1)
+    _ = masked_image.get_roi_as_dask(label=1)
+    _ = masked_image.get_roi_as_delayed(label=1)
+    _ = masked_image.get_roi_masked_as_numpy(label=1)
+    _ = masked_image.get_roi_masked_as_dask(label=1)
+
     _roi_mask = masked_image.get_roi_masked(label=1, mode=array_mode)
     # Check that the mask is binary after masking
     np.testing.assert_allclose(np.unique(_roi_mask), [0, 1])

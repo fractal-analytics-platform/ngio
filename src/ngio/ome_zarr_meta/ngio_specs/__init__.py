@@ -7,12 +7,9 @@ This models can be tr
 """
 
 from ngio.ome_zarr_meta.ngio_specs._axes import (
-    AxesExpand,
     AxesMapper,
+    AxesOps,
     AxesSetup,
-    AxesSqueeze,
-    AxesTransformation,
-    AxesTranspose,
     Axis,
     AxisType,
     DefaultSpaceUnit,
@@ -47,12 +44,9 @@ from ngio.ome_zarr_meta.ngio_specs._ngio_image import (
 from ngio.ome_zarr_meta.ngio_specs._pixel_size import PixelSize
 
 __all__ = [
-    "AxesExpand",
     "AxesMapper",
+    "AxesOps",
     "AxesSetup",
-    "AxesSqueeze",
-    "AxesTransformation",
-    "AxesTranspose",
     "Axis",
     "AxisType",
     "Channel",

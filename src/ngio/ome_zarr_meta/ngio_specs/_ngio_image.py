@@ -19,7 +19,7 @@ from ngio.ome_zarr_meta.ngio_specs._axes import (
     TimeUnits,
     canonical_axes,
 )
-from ngio.ome_zarr_meta.ngio_specs._channels import Channel, ChannelsMeta
+from ngio.ome_zarr_meta.ngio_specs._channels import ChannelsMeta
 from ngio.ome_zarr_meta.ngio_specs._dataset import Dataset
 from ngio.ome_zarr_meta.ngio_specs._pixel_size import PixelSize
 from ngio.utils import NgioValidationError, NgioValueError
@@ -76,8 +76,8 @@ class AbstractNgioImageMeta:
         """Initialize the ImageMeta object."""
         axes = canonical_axes(
             axes_names,
-            space_units=pixel_size.space_unit,  # type: ignore[arg-type]
-            time_units=pixel_size.time_unit,  # type: ignore[arg-type]
+            space_units=pixel_size.space_unit,
+            time_units=pixel_size.time_unit,
         )
 
         px_size_dict = pixel_size.as_dict()
@@ -136,7 +136,7 @@ class AbstractNgioImageMeta:
     @property
     def version(self) -> NgffVersions:
         """Version of the OME-NFF metadata used to build the object."""
-        return self._version  # type: ignore[return-value]
+        return self._version  # type: ignore (version is a Literal type)
 
     @property
     def name(self) -> str | None:
@@ -461,63 +461,6 @@ class NgioImageMeta(AbstractNgioImageMeta):
             data_type=data_type,
         )
         self.set_channels_meta(channels_meta=channels_meta)
-
-    @property
-    def channels(self) -> list[Channel]:
-        """Get the channels in the image."""
-        if self._channels_meta is None:
-            return []
-        assert self.channels_meta is not None
-        return self.channels_meta.channels
-
-    @property
-    def channel_labels(self) -> list[str]:
-        """Get the labels of the channels in the image."""
-        return [channel.label for channel in self.channels]
-
-    @property
-    def channel_wavelength_ids(self) -> list[str | None]:
-        """Get the wavelength IDs of the channels in the image."""
-        return [channel.wavelength_id for channel in self.channels]
-
-    def _get_channel_idx_by_label(self, label: str) -> int | None:
-        """Get the index of a channel by its label."""
-        if self._channels_meta is None:
-            return None
-
-        if label not in self.channel_labels:
-            raise NgioValueError(f"Channel with label {label} not found.")
-
-        return self.channel_labels.index(label)
-
-    def _get_channel_idx_by_wavelength_id(self, wavelength_id: str) -> int | None:
-        """Get the index of a channel by its wavelength ID."""
-        if self._channels_meta is None:
-            return None
-
-        if wavelength_id not in self.channel_wavelength_ids:
-            raise NgioValueError(
-                f"Channel with wavelength ID {wavelength_id} not found."
-            )
-
-        return self.channel_wavelength_ids.index(wavelength_id)
-
-    def get_channel_idx(
-        self, label: str | None = None, wavelength_id: str | None = None
-    ) -> int | None:
-        """Get the index of a channel by its label or wavelength ID."""
-        # Only one of the arguments must be provided
-        if sum([label is not None, wavelength_id is not None]) != 1:
-            raise NgioValueError("get_channel_idx must receive only one argument.")
-
-        if label is not None:
-            return self._get_channel_idx_by_label(label)
-        elif wavelength_id is not None:
-            return self._get_channel_idx_by_wavelength_id(wavelength_id)
-        else:
-            raise NgioValueError(
-                "get_channel_idx must receive either label or wavelength_id."
-            )
 
 
 NgioImageLabelMeta = NgioImageMeta | NgioLabelMeta

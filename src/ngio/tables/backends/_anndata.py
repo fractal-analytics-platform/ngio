@@ -58,7 +58,7 @@ class AnnDataBackend(AbstractTableBackend):
                 "Please make sure to use a compatible "
                 "store like a zarr.DirectoryStore."
             )
-        table.write_zarr(full_url)  # type: ignore
+        table.write_zarr(full_url)  # type: ignore (AnnData writer requires a str path)
 
     def write_from_pandas(self, table: DataFrame) -> None:
         """Serialize the table from a pandas DataFrame."""
@@ -75,7 +75,6 @@ class AnnDataBackend(AbstractTableBackend):
             index_key=self.index_key,
         )
         self.write_from_anndata(anndata)
-
 
 
 class AnnDataBackendV1(AnnDataBackend):

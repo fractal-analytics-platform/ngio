@@ -50,9 +50,9 @@ def test_ome_zarr_tables(cardiomyocyte_tiny_path: Path):
     fov_roi = ome_zarr.get_table("FOV_ROI_table")
     assert len(fov_roi.rois()) == 2  # type: ignore
     roi_table_1 = ome_zarr.get_table("well_ROI_table")
-    assert len(roi_table_1.rois()) == 1
+    assert len(roi_table_1.rois()) == 1  # type: ignore
     roi_table_2 = ome_zarr.get_table("well_ROI_table")
-    assert len(roi_table_2.rois()) == 1
+    assert len(roi_table_2.rois()) == 1  # type: ignore
 
     new_well_roi_table = ome_zarr.build_image_roi_table()
     ome_zarr.add_table("new_well_ROI_table", new_well_roi_table)
@@ -102,13 +102,18 @@ def test_create_ome_zarr_container(tmp_path: Path, array_mode: str):
     assert image.meta.get_highest_resolution_dataset().path == "0"
     assert image.meta.get_lowest_resolution_dataset().path == "2"
 
+    array = image.get_as_numpy()
+    assert isinstance(array, np.ndarray)
+    assert array.shape == (10, 20, 30)
+
+    array_dask = image.get_as_dask()
+    assert array_dask.shape == (10, 20, 30)
+
     array = image.get_array(
         x=slice(None),
         axes_order=["c", "z", "y", "x"],
         mode=array_mode,  # type: ignore
     )
-
-    assert array.shape == (1, 10, 20, 30)
 
     array = array + 1  # type: ignore
 
@@ -122,7 +127,7 @@ def test_create_ome_zarr_container(tmp_path: Path, array_mode: str):
     ome_zarr.set_channel_percentiles()
 
     image = ome_zarr.get_image(path="2")
-    assert np.mean(image.get_array()) == 1
+    assert np.mean(image.get_array()) == 1  # type: ignore
 
     new_ome_zarr = ome_zarr.derive_image(tmp_path / "derived2.zarr", ref_path="2")
 
@@ -168,3 +173,46 @@ def test_remote_ome_zarr_container():
 
     _ = ome_zarr.get_label("nuclei", path="0")
     _ = ome_zarr.get_table("well_ROI_table")
+
+
+@pytest.mark.parametrize("array_mode", ["numpy", "dask"])
+def test_get_and_squeeze(tmp_path: Path, array_mode: str):
+    # Very basic test to check if the container is working
+    # to be expanded with more meaningful tests
+    store = tmp_path / "ome_zarr.zarr"
+    ome_zarr = create_empty_ome_zarr(
+        store,
+        shape=(1, 20, 30),
+        xy_pixelsize=0.5,
+        levels=1,
+        axes_names=["c", "y", "x"],
+        dtype="uint8",
+    )
+    image = ome_zarr.get_image()
+    assert image.shape == (1, 20, 30)
+    assert image.get_array(axes_order=["c", "y", "x"]).shape == (1, 20, 30)
+    image.set_array(
+        np.ones((1, 20, 30), dtype="uint8"),
+        axes_order=["c", "y", "x"],
+    )
+    assert image.get_array(axes_order=["y", "x"]).shape == (20, 30)
+    image.set_array(
+        np.ones((20, 30), dtype="uint8"),
+        axes_order=["y", "x"],
+    )
+    assert image.get_array(axes_order=["x", "y"]).shape == (30, 20)
+    image.set_array(
+        np.ones((30, 20), dtype="uint8"),
+        axes_order=["x", "y"],
+    )
+    assert image.get_array(axes_order=["x"], y=0).shape == (30,)
+    image.set_array(
+        np.ones((30,), dtype="uint8"),
+        axes_order=["x"],
+        y=0,
+    )
+
+    # Test channel_labels
+    image.get_as_numpy(channel_label="channel_0")
+    image.get_as_dask(channel_label="channel_0")
+    image.get_as_delayed(channel_label="channel_0")

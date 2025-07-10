@@ -2,11 +2,10 @@
 
 import itertools
 
-import dask
 import dask.array as da
-import dask.delayed
 import numpy as np
 import scipy.ndimage as ndi
+from dask.delayed import delayed
 
 from ngio.common._roi import Roi, RoiPixels
 from ngio.ome_zarr_meta import PixelSize
@@ -39,7 +38,7 @@ def _adjust_slices(slices, offset):
     return adjusted_slices
 
 
-@dask.delayed
+@delayed
 def _process_chunk(chunk, offset):
     """Process a single chunk.
 
@@ -63,7 +62,7 @@ def _merge_slices(
     return tuple(merged)
 
 
-@dask.delayed
+@delayed
 def _collect_slices(
     local_slices: list[dict[int, tuple[slice, ...]]],
 ) -> dict[int, tuple[slice]]:
@@ -101,7 +100,7 @@ def compute_slices(segmentation: np.ndarray) -> dict[int, tuple[slice, ...]]:
 def lazy_compute_slices(segmentation: da.Array) -> dict[int, tuple[slice, ...]]:
     """Compute slices for each label in a segmentation."""
     global_offsets = _compute_offsets(segmentation.chunks)
-    delayed_chunks = segmentation.to_delayed()
+    delayed_chunks = segmentation.to_delayed()  # type: ignore
 
     grid_shape = tuple(len(c) for c in segmentation.chunks)
 

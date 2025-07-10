@@ -1,5 +1,5 @@
 import math
-from collections.abc import Collection
+from collections.abc import Callable, Collection
 from typing import Literal
 
 import dask.array as da
@@ -40,7 +40,7 @@ def _on_disk_coarsen(
     source: zarr.Array,
     target: zarr.Array,
     _order: Literal[0, 1] = 1,
-    aggregation_function: np.ufunc | None = None,
+    aggregation_function: Callable | None = None,
 ) -> None:
     """Apply a coarsening operation from a source zarr array to a target zarr array.
 
@@ -132,7 +132,7 @@ def on_disk_zoom(
 
 def _find_closest_arrays(
     processed: list[zarr.Array], to_be_processed: list[zarr.Array]
-) -> tuple[int, int]:
+) -> tuple[np.intp, np.intp]:
     dist_matrix = np.zeros((len(processed), len(to_be_processed)))
     for i, arr_to_proc in enumerate(to_be_processed):
         for j, proc_arr in enumerate(processed):
@@ -147,7 +147,9 @@ def _find_closest_arrays(
                 )
             )
 
-    return np.unravel_index(dist_matrix.argmin(), dist_matrix.shape)
+    indices = np.unravel_index(dist_matrix.argmin(), dist_matrix.shape)
+    assert len(indices) == 2, "Indices must be of length 2"
+    return indices
 
 
 def consolidate_pyramid(

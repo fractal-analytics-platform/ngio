@@ -9,10 +9,7 @@ from ngio.images._create import create_empty_image_container
 from ngio.images._image import Image, ImagesContainer
 from ngio.images._label import Label, LabelsContainer
 from ngio.images._masked_image import MaskedImage, MaskedLabel
-from ngio.ome_zarr_meta import (
-    NgioImageMeta,
-    PixelSize,
-)
+from ngio.ome_zarr_meta import NgioImageMeta, PixelSize, find_label_meta_handler
 from ngio.ome_zarr_meta.ngio_specs import (
     DefaultNgffVersion,
     DefaultSpaceUnit,
@@ -58,7 +55,21 @@ def _default_label_container(handler: ZarrGroupHandler) -> LabelsContainer | Non
 
 
 class OmeZarrContainer:
-    """This class contains an OME-Zarr image and its associated tables and labels."""
+    """This class is an object representation of an OME-Zarr image.
+
+    It provides methods to access:
+        - The multiscale image metadata
+        - To open images at different levels of resolution
+        - To access labels and tables associated with the image.
+        - To derive new images, labels, and add tables to the image.
+        - To modify the image metadata, such as axes units and channel metadata.
+
+    Attributes:
+        images_container (ImagesContainer): The container for the images.
+        labels_container (LabelsContainer): The container for the labels.
+        tables_container (TablesContainer): The container for the tables.
+
+    """
 
     _images_container: ImagesContainer
     _labels_container: LabelsContainer | None
@@ -71,7 +82,14 @@ class OmeZarrContainer:
         label_container: LabelsContainer | None = None,
         validate_paths: bool = False,
     ) -> None:
-        """Initialize the OmeZarrContainer."""
+        """Initialize the OmeZarrContainer.
+
+        Args:
+            group_handler (ZarrGroupHandler): The Zarr group handler.
+            table_container (TablesContainer | None): The tables container.
+            label_container (LabelsContainer | None): The labels container.
+            validate_paths (bool): Whether to validate the paths of the image multiscale
+        """
         self._group_handler = group_handler
         self._images_container = ImagesContainer(self._group_handler)
 
@@ -101,7 +119,11 @@ class OmeZarrContainer:
 
     @property
     def images_container(self) -> ImagesContainer:
-        """Return the image container."""
+        """Return the images container.
+
+        Returns:
+            ImagesContainer: The images container.
+        """
         return self._images_container
 
     def _get_labels_container(self) -> LabelsContainer | None:
@@ -192,6 +214,32 @@ class OmeZarrContainer:
     def time_unit(self) -> str | None:
         """Return the time unit of the image."""
         return self.image_meta.time_unit
+
+    @property
+    def channel_labels(self) -> list[str]:
+        """Return the channels of the image."""
+        image = self.get_image()
+        return image.channel_labels
+
+    @property
+    def wavelength_ids(self) -> list[str | None]:
+        """Return the list of wavelength of the image."""
+        image = self.get_image()
+        return image.wavelength_ids
+
+    @property
+    def num_channels(self) -> int:
+        """Return the number of channels."""
+        return len(self.channel_labels)
+
+    def get_channel_idx(
+        self, channel_label: str | None = None, wavelength_id: str | None = None
+    ) -> int:
+        """Get the index of a channel by its label or wavelength ID."""
+        image = self.get_image()
+        return image.channels_meta.get_channel_idx(
+            channel_label=channel_label, wavelength_id=wavelength_id
+        )
 
     def set_channel_meta(
         self,
@@ -661,6 +709,47 @@ def open_image(
     group_handler = ZarrGroupHandler(store, cache, mode)
     images_container = ImagesContainer(group_handler)
     return images_container.get(
+        path=path,
+        pixel_size=pixel_size,
+        strict=strict,
+    )
+
+
+def open_label(
+    store: StoreOrGroup,
+    name: str | None = None,
+    path: str | None = None,
+    pixel_size: PixelSize | None = None,
+    strict: bool = True,
+    cache: bool = False,
+    mode: AccessModeLiteral = "r+",
+) -> Label:
+    """Open a single level label from an OME-Zarr Label group.
+
+    Args:
+        store (StoreOrGroup): The Zarr store or group to create the image in.
+        name (str | None): The name of the label. If None,
+            we will try to open the store as a multiscale label.
+        path (str | None): The path to the image in the ome_zarr file.
+        pixel_size (PixelSize | None): The pixel size of the image.
+        strict (bool): Only used if the pixel size is provided. If True, the
+            pixel size must match the image pixel size exactly. If False, the
+            closest pixel size level will be returned.
+        cache (bool): Whether to use a cache for the zarr group metadata.
+        mode (AccessModeLiteral): The access mode for the image. Defaults to "r+".
+
+    """
+    group_handler = ZarrGroupHandler(store, cache, mode)
+    if name is None:
+        label_meta_handler = find_label_meta_handler(group_handler)
+        path = label_meta_handler.meta.get_dataset(
+            path=path, pixel_size=pixel_size, strict=strict
+        ).path
+        return Label(group_handler, path, label_meta_handler)
+
+    labels_container = LabelsContainer(group_handler)
+    return labels_container.get(
+        name=name,
         path=path,
         pixel_size=pixel_size,
         strict=strict,

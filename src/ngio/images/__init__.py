@@ -7,6 +7,7 @@ from ngio.images._ome_zarr_container import (
     create_empty_ome_zarr,
     create_ome_zarr_from_array,
     open_image,
+    open_label,
     open_ome_zarr_container,
 )
 
@@ -19,5 +20,6 @@ __all__ = [
     "create_empty_ome_zarr",
     "create_ome_zarr_from_array",
     "open_image",
+    "open_label",
     "open_ome_zarr_container",
 ]
