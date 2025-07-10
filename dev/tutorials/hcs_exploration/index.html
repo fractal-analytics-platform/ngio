@@ -10,7 +10,7 @@
       
       
       
-        <link rel="canonical" href="https://github.com/BioVisionCenter/ngio.git/dev/tutorials/hcs_processing/">
+        <link rel="canonical" href="https://github.com/BioVisionCenter/ngio.git/dev/tutorials/hcs_exploration/">
       
       
         <link rel="prev" href="../feature_extraction/">
@@ -20,11 +20,11 @@
       
       
       <link rel="icon" href="../../images/favicon.ico">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.14">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.15">
     
     
       
-        <title>HCS Processing - NGIO: Next Generation File Format I/O</title>
+        <title>HCS Plates - NGIO: Next Generation File Format I/O</title>
       
     
     
@@ -82,7 +82,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#hcs-processing" class="md-skip">
+        <a href="#hcs-plates" class="md-skip">
           Skip to content
         </a>
       
@@ -122,7 +122,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              HCS Processing
+              HCS Plates
             
           </span>
         </div>
@@ -511,6 +511,8 @@
       
         
       
+        
+      
     
     
     
@@ -554,6 +556,29 @@
   
   
     <li class="md-nav__item">
+      <a href="../create_ome_zarr/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    OME-Zarr Creation
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../image_processing/" class="md-nav__link">
         
   
@@ -582,7 +607,7 @@
   
   
   <span class="md-ellipsis">
-    Image Semgmentation
+    Image Segmentation
     
   </span>
   
@@ -632,17 +657,85 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    HCS Plates
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
   <span class="md-ellipsis">
-    HCS Processing
+    HCS Plates
     
   </span>
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#show-whats-in-the-plate" class="md-nav__link">
+    <span class="md-ellipsis">
+      Show what's in the plate
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#aggregate-tables-across-all-images" class="md-nav__link">
+    <span class="md-ellipsis">
+      Aggregate tables across all images
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#save-the-table-in-the-hcs-plate" class="md-nav__link">
+    <span class="md-ellipsis">
+      Save the table in the HCS plate
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#create-a-new-empty-plate" class="md-nav__link">
+    <span class="md-ellipsis">
+      Create a new empty Plate
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -981,8 +1074,6 @@
       
         
       
-        
-      
     
     
     
@@ -1026,12 +1117,12 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/ngio/" class="md-nav__link">
+      <a href="../../api/ome_zarr_container/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    ngio
+    OmeZarrContainer
     
   </span>
   
@@ -1054,30 +1145,7 @@
   
   
   <span class="md-ellipsis">
-    ngio.images
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../api/tables/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    ngio.tables
+    Images
     
   </span>
   
@@ -1100,6 +1168,175 @@
   
   
   <span class="md-ellipsis">
+    HCS
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/tables/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Tables
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_5" id="__nav_5_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    ngio
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_5">
+            <span class="md-nav__icon md-icon"></span>
+            ngio
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/ngio/ngio/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    ngio
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/ngio/images/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    ngio.images
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/ngio/tables/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    ngio.tables
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/ngio/hcs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
     ngio.hcs
     
   </span>
@@ -1118,7 +1355,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/utils/" class="md-nav__link">
+      <a href="../../api/ngio/utils/" class="md-nav__link">
         
   
   
@@ -1141,7 +1378,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/common/" class="md-nav__link">
+      <a href="../../api/ngio/common/" class="md-nav__link">
         
   
   
@@ -1152,6 +1389,14 @@
   
 
       </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
     </li>
   
 
@@ -1308,6 +1553,50 @@
   
     
   
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#show-whats-in-the-plate" class="md-nav__link">
+    <span class="md-ellipsis">
+      Show what's in the plate
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#aggregate-tables-across-all-images" class="md-nav__link">
+    <span class="md-ellipsis">
+      Aggregate tables across all images
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#save-the-table-in-the-hcs-plate" class="md-nav__link">
+    <span class="md-ellipsis">
+      Save the table in the HCS plate
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#create-a-new-empty-plate" class="md-nav__link">
+    <span class="md-ellipsis">
+      Create a new empty Plate
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
   
 </nav>
                   </div>
@@ -1768,8 +2057,692 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h1 id="hcs-processing">HCS Processing<a class="anchor-link" href="#hcs-processing">¶</a></h1><p>Coming soon! This section is still under construction.
-Please check back later for updates.</p>
+<h1 id="hcs-plates">HCS Plates<a class="anchor-link" href="#hcs-plates">¶</a></h1><p>This is a minimal example of how to work with OME-Zarr Plates using <code>ngio</code>.</p>
+<h2 id="show-whats-in-the-plate">Show what's in the plate<a class="anchor-link" href="#show-whats-in-the-plate">¶</a></h2>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [1]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="zeroclipboard-container">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-1">
+<div>
+<span class="notice" hidden="">Copied!</span>
+<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
+<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+</div>
+</clipboard-copy>
+</div>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">ngio</span><span class="w"> </span><span class="kn">import</span> <span class="n">open_ome_zarr_plate</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ngio.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">download_ome_zarr_dataset</span>
+
+<span class="c1"># Download the dataset</span>
+<span class="n">download_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">"."</span><span class="p">)</span><span class="o">.</span><span class="n">absolute</span><span class="p">()</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s2">"data"</span>
+
+<span class="n">hcs_path</span> <span class="o">=</span> <span class="n">download_ome_zarr_dataset</span><span class="p">(</span><span class="s2">"CardiomyocyteTinyMip"</span><span class="p">,</span> <span class="n">download_dir</span><span class="o">=</span><span class="n">download_dir</span><span class="p">)</span>
+<span class="n">hcs_zarr</span> <span class="o">=</span> <span class="n">open_ome_zarr_plate</span><span class="p">(</span><span class="n">hcs_path</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">hcs_zarr</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Rows: </span><span class="si">{</span><span class="n">hcs_zarr</span><span class="o">.</span><span class="n">rows</span><span class="si">}</span><span class="s2">, Columns: </span><span class="si">{</span><span class="n">hcs_zarr</span><span class="o">.</span><span class="n">columns</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+
+<span class="c1"># Get all the images in the plate</span>
+<span class="n">hcs_zarr</span><span class="o">.</span><span class="n">get_images</span><span class="p">()</span>
+</pre></div>
+<div class="clipboard-copy-txt" id="cell-1">from pathlib import Path
+
+from ngio import open_ome_zarr_plate
+from ngio.utils import download_ome_zarr_dataset
+
+# Download the dataset
+download_dir = Path(".").absolute().parent.parent / "data"
+
+hcs_path = download_ome_zarr_dataset("CardiomyocyteTinyMip", download_dir=download_dir)
+hcs_zarr = open_ome_zarr_plate(hcs_path)
+print(hcs_zarr)
+print(f"Rows: {hcs_zarr.rows}, Columns: {hcs_zarr.columns}")
+
+# Get all the images in the plate
+hcs_zarr.get_images()</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr" tabindex="0">
+<pre>Unzipping contents of '/home/runner/work/ngio/ngio/data/20200812-CardiomyocyteDifferentiation14-Cycle1-tiny-mip.zarr.zip' to '/home/runner/work/ngio/ngio/data/tmp'
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Plate([rows x columns] (1 x 1))
+Rows: ['B'], Columns: ['03']
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child jp-OutputArea-executeResult">
+<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[1]:</div>
+<div class="jp-RenderedText jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/plain" tabindex="0">
+<pre>{'B/03/0': OmeZarrContainer(levels=5, labels=['nuclei'], #tables=4)}</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="aggregate-tables-across-all-images">Aggregate tables across all images<a class="anchor-link" href="#aggregate-tables-across-all-images">¶</a></h2>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [2]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="zeroclipboard-container">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-2">
+<div>
+<span class="notice" hidden="">Copied!</span>
+<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
+<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+</div>
+</clipboard-copy>
+</div>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Aggregate all table across all images</span>
+
+<span class="n">table</span> <span class="o">=</span> <span class="n">hcs_zarr</span><span class="o">.</span><span class="n">concatenate_image_tables</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"nuclei"</span><span class="p">)</span>
+<span class="n">table</span><span class="o">.</span><span class="n">dataframe</span>
+</pre></div>
+<div class="clipboard-copy-txt" id="cell-2"># Aggregate all table across all images
+
+table = hcs_zarr.concatenate_image_tables(name="nuclei")
+table.dataframe</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="application/vnd.jupyter.stderr" tabindex="0">
+<pre>/opt/hostedtoolcache/Python/3.13.5/x64/lib/python3.13/site-packages/anndata/_core/aligned_df.py:68: ImplicitModificationWarning: Transforming to str index.
+  warnings.warn("Transforming to str index.", ImplicitModificationWarning)
+</pre>
+</div>
+</div>
+<div class="jp-OutputArea-child jp-OutputArea-executeResult">
+<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[2]:</div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/html" tabindex="0">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+<thead>
+<tr style="text-align: right;">
+<th></th>
+<th>area</th>
+<th>bbox_area</th>
+<th>equivalent_diameter</th>
+<th>max_intensity</th>
+<th>mean_intensity</th>
+<th>min_intensity</th>
+<th>standard_deviation_intensity</th>
+<th>row</th>
+<th>column</th>
+<th>path_in_well</th>
+</tr>
+<tr>
+<th>label</th>
+<th></th>
+<th></th>
+<th></th>
+<th></th>
+<th></th>
+<th></th>
+<th></th>
+<th></th>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>1</th>
+<td>1360.0</td>
+<td>1664.0</td>
+<td>13.746119</td>
+<td>268.0</td>
+<td>184.579407</td>
+<td>125.0</td>
+<td>24.502481</td>
+<td>B</td>
+<td>03</td>
+<td>0</td>
+</tr>
+<tr>
+<th>2</th>
+<td>2464.0</td>
+<td>2992.0</td>
+<td>16.757685</td>
+<td>461.0</td>
+<td>273.246765</td>
+<td>132.0</td>
+<td>51.794971</td>
+<td>B</td>
+<td>03</td>
+<td>0</td>
+</tr>
+<tr>
+<th>3</th>
+<td>1968.0</td>
+<td>2688.0</td>
+<td>15.548035</td>
+<td>429.0</td>
+<td>277.291656</td>
+<td>143.0</td>
+<td>41.822422</td>
+<td>B</td>
+<td>03</td>
+<td>0</td>
+</tr>
+<tr>
+<th>4</th>
+<td>5120.0</td>
+<td>6400.0</td>
+<td>21.384073</td>
+<td>413.0</td>
+<td>279.035156</td>
+<td>118.0</td>
+<td>44.379074</td>
+<td>B</td>
+<td>03</td>
+<td>0</td>
+</tr>
+<tr>
+<th>5</th>
+<td>288.0</td>
+<td>352.0</td>
+<td>8.193409</td>
+<td>341.0</td>
+<td>243.315979</td>
+<td>147.0</td>
+<td>41.861721</td>
+<td>B</td>
+<td>03</td>
+<td>0</td>
+</tr>
+<tr>
+<th>...</th>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+</tr>
+<tr>
+<th>1493</th>
+<td>1248.0</td>
+<td>1440.0</td>
+<td>13.357914</td>
+<td>385.0</td>
+<td>269.291656</td>
+<td>108.0</td>
+<td>45.967396</td>
+<td>B</td>
+<td>03</td>
+<td>0</td>
+</tr>
+<tr>
+<th>1494</th>
+<td>528.0</td>
+<td>704.0</td>
+<td>10.027941</td>
+<td>475.0</td>
+<td>315.710236</td>
+<td>128.0</td>
+<td>70.174896</td>
+<td>B</td>
+<td>03</td>
+<td>0</td>
+</tr>
+<tr>
+<th>1495</th>
+<td>608.0</td>
+<td>768.0</td>
+<td>10.510781</td>
+<td>377.0</td>
+<td>281.544403</td>
+<td>122.0</td>
+<td>34.698723</td>
+<td>B</td>
+<td>03</td>
+<td>0</td>
+</tr>
+<tr>
+<th>1496</th>
+<td>288.0</td>
+<td>480.0</td>
+<td>8.193409</td>
+<td>356.0</td>
+<td>261.003479</td>
+<td>122.0</td>
+<td>44.835232</td>
+<td>B</td>
+<td>03</td>
+<td>0</td>
+</tr>
+<tr>
+<th>1497</th>
+<td>432.0</td>
+<td>528.0</td>
+<td>9.379111</td>
+<td>454.0</td>
+<td>336.101837</td>
+<td>172.0</td>
+<td>53.799728</td>
+<td>B</td>
+<td>03</td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+<p>1497 rows × 10 columns</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="save-the-table-in-the-hcs-plate">Save the table in the HCS plate<a class="anchor-link" href="#save-the-table-in-the-hcs-plate">¶</a></h2>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [3]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="zeroclipboard-container">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-3">
+<div>
+<span class="notice" hidden="">Copied!</span>
+<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
+<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+</div>
+</clipboard-copy>
+</div>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Save the tabvle in the HCS plate</span>
+<span class="n">hcs_zarr</span><span class="o">.</span><span class="n">add_table</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"nuclei"</span><span class="p">,</span> <span class="n">table</span><span class="o">=</span><span class="n">table</span><span class="p">)</span>
+
+<span class="c1"># Read the table back for sanity check</span>
+<span class="n">hcs_zarr</span><span class="o">.</span><span class="n">get_table</span><span class="p">(</span><span class="s2">"nuclei"</span><span class="p">)</span><span class="o">.</span><span class="n">dataframe</span>
+</pre></div>
+<div class="clipboard-copy-txt" id="cell-3"># Save the tabvle in the HCS plate
+hcs_zarr.add_table(name="nuclei", table=table)
+
+# Read the table back for sanity check
+hcs_zarr.get_table("nuclei").dataframe</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child jp-OutputArea-executeResult">
+<div class="jp-OutputPrompt jp-OutputArea-prompt">Out[3]:</div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output jp-OutputArea-executeResult" data-mime-type="text/html" tabindex="0">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+<thead>
+<tr style="text-align: right;">
+<th></th>
+<th>area</th>
+<th>bbox_area</th>
+<th>equivalent_diameter</th>
+<th>max_intensity</th>
+<th>mean_intensity</th>
+<th>min_intensity</th>
+<th>standard_deviation_intensity</th>
+<th>row</th>
+<th>column</th>
+<th>path_in_well</th>
+</tr>
+<tr>
+<th>label</th>
+<th></th>
+<th></th>
+<th></th>
+<th></th>
+<th></th>
+<th></th>
+<th></th>
+<th></th>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>1</th>
+<td>1360.0</td>
+<td>1664.0</td>
+<td>13.746119</td>
+<td>268.0</td>
+<td>184.579407</td>
+<td>125.0</td>
+<td>24.502481</td>
+<td>B</td>
+<td>03</td>
+<td>0</td>
+</tr>
+<tr>
+<th>2</th>
+<td>2464.0</td>
+<td>2992.0</td>
+<td>16.757685</td>
+<td>461.0</td>
+<td>273.246765</td>
+<td>132.0</td>
+<td>51.794971</td>
+<td>B</td>
+<td>03</td>
+<td>0</td>
+</tr>
+<tr>
+<th>3</th>
+<td>1968.0</td>
+<td>2688.0</td>
+<td>15.548035</td>
+<td>429.0</td>
+<td>277.291656</td>
+<td>143.0</td>
+<td>41.822422</td>
+<td>B</td>
+<td>03</td>
+<td>0</td>
+</tr>
+<tr>
+<th>4</th>
+<td>5120.0</td>
+<td>6400.0</td>
+<td>21.384073</td>
+<td>413.0</td>
+<td>279.035156</td>
+<td>118.0</td>
+<td>44.379074</td>
+<td>B</td>
+<td>03</td>
+<td>0</td>
+</tr>
+<tr>
+<th>5</th>
+<td>288.0</td>
+<td>352.0</td>
+<td>8.193409</td>
+<td>341.0</td>
+<td>243.315979</td>
+<td>147.0</td>
+<td>41.861721</td>
+<td>B</td>
+<td>03</td>
+<td>0</td>
+</tr>
+<tr>
+<th>...</th>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+<td>...</td>
+</tr>
+<tr>
+<th>1493</th>
+<td>1248.0</td>
+<td>1440.0</td>
+<td>13.357914</td>
+<td>385.0</td>
+<td>269.291656</td>
+<td>108.0</td>
+<td>45.967396</td>
+<td>B</td>
+<td>03</td>
+<td>0</td>
+</tr>
+<tr>
+<th>1494</th>
+<td>528.0</td>
+<td>704.0</td>
+<td>10.027941</td>
+<td>475.0</td>
+<td>315.710236</td>
+<td>128.0</td>
+<td>70.174896</td>
+<td>B</td>
+<td>03</td>
+<td>0</td>
+</tr>
+<tr>
+<th>1495</th>
+<td>608.0</td>
+<td>768.0</td>
+<td>10.510781</td>
+<td>377.0</td>
+<td>281.544403</td>
+<td>122.0</td>
+<td>34.698723</td>
+<td>B</td>
+<td>03</td>
+<td>0</td>
+</tr>
+<tr>
+<th>1496</th>
+<td>288.0</td>
+<td>480.0</td>
+<td>8.193409</td>
+<td>356.0</td>
+<td>261.003479</td>
+<td>122.0</td>
+<td>44.835232</td>
+<td>B</td>
+<td>03</td>
+<td>0</td>
+</tr>
+<tr>
+<th>1497</th>
+<td>432.0</td>
+<td>528.0</td>
+<td>9.379111</td>
+<td>454.0</td>
+<td>336.101837</td>
+<td>172.0</td>
+<td>53.799728</td>
+<td>B</td>
+<td>03</td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+<p>1497 rows × 10 columns</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="create-a-new-empty-plate">Create a new empty Plate<a class="anchor-link" href="#create-a-new-empty-plate">¶</a></h2>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [4]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="zeroclipboard-container">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-4">
+<div>
+<span class="notice" hidden="">Copied!</span>
+<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
+<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+</div>
+</clipboard-copy>
+</div>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">ngio</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImageInWellPath</span><span class="p">,</span> <span class="n">create_empty_plate</span>
+
+<span class="n">test_plate</span> <span class="o">=</span> <span class="n">create_empty_plate</span><span class="p">(</span>
+    <span class="n">store</span><span class="o">=</span><span class="s2">"./data/empty_plate.zarr"</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"Test Plate"</span><span class="p">,</span>
+    <span class="n">images</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">ImageInWellPath</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="s2">"A"</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="s2">"01"</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s2">"0"</span><span class="p">),</span>
+        <span class="n">ImageInWellPath</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="s2">"A"</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="s2">"02"</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s2">"0"</span><span class="p">),</span>
+        <span class="n">ImageInWellPath</span><span class="p">(</span><span class="n">row</span><span class="o">=</span><span class="s2">"A"</span><span class="p">,</span> <span class="n">column</span><span class="o">=</span><span class="s2">"02"</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s2">"1"</span><span class="p">,</span> <span class="n">acquisition_id</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+    <span class="p">],</span>
+    <span class="n">overwrite</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">test_plate</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Rows: </span><span class="si">{</span><span class="n">test_plate</span><span class="o">.</span><span class="n">rows</span><span class="si">}</span><span class="s2">, Columns: </span><span class="si">{</span><span class="n">test_plate</span><span class="o">.</span><span class="n">columns</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</pre></div>
+<div class="clipboard-copy-txt" id="cell-4">from ngio import ImageInWellPath, create_empty_plate
+
+test_plate = create_empty_plate(
+    store="./data/empty_plate.zarr",
+    name="Test Plate",
+    images=[
+        ImageInWellPath(row="A", column="01", path="0"),
+        ImageInWellPath(row="A", column="02", path="0"),
+        ImageInWellPath(row="A", column="02", path="1", acquisition_id=1),
+    ],
+    overwrite=True,
+)
+
+print(test_plate)
+print(f"Rows: {test_plate.rows}, Columns: {test_plate.columns}")</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
+<pre>Plate([rows x columns] (1 x 2))
+Rows: ['A'], Columns: ['01', '02']
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 </div>
 </div>
 </div>
@@ -1803,7 +2776,7 @@ Please check back later for updates.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 31, 2025 12:37:48 UTC">March 31, 2025</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 10, 2025 16:00:26 UTC">July 10, 2025</span>
   </span>
 
     
@@ -1813,34 +2786,11 @@ Please check back later for updates.</p>
     <span class="md-icon" title="Created">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 28, 2025 15:29:17 UTC">March 28, 2025</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 10, 2025 16:00:26 UTC">July 10, 2025</span>
   </span>
 
     
     
-    
-      
-  <span class="md-source-file__fact">
-    
-      
-  <span class="md-icon" title="Contributors">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2A10 10 0 0 0 2 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.87 1.52 2.34 1.07 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33s1.71.11 2.5.33c1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2"/></svg>
-  </span>
-  <span>GitHub</span>
-
-    
-    <nav>
-      
-        <a href="https://github.com/lorenzocerrone" class="md-author" title="@lorenzocerrone">
-          
-          <img src="https://avatars.githubusercontent.com/u/23013839?v=4&size=72" alt="lorenzocerrone">
-        </a>
-      
-      
-      
-    </nav>
-  </span>
-
     
   </aside>
 
@@ -1947,7 +2897,7 @@ Please check back later for updates.</p>
       <script id="__config" type="application/json">{"base": "../..", "features": ["content.tooltips", "content.tabs.link", "content.code.annotate", "navigation.instant", "navigation.instant.progress", "navigation.sections", "navigation.path", "navigation.indexes", "navigation.footer", "toc.follow", "search.suggest", "search.share"], "search": "../../assets/javascripts/workers/search.d50fe291.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.13a4f30d.min.js"></script>
+      <script src="../../assets/javascripts/bundle.56ea9cef.min.js"></script>
       
         <script src="../../assets/_markdown_exec_pyodide.js"></script>
       
