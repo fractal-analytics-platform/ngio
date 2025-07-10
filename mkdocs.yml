@@ -68,6 +68,19 @@ plugins:
             show_root_full_path: true
             show_bases: true
             docstring_section_style: list
+            extensions:
+              - griffe_typingdoc
+            show_if_no_docstring: true
+            inherited_members: true
+            members_order: source
+            separate_signature: true
+            unwrap_annotated: false
+            filters:
+            - '!^_'
+            merge_init_into_class: true
+            signature_crossrefs: true
+            show_symbol_type_heading: true
+            show_symbol_type_toc: true
   - git-revision-date-localized:
       enable_creation_date: true
   - git-committers:
@@ -112,12 +125,14 @@ nav:
       - "Add Custom Table": table_specs/table_types/custom_table.md
   
   - API Reference:
-    - "ngio": api/ngio.md
-    - "ngio.images": api/images.md
-    - "ngio.tables": api/tables.md
-    - "ngio.hcs": api/hcs.md
-    - "ngio.utils": api/utils.md
-    - "ngio.common": api/common.md
+    - "OmeZarrContainer": api/ome_zarr_container.md
+    - "ngio":
+      - "ngio": api/ngio/ngio.md
+      - "ngio.images": api/ngio/images.md
+      - "ngio.tables": api/ngio/tables.md
+      - "ngio.hcs": api/ngio/hcs.md
+      - "ngio.utils": api/ngio/utils.md
+      - "ngio.common": api/ngio/common.md
     - changelog.md
 
   - Contributing:
