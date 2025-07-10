@@ -303,7 +303,7 @@ class Image(AbstractImage[ImageMetaHandler]):
         channel_label: str | None = None,
         axes_order: Collection[str] | None = None,
         transforms: Collection[TransformProtocol] | None = None,
-        mode: Literal["dask", "numpy", "delayed"] = "dask",
+        mode: Literal["numpy", "dask", "delayed"] = "numpy",
         **slice_kwargs: slice | int | Iterable[int],
     ) -> ArrayLike:
         """Get the image as a zarr array.
@@ -335,7 +335,7 @@ class Image(AbstractImage[ImageMetaHandler]):
         channel_label: str | None = None,
         axes_order: Collection[str] | None = None,
         transforms: Collection[TransformProtocol] | None = None,
-        mode: Literal["dask", "numpy", "delayed"] = "dask",
+        mode: Literal["numpy", "dask", "delayed"] = "numpy",
         **slice_kwargs: slice | int | Iterable[int],
     ) -> ArrayLike:
         """Get the image as a zarr array for a region of interest.
