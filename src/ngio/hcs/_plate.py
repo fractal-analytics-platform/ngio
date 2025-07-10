@@ -1005,7 +1005,7 @@ class OmeZarrPlate:
 
     def concatenate_image_tables(
         self,
-        table_name: str,
+        name: str,
         acquisition: int | None = None,
         strict: bool = True,
         index_key: str | None = None,
@@ -1014,7 +1014,7 @@ class OmeZarrPlate:
         """Concatenate tables from all images in the plate.
 
         Args:
-            table_name: The name of the table to concatenate.
+            name: The name of the table to concatenate.
             index_key: The key to use for the index of the concatenated table.
             acquisition: The acquisition id to filter the images.
             strict: If True, raise an error if the table is not found in the image.
@@ -1029,7 +1029,7 @@ class OmeZarrPlate:
         return concatenate_image_tables(
             images=images.values(),
             extras=extras,
-            table_name=table_name,
+            name=name,
             index_key=index_key,
             strict=strict,
             mode=mode,
@@ -1037,7 +1037,7 @@ class OmeZarrPlate:
 
     def concatenate_image_tables_as(
         self,
-        table_name: str,
+        name: str,
         table_cls: type[TableType],
         acquisition: int | None = None,
         index_key: str | None = None,
@@ -1047,7 +1047,7 @@ class OmeZarrPlate:
         """Concatenate tables from all images in the plate as a specific type.
 
         Args:
-            table_name: The name of the table to concatenate.
+            name: The name of the table to concatenate.
             table_cls: The type of the table to concatenate.
             index_key: The key to use for the index of the concatenated table.
             acquisition: The acquisition id to filter the images.
@@ -1063,7 +1063,7 @@ class OmeZarrPlate:
         return concatenate_image_tables_as(
             images=images.values(),
             extras=extras,
-            table_name=table_name,
+            name=name,
             table_cls=table_cls,
             index_key=index_key,
             strict=strict,
@@ -1072,7 +1072,7 @@ class OmeZarrPlate:
 
     async def concatenate_image_tables_async(
         self,
-        table_name: str,
+        name: str,
         acquisition: int | None = None,
         index_key: str | None = None,
         strict: bool = True,
@@ -1081,7 +1081,7 @@ class OmeZarrPlate:
         """Concatenate tables from all images in the plate asynchronously.
 
         Args:
-            table_name: The name of the table to concatenate.
+            name: The name of the table to concatenate.
             index_key: The key to use for the index of the concatenated table.
             acquisition: The acquisition id to filter the images.
             index_key: If a string is provided, a new index column will be created
@@ -1096,7 +1096,7 @@ class OmeZarrPlate:
         return await concatenate_image_tables_async(
             images=images.values(),
             extras=extras,
-            table_name=table_name,
+            name=name,
             index_key=index_key,
             strict=strict,
             mode=mode,
@@ -1104,7 +1104,7 @@ class OmeZarrPlate:
 
     async def concatenate_image_tables_as_async(
         self,
-        table_name: str,
+        name: str,
         table_cls: type[TableType],
         acquisition: int | None = None,
         index_key: str | None = None,
@@ -1114,7 +1114,7 @@ class OmeZarrPlate:
         """Concatenate tables from all images in the plate as a specific type.
 
         Args:
-            table_name: The name of the table to concatenate.
+            name: The name of the table to concatenate.
             table_cls: The type of the table to concatenate.
             index_key: The key to use for the index of the concatenated table.
             acquisition: The acquisition id to filter the images.
@@ -1130,7 +1130,7 @@ class OmeZarrPlate:
         return await concatenate_image_tables_as_async(
             images=images.values(),
             extras=extras,
-            table_name=table_name,
+            name=name,
             table_cls=table_cls,
             index_key=index_key,
             strict=strict,
