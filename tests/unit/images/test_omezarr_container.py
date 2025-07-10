@@ -102,13 +102,18 @@ def test_create_ome_zarr_container(tmp_path: Path, array_mode: str):
     assert image.meta.get_highest_resolution_dataset().path == "0"
     assert image.meta.get_lowest_resolution_dataset().path == "2"
 
+    array = image.get_as_numpy()
+    assert isinstance(array, np.ndarray)
+    assert array.shape == (10, 20, 30)
+
+    array_dask = image.get_as_dask()
+    assert array_dask.shape == (10, 20, 30)
+
     array = image.get_array(
         x=slice(None),
         axes_order=["c", "z", "y", "x"],
         mode=array_mode,  # type: ignore
     )
-
-    assert array.shape == (1, 10, 20, 30)
 
     array = array + 1  # type: ignore
 
