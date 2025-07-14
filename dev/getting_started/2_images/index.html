@@ -1757,30 +1757,37 @@ The <code>axes</code> attribute returns the order of the axes in the image.</p>
 </div>
 <h3 id="working-with-image-data">Working with image data<a class="headerlink" href="#working-with-image-data" title="Permanent link">&para;</a></h3>
 <p>Once you have the <code>Image</code> object, you can access the image data as a:</p>
-<div class="tabbed-set tabbed-alternate" data-tabs="3:3"><input checked="checked" id="__tabbed_3_1" name="__tabbed_3" type="radio" /><input id="__tabbed_3_2" name="__tabbed_3" type="radio" /><input id="__tabbed_3_3" name="__tabbed_3" type="radio" /><div class="tabbed-labels"><label for="__tabbed_3_1">Numpy Array</label><label for="__tabbed_3_2">Dask Array</label><label for="__tabbed_3_3">Dask Delayed</label></div>
+<div class="tabbed-set tabbed-alternate" data-tabs="3:4"><input checked="checked" id="__tabbed_3_1" name="__tabbed_3" type="radio" /><input id="__tabbed_3_2" name="__tabbed_3" type="radio" /><input id="__tabbed_3_3" name="__tabbed_3" type="radio" /><input id="__tabbed_3_4" name="__tabbed_3" type="radio" /><div class="tabbed-labels"><label for="__tabbed_3_1">Numpy Array</label><label for="__tabbed_3_2">Dask Array</label><label for="__tabbed_3_3">Dask Delayed</label><label for="__tabbed_3_4">Legacy</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">get_array</span><span class="p">()</span> <span class="c1"># Get the image as a numpy array</span>
+<div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">get_as_numpy</span><span class="p">()</span> <span class="c1"># Get the image as a numpy array</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">dtype</span>
 <span class="go">(3, 1, 1080, 1280) uint16</span>
 </code></pre></div>
 </div>
 <div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">dask_array</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">get_array</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;dask&quot;</span><span class="p">)</span> <span class="c1"># Get the image as a dask array</span>
+<div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">dask_array</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">get_as_dask</span><span class="p">()</span> <span class="c1"># Get the image as a dask array</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">dask_array</span>
 <span class="go">dask.array&lt;from-zarr, shape=(3, 1, 1080, 1280), dtype=uint16, chunksize=(1, 1, 1080, 1280), chunktype=numpy.ndarray&gt;</span>
 </code></pre></div>
 </div>
 <div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">dask_delayed</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">get_array</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;delayed&quot;</span><span class="p">)</span> <span class="c1"># Get the image as a dask delayed object</span>
+<div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">dask_delayed</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">get_as_delayed</span><span class="p">()</span> <span class="c1"># Get the image as a dask delayed object</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">dask_delayed</span>
-<span class="go">Delayed(&#39;_numpy_apply_axes_ops-ae7dacff-e309-4a43-81c7-4a7b86b66976&#39;)</span>
+<span class="go">Delayed(&#39;_numpy_apply_axes_ops-0f634bc6-c9a3-4ca1-b76c-e9baaf328535&#39;)</span>
+</code></pre></div>
+</div>
+<div class="tabbed-block">
+<p>A generic <code>get_array</code> method is still available for backwards compatibility.</p>
+<div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">get_array</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;numpy&quot;</span><span class="p">)</span> <span class="c1"># Get the image as a numpy or dask or delayed object</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">dtype</span>
+<span class="go">(3, 1, 1080, 1280) uint16</span>
 </code></pre></div>
 </div>
 </div>
 </div>
-<p>The <code>get_array</code> can also be used to slice the image data, and query specific axes in specific orders:</p>
-<div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">image_slice</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">get_array</span><span class="p">(</span><span class="n">c</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="nb">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">128</span><span class="p">),</span> <span class="n">axes_order</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;t&quot;</span><span class="p">,</span> <span class="s2">&quot;z&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;c&quot;</span><span class="p">])</span> <span class="c1"># Get a specific channel and axes order</span>
+<p>The <code>get_as_*</code> can also be used to slice the image data, and query specific axes in specific orders:</p>
+<div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">image_slice</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">get_as_numpy</span><span class="p">(</span><span class="n">c</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="nb">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">128</span><span class="p">),</span> <span class="n">axes_order</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;t&quot;</span><span class="p">,</span> <span class="s2">&quot;z&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;c&quot;</span><span class="p">])</span> <span class="c1"># Get a specific channel and axes order</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">image_slice</span><span class="o">.</span><span class="n">shape</span>
 <span class="go">(1, 1, 1080, 128, 1)</span>
 </code></pre></div>
@@ -1790,7 +1797,7 @@ The <code>axes</code> attribute returns the order of the axes in the image.</p>
 <p>The <code>set_array</code> method can be used to set the image data from a numpy array, dask array, or dask delayed object.</p>
 <p>A minimal example of how to use the <code>get_array</code> and <code>set_array</code> methods:</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># Get the image data as a numpy array</span>
-<span class="n">data</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">get_array</span><span class="p">(</span><span class="n">c</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="nb">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">128</span><span class="p">),</span> <span class="n">y</span><span class="o">=</span><span class="nb">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">128</span><span class="p">),</span> <span class="n">axes_order</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;z&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;c&quot;</span><span class="p">])</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">get_as_numpy</span><span class="p">(</span><span class="n">c</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="nb">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">128</span><span class="p">),</span> <span class="n">y</span><span class="o">=</span><span class="nb">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">128</span><span class="p">),</span> <span class="n">axes_order</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;z&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;c&quot;</span><span class="p">])</span>
 
 <span class="c1"># Modify the image data</span>
 <span class="n">data</span> <span class="o">=</span> <span class="n">some_function</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
@@ -1881,7 +1888,7 @@ If you want to create a new label with slightly different metadata see <a href="
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="March 31, 2025 16:17:59 UTC">March 31, 2025</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="July 14, 2025 12:23:31 UTC">July 14, 2025</span>
   </span>
 
     
