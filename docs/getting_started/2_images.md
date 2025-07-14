@@ -72,29 +72,38 @@ Once you have the `Image` object, you can access the image data as a:
 
 === "Numpy Array"
     ```pycon exec="true" source="console" session="get_started"
-    >>> data = image.get_array() # Get the image as a numpy array
+    >>> data = image.get_as_numpy() # Get the image as a numpy array
     >>> data.shape, data.dtype
     >>> print(data.shape, data.dtype) # markdown-exec: hide
     ```
 
 === "Dask Array"
     ```pycon exec="true" source="console" session="get_started"
-    >>> dask_array = image.get_array(mode="dask") # Get the image as a dask array
+    >>> dask_array = image.get_as_dask() # Get the image as a dask array
     >>> dask_array
     >>> print(dask_array) # markdown-exec: hide
     ```
 
 === "Dask Delayed"
     ```pycon exec="true" source="console" session="get_started"
-    >>> dask_delayed = image.get_array(mode="delayed") # Get the image as a dask delayed object
+    >>> dask_delayed = image.get_as_delayed() # Get the image as a dask delayed object
     >>> dask_delayed
     >>> print(dask_delayed) # markdown-exec: hide
     ```
 
-The `get_array` can also be used to slice the image data, and query specific axes in specific orders:
+=== "Legacy"
+    A generic `get_array` method is still available for backwards compatibility.
+
+    ```pycon exec="true" source="console" session="get_started"
+    >>> data = image.get_array(mode="numpy") # Get the image as a numpy or dask or delayed object
+    >>> data.shape, data.dtype
+    >>> print(data.shape, data.dtype) # markdown-exec: hide
+    ```
+
+The `get_as_*` can also be used to slice the image data, and query specific axes in specific orders:
 
 ```pycon exec="true" source="console" session="get_started"
->>> image_slice = image.get_array(c=0, x=slice(0, 128), axes_order=["t", "z", "y", "x", "c"]) # Get a specific channel and axes order
+>>> image_slice = image.get_as_numpy(c=0, x=slice(0, 128), axes_order=["t", "z", "y", "x", "c"]) # Get a specific channel and axes order
 >>> image_slice.shape
 >>> print(image_slice.shape) # markdown-exec: hide
 ```
@@ -111,7 +120,7 @@ A minimal example of how to use the `get_array` and `set_array` methods:
 
 ```python exec="true" source="material-block" session="get_started"
 # Get the image data as a numpy array
-data = image.get_array(c=0, x=slice(0, 128), y=slice(0, 128), axes_order=["z", "y", "x", "c"])
+data = image.get_as_numpy(c=0, x=slice(0, 128), y=slice(0, 128), axes_order=["z", "y", "x", "c"])
 
 # Modify the image data
 some_function = lambda x: x # markdown-exec: hide
