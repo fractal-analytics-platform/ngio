@@ -77,6 +77,40 @@ class Roi(BaseModel):
         """
         return zoom_roi(self, zoom_factor)
 
+    def intersection(self, other: "Roi") -> "Roi | None":
+        """Calculate the intersection of two ROIs."""
+        if self.unit != other.unit:
+            raise NgioValueError(
+                "Cannot calculate intersection of ROIs with different units."
+            )
+
+        x = max(self.x, other.x)
+        y = max(self.y, other.y)
+        z = max(self.z, other.z)
+        t = max(self.t, other.t)
+
+        x_length = min(self.x + self.x_length, other.x + other.x_length) - x
+        y_length = min(self.y + self.y_length, other.y + other.y_length) - y
+        z_length = min(self.z + self.z_length, other.z + other.z_length) - z
+        t_length = min(self.t + self.t_length, other.t + other.t_length) - t
+
+        if x_length <= 0 or y_length <= 0 or z_length <= 0 or t_length <= 0:
+            # No intersection
+            return None
+
+        return Roi(
+            name=f"{self.name}_x_{other.name}",
+            x=x,
+            y=y,
+            z=z,
+            t=t,
+            x_length=x_length,
+            y_length=y_length,
+            z_length=z_length,
+            t_length=t_length,
+            unit=self.unit,
+        )
+
 
 class RoiPixels(BaseModel):
     """Region of interest (ROI) metadata."""
@@ -117,6 +151,34 @@ class RoiPixels(BaseModel):
             "z": slice(self.z, self.z + self.z_length),
             "t": slice(self.t, self.t + self.t_length),
         }
+
+    def intersection(self, other: "RoiPixels") -> "RoiPixels | None":
+        """Calculate the intersection of two ROIs."""
+        x = max(self.x, other.x)
+        y = max(self.y, other.y)
+        z = max(self.z, other.z)
+        t = max(self.t, other.t)
+
+        x_length = min(self.x + self.x_length, other.x + other.x_length) - x
+        y_length = min(self.y + self.y_length, other.y + other.y_length) - y
+        z_length = min(self.z + self.z_length, other.z + other.z_length) - z
+        t_length = min(self.t + self.t_length, other.t + other.t_length) - t
+
+        if x_length <= 0 or y_length <= 0 or z_length <= 0 or t_length <= 0:
+            # No intersection
+            return None
+
+        return RoiPixels(
+            name=f"{self.name}_x_{other.name}",
+            x=x,
+            y=y,
+            z=z,
+            t=t,
+            x_length=x_length,
+            y_length=y_length,
+            z_length=z_length,
+            t_length=t_length,
+        )
 
 
 def zoom_roi(roi: Roi, zoom_factor: float = 1) -> Roi:
