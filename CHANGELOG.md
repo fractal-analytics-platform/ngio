@@ -8,8 +8,10 @@
 
 ### API Changes
 
-- change `table_name` keyword argument to `name` for consistency in all table concatenation functions, e.g. `concatenate_image_tables`, `concatenate_image_tables_as`, etc.
-- change to `Dimension` class. `get_shape` and `get_canonical_shape` have been removed, `get` uses new keyword arguments `default` instead of `strict`.
+- The image-like `get_*` api have been slightly changed.
+  now if a single int is passed as slice_kwargs, it is interpreted as a single index. So the dimension is automatically squeezed.
+- Change `table_name` keyword argument to `name` for consistency in all table concatenation functions, e.g. `concatenate_image_tables`, `concatenate_image_tables_as`, etc.
+- Change to `Dimension` class. `get_shape` and `get_canonical_shape` have been removed, `get` uses new keyword arguments `default` instead of `strict`.
 - Image like objects now have a more clean API to load data. Instead of `get_array` and `set_array`, they now use `get_as_numpy`, `get_as_dask`, and `get_as_delayed` for delayed arrays.
 - Same for `get_roi` now specific methods are available:
   - for ROI objects, the `get_roi_as_numpy`, `get_roi_as_dask`, and `get_roi_as_delayed` methods
