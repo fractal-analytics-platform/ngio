@@ -77,6 +77,7 @@ def _validate_slice(value: slice, shape: int) -> slice:
 def _build_slices(
     *,
     dimensions: Dimensions,
+    axes_ops: AxesOps | None = None,
     **slice_kwargs: slice | int | Collection[int],
 ) -> SliceDefinition | None:
     _slices = {}
@@ -99,6 +100,8 @@ def _build_slices(
 
         if isinstance(slice_, int):
             slice_ = _validate_int(slice_, shape)
+            if axes_ops is not None:
+                slice_ = slice(slice_, slice_ + 1)
 
         elif isinstance(slice_, Collection):
             slice_ = _validate_iter_of_ints(slice_, shape)
@@ -214,12 +217,11 @@ def _setup_from_disk_pipe(
     axes_order: Collection[str] | None = None,
     **slice_kwargs: slice | int | Collection[int],
 ) -> tuple[SliceDefinition | None, AxesOps | None]:
-    slices = _build_slices(dimensions=dimensions, **slice_kwargs)
+    axes_ops = (
+        dimensions.axes_mapper.to_order(axes_order) if axes_order is not None else None
+    )
 
-    if axes_order is None:
-        return slices, None
-
-    axes_ops = dimensions.axes_mapper.to_order(axes_order)
+    slices = _build_slices(dimensions=dimensions, axes_ops=axes_ops, **slice_kwargs)
     return slices, axes_ops
 
 
@@ -320,11 +322,12 @@ def _setup_to_disk_pipe(
     axes_order: Collection[str] | None = None,
     **slice_kwargs: slice | int | Collection[int],
 ) -> tuple[SliceDefinition | None, AxesOps | None]:
-    slices = _build_slices(dimensions=dimensions, **slice_kwargs)
-    if axes_order is None:
-        return slices, None
-
-    axes_ops = dimensions.axes_mapper.from_order(axes_order)
+    axes_ops = (
+        dimensions.axes_mapper.from_order(axes_order)
+        if axes_order is not None
+        else None
+    )
+    slices = _build_slices(dimensions=dimensions, axes_ops=axes_ops, **slice_kwargs)
     return slices, axes_ops
 
 
