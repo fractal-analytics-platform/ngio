@@ -1,4 +1,4 @@
-from collections.abc import Collection, Iterable
+from collections.abc import Collection
 from typing import TypeAlias
 
 import dask.array as da
@@ -23,7 +23,7 @@ from ngio.utils import NgioValueError
 #
 ##############################################################
 
-SliceDefinition: TypeAlias = tuple[slice | tuple[int, ...], ...]
+SliceDefinition: TypeAlias = tuple[slice | tuple[int, ...] | int, ...]
 ArrayLike: TypeAlias = np.ndarray | DaskArray | Delayed
 
 
@@ -37,11 +37,34 @@ def _validate_int(value: int, shape: int) -> int:
     return value
 
 
-def _validate_iter_of_ints(value: Iterable[int], shape: int) -> list[int]:
-    if not isinstance(value, list):
-        raise NgioValueError(f"Invalid value {value} of type {type(value)}")
+def _try_to_slice(input: Collection[int]) -> slice | tuple[int, ...]:
+    """Try to convert a list of integers into a slice if they are contiguous.
+
+    - If the input is empty, return an empty tuple.
+    - If the input is sorted, and contains contiguous integers,
+      return a slice from the minimum to the maximum integer.
+    - Otherwise, return the input as a tuple.
+    """
+    if not input:
+        return ()
+
+    # If the input is not sorted, return it as a tuple
+    max_input = max(input)
+    min_input = min(input)
+    assert min_input >= 0, "Input must contain non-negative integers"
+    assert max_input >= 0, "Input must contain non-negative integers"
+
+    if sorted(input) == list(range(min_input, max_input + 1)):
+        return slice(min_input, max_input + 1)
+
+    return tuple(input)
+
+
+def _validate_iter_of_ints(
+    value: Collection[int], shape: int
+) -> slice | tuple[int, ...]:
     value = [_validate_int(v, shape=shape) for v in value]
-    return value
+    return _try_to_slice(value)
 
 
 def _validate_slice(value: slice, shape: int) -> slice:
@@ -54,7 +77,7 @@ def _validate_slice(value: slice, shape: int) -> slice:
 def _build_slices(
     *,
     dimensions: Dimensions,
-    **slice_kwargs: slice | int | Iterable[int],
+    **slice_kwargs: slice | int | Collection[int],
 ) -> SliceDefinition | None:
     _slices = {}
     if not slice_kwargs:
@@ -76,11 +99,9 @@ def _build_slices(
 
         if isinstance(slice_, int):
             slice_ = _validate_int(slice_, shape)
-            slice_ = slice(slice_, slice_ + 1)
 
-        elif isinstance(slice_, Iterable):
+        elif isinstance(slice_, Collection):
             slice_ = _validate_iter_of_ints(slice_, shape)
-            slice_ = tuple(slice_)
 
         elif isinstance(slice_, slice):
             slice_ = _validate_slice(slice_, shape)
@@ -100,13 +121,37 @@ def _get_slice_as_numpy(
 ) -> np.ndarray:
     if slices is None:
         return array[...]
-    return array[slices]
+
+    if all(not isinstance(s, tuple) for s in slices):
+        return array[slices]
+
+    fist_slices = []
+    for s in slices:
+        if isinstance(s, tuple):
+            fist_slices.append(slice(None))
+        else:
+            fist_slices.append(s)
+    second_slices = []
+    for s in slices:
+        if isinstance(s, tuple):
+            second_slices.append(s)
+        else:
+            second_slices.append(slice(None))
+
+    return array[tuple(fist_slices)][tuple(second_slices)]
 
 
 def _get_slice_as_dask(array: zarr.Array, slices: SliceDefinition | None) -> da.Array:
     da_array = da.from_zarr(array)
     if slices is None:
         return da_array
+
+    if any(isinstance(s, tuple) for s in slices):
+        raise NgioValueError(
+            "Slicing with non-contiguous tuples/lists "
+            "is not supported for Dask arrays. Use the "
+            "numpy api to get the correct array slice."
+        )
     return da_array[slices]
 
 
@@ -167,7 +212,7 @@ def _setup_from_disk_pipe(
     *,
     dimensions: Dimensions,
     axes_order: Collection[str] | None = None,
-    **slice_kwargs: slice | int | Iterable[int],
+    **slice_kwargs: slice | int | Collection[int],
 ) -> tuple[SliceDefinition | None, AxesOps | None]:
     slices = _build_slices(dimensions=dimensions, **slice_kwargs)
 
@@ -220,7 +265,7 @@ def get_as_numpy(
     dimensions: Dimensions,
     axes_order: Collection[str] | None = None,
     transforms: Collection[TransformProtocol] | None = None,
-    **slice_kwargs: slice | int | Iterable[int],
+    **slice_kwargs: slice | int | Collection[int],
 ) -> np.ndarray:
     slices, axes_ops = _setup_from_disk_pipe(
         dimensions=dimensions, axes_order=axes_order, **slice_kwargs
@@ -236,7 +281,7 @@ def get_as_dask(
     dimensions: Dimensions,
     axes_order: Collection[str] | None = None,
     transforms: Collection[TransformProtocol] | None = None,
-    **slice_kwargs: slice | int | Iterable[int],
+    **slice_kwargs: slice | int | Collection[int],
 ) -> DaskArray:
     slices, axes_ops = _setup_from_disk_pipe(
         dimensions=dimensions, axes_order=axes_order, **slice_kwargs
@@ -252,7 +297,7 @@ def get_as_delayed(
     dimensions: Dimensions,
     axes_order: Collection[str] | None = None,
     transforms: Collection[TransformProtocol] | None = None,
-    **slice_kwargs: slice | int | Iterable[int],
+    **slice_kwargs: slice | int | Collection[int],
 ) -> Delayed:
     slices, axes_ops = _setup_from_disk_pipe(
         dimensions=dimensions, axes_order=axes_order, **slice_kwargs
@@ -273,7 +318,7 @@ def _setup_to_disk_pipe(
     *,
     dimensions: Dimensions,
     axes_order: Collection[str] | None = None,
-    **slice_kwargs: slice | int | Iterable[int],
+    **slice_kwargs: slice | int | Collection[int],
 ) -> tuple[SliceDefinition | None, AxesOps | None]:
     slices = _build_slices(dimensions=dimensions, **slice_kwargs)
     if axes_order is None:
@@ -328,7 +373,7 @@ def set_numpy(
     dimensions: Dimensions,
     axes_order: Collection[str] | None = None,
     transforms: Collection[TransformProtocol] | None = None,
-    **slice_kwargs: slice | int | Iterable[int],
+    **slice_kwargs: slice | int | Collection[int],
 ):
     slices, axes_ops = _setup_to_disk_pipe(
         dimensions=dimensions, axes_order=axes_order, **slice_kwargs
@@ -349,7 +394,7 @@ def set_dask(
     dimensions: Dimensions,
     axes_order: Collection[str] | None = None,
     transforms: Collection[TransformProtocol] | None = None,
-    **slice_kwargs: slice | int | Iterable[int],
+    **slice_kwargs: slice | int | Collection[int],
 ):
     slices, axes_ops = _setup_to_disk_pipe(
         dimensions=dimensions, axes_order=axes_order, **slice_kwargs
@@ -370,7 +415,7 @@ def set_delayed(
     dimensions: Dimensions,
     axes_order: Collection[str] | None = None,
     transforms: Collection[TransformProtocol] | None = None,
-    **slice_kwargs: slice | int | Iterable[int],
+    **slice_kwargs: slice | int | Collection[int],
 ):
     slices, axes_ops = _setup_to_disk_pipe(
         dimensions=dimensions, axes_order=axes_order, **slice_kwargs
@@ -400,7 +445,7 @@ def _mask_pipe_common_numpy(
     dimensions_label: Dimensions,
     axes_order: Collection[str] | None = None,
     transforms: Collection[TransformProtocol] | None = None,
-    **slice_kwargs: slice | int | Iterable[int],
+    **slice_kwargs: slice | int | Collection[int],
 ) -> tuple[np.ndarray, np.ndarray]:
     array_patch = get_as_numpy(
         array,
@@ -439,7 +484,7 @@ def _mask_pipe_common_dask(
     dimensions_label: Dimensions,
     axes_order: Collection[str] | None = None,
     transforms: Collection[TransformProtocol] | None = None,
-    **slice_kwargs: slice | int | Iterable[int],
+    **slice_kwargs: slice | int | Collection[int],
 ) -> tuple[DaskArray, DaskArray]:
     array_patch = get_as_dask(
         array,
@@ -486,7 +531,7 @@ def get_masked_as_numpy(
     dimensions_label: Dimensions,
     axes_order: Collection[str] | None = None,
     transforms: Collection[TransformProtocol] | None = None,
-    **slice_kwargs: slice | int | Iterable[int],
+    **slice_kwargs: slice | int | Collection[int],
 ) -> np.ndarray:
     array_patch, mask = _mask_pipe_common_numpy(
         array=array,
@@ -511,7 +556,7 @@ def get_masked_as_dask(
     dimensions_label: Dimensions,
     axes_order: Collection[str] | None = None,
     transforms: Collection[TransformProtocol] | None = None,
-    **slice_kwargs: slice | int | Iterable[int],
+    **slice_kwargs: slice | int | Collection[int],
 ) -> DaskArray:
     array_patch, mask = _mask_pipe_common_dask(
         array=array,
@@ -537,7 +582,7 @@ def set_numpy_masked(
     dimensions_label: Dimensions,
     axes_order: Collection[str] | None = None,
     transforms: Collection[TransformProtocol] | None = None,
-    **slice_kwargs: slice | int | Iterable[int],
+    **slice_kwargs: slice | int | Collection[int],
 ):
     array_patch, mask = _mask_pipe_common_numpy(
         array=array,
@@ -571,7 +616,7 @@ def set_dask_masked(
     dimensions_label: Dimensions,
     axes_order: Collection[str] | None = None,
     transforms: Collection[TransformProtocol] | None = None,
-    **slice_kwargs: slice | int | Iterable[int],
+    **slice_kwargs: slice | int | Collection[int],
 ):
     array_patch, mask = _mask_pipe_common_dask(
         array=array,

@@ -4,7 +4,7 @@ These are the interfaces bwteen the ROI tables / masking ROI tables and
     the ImageLikeHandler.
 """
 
-from collections.abc import Iterable
+from collections.abc import Collection
 
 import numpy as np
 from pydantic import BaseModel, ConfigDict, Field
@@ -223,8 +223,8 @@ def roi_to_slice_kwargs(
     roi: Roi | RoiPixels,
     dimensions: Dimensions,
     pixel_size: PixelSize | None = None,
-    **slice_kwargs: slice | int | Iterable[int],
-) -> dict[str, slice | int | Iterable[int]]:
+    **slice_kwargs: slice | int | Collection[int],
+) -> dict[str, slice | int | Collection[int]]:
     """Convert a WorldCooROI to slice_kwargs."""
     if isinstance(roi, Roi):
         if pixel_size is None:

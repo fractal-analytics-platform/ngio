@@ -1,6 +1,6 @@
 """Generic class to handle Image-like data in a OME-NGFF file."""
 
-from collections.abc import Collection, Iterable
+from collections.abc import Collection
 from typing import Generic, Literal, TypeVar
 
 import dask.array as da
@@ -177,7 +177,7 @@ class AbstractImage(Generic[_image_handler]):
         self,
         axes_order: Collection[str] | None = None,
         transforms: Collection[TransformProtocol] | None = None,
-        **slice_kwargs: slice | int | Iterable[int],
+        **slice_kwargs: slice | int | Collection[int],
     ) -> np.ndarray:
         """Get the image as a numpy array.
 
@@ -202,7 +202,7 @@ class AbstractImage(Generic[_image_handler]):
         roi: Roi | RoiPixels,
         axes_order: Collection[str] | None = None,
         transforms: Collection[TransformProtocol] | None = None,
-        **slice_kwargs: slice | int | Iterable[int],
+        **slice_kwargs: slice | int | Collection[int],
     ) -> np.ndarray:
         """Get the image as a numpy array for a region of interest.
 
@@ -226,7 +226,7 @@ class AbstractImage(Generic[_image_handler]):
         self,
         axes_order: Collection[str] | None = None,
         transforms: Collection[TransformProtocol] | None = None,
-        **slice_kwargs: slice | int | Iterable[int],
+        **slice_kwargs: slice | int | Collection[int],
     ) -> da.Array:
         """Get the image as a dask array.
 
@@ -248,7 +248,7 @@ class AbstractImage(Generic[_image_handler]):
         roi: Roi | RoiPixels,
         axes_order: Collection[str] | None = None,
         transforms: Collection[TransformProtocol] | None = None,
-        **slice_kwargs: slice | int | Iterable[int],
+        **slice_kwargs: slice | int | Collection[int],
     ) -> da.Array:
         """Get the image as a dask array for a region of interest.
 
@@ -269,7 +269,7 @@ class AbstractImage(Generic[_image_handler]):
         self,
         axes_order: Collection[str] | None = None,
         transforms: Collection[TransformProtocol] | None = None,
-        **slice_kwargs: slice | int | Iterable[int],
+        **slice_kwargs: slice | int | Collection[int],
     ) -> Delayed:
         """Get the image as a delayed object.
 
@@ -291,7 +291,7 @@ class AbstractImage(Generic[_image_handler]):
         roi: Roi | RoiPixels,
         axes_order: Collection[str] | None = None,
         transforms: Collection[TransformProtocol] | None = None,
-        **slice_kwargs: slice | int | Iterable[int],
+        **slice_kwargs: slice | int | Collection[int],
     ) -> Delayed:
         """Get the image as a delayed object for a region of interest.
 
@@ -313,7 +313,7 @@ class AbstractImage(Generic[_image_handler]):
         axes_order: Collection[str] | None = None,
         transforms: Collection[TransformProtocol] | None = None,
         mode: Literal["numpy", "dask", "delayed"] = "numpy",
-        **slice_kwargs: slice | int | Iterable[int],
+        **slice_kwargs: slice | int | Collection[int],
     ) -> ArrayLike:
         """Get a slice of the image.
 
@@ -350,7 +350,7 @@ class AbstractImage(Generic[_image_handler]):
         axes_order: Collection[str] | None = None,
         transforms: Collection[TransformProtocol] | None = None,
         mode: Literal["numpy", "dask", "delayed"] = "numpy",
-        **slice_kwargs: slice | int | Iterable[int],
+        **slice_kwargs: slice | int | Collection[int],
     ) -> ArrayLike:
         """Get a slice of the image.
 
@@ -386,7 +386,7 @@ class AbstractImage(Generic[_image_handler]):
         patch: ArrayLike,
         axes_order: Collection[str] | None = None,
         transforms: Collection[TransformProtocol] | None = None,
-        **slice_kwargs: slice | int | Iterable[int],
+        **slice_kwargs: slice | int | Collection[int],
     ) -> None:
         """Set a slice of the image.
 
@@ -437,7 +437,7 @@ class AbstractImage(Generic[_image_handler]):
         patch: ArrayLike,
         axes_order: Collection[str] | None = None,
         transforms: Collection[TransformProtocol] | None = None,
-        **slice_kwargs: slice | int | Iterable[int],
+        **slice_kwargs: slice | int | Collection[int],
     ) -> None:
         """Set a slice of the image.
 
