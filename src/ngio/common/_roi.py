@@ -39,6 +39,7 @@ class Roi(BaseModel):
     z: float = 0.0
     t: float = 0.0
     unit: SpaceUnits | str | None = Field(DefaultSpaceUnit, repr=False)
+    label: int | None = None
 
     model_config = ConfigDict(extra="allow")
 
@@ -63,6 +64,7 @@ class Roi(BaseModel):
             y_length=_to_raster(self.y_length, pixel_size.y, dim_y),
             z_length=_to_raster(self.z_length, pixel_size.z, dim_z),
             t_length=_to_raster(self.t_length, pixel_size.t, dim_t),
+            label=self.label,
             **extra_dict,
         )
 
@@ -98,8 +100,16 @@ class Roi(BaseModel):
             # No intersection
             return None
 
+        # Find label
+        if self.label is not None and other.label is not None:
+            if self.label != other.label:
+                raise NgioValueError(
+                    "Cannot calculate intersection of ROIs with different labels."
+                )
+        label = self.label or other.label
+
         return Roi(
-            name=f"{self.name}_x_{other.name}",
+            name=f"[{self.name}_x_{other.name}]",
             x=x,
             y=y,
             z=z,
@@ -109,6 +119,7 @@ class Roi(BaseModel):
             z_length=z_length,
             t_length=t_length,
             unit=self.unit,
+            label=label,
         )
 
 
@@ -124,6 +135,8 @@ class RoiPixels(BaseModel):
     y: int = 0
     z: int = 0
     t: int = 0
+    label: int | None = None
+
     model_config = ConfigDict(extra="allow")
 
     def to_roi(self, pixel_size: PixelSize) -> Roi:
@@ -140,6 +153,7 @@ class RoiPixels(BaseModel):
             z_length=_to_world(self.z_length, pixel_size.z),
             t_length=_to_world(self.t_length, pixel_size.t),
             unit=pixel_size.space_unit,
+            label=self.label,
             **extra_dict,
         )
 
@@ -168,8 +182,16 @@ class RoiPixels(BaseModel):
             # No intersection
             return None
 
+        # Find label
+        if self.label is not None and other.label is not None:
+            if self.label != other.label:
+                raise NgioValueError(
+                    "Cannot calculate intersection of ROIs with different labels."
+                )
+        label = self.label or other.label
+
         return RoiPixels(
-            name=f"{self.name}_x_{other.name}",
+            name=f"[{self.name}_x_{other.name}]",
             x=x,
             y=y,
             z=z,
@@ -178,6 +200,7 @@ class RoiPixels(BaseModel):
             y_length=y_length,
             z_length=z_length,
             t_length=t_length,
+            label=label,
         )
 
 
@@ -251,3 +274,20 @@ def roi_to_slice_kwargs(
                 f"{key}={slice_kwargs[key]} or roi_{key}={pixel_roi[key]}"
             )
     return {**pixel_roi, **slice_kwargs}
+
+
+def add_channel_label_to_slice_kwargs(
+    channel_idx: int | None = None,
+    channel_label: str | None = None,
+    **slice_kwargs: slice | int | Collection[int],
+) -> dict[str, slice | int | Collection[int]]:
+    """Add a channel label to the image metadata."""
+    if channel_label is None or channel_idx is None:
+        return slice_kwargs
+
+    if "c" in slice_kwargs:
+        raise NgioValueError(
+            "Cannot specify a channel label and a channel index at the same time."
+        )
+    slice_kwargs["c"] = channel_idx
+    return slice_kwargs

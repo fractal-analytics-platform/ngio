@@ -69,7 +69,7 @@ class MaskedImage(Image):
         **slice_kwargs: slice | int | Collection[int],
     ) -> ArrayLike:
         """Return the array for a given ROI."""
-        roi = self._masking_roi_table.get(label)
+        roi = self._masking_roi_table.get_label(label)
         roi = roi.zoom(zoom_factor)
         return super().get_roi_as_numpy(
             roi=roi,
@@ -89,7 +89,7 @@ class MaskedImage(Image):
         **slice_kwargs: slice | int | Collection[int],
     ) -> da.Array:
         """Return the array for a given ROI as a Dask array."""
-        roi = self._masking_roi_table.get(label)
+        roi = self._masking_roi_table.get_label(label)
         roi = roi.zoom(zoom_factor)
         return super().get_roi_as_dask(
             roi=roi,
@@ -109,7 +109,7 @@ class MaskedImage(Image):
         **slice_kwargs: slice | int | Collection[int],
     ) -> Delayed:
         """Return the array for a given ROI as a delayed object."""
-        roi = self._masking_roi_table.get(label)
+        roi = self._masking_roi_table.get_label(label)
         roi = roi.zoom(zoom_factor)
         return super().get_roi_as_delayed(
             roi=roi,
@@ -130,7 +130,7 @@ class MaskedImage(Image):
         **slice_kwargs: slice | int | Collection[int],
     ) -> ArrayLike:
         """Return the array for a given ROI."""
-        roi = self._masking_roi_table.get(label)
+        roi = self._masking_roi_table.get_label(label)
         roi = roi.zoom(zoom_factor)
         return super().get_roi(
             roi=roi,
@@ -152,7 +152,7 @@ class MaskedImage(Image):
         **slice_kwargs: slice | int | Collection[int],
     ) -> None:
         """Set the array for a given ROI."""
-        roi = self._masking_roi_table.get(label)
+        roi = self._masking_roi_table.get_label(label)
         roi = roi.zoom(zoom_factor)
         return super().set_roi(
             roi=roi,
@@ -171,7 +171,7 @@ class MaskedImage(Image):
         **slice_kwargs: slice | int | Collection[int],
     ) -> dict[str, slice | int | Collection[int]]:
         """Build the slice kwargs for the ROI."""
-        roi = self._masking_roi_table.get(label)
+        roi = self._masking_roi_table.get_label(label)
         roi = roi.zoom(zoom_factor)
         slice_kwargs = roi_to_slice_kwargs(
             roi=roi,
@@ -361,7 +361,7 @@ class MaskedLabel(Label):
         **slice_kwargs: slice | int | Collection[int],
     ) -> np.ndarray:
         """Return the ROI as a NumPy array."""
-        roi = self._masking_roi_table.get(label)
+        roi = self._masking_roi_table.get_label(label)
         roi = roi.zoom(zoom_factor)
         return super().get_roi_as_numpy(
             roi=roi,
@@ -379,7 +379,7 @@ class MaskedLabel(Label):
         **slice_kwargs: slice | int | Collection[int],
     ) -> da.Array:
         """Return the ROI as a Dask array."""
-        roi = self._masking_roi_table.get(label)
+        roi = self._masking_roi_table.get_label(label)
         roi = roi.zoom(zoom_factor)
         return super().get_roi_as_dask(
             roi=roi,
@@ -397,7 +397,7 @@ class MaskedLabel(Label):
         **slice_kwargs: slice | int | Collection[int],
     ) -> Delayed:
         """Return the ROI as a delayed object."""
-        roi = self._masking_roi_table.get(label)
+        roi = self._masking_roi_table.get_label(label)
         roi = roi.zoom(zoom_factor)
         return super().get_roi_as_delayed(
             roi=roi,
@@ -416,7 +416,7 @@ class MaskedLabel(Label):
         **slice_kwargs: slice | int | Collection[int],
     ) -> ArrayLike:
         """Return the array for a given ROI."""
-        roi = self._masking_roi_table.get(label)
+        roi = self._masking_roi_table.get_label(label)
         roi = roi.zoom(zoom_factor)
         return super().get_roi(
             roi=roi,
@@ -436,7 +436,7 @@ class MaskedLabel(Label):
         **slice_kwargs: slice | int | Collection[int],
     ) -> None:
         """Set the array for a given ROI."""
-        roi = self._masking_roi_table.get(label)
+        roi = self._masking_roi_table.get_label(label)
         roi = roi.zoom(zoom_factor)
         return super().set_roi(
             roi=roi,
@@ -453,7 +453,7 @@ class MaskedLabel(Label):
         **slice_kwargs: slice | int | Collection[int],
     ) -> dict[str, slice | int | Collection[int]]:
         """Build the slice kwargs for the ROI."""
-        roi = self._masking_roi_table.get(label)
+        roi = self._masking_roi_table.get_label(label)
         roi = roi.zoom(zoom_factor)
         slice_kwargs = roi_to_slice_kwargs(
             roi=roi,
