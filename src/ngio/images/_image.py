@@ -7,7 +7,14 @@ import dask.array as da
 import numpy as np
 from dask.delayed import Delayed
 
-from ngio.common import ArrayLike, Dimensions, Roi, RoiPixels, TransformProtocol
+from ngio.common import (
+    ArrayLike,
+    Dimensions,
+    Roi,
+    RoiPixels,
+    TransformProtocol,
+    add_channel_label_to_slice_kwargs,
+)
 from ngio.images._abstract_image import AbstractImage
 from ngio.images._create import create_empty_image_container
 from ngio.ome_zarr_meta import (
@@ -27,7 +34,6 @@ from ngio.ome_zarr_meta.ngio_specs import (
 )
 from ngio.utils import (
     NgioValidationError,
-    NgioValueError,
     StoreOrGroup,
     ZarrGroupHandler,
 )
@@ -114,14 +120,14 @@ class Image(AbstractImage[ImageMetaHandler]):
         **slice_kwargs: slice | int | Collection[int],
     ) -> dict[str, slice | int | Collection[int]]:
         """Add a channel label to the image metadata."""
-        if channel_label is None:
-            return slice_kwargs
-        channel_idx = self.get_channel_idx(channel_label=channel_label)
-        if "c" in slice_kwargs:
-            raise NgioValueError(
-                "Cannot specify a channel label and a channel index at the same time."
-            )
-        slice_kwargs["c"] = channel_idx
+        if channel_label is not None:
+            channel_idx = self.get_channel_idx(channel_label=channel_label)
+        else:
+            channel_idx = None
+
+        slice_kwargs = add_channel_label_to_slice_kwargs(
+            channel_idx=channel_idx, channel_label=channel_label, **slice_kwargs
+        )
         return slice_kwargs
 
     def get_as_numpy(

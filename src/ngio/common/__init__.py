@@ -20,7 +20,12 @@ from ngio.common._io_transforms import (
 )
 from ngio.common._masking_roi import compute_masking_roi
 from ngio.common._pyramid import consolidate_pyramid, init_empty_pyramid, on_disk_zoom
-from ngio.common._roi import Roi, RoiPixels, roi_to_slice_kwargs
+from ngio.common._roi import (
+    Roi,
+    RoiPixels,
+    add_channel_label_to_slice_kwargs,
+    roi_to_slice_kwargs,
+)
 from ngio.common._table_ops import (
     concatenate_image_tables,
     concatenate_image_tables_as,
@@ -39,6 +44,7 @@ __all__ = [
     "Roi",
     "RoiPixels",
     "TransformProtocol",
+    "add_channel_label_to_slice_kwargs",
     "compute_masking_roi",
     "concatenate_image_tables",
     "concatenate_image_tables_as",

@@ -5,6 +5,7 @@ but it is based on the actual metadata of the image data.
 """
 
 from ngio.ome_zarr_meta import AxesMapper
+from ngio.ome_zarr_meta.ngio_specs import AxisType
 from ngio.utils import NgioValidationError, NgioValueError
 
 
@@ -111,4 +112,26 @@ class Dimensions:
         """Return whether the data has multiple channels."""
         if self.get("c", default=1) == 1:
             return False
+        return True
+
+    def is_compatible_with(self, other: "Dimensions") -> bool:
+        """Check if the dimensions are compatible with another Dimensions object.
+
+        Two dimensions are compatible if:
+            - they have the same number of axes (excluding channels)
+            - the shape of each axis is the same
+        """
+        if abs(len(self.on_disk_shape) - len(other.on_disk_shape)) > 1:
+            # Since channels are not considered in compatibility
+            # we allow a difference of 0, 1 n-dimension in the shapes.
+            return False
+
+        for ax in self._axes_mapper.on_disk_axes:
+            if ax.axis_type == AxisType.channel:
+                continue
+
+            self_shape = self.get(ax.on_disk_name, default=None)
+            other_shape = other.get(ax.on_disk_name, default=None)
+            if self_shape != other_shape:
+                return False
         return True
