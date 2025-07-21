@@ -5,7 +5,6 @@ from typing import Literal
 
 import dask.array as da
 import numpy as np
-from dask.delayed import Delayed
 
 from ngio.common import (
     ArrayLike,
@@ -246,70 +245,12 @@ class Image(AbstractImage[ImageMetaHandler]):
             roi=roi, axes_order=axes_order, transforms=transforms, **slice_kwargs
         )
 
-    def get_as_delayed(
-        self,
-        channel_label: str | None = None,
-        axes_order: Collection[str] | None = None,
-        transforms: Collection[TransformProtocol] | None = None,
-        **slice_kwargs: slice | int | Collection[int],
-    ) -> Delayed:
-        """Get the image as a dask delayed array.
-
-        Args:
-            channel_label: Select a specific channel by label.
-                If None, all channels are returned.
-                Alternatively, you can slice arbitrary channels
-                using the slice_kwargs (c=[0, 2]).
-            axes_order: The order of the axes to return the array.
-            transforms: The transforms to apply to the array.
-            **slice_kwargs: The slices to get the array.
-
-        Returns:
-            The dask delayed array of the region of interest.
-        """
-        slice_kwargs = self._add_channel_label(
-            channel_label=channel_label, **slice_kwargs
-        )
-        return self._get_as_delayed(
-            axes_order=axes_order, transforms=transforms, **slice_kwargs
-        )
-
-    def get_roi_as_delayed(
-        self,
-        roi: Roi | RoiPixels,
-        channel_label: str | None = None,
-        axes_order: Collection[str] | None = None,
-        transforms: Collection[TransformProtocol] | None = None,
-        **slice_kwargs: slice | int | Collection[int],
-    ) -> Delayed:
-        """Get the image as a dask delayed array for a region of interest.
-
-        Args:
-            roi: The region of interest to get the array.
-            channel_label: Select a specific channel by label.
-                If None, all channels are returned.
-                Alternatively, you can slice arbitrary channels
-                using the slice_kwargs (c=[0, 2]).
-            axes_order: The order of the axes to return the array.
-            transforms: The transforms to apply to the array.
-            **slice_kwargs: The slices to get the array.
-
-        Returns:
-            The dask delayed array of the region of interest.
-        """
-        slice_kwargs = self._add_channel_label(
-            channel_label=channel_label, **slice_kwargs
-        )
-        return self._get_roi_as_delayed(
-            roi=roi, axes_order=axes_order, transforms=transforms, **slice_kwargs
-        )
-
     def get_array(
         self,
         channel_label: str | None = None,
         axes_order: Collection[str] | None = None,
         transforms: Collection[TransformProtocol] | None = None,
-        mode: Literal["numpy", "dask", "delayed"] = "numpy",
+        mode: Literal["numpy", "dask"] = "numpy",
         **slice_kwargs: slice | int | Collection[int],
     ) -> ArrayLike:
         """Get the image as a zarr array.
@@ -322,7 +263,7 @@ class Image(AbstractImage[ImageMetaHandler]):
             axes_order: The order of the axes to return the array.
             transforms: The transforms to apply to the array.
             mode: The object type to return.
-                Can be "dask", "numpy", or "delayed".
+                Can be "dask", "numpy".
             **slice_kwargs: The slices to get the array.
 
         Returns:
@@ -341,7 +282,7 @@ class Image(AbstractImage[ImageMetaHandler]):
         channel_label: str | None = None,
         axes_order: Collection[str] | None = None,
         transforms: Collection[TransformProtocol] | None = None,
-        mode: Literal["numpy", "dask", "delayed"] = "numpy",
+        mode: Literal["numpy", "dask"] = "numpy",
         **slice_kwargs: slice | int | Collection[int],
     ) -> ArrayLike:
         """Get the image as a zarr array for a region of interest.
@@ -355,7 +296,7 @@ class Image(AbstractImage[ImageMetaHandler]):
             axes_order: The order of the axes to return the array.
             transforms: The transforms to apply to the array.
             mode: The object type to return.
-                Can be "dask", "numpy", or "delayed".
+                Can be "dask", "numpy".
             **slice_kwargs: The slices to get the array.
 
         Returns:

@@ -5,7 +5,6 @@ from typing import Literal
 
 import dask.array as da
 import numpy as np
-from dask.delayed import Delayed
 
 from ngio.common import (
     ArrayLike,
@@ -99,26 +98,6 @@ class MaskedImage(Image):
             **slice_kwargs,
         )
 
-    def get_roi_as_delayed(  # type: ignore (this ignore the method override issue)
-        self,
-        label: int,
-        channel_label: str | None = None,
-        zoom_factor: float = 1.0,
-        axes_order: Collection[str] | None = None,
-        transforms: Collection[TransformProtocol] | None = None,
-        **slice_kwargs: slice | int | Collection[int],
-    ) -> Delayed:
-        """Return the array for a given ROI as a delayed object."""
-        roi = self._masking_roi_table.get_label(label)
-        roi = roi.zoom(zoom_factor)
-        return super().get_roi_as_delayed(
-            roi=roi,
-            channel_label=channel_label,
-            axes_order=axes_order,
-            transforms=transforms,
-            **slice_kwargs,
-        )
-
     def get_roi(  # type: ignore (this ignore the method override issue)
         self,
         label: int,
@@ -126,7 +105,7 @@ class MaskedImage(Image):
         channel_label: str | None = None,
         axes_order: Collection[str] | None = None,
         transforms: Collection[TransformProtocol] | None = None,
-        mode: Literal["numpy", "dask", "delayed"] = "numpy",
+        mode: Literal["numpy", "dask"] = "numpy",
         **slice_kwargs: slice | int | Collection[int],
     ) -> ArrayLike:
         """Return the array for a given ROI."""
@@ -388,30 +367,12 @@ class MaskedLabel(Label):
             **slice_kwargs,
         )
 
-    def get_roi_as_delayed(
-        self,
-        label: int,
-        zoom_factor: float = 1.0,
-        axes_order: Collection[str] | None = None,
-        transforms: Collection[TransformProtocol] | None = None,
-        **slice_kwargs: slice | int | Collection[int],
-    ) -> Delayed:
-        """Return the ROI as a delayed object."""
-        roi = self._masking_roi_table.get_label(label)
-        roi = roi.zoom(zoom_factor)
-        return super().get_roi_as_delayed(
-            roi=roi,
-            axes_order=axes_order,
-            transforms=transforms,
-            **slice_kwargs,
-        )
-
     def get_roi(
         self,
         label: int,
         zoom_factor: float = 1.0,
         axes_order: Collection[str] | None = None,
-        mode: Literal["numpy", "dask", "delayed"] = "numpy",
+        mode: Literal["numpy", "dask"] = "numpy",
         transforms: Collection[TransformProtocol] | None = None,
         **slice_kwargs: slice | int | Collection[int],
     ) -> ArrayLike:

@@ -3,13 +3,11 @@
 from ngio.common._array_io_pipe import (
     ArrayLike,
     get_as_dask,
-    get_as_delayed,
     get_as_numpy,
     get_masked_as_dask,
     get_masked_as_numpy,
     set_dask,
     set_dask_masked,
-    set_delayed,
     set_numpy,
     set_numpy_masked,
 )
@@ -54,7 +52,6 @@ __all__ = [
     "consolidate_pyramid",
     "dask_zoom",
     "get_as_dask",
-    "get_as_delayed",
     "get_as_numpy",
     "get_masked_as_dask",
     "get_masked_as_numpy",
@@ -66,7 +63,6 @@ __all__ = [
     "roi_to_slice_kwargs",
     "set_dask",
     "set_dask_masked",
-    "set_delayed",
     "set_numpy",
     "set_numpy_masked",
 ]

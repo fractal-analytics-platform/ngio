@@ -5,13 +5,11 @@ import dask.array as da
 import numpy as np
 import zarr
 from dask.array import Array as DaskArray
-from dask.delayed import Delayed, delayed
 
 from ngio.common._dimensions import Dimensions
 from ngio.common._io_transforms import (
     TransformProtocol,
     apply_dask_transforms,
-    apply_delayed_transforms,
     apply_numpy_transforms,
 )
 from ngio.ome_zarr_meta.ngio_specs import AxesOps
@@ -24,7 +22,7 @@ from ngio.utils import NgioValueError
 ##############################################################
 
 SliceDefinition: TypeAlias = tuple[slice | tuple[int, ...] | int, ...]
-ArrayLike: TypeAlias = np.ndarray | DaskArray | Delayed
+ArrayLike: TypeAlias = np.ndarray | DaskArray
 
 
 def _validate_int(value: int, shape: int) -> int:
@@ -237,18 +235,6 @@ def _numpy_get_pipe(
     return _array
 
 
-def _delayed_numpy_get_pipe(
-    array: zarr.Array,
-    slices: SliceDefinition | None,
-    axes_ops: AxesOps | None,
-    transforms: Collection[TransformProtocol] | None,
-) -> Delayed:
-    _array = delayed(_get_slice_as_numpy)(array, slices)
-    _array = delayed(_numpy_apply_axes_ops)(_array, axes_ops)
-    _array = apply_delayed_transforms(_array, transforms)
-    return _array
-
-
 def _dask_get_pipe(
     array: zarr.Array,
     slices: SliceDefinition | None,
@@ -289,22 +275,6 @@ def get_as_dask(
         dimensions=dimensions, axes_order=axes_order, **slice_kwargs
     )
     return _dask_get_pipe(
-        array=array, slices=slices, axes_ops=axes_ops, transforms=transforms
-    )
-
-
-def get_as_delayed(
-    array: zarr.Array,
-    *,
-    dimensions: Dimensions,
-    axes_order: Collection[str] | None = None,
-    transforms: Collection[TransformProtocol] | None = None,
-    **slice_kwargs: slice | int | Collection[int],
-) -> Delayed:
-    slices, axes_ops = _setup_from_disk_pipe(
-        dimensions=dimensions, axes_order=axes_order, **slice_kwargs
-    )
-    return _delayed_numpy_get_pipe(
         array=array, slices=slices, axes_ops=axes_ops, transforms=transforms
     )
 
@@ -355,20 +325,6 @@ def _dask_set_pipe(
     _set_dask_slice(array, _patch, slices)
 
 
-def _delayed_numpy_set_pipe(
-    array: zarr.Array,
-    patch: np.ndarray | Delayed,
-    slices: SliceDefinition | None,
-    axes_ops: AxesOps | None,
-    transforms: Collection[TransformProtocol] | None,
-) -> Delayed:
-    if isinstance(patch, np.ndarray):
-        patch = delayed(patch)
-    _patch = apply_delayed_transforms(patch, transforms)
-    _patch = delayed(_numpy_apply_axes_ops)(_patch, axes_ops)
-    return delayed(_set_numpy_slice)(array, _patch, slices)
-
-
 def set_numpy(
     array: zarr.Array,
     patch: np.ndarray,
@@ -403,27 +359,6 @@ def set_dask(
         dimensions=dimensions, axes_order=axes_order, **slice_kwargs
     )
     _dask_set_pipe(
-        array=array,
-        patch=patch,
-        slices=slices,
-        axes_ops=axes_ops,
-        transforms=transforms,
-    )
-
-
-def set_delayed(
-    array: zarr.Array,
-    patch: np.ndarray | Delayed,
-    *,
-    dimensions: Dimensions,
-    axes_order: Collection[str] | None = None,
-    transforms: Collection[TransformProtocol] | None = None,
-    **slice_kwargs: slice | int | Collection[int],
-):
-    slices, axes_ops = _setup_to_disk_pipe(
-        dimensions=dimensions, axes_order=axes_order, **slice_kwargs
-    )
-    _delayed_numpy_set_pipe(
         array=array,
         patch=patch,
         slices=slices,

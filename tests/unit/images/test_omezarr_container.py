@@ -229,4 +229,3 @@ def test_get_and_squeeze(tmp_path: Path, array_mode: str):
     # Test channel_labels
     image.get_as_numpy(channel_label="channel_0")
     image.get_as_dask(channel_label="channel_0")
-    image.get_as_delayed(channel_label="channel_0")

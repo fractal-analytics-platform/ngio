@@ -6,7 +6,6 @@ from typing import Generic, Literal, TypeVar
 import dask.array as da
 import numpy as np
 import zarr
-from dask.delayed import Delayed
 
 from ngio.common import (
     ArrayLike,
@@ -16,11 +15,9 @@ from ngio.common import (
     TransformProtocol,
     consolidate_pyramid,
     get_as_dask,
-    get_as_delayed,
     get_as_numpy,
     roi_to_slice_kwargs,
     set_dask,
-    set_delayed,
     set_numpy,
 )
 from ngio.ome_zarr_meta import (
@@ -265,54 +262,11 @@ class AbstractImage(Generic[_image_handler]):
             axes_order=axes_order, transforms=transforms, **slice_kwargs
         )
 
-    def _get_as_delayed(
-        self,
-        axes_order: Collection[str] | None = None,
-        transforms: Collection[TransformProtocol] | None = None,
-        **slice_kwargs: slice | int | Collection[int],
-    ) -> Delayed:
-        """Get the image as a delayed object.
-
-        Args:
-            axes_order: The order of the axes to return the array.
-            transforms: The transforms to apply to the array.
-            **slice_kwargs: The slices to get the array.
-        """
-        return get_as_delayed(
-            array=self.zarr_array,
-            dimensions=self.dimensions,
-            axes_order=axes_order,
-            transforms=transforms,
-            **slice_kwargs,
-        )
-
-    def _get_roi_as_delayed(
-        self,
-        roi: Roi | RoiPixels,
-        axes_order: Collection[str] | None = None,
-        transforms: Collection[TransformProtocol] | None = None,
-        **slice_kwargs: slice | int | Collection[int],
-    ) -> Delayed:
-        """Get the image as a delayed object for a region of interest.
-
-        Args:
-            roi: The region of interest to get the array.
-            axes_order: The order of the axes to return the array.
-            transforms: The transforms to apply to the array.
-            **slice_kwargs: The slices to get the array.
-        """
-        slice_kwargs = roi_to_slice_kwargs(
-            roi, dimensions=self.dimensions, pixel_size=self.pixel_size, **slice_kwargs
-        )
-        return self._get_as_delayed(
-            axes_order=axes_order, transforms=transforms, **slice_kwargs
-        )
-
     def _get_array(
         self,
         axes_order: Collection[str] | None = None,
         transforms: Collection[TransformProtocol] | None = None,
-        mode: Literal["numpy", "dask", "delayed"] = "numpy",
+        mode: Literal["numpy", "dask"] = "numpy",
         **slice_kwargs: slice | int | Collection[int],
     ) -> ArrayLike:
         """Get a slice of the image.
@@ -321,7 +275,7 @@ class AbstractImage(Generic[_image_handler]):
             axes_order: The order of the axes to return the array.
             transforms: The transforms to apply to the array.
             mode: The object type to return.
-                Can be "dask", "numpy", or "delayed".
+                Can be "dask", "numpy".
             **slice_kwargs: The slices to get the array.
 
         Returns:
@@ -335,10 +289,6 @@ class AbstractImage(Generic[_image_handler]):
             return self._get_as_dask(
                 axes_order=axes_order, transforms=transforms, **slice_kwargs
             )
-        elif mode == "delayed":
-            return self._get_as_delayed(
-                axes_order=axes_order, transforms=transforms, **slice_kwargs
-            )
         else:
             raise ValueError(
                 f"Unknown mode: {mode}. Choose from 'numpy', 'dask', or 'delayed'."
@@ -349,7 +299,7 @@ class AbstractImage(Generic[_image_handler]):
         roi: Roi | RoiPixels,
         axes_order: Collection[str] | None = None,
         transforms: Collection[TransformProtocol] | None = None,
-        mode: Literal["numpy", "dask", "delayed"] = "numpy",
+        mode: Literal["numpy", "dask"] = "numpy",
         **slice_kwargs: slice | int | Collection[int],
     ) -> ArrayLike:
         """Get a slice of the image.
@@ -359,6 +309,7 @@ class AbstractImage(Generic[_image_handler]):
             axes_order: The order of the axes to return the array.
             transforms: The transforms to apply to the array.
             mode: The mode to return the array.
+                Can be "dask", "numpy".
             **slice_kwargs: The slices to get the array.
 
         Returns:
@@ -370,10 +321,6 @@ class AbstractImage(Generic[_image_handler]):
             )
         elif mode == "dask":
             return self._get_roi_as_dask(
-                roi=roi, axes_order=axes_order, transforms=transforms, **slice_kwargs
-            )
-        elif mode == "delayed":
-            return self._get_roi_as_delayed(
                 roi=roi, axes_order=axes_order, transforms=transforms, **slice_kwargs
             )
         else:
@@ -415,20 +362,11 @@ class AbstractImage(Generic[_image_handler]):
                 transforms=transforms,
                 **slice_kwargs,
             )
-        elif isinstance(patch, Delayed):
-            set_delayed(
-                array=self.zarr_array,
-                patch=patch,
-                dimensions=self.dimensions,
-                axes_order=axes_order,
-                transforms=transforms,
-                **slice_kwargs,
-            )
         else:
             raise TypeError(
                 f"Unsupported patch type: {type(patch)}. "
                 "Supported types are: "
-                "numpy.ndarray, dask.array.Array, and dask.delayed.Delayed."
+                "numpy.ndarray, dask.array.Array."
             )
 
     def _set_roi(
