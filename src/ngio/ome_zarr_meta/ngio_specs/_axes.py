@@ -7,7 +7,7 @@ from typing import Literal, TypeVar
 import numpy as np
 from pydantic import BaseModel, ConfigDict, Field
 
-from ngio.utils import NgioValidationError, NgioValueError, ngio_logger
+from ngio.utils import NgioValidationError, NgioValueError
 
 T = TypeVar("T")
 
@@ -98,24 +98,10 @@ class Axis(BaseModel):
 
     def implicit_type_cast(self, cast_type: AxisType) -> "Axis":
         unit = self.unit
-        if self.axis_type != cast_type:
-            ngio_logger.warning(
-                f"Axis {self.on_disk_name} has type {self.axis_type}. "
-                f"Casting to {cast_type}."
-            )
-
         if cast_type == AxisType.time and unit is None:
-            ngio_logger.warning(
-                f"Time axis {self.on_disk_name} has unit {self.unit}. "
-                f"Casting to {DefaultSpaceUnit}."
-            )
             unit = DefaultTimeUnit
 
         if cast_type == AxisType.space and unit is None:
-            ngio_logger.warning(
-                f"Space axis {self.on_disk_name} has unit {unit}. "
-                f"Casting to {DefaultSpaceUnit}."
-            )
             unit = DefaultSpaceUnit
 
         return Axis(on_disk_name=self.on_disk_name, axis_type=cast_type, unit=unit)
