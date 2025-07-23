@@ -57,6 +57,14 @@ class Dimensions:
 
         return self._shape[index]
 
+    def get_index(self, axis_name: str) -> int | None:
+        """Return the index of the given axis name.
+
+        Args:
+            axis_name: The name of the axis (either canonical or non-canonical).
+        """
+        return self._axes_mapper.get_index(axis_name)
+
     def has_axis(self, axis_name: str) -> bool:
         """Return whether the axis exists."""
         index = self._axes_mapper.get_axis(axis_name)
