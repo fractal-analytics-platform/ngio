@@ -1,13 +1,19 @@
 """Generic class to handle Image-like data in a OME-NGFF file."""
 
-from collections.abc import Collection, Iterable
+from collections.abc import Collection
 from typing import Literal
 
 import dask.array as da
 import numpy as np
-from dask.delayed import Delayed
 
-from ngio.common import ArrayLike, Dimensions, Roi, RoiPixels, TransformProtocol
+from ngio.common import (
+    ArrayLike,
+    Dimensions,
+    Roi,
+    RoiPixels,
+    TransformProtocol,
+    add_channel_label_to_slice_kwargs,
+)
 from ngio.images._abstract_image import AbstractImage
 from ngio.images._create import create_empty_image_container
 from ngio.ome_zarr_meta import (
@@ -27,7 +33,6 @@ from ngio.ome_zarr_meta.ngio_specs import (
 )
 from ngio.utils import (
     NgioValidationError,
-    NgioValueError,
     StoreOrGroup,
     ZarrGroupHandler,
 )
@@ -111,17 +116,17 @@ class Image(AbstractImage[ImageMetaHandler]):
     def _add_channel_label(
         self,
         channel_label: str | None = None,
-        **slice_kwargs: slice | int | Iterable[int],
-    ) -> dict[str, slice | int | Iterable[int]]:
+        **slice_kwargs: slice | int | Collection[int],
+    ) -> dict[str, slice | int | Collection[int]]:
         """Add a channel label to the image metadata."""
-        if channel_label is None:
-            return slice_kwargs
-        channel_idx = self.get_channel_idx(channel_label=channel_label)
-        if "c" in slice_kwargs:
-            raise NgioValueError(
-                "Cannot specify a channel label and a channel index at the same time."
-            )
-        slice_kwargs["c"] = channel_idx
+        if channel_label is not None:
+            channel_idx = self.get_channel_idx(channel_label=channel_label)
+        else:
+            channel_idx = None
+
+        slice_kwargs = add_channel_label_to_slice_kwargs(
+            channel_idx=channel_idx, channel_label=channel_label, **slice_kwargs
+        )
         return slice_kwargs
 
     def get_as_numpy(
@@ -129,7 +134,7 @@ class Image(AbstractImage[ImageMetaHandler]):
         channel_label: str | None = None,
         axes_order: Collection[str] | None = None,
         transforms: Collection[TransformProtocol] | None = None,
-        **slice_kwargs: slice | int | Iterable[int],
+        **slice_kwargs: slice | int | Collection[int],
     ) -> np.ndarray:
         """Get the image as a numpy array.
 
@@ -158,7 +163,7 @@ class Image(AbstractImage[ImageMetaHandler]):
         channel_label: str | None = None,
         axes_order: Collection[str] | None = None,
         transforms: Collection[TransformProtocol] | None = None,
-        **slice_kwargs: slice | int | Iterable[int],
+        **slice_kwargs: slice | int | Collection[int],
     ) -> np.ndarray:
         """Get the image as a numpy array for a region of interest.
 
@@ -187,7 +192,7 @@ class Image(AbstractImage[ImageMetaHandler]):
         channel_label: str | None = None,
         axes_order: Collection[str] | None = None,
         transforms: Collection[TransformProtocol] | None = None,
-        **slice_kwargs: slice | int | Iterable[int],
+        **slice_kwargs: slice | int | Collection[int],
     ) -> da.Array:
         """Get the image as a dask array.
 
@@ -216,7 +221,7 @@ class Image(AbstractImage[ImageMetaHandler]):
         channel_label: str | None = None,
         axes_order: Collection[str] | None = None,
         transforms: Collection[TransformProtocol] | None = None,
-        **slice_kwargs: slice | int | Iterable[int],
+        **slice_kwargs: slice | int | Collection[int],
     ) -> da.Array:
         """Get the image as a dask array for a region of interest.
 
@@ -240,71 +245,13 @@ class Image(AbstractImage[ImageMetaHandler]):
             roi=roi, axes_order=axes_order, transforms=transforms, **slice_kwargs
         )
 
-    def get_as_delayed(
-        self,
-        channel_label: str | None = None,
-        axes_order: Collection[str] | None = None,
-        transforms: Collection[TransformProtocol] | None = None,
-        **slice_kwargs: slice | int | Iterable[int],
-    ) -> Delayed:
-        """Get the image as a dask delayed array.
-
-        Args:
-            channel_label: Select a specific channel by label.
-                If None, all channels are returned.
-                Alternatively, you can slice arbitrary channels
-                using the slice_kwargs (c=[0, 2]).
-            axes_order: The order of the axes to return the array.
-            transforms: The transforms to apply to the array.
-            **slice_kwargs: The slices to get the array.
-
-        Returns:
-            The dask delayed array of the region of interest.
-        """
-        slice_kwargs = self._add_channel_label(
-            channel_label=channel_label, **slice_kwargs
-        )
-        return self._get_as_delayed(
-            axes_order=axes_order, transforms=transforms, **slice_kwargs
-        )
-
-    def get_roi_as_delayed(
-        self,
-        roi: Roi | RoiPixels,
-        channel_label: str | None = None,
-        axes_order: Collection[str] | None = None,
-        transforms: Collection[TransformProtocol] | None = None,
-        **slice_kwargs: slice | int | Iterable[int],
-    ) -> Delayed:
-        """Get the image as a dask delayed array for a region of interest.
-
-        Args:
-            roi: The region of interest to get the array.
-            channel_label: Select a specific channel by label.
-                If None, all channels are returned.
-                Alternatively, you can slice arbitrary channels
-                using the slice_kwargs (c=[0, 2]).
-            axes_order: The order of the axes to return the array.
-            transforms: The transforms to apply to the array.
-            **slice_kwargs: The slices to get the array.
-
-        Returns:
-            The dask delayed array of the region of interest.
-        """
-        slice_kwargs = self._add_channel_label(
-            channel_label=channel_label, **slice_kwargs
-        )
-        return self._get_roi_as_delayed(
-            roi=roi, axes_order=axes_order, transforms=transforms, **slice_kwargs
-        )
-
     def get_array(
         self,
         channel_label: str | None = None,
         axes_order: Collection[str] | None = None,
         transforms: Collection[TransformProtocol] | None = None,
-        mode: Literal["numpy", "dask", "delayed"] = "numpy",
-        **slice_kwargs: slice | int | Iterable[int],
+        mode: Literal["numpy", "dask"] = "numpy",
+        **slice_kwargs: slice | int | Collection[int],
     ) -> ArrayLike:
         """Get the image as a zarr array.
 
@@ -316,7 +263,7 @@ class Image(AbstractImage[ImageMetaHandler]):
             axes_order: The order of the axes to return the array.
             transforms: The transforms to apply to the array.
             mode: The object type to return.
-                Can be "dask", "numpy", or "delayed".
+                Can be "dask", "numpy".
             **slice_kwargs: The slices to get the array.
 
         Returns:
@@ -335,8 +282,8 @@ class Image(AbstractImage[ImageMetaHandler]):
         channel_label: str | None = None,
         axes_order: Collection[str] | None = None,
         transforms: Collection[TransformProtocol] | None = None,
-        mode: Literal["numpy", "dask", "delayed"] = "numpy",
-        **slice_kwargs: slice | int | Iterable[int],
+        mode: Literal["numpy", "dask"] = "numpy",
+        **slice_kwargs: slice | int | Collection[int],
     ) -> ArrayLike:
         """Get the image as a zarr array for a region of interest.
 
@@ -349,7 +296,7 @@ class Image(AbstractImage[ImageMetaHandler]):
             axes_order: The order of the axes to return the array.
             transforms: The transforms to apply to the array.
             mode: The object type to return.
-                Can be "dask", "numpy", or "delayed".
+                Can be "dask", "numpy".
             **slice_kwargs: The slices to get the array.
 
         Returns:
@@ -372,7 +319,7 @@ class Image(AbstractImage[ImageMetaHandler]):
         channel_label: str | None = None,
         axes_order: Collection[str] | None = None,
         transforms: Collection[TransformProtocol] | None = None,
-        **slice_kwargs: slice | int | Iterable[int],
+        **slice_kwargs: slice | int | Collection[int],
     ) -> None:
         """Set the image array.
 
@@ -400,7 +347,7 @@ class Image(AbstractImage[ImageMetaHandler]):
         channel_label: str | None = None,
         axes_order: Collection[str] | None = None,
         transforms: Collection[TransformProtocol] | None = None,
-        **slice_kwargs: slice | int | Iterable[int],
+        **slice_kwargs: slice | int | Collection[int],
     ) -> None:
         """Set the image array for a region of interest.
 

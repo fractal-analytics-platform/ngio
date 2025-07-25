@@ -13,7 +13,7 @@ def _stacked_zoom(x, zoom_y, zoom_x, order=1, mode="grid-constant", grid_mode=Tr
     x = x.reshape(-1, yshape, xshape)
     scale_xy = (zoom_y, zoom_x)
     _x_out = [
-        scipy_zoom(x[i], scale_xy, order=order, mode=mode, grid_mode=True)
+        scipy_zoom(x[i], scale_xy, order=order, mode=mode, grid_mode=grid_mode)
         for i in range(x.shape[0])
     ]
     x_out = np.stack(_x_out)  # type: ignore (scipy_zoom returns np.ndarray, but type is not inferred correctly)

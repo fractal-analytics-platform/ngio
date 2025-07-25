@@ -87,12 +87,9 @@ def _check_optional_columns(col_name: str) -> None:
 
 def _dataframe_to_rois(
     dataframe: pd.DataFrame,
-    required_columns: list[str] | None = None,
+    required_columns: list[str] = REQUIRED_COLUMNS,
 ) -> dict[str, Roi]:
     """Convert a DataFrame to a WorldCooROI object."""
-    if required_columns is None:
-        required_columns = REQUIRED_COLUMNS
-
     # Validate the columns of the DataFrame
     _required_columns = set(dataframe.columns).intersection(set(required_columns))
     if len(_required_columns) != len(required_columns):
@@ -107,6 +104,8 @@ def _dataframe_to_rois(
     for col in extra_columns:
         _check_optional_columns(col)
 
+    label_is_index = True if dataframe.index.name == "label" else False
+
     extras = {}
 
     rois = {}
@@ -117,6 +116,11 @@ def _dataframe_to_rois(
 
         t_second = getattr(row, "t_second", 0.0)
         t_length_second = getattr(row, "len_t_second", 1.0)
+
+        if label_is_index:
+            label = int(row.Index)  # type: ignore (type can not be known here, but should be castable to int)
+        else:
+            label = getattr(row, "label", None)
 
         roi = Roi(
             name=str(row.Index),
@@ -129,35 +133,11 @@ def _dataframe_to_rois(
             z_length=row.len_z_micrometer,  # type: ignore (type can not be known here)
             t_length=t_length_second,
             unit="micrometer",
+            label=label,
             **extras,
         )
         rois[roi.name] = roi
     return rois
-
-
-def _table_to_rois(
-    table: TabularData,
-    index_key: str | None = None,
-    index_type: Literal["int", "str"] | None = None,
-    required_columns: list[str] | None = None,
-) -> tuple[pd.DataFrame, dict[str, Roi]]:
-    """Convert a table to a dictionary of ROIs.
-
-    Args:
-        table: The table to convert.
-        index_key: The column name to use as the index of the DataFrame.
-        index_type: The type of the index column in the DataFrame.
-        required_columns: The required columns in the DataFrame.
-
-    Returns:
-        A dictionary of ROIs.
-    """
-    dataframe = convert_to_pandas(
-        table,
-        index_key=index_key,
-        index_type=index_type,
-    )
-    return dataframe, _dataframe_to_rois(dataframe, required_columns=required_columns)
 
 
 def _rois_to_dataframe(rois: dict[str, Roi], index_key: str | None) -> pd.DataFrame:
@@ -176,6 +156,9 @@ def _rois_to_dataframe(rois: dict[str, Roi], index_key: str | None) -> pd.DataFr
             "len_t_second": roi.t_length,
         }
 
+        if roi.label is not None and index_key != "label":
+            row["label"] = roi.label
+
         extra = roi.model_extra or {}
         for col in extra:
             _check_optional_columns(col)
@@ -186,21 +169,99 @@ def _rois_to_dataframe(rois: dict[str, Roi], index_key: str | None) -> pd.DataFr
     return dataframe
 
 
+class RoiDictWrapper:
+    """A wrapper for a dictionary of ROIs to provide a consistent interface."""
+
+    def __init__(self, rois: Iterable[Roi]) -> None:
+        self._rois_by_name = {roi.name: roi for roi in rois}
+        self._rois_by_label = {roi.label: roi for roi in rois if roi.label is not None}
+
+    def get_by_name(self, name: str, default: Roi | None = None) -> Roi | None:
+        """Get an ROI by its name."""
+        return self._rois_by_name.get(name, default)
+
+    def get_by_label(self, label: int, default: Roi | None = None) -> Roi | None:
+        """Get an ROI by its label."""
+        return self._rois_by_label.get(label, default)
+
+    def _add_roi(self, roi: Roi, overwrite: bool = False) -> None:
+        """Add an ROI to the wrapper."""
+        if roi.name in self._rois_by_name and not overwrite:
+            raise NgioValueError(f"ROI with name {roi.name} already exists.")
+
+        self._rois_by_name[roi.name] = roi
+        if roi.label is not None:
+            self._rois_by_label[roi.label] = roi
+
+    def add_rois(self, rois: Roi | Iterable[Roi], overwrite: bool = False) -> None:
+        """Add ROIs to the wrapper."""
+        if isinstance(rois, Roi):
+            rois = [rois]
+
+        for roi in rois:
+            self._add_roi(roi, overwrite=overwrite)
+
+    def to_list(self) -> list[Roi]:
+        """Return the list of ROIs."""
+        return list(self._rois_by_name.values())
+
+    def to_dataframe(self, index_key: str | None = None) -> pd.DataFrame:
+        """Convert the ROIs to a DataFrame."""
+        return _rois_to_dataframe(self._rois_by_name, index_key=index_key)
+
+    @classmethod
+    def from_dataframe(
+        cls, dataframe: pd.DataFrame, required_columns: list[str] = REQUIRED_COLUMNS
+    ) -> "RoiDictWrapper":
+        """Create a RoiDictWrapper from a DataFrame."""
+        rois = _dataframe_to_rois(dataframe, required_columns=required_columns)
+        return cls(rois.values())
+
+
+def _table_to_rois(
+    table: TabularData,
+    index_key: str | None = None,
+    index_type: Literal["int", "str"] | None = None,
+    required_columns: list[str] = REQUIRED_COLUMNS,
+) -> tuple[pd.DataFrame, RoiDictWrapper]:
+    """Convert a table to a dictionary of ROIs.
+
+    Args:
+        table: The table to convert.
+        index_key: The column name to use as the index of the DataFrame.
+        index_type: The type of the index column in the DataFrame.
+        required_columns: The required columns in the DataFrame.
+
+    Returns:
+        A tuple containing the DataFrame and a RoiDictWrapper with the ROIs.
+    """
+    dataframe = convert_to_pandas(
+        table,
+        index_key=index_key,
+        index_type=index_type,
+    )
+    roi_dict_wrapper = RoiDictWrapper.from_dataframe(
+        dataframe, required_columns=required_columns
+    )
+    return dataframe, roi_dict_wrapper
+
+
 class GenericRoiTableV1(AbstractBaseTable):
     def __init__(
         self,
         *,
         rois: Iterable[Roi] | None = None,
         meta: BackendMeta,
+        required_columns: list[str] = REQUIRED_COLUMNS,
     ) -> None:
         table = None
 
-        self._rois: dict[str, Roi] | None = None
+        self._rois: RoiDictWrapper | None = None
         if rois is not None:
-            self._rois = {}
-            self.add(rois)
-            table = _rois_to_dataframe(self._rois, index_key=meta.index_key)
+            self._rois = RoiDictWrapper(rois)
+            table = self._rois.to_dataframe(index_key=meta.index_key)
 
+        self._required_columns = required_columns
         super().__init__(table_data=table, meta=meta)
 
     def __repr__(self) -> str:
@@ -227,7 +288,7 @@ class GenericRoiTableV1(AbstractBaseTable):
             return super().table_data
 
         if len(self.rois()) > 0:
-            self._table_data = _rois_to_dataframe(self._rois, index_key=self.index_key)
+            self._table_data = self._rois.to_dataframe(index_key=self.meta.index_key)
         return super().table_data
 
     def set_table_data(
@@ -274,14 +335,16 @@ class GenericRoiTableV1(AbstractBaseTable):
         If the ROIs are not loaded, load them from the table.
         """
         if self._rois is None:
-            self._rois = _dataframe_to_rois(self.dataframe)
+            self._rois = RoiDictWrapper.from_dataframe(
+                self.dataframe, required_columns=self._required_columns
+            )
 
     def rois(self) -> list[Roi]:
         """List all ROIs in the table."""
         self._check_rois()
         if self._rois is None:
             return []
-        return list(self._rois.values())
+        return self._rois.to_list()
 
     def add(self, roi: Roi | Iterable[Roi], overwrite: bool = False) -> None:
         """Append ROIs to the current table.
@@ -295,22 +358,20 @@ class GenericRoiTableV1(AbstractBaseTable):
 
         self._check_rois()
         if self._rois is None:
-            self._rois = {}
+            self._rois = RoiDictWrapper([])
 
-        for _roi in roi:
-            if not overwrite and _roi.name in self._rois:
-                raise NgioValueError(f"ROI {_roi.name} already exists in the table.")
-            self._rois[_roi.name] = _roi
+        self._rois.add_rois(roi, overwrite=overwrite)
 
     def get(self, roi_name: str) -> Roi:
         """Get an ROI from the table."""
         self._check_rois()
         if self._rois is None:
-            self._rois = {}
+            self._rois = RoiDictWrapper([])
 
-        if roi_name not in self._rois:
-            raise NgioValueError(f"ROI {roi_name} not found in the table.")
-        return self._rois[roi_name]
+        roi = self._rois.get_by_name(roi_name)
+        if roi is None:
+            raise NgioValueError(f"ROI with name {roi_name} not found in the table.")
+        return roi
 
     @classmethod
     def from_table_data(
@@ -323,7 +384,7 @@ class GenericRoiTableV1(AbstractBaseTable):
             index_type=meta.index_type,
             required_columns=REQUIRED_COLUMNS,
         )
-        return cls(rois=rois.values(), meta=meta)
+        return cls(rois=rois.to_list(), meta=meta)
 
 
 class RoiTableV1Meta(BackendMeta):
@@ -471,7 +532,13 @@ class MaskingRoiTableV1(GenericRoiTableV1):
         path = path.split("/")[-1]
         return path
 
-    def get(self, label: int | str) -> Roi:  # type: ignore
-        """Get an ROI from the table."""
-        roi_name = str(label)
-        return super().get(roi_name)
+    def get_label(self, label: int) -> Roi:
+        """Get an ROI by label."""
+        self._check_rois()
+        if self._rois is None:
+            self._rois = RoiDictWrapper([])
+        roi = self._rois.get_by_label(label)
+
+        if roi is None:
+            raise NgioValueError(f"ROI with label {label} not found.")
+        return roi

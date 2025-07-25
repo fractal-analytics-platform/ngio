@@ -33,11 +33,9 @@ class Label(AbstractImage[LabelMetaHandler]):
 
     get_as_numpy = AbstractImage._get_as_numpy
     get_as_dask = AbstractImage._get_as_dask
-    get_as_delayed = AbstractImage._get_as_delayed
     get_array = AbstractImage._get_array
     get_roi_as_numpy = AbstractImage._get_roi_as_numpy
     get_roi_as_dask = AbstractImage._get_roi_as_dask
-    get_roi_as_delayed = AbstractImage._get_roi_as_delayed
     get_roi = AbstractImage._get_roi
     set_array = AbstractImage._set_array
     set_roi = AbstractImage._set_roi
