@@ -107,7 +107,7 @@ class Axis(BaseModel):
         if cast_type == AxisType.time and unit is None:
             ngio_logger.warning(
                 f"Time axis {self.on_disk_name} has unit {self.unit}. "
-                f"Casting to {DefaultSpaceUnit}."
+                f"Casting to {DefaultTimeUnit}."
             )
             unit = DefaultTimeUnit
 
